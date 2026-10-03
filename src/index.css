@@ -1,0 +1,335 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Oswald", "Arial Narrow", ui-sans-serif, sans-serif;
+
+  --color-night-950: #090909;
+  --color-night-900: #111111;
+  --color-night-800: #191919;
+  --color-night-700: #232323;
+
+  --color-brand-500: #e21b23;
+  --color-brand-600: #c3131a;
+  --color-brand-700: #9a0f15;
+
+  --color-paper: #f5f5f5;
+  --color-steel-300: #c6c6c6;
+  --color-steel-400: #a3a3a3;
+  --color-steel-500: #7a7a7a;
+  --color-steel-600: #565656;
+
+  /* Estados semânticos. Verde é exclusivamente positivo, âmbar é
+     exclusivamente alerta — o resto da interface é cinza + vermelho de
+     ação. Cores aqui existem para que um status nunca dependa só de
+     "parece verde". */
+  --color-ok: #16a36a;
+  --color-warn: #d99a22;
+
+  /* Altura da barra de navegação inferior do painel no celular.
+     Fica em `--spacing-*` de propósito: a barra, o respiro do <main>, o
+     deslocamento do toast e o da barra de "salvar" leem o mesmo número.
+     Se um deles mudasse sozinho, o conteúdo voltaria a sumir atrás da
+     navegação. 56px é o menor alvo confortável para o polegar. */
+  --spacing-nav-painel: 3.5rem;
+
+  /* Duração curta e com decelerada: movimento de sistema, não de
+     animação decorativa. A regra global de `prefers-reduced-motion`
+     abaixo zera as duas. */
+  --animate-sheet: sheet 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade: fade 0.18s ease-out both;
+
+  /* Animações da vitrine. Ficam no mesmo bloco porque `prefers-reduced-motion`
+     abaixo desliga as quatro de uma vez — se uma delas voltar para outro
+     lugar, o agressivo some de novo. */
+  --animate-reveal: reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes sheet {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-night-950);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-500);
+    color: #ffffff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .container-site {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .section {
+    @apply py-16 sm:py-24;
+  }
+
+  .eyebrow {
+    @apply font-display text-xs font-semibold tracking-[0.3em] uppercase text-brand-500;
+  }
+
+  .h-display {
+    @apply font-display text-balance font-semibold leading-[1.04] tracking-tight uppercase;
+  }
+
+  .input {
+    @apply w-full rounded-md border border-white/10 bg-night-800 px-3.5 py-2.5 text-sm text-paper transition-colors placeholder:text-steel-500 focus:border-brand-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-brand-500;
+  }
+
+  /* Select: mesma base do .input, com a seta desenhada em background para
+     não depender de um segundo elemento no DOM. */
+  .select {
+    @apply w-full cursor-pointer rounded-md border border-white/10 bg-night-800 px-3.5 py-2.5 pr-9 text-sm text-paper transition-colors placeholder:text-steel-500 focus:border-brand-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-brand-500;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237a7a7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1rem;
+  }
+
+  .select option {
+    background-color: var(--color-night-800);
+    color: var(--color-paper);
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-[11px] font-semibold tracking-[0.14em] uppercase text-steel-300;
+  }
+
+  .surface {
+    @apply border border-white/10 bg-night-900;
+  }
+
+  /* ------------------------------------------------------------------
+   * Sistema do painel administrativo.
+   *
+   * A vitrine usa `font-display` em caixa alta nos botões (marca, vende).
+   * O painel é ferramenta de uso diário: informação densa, então os
+   * botões aqui são em caixa de sentença, com `rounded-md` para casar com
+   * os campos. Mesmos tokens, mesma paleta — densidade diferente.
+   * ------------------------------------------------------------------ */
+
+  .card {
+    @apply rounded-lg border border-white/10 bg-night-900;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-brand-500 text-white hover:bg-brand-600;
+  }
+
+  .btn-secondary {
+    @apply border border-white/15 bg-night-800 text-steel-300 hover:border-white/30 hover:text-paper;
+  }
+
+  .btn-ghost {
+    @apply text-steel-300 hover:bg-white/5 hover:text-paper;
+  }
+
+  .btn-danger {
+    @apply border border-brand-500/40 bg-brand-500/10 text-brand-500 hover:bg-brand-500 hover:text-white;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  /* Botão só de ícone: alvo de 36px, um pouco acima dos 24px do mínimo
+     absoluto para dedo. */
+  .btn-icone {
+    @apply grid size-9 shrink-0 place-items-center rounded-md border border-white/15 text-steel-400 transition-colors hover:border-white/30 hover:text-paper;
+  }
+
+  .btn-icone-perigo {
+    @apply hover:border-brand-500 hover:bg-brand-500/10 hover:text-brand-500;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] leading-4 font-medium;
+  }
+
+  .esqueleto {
+    @apply animate-pulse rounded-md bg-white/5;
+  }
+
+  /* Anel de foco próprio: o outline global serve para a vitrine, mas no
+     painel o fill é escuro e o offset de 2px encosta na borda do card. */
+  .foco-painel:focus-visible {
+    @apply outline-2 outline-offset-0 outline-brand-500;
+  }
+
+  /* ------------------------------------------------------------------
+   * Painel: navegação inferior do celular.
+   *
+   * Quatro destinos em uma linha só. O item ativo é marcado por uma barra
+   * vermelha no topo (posicionada, não no fluxo — se ocupasse linha, o
+   * ícone desceria a cada troca de aba) e pelo ícone em vermelho. Sem
+   * fundo, sem pill: o mesmo peso visual do menu do sistema.
+   * ------------------------------------------------------------------ */
+  .nav-painel-item {
+    @apply relative flex h-full flex-1 flex-col items-center justify-center gap-1 text-[11px] leading-none transition-colors;
+  }
+
+  /* O anel de foco é declarado aqui em vez de `@apply foco-painel`: no
+     Tailwind 4 só utilidades entram no `@apply`, e `foco-painel` é uma
+     classe de componente do próprio arquivo. */
+  .nav-painel-item:focus-visible {
+    @apply outline-2 outline-offset-0 outline-brand-500;
+  }
+
+  /* Linha de lista dentro da planilha do Menu e das listas do painel.
+     py-2.5 dá 40px de altura — acima do mínimo de dedo mesmo com o
+     `text-xs` das descrições. */
+  .item-linha {
+    @apply flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors;
+  }
+
+  /* Seção do painel: cabeçalho + corpo, com o mesmo Padding em todos os
+     módulos. No celular cai para 16px porque a largura é o recurso
+     escasso, não a vertical. */
+  .painel-secao {
+    /* `card` reescrito à mão: no Tailwind 4 `@apply` só aceita
+       utilitários, e `card` é uma classe de componente deste arquivo. */
+    @apply overflow-hidden rounded-lg border border-white/10 bg-night-900;
+  }
+
+  .painel-cabecalho {
+    @apply flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5 sm:px-5 sm:py-4;
+  }
+
+  .painel-titulo {
+    @apply font-display text-base font-semibold tracking-wide text-paper uppercase;
+  }
+
+  /* Reveal on scroll (controlado por useRevealOnScroll) */
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+
+    .animate-reveal,
+    .animate-shimmer,
+    .animate-sheet,
+    .animate-fade {
+      animation: none;
+    }
+  }
+}
+
+@layer utilities {
+  /* Safe area: iPhone com barra de gestos reserva ~34px no rodapé. Todo o
+     chrome fixo do painel usa estas duas em vez de um `pb-6` chutado,
+     porque o valor do entalhe varia de aparelho para aparelho. */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Alvo de toque mínimo de 44px (recomendação de plataforma). Os botões
+     de ícone do painel são `size-9` (36px) no desktop, então ganham área
+     extra só no celular via este pseudo-elemento — invisível, sem
+     alterar o layout. */
+  .toque-minimo {
+    position: relative;
+  }
+
+  .toque-minimo::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+
+  /* Valores monetários em tabular-nums com tracking apertado: o "R$"
+     seguido de cinco dígitos precisa caber em meia tela sem cortar. */
+  .valor-moeda {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.015em;
+  }
+}
