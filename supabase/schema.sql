@@ -276,7 +276,7 @@ insert into public.motorcycles
 select * from (values
   ('honda-xre-300-2021','Honda','XRE 300',2021::int,31900::numeric,NULL::int,291::int,'Trail',
    'Trail versátil para o dia a dia e para viagem: motor de um cilindro com boa resposta em baixa rotação, posição de pilotagem ereta e manutenção de custo previsível. Revisão e documentação em dia.',
-   '[{"label":"Motor","value":"Mono OHc, 291,6 cc"},{"label":"Câmbio","value":"6 marchas"},{"label":"Freios","value":"ABS, disco nas duas rodas"},{"label":"Tanque","value":"16,7 L"}]'::jsonb,
+   '[{"label":"Motor","value":"Mono OHC, 291,6 cc"},{"label":"Câmbio","value":"6 marchas"},{"label":"Freios","value":"ABS, disco nas duas rodas"},{"label":"Tanque","value":"16,7 L"}]'::jsonb,
    '[{"src":"/motos/honda-xre-300-2021/01.webp","alt":"Honda XRE 300 2021 — vista frontal"},{"src":"/motos/honda-xre-300-2021/02.webp","alt":"Honda XRE 300 2021 — vista lateral"},{"src":"/motos/honda-xre-300-2021/03.webp","alt":"Honda XRE 300 2021 — painel"}]'::jsonb,
    true,'disponivel'),
 

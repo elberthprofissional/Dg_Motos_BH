@@ -13,7 +13,7 @@ export function Sobre() {
 
   usePageMeta(
     'Sobre a DG Motos | Belo Horizonte, MG',
-    'Motos com qualidade, procedência e atendimento que faz a diferença em Belo Horizonte. Conheça a DG Motos e negocie com quem responde pelo que anuncia.',
+    'A DG Motos é uma loja de motocicletas seminovas em Belo Horizonte. Estoque conferido, financiamento e avaliação de troca — negociação direta com quem vende.',
   )
 
   return (
@@ -24,7 +24,7 @@ export function Sobre() {
           <div>
             <p className="eyebrow">Sobre a loja</p>
             <h1 className="h-display mt-3 text-4xl sm:text-5xl">
-              Uma loja de bairro com critério de curadoria
+              Uma loja de bairro que conhece cada moto do pátio
             </h1>
             <p className="mt-5 leading-relaxed text-steel-300">
               A DG Motos nasceu em Belo Horizonte com uma ideia simples:
@@ -33,9 +33,8 @@ export function Sobre() {
               alguém do lado que entende do assunto.
             </p>
             <p className="mt-4 leading-relaxed text-steel-300">
-              Não somos multimarcas gigantes nem loja de plataforma. Somos uma
-              equipe que conhece cada moto que entra no pátio e responde pelo
-              que anuncia.
+              Somos uma equipe pequena, e por isso cada moto do anúncio é
+              conferida por gente da loja antes de entrar no estoque.
             </p>
           </div>
           <img

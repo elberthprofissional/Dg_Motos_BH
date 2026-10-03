@@ -76,8 +76,8 @@ export function FinanciamentoForm() {
         </h3>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-steel-400">
           Abrimos o WhatsApp com os seus dados preenchidos. Se a janela não
-          abriu, use o botão abaixo. Um atendente humano responde o quanto
-          antes — não é uma análise automática de crédito.
+          abriu, use o botão abaixo. Quem responde é a equipe da loja — a
+          análise de crédito é feita pela instituição financeira.
         </p>
         <a
           href={linkGerado}

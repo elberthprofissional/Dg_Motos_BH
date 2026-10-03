@@ -43,8 +43,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function entrar(email: string, senha: string): Promise<string | null> {
     const sb = getSupabase()
     if (!sb) return 'Supabase não configurado.'
-    const { error } = await sb.auth.signInWithPassword({ email, password: senha })
-    return error ? traduzirErroLogin(error) : null
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: senha })
+    if (error) return traduzirErroLogin(error)
+    // A sessão é gravada aqui, e não só pelo onAuthStateChange: o evento
+    // pode chegar depois que a tela de login já redirecionou para /admin,
+    // e a guarda veria "sem sessão" — devolvendo o dono para o login.
+    setSessao(data.session)
+    setCarregando(false)
+    return null
   }
 
   async function sair(): Promise<void> {

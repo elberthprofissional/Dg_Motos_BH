@@ -26,7 +26,7 @@ export function Financiamento() {
 
   usePageMeta(
     'Financiamento | DG Motos',
-    'Financie sua motocicleta com orientação da DG Motos: análise de crédito conduzida, condições reais e atendimento humano em Belo Horizonte.',
+    'Financiamento de motocicleta na DG Motos, em Belo Horizonte: simulador de parcelas, análise de crédito com instituições parceiras e condições claras antes de assinar.',
   )
 
   return (
@@ -44,7 +44,6 @@ export function Financiamento() {
         <div className="container-site grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-start">
           <div className="lg:sticky lg:top-24">
             <SectionHeading
-              eyebrow="Sem compromisso"
               title="Quanto ficaria por mês?"
               description="Escolha a moto, a entrada e o número de parcelas para ter uma estimativa na hora. Depois é só mandar a simulação pro WhatsApp e a gente busca a condição real."
             />
@@ -58,12 +57,11 @@ export function Financiamento() {
         <div className="container-site grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:items-start">
           <div className="lg:sticky lg:top-24">
             <SectionHeading
-              eyebrow="Formulário"
               title="Comece pelo interesse"
               description="Preencha os dados e a gente abre a conversa pronta no WhatsApp. Se preferir, fale direto com um atendente."
             />
             <div className="mt-6">
-              <WhatsAppCTA message={buildDefaultMessage()} label="Atendimento humano agora" />
+              <WhatsAppCTA message={buildDefaultMessage()} label="Falar no WhatsApp" />
             </div>
           </div>
           <div className="surface rounded-lg p-6 sm:p-8">

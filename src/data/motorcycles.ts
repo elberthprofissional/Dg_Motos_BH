@@ -14,6 +14,11 @@ import type { Motorcycle } from '../types'
  *   "Km a confirmar" enquanto estiver nula.
  * - Descrições e especificações são rascunho editorial para
  *   revisão do proprietário.
+ * - `descricao` e `especificacoes` saem daqui crus para a ficha
+ *   (`/moto/<slug>`) e para o schema.org: não escrever nelas
+ *   observações internas ("sujeito a confirmação", "a confirmar",
+ *   "TODO"). Provisionamento que não vai ao cliente fica neste
+ *   comentário ou em `docs/PENDENCIAS-CLIENTE.md`.
  * - Imagens: colocar os arquivos reais em
  *   public/motos/<pasta>/ e manter os mesmos nomes.
  */
@@ -29,9 +34,9 @@ export const motorcycles: Motorcycle[] = [
     cilindrada: 291,
     categoria: 'Trail',
     descricao:
-      'Trail versátil para o dia a dia e para viagem: motor de um cilindro com boa resposta em baixa rotação, posição de pilotagem ereta e manutenção de custo previsível. Revisão e documentação em dia. Texto sujeito a confirmação do proprietário.',
+      'Trail da Honda, ano 2021, com motor de um cilindro que responde bem em baixa rotação. Pilotagem erta, boa para cidade e estrada, e manutenção de custo previsível. Revisão e documentação em dia.',
     especificacoes: [
-      { label: 'Motor', value: 'Mono OHc, 291,6 cc' },
+      { label: 'Motor', value: 'Mono OHC, 291,6 cc' },
       { label: 'Câmbio', value: '6 marchas' },
       { label: 'Freios', value: 'ABS, disco nas duas rodas' },
       { label: 'Tanque', value: '16,7 L' },
@@ -55,7 +60,7 @@ export const motorcycles: Motorcycle[] = [
     cilindrada: 250,
     categoria: 'Trail',
     descricao:
-      'Lander 2024 com suspensão dianteira invertida e freios ABS — seminova de pouca estrada. Conforto para o uso urbano e segurança para viagens. Texto sujeito a confirmação do proprietário.',
+      'Lander 2024 com suspensão dianteira invertida e freios ABS. Seminova de pouca estrada: confortável no dia a dia e segura em viagem.',
     especificacoes: [
       { label: 'Motor', value: 'Mono 250 cc' },
       { label: 'Suspensão', value: 'Dianteira invertida' },
@@ -81,7 +86,7 @@ export const motorcycles: Motorcycle[] = [
     cilindrada: 162,
     categoria: 'Street',
     descricao:
-      'A referência de rua no Brasil: econômica, robusta e com ótima aceitação na revenda. Ideal para o uso diário na cidade e para o trabalho. Texto sujeito a confirmação do proprietário.',
+      'Titan 2022, street de 160 cc econômica e robusta. Serve bem para o dia a dia na cidade e para o trabalho, com manutenção simples e peça fácil de achar.',
     especificacoes: [
       { label: 'Motor', value: 'Mono OHC 162,7 cc' },
       { label: 'Câmbio', value: '5 marchas' },
@@ -107,7 +112,7 @@ export const motorcycles: Motorcycle[] = [
     cilindrada: 162,
     categoria: 'Street',
     descricao:
-      'Porta de entrada da linha CG: partida elétrica, freio CBS e custo de uso baixíssimo. Simples de pilotar e fácil de manter. Texto sujeito a confirmação do proprietário.',
+      'CG 160 Start 2024: a porta de entrada da linha CG. Partida elétrica, freio CBS e custo de uso baixo. Simples de pilotar e fácil de manter.',
     especificacoes: [
       { label: 'Motor', value: 'Mono OHC 162,7 cc' },
       { label: 'Câmbio', value: '4 marchas' },
@@ -133,7 +138,7 @@ export const motorcycles: Motorcycle[] = [
     cilindrada: 149,
     categoria: 'Street',
     descricao:
-      'Street econômica da Yamaha, confortável para o trajeto diário e barata de manter. Uma das opções mais equilibradas do mercado na faixa de 150 cc. Texto sujeito a confirmação do proprietário.',
+      'Fazer 150 2020 da Yamaha. Confortável para o trajeto diário e barata de manter — uma das mais equilibradas da faixa de 150 cc.',
     especificacoes: [
       { label: 'Motor', value: 'Mono 149,8 cc' },
       { label: 'Câmbio', value: '5 marchas' },

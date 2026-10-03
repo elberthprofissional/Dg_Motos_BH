@@ -3,6 +3,7 @@ import { Lock, MapPin, MessageCircle } from 'lucide-react'
 import { InstagramIcon } from '../ui/InstagramIcon'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
 import { buildDefaultMessage, useWhatsappLink } from '../../lib/format'
+import { buildMapsRouteUrl } from '../../lib/maps'
 
 const NAV = [
   { to: '/', label: 'Início' },
@@ -21,34 +22,48 @@ export function Footer() {
   const ano = ANO_CORRENTE
 
   return (
-    <footer className="border-t border-white/10 bg-night-900">
-      <div className="container-site grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
-        <div>
+    <footer className="border-t border-line bg-night-900">
+      <div className="container-site grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+        {/* Identidade */}
+        <div className="lg:col-span-4">
           <div className="flex items-center gap-2.5">
             <span
               aria-hidden="true"
-              className="grid size-9 place-items-center rounded bg-brand-500 font-display text-base font-bold text-white"
+              className="grid size-9 place-items-center rounded-sm bg-brand-500 font-display text-base font-bold text-white"
             >
               DG
             </span>
-            <span className="font-display text-lg font-semibold uppercase">DG Motos</span>
+            <span className="font-display text-lg font-semibold tracking-wide uppercase">
+              DG Motos
+            </span>
           </div>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-steel-400">
             Motocicletas seminovas selecionadas em Belo Horizonte. Atendimento
             direto, procedência conferida e negociação sem complicação.
           </p>
+          {config.instagramUrl ? (
+            <a
+              href={config.instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-2 text-sm text-steel-300 transition-colors hover:text-paper"
+            >
+              <InstagramIcon className="size-4" aria-hidden="true" />
+              {config.instagramHandle || 'Instagram'}
+            </a>
+          ) : null}
         </div>
 
-        <nav aria-label="Links do rodapé">
-          <h3 className="font-display text-xs font-semibold tracking-[0.22em] text-steel-400 uppercase">
+        <nav aria-label="Links do rodapé" className="lg:col-span-2">
+          <h2 className="font-display text-[11px] font-semibold tracking-[0.22em] text-steel-500 uppercase">
             Navegação
-          </h3>
-          <ul className="mt-4 space-y-2.5">
+          </h2>
+          <ul className="mt-4 space-y-3">
             {NAV.map((item) => (
               <li key={item.to}>
                 <Link
                   to={item.to}
-                  className="text-sm text-steel-300 transition-colors hover:text-paper"
+                  className="link-editorial text-sm text-steel-300 transition-colors hover:text-paper"
                 >
                   {item.label}
                 </Link>
@@ -57,76 +72,67 @@ export function Footer() {
           </ul>
         </nav>
 
-        <div>
-          <h3 className="font-display text-xs font-semibold tracking-[0.22em] text-steel-400 uppercase">
-            Contato
-          </h3>
-          <ul className="mt-4 space-y-2.5 text-sm text-steel-300">
-            <li>
-              <a
-                href={config.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-paper"
-              >
-                {config.enderecoRua} — {config.enderecoCidadeUf}
-              </a>
-            </li>
-            {wa ? (
-              <li>
-                <a
-                  href={wa}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 transition-colors hover:text-paper"
-                >
-                  <MessageCircle className="size-4" aria-hidden="true" />
-                  WhatsApp
-                </a>
-              </li>
-            ) : null}
-            <li>
-              <a
-                href={config.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 transition-colors hover:text-paper"
-              >
-                <InstagramIcon className="size-4" aria-hidden="true" />
-                {config.instagramHandle}
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="font-display text-xs font-semibold tracking-[0.22em] text-steel-400 uppercase">
-            Localização
-          </h3>
-          <p className="mt-4 flex items-start gap-2 text-sm leading-relaxed text-steel-300">
+        {/* Endereço e WhatsApp juntos: são o mesmo caminho de contato, e
+            antes eram duas colunas repetindo a mesma rua. */}
+        <div className="lg:col-span-3">
+          <h2 className="font-display text-[11px] font-semibold tracking-[0.22em] text-steel-500 uppercase">
+            Endereço
+          </h2>
+          <a
+            href={buildMapsRouteUrl(config.mapsUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex items-start gap-2 text-sm leading-relaxed text-steel-300 transition-colors hover:text-paper"
+          >
             <MapPin className="mt-0.5 size-4 shrink-0 text-brand-500" aria-hidden="true" />
             <span>
               {config.enderecoRua}
               <br />
               {config.enderecoCidadeUf}
             </span>
-          </p>
-          <a
-            href={config.mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-block text-sm font-medium text-brand-500 transition-colors hover:text-brand-600"
-          >
-            Ver rota no Google Maps
           </a>
+          {wa ? (
+            <a
+              href={wa}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm text-steel-300 transition-colors hover:text-paper"
+            >
+              <MessageCircle className="size-4 text-brand-500" aria-hidden="true" />
+              WhatsApp
+            </a>
+          ) : null}
+          {config.telefoneExibicao ? (
+            <p className="mt-4 text-sm text-steel-300">{config.telefoneExibicao}</p>
+          ) : null}
+        </div>
+
+        {/* Horários só aparecem se o dono tiver cadastrado no painel. */}
+        <div className="lg:col-span-3">
+          <h2 className="font-display text-[11px] font-semibold tracking-[0.22em] text-steel-500 uppercase">
+            Horários
+          </h2>
+          {config.horarios.length > 0 ? (
+            <dl className="mt-4 space-y-2 text-sm">
+              {config.horarios.map((h) => (
+                <div key={h.dias} className="flex items-baseline justify-between gap-4">
+                  <dt className="text-steel-400">{h.dias}</dt>
+                  <dd className="text-paper">{h.horas}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="mt-4 text-sm leading-relaxed text-steel-500">
+              Confirme o horário de funcionamento pelo WhatsApp ou Instagram antes
+              de vir.
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="border-t border-line">
         <div className="container-site flex flex-col items-start justify-between gap-3 py-5 text-xs text-steel-500 sm:flex-row sm:items-center">
-          <p>
-            © {ano} DG Motos — Realizando Sonhos. Todos os direitos reservados.
-          </p>
+          <p>© {ano} DG Motos — Realizando Sonhos. Todos os direitos reservados.</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <p>Belo Horizonte, Minas Gerais.</p>
             {/* Aponta para /admin e não /admin/login: quem já está logado cai

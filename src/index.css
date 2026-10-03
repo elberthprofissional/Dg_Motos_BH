@@ -4,8 +4,11 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Oswald", "Arial Narrow", ui-sans-serif, sans-serif;
 
-  --color-night-950: #090909;
+  /* Paleta DG Motos. O vermelho é cor de ação, nunca de fundo decorativo:
+     o resto da interface vive em preto/cinza com a foto como cor principal. */
+  --color-night-950: #080808;
   --color-night-900: #111111;
+  --color-superficie: #171717;
   --color-night-800: #191919;
   --color-night-700: #232323;
 
@@ -13,11 +16,16 @@
   --color-brand-600: #c3131a;
   --color-brand-700: #9a0f15;
 
-  --color-paper: #f5f5f5;
+  --color-paper: #f4f4f4;
   --color-steel-300: #c6c6c6;
-  --color-steel-400: #a3a3a3;
+  --color-steel-400: #a1a1a1;
   --color-steel-500: #7a7a7a;
   --color-steel-600: #565656;
+
+  /* Divisória da vitrine. Fica como token para que card, seção e footer
+     compartilhem exatamente o mesmo fio de 1px. */
+  --color-line: rgb(255 255 255 / 0.1);
+  --color-line-forte: rgb(255 255 255 / 0.18);
 
   /* Estados semânticos. Verde é exclusivamente positivo, âmbar é
      exclusivamente alerta — o resto da interface é cinza + vermelho de
@@ -87,6 +95,9 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* O header é fixo: sem este recuo, pular para uma âncora esconde o
+       topo do destino atrás da barra. 5rem cobre o header de 72px + folga. */
+    scroll-padding-top: 5rem;
   }
 
   body {
@@ -128,15 +139,41 @@
   }
 
   .section {
-    @apply py-16 sm:py-24;
+    @apply py-14 sm:py-20 lg:py-24;
   }
 
   .eyebrow {
-    @apply font-display text-xs font-semibold tracking-[0.3em] uppercase text-brand-500;
+    @apply font-display text-xs font-semibold tracking-[0.22em] uppercase text-brand-500;
+  }
+
+  /* Rótulo de seção com fio na frente. O alinhamento vem do traço, não de
+     uma caixa — é o que separa um cabeçalho editorial de um card. */
+  .rotulo {
+    @apply flex items-center gap-3 font-display text-[11px] font-semibold tracking-[0.22em] text-steel-400 uppercase;
+  }
+
+  .rotulo::before {
+    content: '';
+    @apply h-px w-7 shrink-0 bg-brand-500;
+  }
+
+  /* Sobrelinha que cresce a partir da esquerda no hover/foco. */
+  .link-editorial {
+    @apply relative inline-block;
+  }
+
+  .link-editorial::after {
+    content: '';
+    @apply absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-brand-500 transition-transform duration-300;
+  }
+
+  .link-editorial:hover::after,
+  .link-editorial:focus-visible::after {
+    @apply scale-x-100;
   }
 
   .h-display {
-    @apply font-display text-balance font-semibold leading-[1.04] tracking-tight uppercase;
+    @apply font-display text-balance font-semibold leading-[1.06] tracking-tight uppercase;
   }
 
   .input {
@@ -163,7 +200,7 @@
   }
 
   .surface {
-    @apply border border-white/10 bg-night-900;
+    @apply border border-line bg-superficie;
   }
 
   /* ------------------------------------------------------------------

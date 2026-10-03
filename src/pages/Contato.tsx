@@ -3,15 +3,9 @@ import { InstagramIcon } from '../components/ui/InstagramIcon'
 import { usePageMeta } from '../hooks/useNavigation'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { buildDefaultMessage, useWhatsappLink } from '../lib/format'
+import { buildMapsRouteUrl } from '../lib/maps'
+import { MapaLoja } from '../components/ui/MapaLoja'
 import { SectionHeading } from '../components/ui/SectionHeading'
-
-/**
- * Embed oficial do Google Maps (código "Incorporar mapa"), com o pin na
- * entrada da loja. Link "abrir no Maps" continua usando config.mapsUrl,
- * editável pelo dono no painel.
- */
-const MAPS_EMBED_URL =
-  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3752.9850228882406!2d-43.92277602383706!3d-19.84058663553232!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa68534aede22ef%3A0x5442a33d1ba51e55!2sAv.%20Bas%C3%ADlio%20da%20Gama%2C%20139%20-%20Tupi%2C%20Belo%20Horizonte%20-%20MG%2C%2031842-610!5e0!3m2!1spt-BR!2sbr!4v1790940091410!5m2!1spt-BR!2sbr'
 
 export function Contato() {
   usePageMeta(
@@ -38,7 +32,7 @@ export function Contato() {
         </a>
       ) : (
         <span className="text-sm text-steel-500">
-          Número oficial em configuração — use o Instagram enquanto isso.
+          Chame pelo Instagram enquanto isso.
         </span>
       ),
     },
@@ -129,8 +123,7 @@ export function Contato() {
               </div>
             ) : (
               <p className="mt-6 text-xs leading-relaxed text-steel-500">
-                Horários de atendimento serão publicados após confirmação da
-                loja.
+                Horários: confirme pelo WhatsApp ou Instagram antes de vir.
               </p>
             )}
 
@@ -140,25 +133,19 @@ export function Contato() {
               </p>
             ) : null}
 
-            {/* Mapa incorporado do Google (não usa cookie de rastreio) */}
-            <div className="mt-6 overflow-hidden rounded-lg border border-white/10">
-              <iframe
-                src={MAPS_EMBED_URL}
-                title="Mapa da localização da DG Motos"
-                width={600}
-                height={300}
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-                className="h-64 w-full border-0 sm:h-72"
+            {/* Mapa do Google (não usa cookie de rastreio) */}
+            <div className="mt-6 overflow-hidden rounded-md border border-line">
+              <MapaLoja
+                rotulo={`${config.enderecoRua}, ${config.enderecoCidadeUf}`}
+                className="h-64 sm:h-72"
               />
             </div>
 
             <a
-              href={config.mapsUrl}
+              href={buildMapsRouteUrl(config.mapsUrl)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded border border-white/20 px-5 py-2.5 font-display text-sm font-semibold tracking-[0.08em] uppercase transition-colors hover:border-white/40 hover:bg-white/5"
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded border border-line-forte px-5 py-2.5 font-display text-sm font-semibold tracking-[0.08em] uppercase transition-colors hover:border-white/40 hover:bg-white/5"
             >
               <MapPin className="size-4" aria-hidden="true" />
               Abrir no Google Maps

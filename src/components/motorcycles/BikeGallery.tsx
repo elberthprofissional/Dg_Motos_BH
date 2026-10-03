@@ -19,17 +19,21 @@ interface BikeGalleryProps {
 
 export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
   const [ativa, setAtiva] = useState(0)
-  const atual = imagens[ativa]
   const lista = imagens.length > 0 ? imagens : [{ src: PLACEHOLDER, alt: titulo }]
+  const atual = lista[ativa] ?? lista[0]
 
   return (
     <div>
-      <div className="surface relative aspect-[16/10] overflow-hidden rounded-lg bg-night-800">
+      {/* 4:5 é a proporção da foto de capa do catálogo (960x1200). Uma caixa
+          horizontal cortaria a moto ao meio. */}
+      <div className="relative aspect-4/5 overflow-hidden rounded-md border border-line bg-night-800">
         <img
-          key={atual?.src ?? lista[0].src}
-          src={lista[ativa]?.src ?? lista[0].src}
-          alt={lista[ativa]?.alt ?? titulo}
-          className="size-full animate-reveal object-cover"
+          key={atual.src}
+          src={atual.src}
+          alt={atual.alt || titulo}
+          width={960}
+          height={1200}
+          className="size-full animate-fade object-cover"
           onError={(e) => {
             ;(e.currentTarget as HTMLImageElement).src = PLACEHOLDER
           }}
@@ -37,26 +41,28 @@ export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
       </div>
 
       {lista.length > 1 && (
-        <div className="mt-3 grid grid-cols-4 gap-3" role="listbox" aria-label="Fotos da motocicleta">
+        // Flex em vez de grid: o dono pode enviar 2, 3 ou 8 fotos e nunca
+        // sobra uma célula vazia no fim da fileira.
+        <div className="mt-3 flex flex-wrap gap-2.5" role="group" aria-label="Fotos da motocicleta">
           {lista.map((img, i) => (
             <button
               key={img.src}
               type="button"
-              role="option"
-              aria-selected={i === ativa}
+              aria-pressed={i === ativa}
               aria-label={`Ver foto ${i + 1} de ${lista.length}`}
               onClick={() => setAtiva(i)}
-              className={`aspect-[4/3] overflow-hidden rounded border transition-colors ${
-                i === ativa
-                  ? 'border-brand-500'
-                  : 'border-white/10 opacity-60 hover:opacity-100'
+              className={`aspect-4/5 w-20 overflow-hidden rounded-sm border transition-colors sm:w-24 ${
+                i === ativa ? 'border-brand-500' : 'border-line hover:border-line-forte'
               }`}
             >
               <img
                 src={img.src}
                 alt=""
                 loading="lazy"
-                className="size-full object-cover"
+                decoding="async"
+                className={`size-full object-cover transition-opacity ${
+                  i === ativa ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+                }`}
                 onError={(e) => {
                   ;(e.currentTarget as HTMLImageElement).src = PLACEHOLDER
                 }}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { SenhaInput } from '../components/ui/SenhaInput'
 import { useAuth } from '../hooks/authContexto'
 
@@ -12,7 +12,8 @@ import { useAuth } from '../hooks/authContexto'
  * anunciada; o dono acessa digitando /admin.
  */
 export function AdminLogin() {
-  const { entrar, carregando, disponivel } = useAuth()
+  const { entrar, sessao, carregando, disponivel } = useAuth()
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
@@ -22,10 +23,21 @@ export function AdminLogin() {
     e.preventDefault()
     setErro(null)
     setEnviando(true)
-    const falha = await entrar(email, senha)
-    if (falha) setErro(falha)
+    const falha = await entrar(email.trim(), senha)
     setEnviando(false)
+    if (falha) {
+      setErro(falha)
+      return
+    }
+    // Autenticado: entra no painel. Sem esta linha o login dava certo mas
+    // a tela de acesso continuava na frente, e o dono só percebia depois
+    // de voltar ao site e clicar no login do rodapé.
+    navigate('/admin', { replace: true })
   }
+
+  // Sessão já ativa (ex.: voltou pelo botão "anterior" do navegador):
+  // mostra o painel direto em vez de pedir a senha de novo.
+  if (!carregando && sessao) return <Navigate to="/admin" replace />
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-5 py-10">
@@ -56,7 +68,9 @@ export function AdminLogin() {
             <input
               id="admin-email"
               type="email"
+              name="email"
               autoComplete="username"
+              autoFocus
               required
               placeholder="E-mail"
               aria-label="E-mail"

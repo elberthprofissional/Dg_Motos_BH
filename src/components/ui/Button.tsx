@@ -29,7 +29,10 @@ type ButtonAsButton = CommonProps &
   React.ButtonHTMLAttributes<HTMLButtonElement> & { to?: undefined; href?: undefined }
 
 type ButtonAsLink = CommonProps & { to: string; href?: undefined }
-type ButtonAsAnchor = CommonProps & { href: string; to?: undefined }
+
+/** Variante `<a>`: aceita os atributos de âncora (target, rel, download...). */
+type ButtonAsAnchor = CommonProps &
+  Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & { href: string; to?: undefined }
 
 export type ButtonProps = ButtonAsButton | ButtonAsLink | ButtonAsAnchor
 

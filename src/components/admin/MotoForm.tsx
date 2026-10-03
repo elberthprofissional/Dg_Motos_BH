@@ -241,7 +241,7 @@ export function MotoForm({
         </legend>
         {form.especificacoes.map((spec: MotorcycleSpec, i) => (
           /* `1fr 1.4fr auto` de uma vez só não cabe em 320px: os dois campos
-             ficavam com ~55px de área útil e o placeholder ("Mono OHc, 291,6
+             ficavam com ~55px de área útil e o placeholder ("Mono OHC, 291,6
              cc") sumia. No celular o rótulo ocupa a linha inteira e o valor
              divide espaço com o botão de remover; do `sm` em diante volta a
              linha única de três colunas. */
@@ -260,7 +260,7 @@ export function MotoForm({
             <input
               className="input"
               value={spec.value}
-              placeholder="Mono OHc, 291,6 cc"
+              placeholder="Mono OHC, 291,6 cc"
               aria-label="Valor da especificação"
               onChange={(e) => {
                 const nova = [...form.especificacoes]

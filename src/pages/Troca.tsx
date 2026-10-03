@@ -23,7 +23,7 @@ export function Troca() {
     {
       icon: Handshake,
       titulo: 'Receba a proposta',
-      texto: 'Avaliação feita por pessoas, com valor justo e sem enrolação.',
+      texto: 'Quem avalia é da equipe da loja. Valor justo e sem enrolação.',
     },
     {
       icon: RefreshCcw,

@@ -32,7 +32,7 @@ export interface ConfigFinanciamento {
 
 /** Texto padrão da página — também é o fallback quando o banco não tem nada. */
 export const FINANCIAMENTO_PADRAO: ConfigFinanciamento = {
-  titulo: 'Financie com quem conduz o processo com você',
+  titulo: 'Financie sua moto com a gente',
   subtitulo:
     'Trabalhamos com instituições parceiras e acompanhamos cada etapa — da simulação à entrega. Sem prometer o que não depende da gente.',
   etapasTitulo: 'Quatro etapas, sem surpresa',

@@ -82,10 +82,6 @@ export function BikeDetail() {
         {/* Galeria */}
         <div>
           <BikeGallery imagens={bike.imagens} titulo={`${titulo} ${bike.ano}`} />
-          <p className="mt-3 text-xs text-steel-500">
-            Fotos ilustrativas — imagens reais deste veículo disponíveis na loja
-            e no Instagram {SITE.instagram.handle}.
-          </p>
         </div>
 
         {/* Painel comercial */}
