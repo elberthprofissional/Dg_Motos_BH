@@ -23,10 +23,13 @@ export function Toast({
   feedback,
   onFechar,
   duracao = 5000,
+  acimaDaBarra = false,
 }: {
   feedback: Feedback | null
   onFechar: () => void
   duracao?: number
+  /** Sobe o aviso no celular para não ficar atrás da barra inferior. */
+  acimaDaBarra?: boolean
 }) {
   useEffect(() => {
     if (!feedback) return
@@ -37,15 +40,19 @@ export function Toast({
   if (!feedback) return null
   const { caixa, icone: Icone } = ESTILOS[feedback.tipo]
 
-  /* Posicionamento: no celular fica sobre a base, somando só a safe area
-     (o painel não tem mais barra de navegação inferior). Em iPhone com
-     entalhe, sem a folga da safe area o aviso ficaria atrás do gesto de
-     voltar. */
+  /* Posicionamento: no celular fica sobre a base, somando só a safe area.
+     Em iPhone com entalhe, sem a folga da safe area o aviso ficaria atrás
+     do gesto de voltar. `acimaDaBarra` adiciona a altura da barra
+     inferior (usada só no painel, que agora tem uma). */
   return (
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 [bottom:calc(env(safe-area-inset-bottom,0px)+0.75rem)] lg:bottom-6 lg:left-auto lg:right-6 lg:justify-end lg:px-0"
+      className={`pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 lg:bottom-6 lg:left-auto lg:right-6 lg:justify-end lg:px-0 ${
+        acimaDaBarra
+          ? '[bottom:calc(env(safe-area-inset-bottom,0px)+0.75rem+4.5rem)]'
+          : '[bottom:calc(env(safe-area-inset-bottom,0px)+0.75rem)]'
+      }`}
     >
       <div
         className={`pointer-events-auto flex max-w-sm items-start gap-3 rounded-lg border px-4 py-3 shadow-xl shadow-black/50 ${caixa}`}

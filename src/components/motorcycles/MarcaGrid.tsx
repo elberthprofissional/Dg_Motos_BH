@@ -6,12 +6,11 @@
  * lista. A seleção alimenta o mesmo `filtros.marca` do select — os
  * dois controles ficam sempre em sincronia.
  *
- * Logo: hoje nenhuma marca tem arquivo de logo (o cliente ainda não
- * enviou). Quando mandar, basta colocar o arquivo em
- * `public/marcas/<slug>.webp` (ex.: /marcas/honda.webp) — o slug
- * vem de `logoDaMarca`, em src/lib/marcas.ts — e trocar o placeholder
- * de iniciais pelo <img> indicado abaixo. Sem imagem inventada:
- * enquanto não há logo, as iniciais ocupam o disco.
+ * Logo: vem de `public/marcas/<slug>.webp` (gerado por `npm run marcas`,
+ * slug em `logoDaMarca`, em src/lib/marcas.ts). Se o arquivo não existir
+ * — marca nova digitada no admin, por exemplo — o onError volta para as
+ * iniciais em vez de deixar o círculo vazio. Sem imagem inventada: sem
+ * arquivo, as iniciais ocupam o disco.
  */
 import { useState } from 'react'
 import { iniciaisDaMarca, logoDaMarca } from '../../lib/marcas'
@@ -76,15 +75,15 @@ function DiscoMarca({
       <span
         className={`relative grid size-16 place-items-center overflow-hidden rounded-full border-2 transition-all duration-200 sm:size-[68px] ${
           ativa
-            ? 'border-[#d91f32]'
-            : 'border-white/15 group-hover:border-white/40 group-active:scale-95'
+            ? 'border-brand-500'
+            : 'border-line group-hover:border-line-forte group-active:scale-95'
         }`}
       >
-        <span className="absolute inset-0 grid place-items-center bg-[#1d1d1d] transition-colors group-hover:bg-[#242424]">
+        <span className="absolute inset-0 grid place-items-center bg-night-800 transition-colors group-hover:bg-night-700">
           {semLogo ? (
             <span
               className={`font-display text-lg font-bold tracking-[0.08em] transition-colors ${
-                ativa ? 'text-[#d91f32]' : 'text-[#8c8c8c] group-hover:text-[#d9d9d9]'
+                ativa ? 'text-brand-500' : 'text-steel-500 group-hover:text-steel-300'
               }`}
             >
               {iniciais}
@@ -105,8 +104,8 @@ function DiscoMarca({
       </span>
 
       <span
-        className={`font-display text-[11px] font-semibold tracking-[0.14em] uppercase transition-colors ${
-          ativa ? 'text-[#d91f32]' : 'text-[#a3a3a3] group-hover:text-[#f5f5f5]'
+        className={`text-center text-[11px] leading-tight font-semibold tracking-[0.12em] uppercase transition-colors ${
+          ativa ? 'text-brand-500' : 'text-steel-400 group-hover:text-paper'
         }`}
       >
         {marca}

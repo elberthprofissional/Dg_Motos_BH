@@ -7,10 +7,10 @@ const base =
   'inline-flex items-center justify-center gap-2 rounded-sm font-display text-xs font-semibold tracking-[0.18em] uppercase transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50'
 
 const variants: Record<Variant, string> = {
-  primary: 'border border-[#d91f32] bg-[#d91f32] text-[#f5f5f5] hover:bg-[#b71c2b] hover:border-[#b71c2b]',
+  primary: 'bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700',
   outline:
-    'border border-white/25 text-[#f5f5f5] hover:border-white/60 hover:bg-white/5',
-  ghost: 'text-[#a3a3a3] hover:text-[#f5f5f5]',
+    'border border-line-forte text-paper hover:border-white/40 hover:bg-white/5 active:bg-white/10',
+  ghost: 'text-steel-400 hover:text-paper',
 }
 
 const sizes = {

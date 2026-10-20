@@ -1,11 +1,19 @@
 import { useEffect, useRef } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, LogOut } from 'lucide-react'
 
 export interface PedidoConfirmacao {
   titulo: string
   descricao: string
   rotuloConfirmar: string
   onConfirmar: () => void | Promise<void>
+  /**
+   * Tom visual. `perigo` (padrão) é o vermelho para ações destrutivas
+   * (excluir). `neutro` é para confirmações inofensivas — sair, descartar
+   * rascunho — onde um alerta vermelho daria peso errado à ação.
+   */
+  tom?: 'perigo' | 'neutro'
+  /** Texto do botão enquanto a ação roda (padrão: "Processando..."). */
+  rotuloOcupado?: string
 }
 
 /**
@@ -65,6 +73,9 @@ export function DialogoConfirmacao({
 
   if (!pedido) return null
 
+  const neutro = pedido.tom === 'neutro'
+  const Icone = neutro ? LogOut : AlertTriangle
+
 /* No celular o diálogo sobe de baixo (alcance do polegar) e o rodapé
       soma a safe area ao respiro inferior: a barra de navegação do painel
       foi removida, então só o entalhe do iPhone precisa de folga para os
@@ -90,9 +101,13 @@ export function DialogoConfirmacao({
         <div className="flex items-start gap-3 sm:gap-4">
           <span
             aria-hidden="true"
-            className="grid size-10 shrink-0 place-items-center rounded-lg border border-brand-500/40 bg-brand-500/10 text-brand-500"
+            className={`grid size-10 shrink-0 place-items-center rounded-lg border ${
+              neutro
+                ? 'border-white/10 bg-white/5 text-steel-400'
+                : 'border-brand-500/40 bg-brand-500/10 text-brand-500'
+            }`}
           >
-            <AlertTriangle className="size-5" />
+            <Icone className="size-5" />
           </span>
           <div className="min-w-0">
             <h2
@@ -120,9 +135,11 @@ export function DialogoConfirmacao({
             type="button"
             disabled={ocupado}
             onClick={() => void pedido.onConfirmar()}
-            className="btn btn-danger h-11 w-full sm:h-auto sm:w-auto"
+            className={`btn h-11 w-full sm:h-auto sm:w-auto ${
+              neutro ? 'btn-primary' : 'btn-danger'
+            }`}
           >
-            {ocupado ? 'Excluindo...' : pedido.rotuloConfirmar}
+            {ocupado ? (pedido.rotuloOcupado ?? 'Processando...') : pedido.rotuloConfirmar}
           </button>
         </div>
       </div>

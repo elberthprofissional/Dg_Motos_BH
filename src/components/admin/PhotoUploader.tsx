@@ -205,10 +205,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
           ))}
         </ul>
       ) : (
-        <p className="mt-3 flex items-center gap-2 text-xs text-steel-500">
-          <ImagePlus className="size-4" aria-hidden="true" />
-          Nenhuma foto ainda. Sem foto, o site mostra o placeholder "FOTO EM BREVE".
-        </p>
+        <p className="mt-4 text-center text-xs text-steel-600">Nenhuma foto adicionada</p>
       )}
     </div>
   )

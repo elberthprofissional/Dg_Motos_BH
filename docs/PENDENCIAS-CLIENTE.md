@@ -60,6 +60,15 @@ moto + showroom + favicon. Elas foram convertidas para WebP e já estão no site
 
 - Para converter/atualizar fotos: colocar os arquivos em `img/` (mesmos
   nomes) e rodar `npm run convert-images`.
+- **Estado atual da fonte:** `img/` hoje guarda só Fazer, Lander, hero e
+  logo — os arquivos de XRE, Titan e Start foram removidos da fonte, mas
+  os WebP já convertidos continuam em `public/motos/<modelo>/` e no site.
+  Para trocar a foto dessas três, repor o arquivo em `img/` (mesmo nome) e
+  rodar `npm run convert-images`.
+- **Hero novo:** `img/hero-showroom.webp` foi atualizado e sai convertido
+  para `public/hero/showroom-2026-02.webp` (versão no nome para furar
+  cache). O `showroom.webp` antigo ficou órfão em `public/hero/` e pode
+  ser apagado quando quiser.
 - **Pendente:** o cliente enviou apenas **1 foto por moto** — o script gera
   2 recortes extras (02.webp, 03.webp) só para a galeria não ficar vazia.
   O ideal é receber 3–5 fotos reais por moto (frente, lateral, painel,
@@ -110,5 +119,4 @@ Sem Supabase, o caminho é pelo código:
 - Windows: dê dois cliques em `launcher\iniciar-projeto.bat`
   (instala dependências na 1ª vez, sobe o servidor em segundo plano e abre
   http://localhost:5173).
-- Linux/Mac: `bash launcher/iniciar-projeto.sh`
 - Build de produção: `npm run build` (saída em `dist/`).

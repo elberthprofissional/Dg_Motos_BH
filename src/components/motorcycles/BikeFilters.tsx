@@ -18,23 +18,55 @@ interface BikeFiltersProps {
   motos: Motorcycle[]
   onChange: (next: BikeFilterState) => void
   onClear: () => void
+  /**
+   * 'topo' (padrão): faixa horizontal de campos — usada no mobile.
+   * 'lateral': coluna empilhada — usada na sidebar do desktop.
+   */
+  layout?: 'topo' | 'lateral'
 }
 
-export function BikeFilters({ filtros, motos, onChange, onClear }: BikeFiltersProps) {
+export function BikeFilters({
+  filtros,
+  motos,
+  onChange,
+  onClear,
+  layout = 'topo',
+}: BikeFiltersProps) {
   const set = <K extends keyof BikeFilterState>(key: K, value: BikeFilterState[K]) =>
     onChange({ ...filtros, [key]: value })
 
   const marcas = marcasDisponiveis(motos)
+  const lateral = layout === 'lateral'
 
   return (
     <form
-      className="surface rounded-lg p-4 sm:p-5"
+      className={
+        lateral
+          ? 'surface flex flex-col gap-5 rounded-lg p-5'
+          : 'surface rounded-lg p-4 sm:p-5'
+      }
       onSubmit={(e) => e.preventDefault()}
       aria-label="Filtros do estoque"
     >
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {lateral && (
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-display text-lg tracking-[0.03em] uppercase">Filtros</h2>
+          {temFiltroAtivo(filtros) && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="inline-flex items-center gap-1 text-xs font-medium text-steel-400 transition-colors hover:text-paper"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+              Limpar
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className={lateral ? 'flex flex-col gap-5' : 'grid gap-4 md:grid-cols-2 lg:grid-cols-4'}>
         {/* Busca */}
-        <div className="lg:col-span-2">
+        <div className={lateral ? '' : 'lg:col-span-2'}>
           <label htmlFor="filtro-busca" className="field-label">
             Buscar por marca ou modelo
           </label>
@@ -97,7 +129,7 @@ export function BikeFilters({ filtros, motos, onChange, onClear }: BikeFiltersPr
         </div>
 
         {/* Ordenação */}
-        <div className="md:col-span-2 lg:col-span-1">
+        <div className={lateral ? '' : 'md:col-span-2 lg:col-span-1'}>
           <label htmlFor="filtro-ordenacao" className="field-label">
             Ordenar por
           </label>
@@ -116,7 +148,7 @@ export function BikeFilters({ filtros, motos, onChange, onClear }: BikeFiltersPr
         </div>
 
         {/* Preço máximo */}
-        <div className="md:col-span-1 lg:col-span-2">
+        <div className={lateral ? '' : 'md:col-span-1 lg:col-span-2'}>
           <label htmlFor="filtro-preco" className="field-label">
             Preço até <span className="text-paper">{formatPrice(filtros.precoMax)}</span>
           </label>
@@ -137,7 +169,7 @@ export function BikeFilters({ filtros, motos, onChange, onClear }: BikeFiltersPr
         </div>
 
         {/* Ano mínimo */}
-        <div className="md:col-span-1 lg:col-span-2">
+        <div className={lateral ? '' : 'md:col-span-1 lg:col-span-2'}>
           <label htmlFor="filtro-ano" className="field-label">
             Ano a partir de <span className="text-paper">{filtros.anoMin}</span>
           </label>
@@ -158,7 +190,7 @@ export function BikeFilters({ filtros, motos, onChange, onClear }: BikeFiltersPr
         </div>
       </div>
 
-      {temFiltroAtivo(filtros) && (
+      {!lateral && temFiltroAtivo(filtros) && (
         <div className="mt-4 border-t border-line pt-4">
           <button
             type="button"

@@ -14,7 +14,10 @@ import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
 import { MapaLoja } from '../components/ui/MapaLoja'
 import { Button } from '../components/ui/Button'
 
-const HERO_BG = '/hero/showroom.webp'
+// Sufixo -2026-02 no nome: força o navegador/CDN a baixar a foto nova.
+// Trocar só o conteúdo do arquivo mantém a mesma URL, e o cache antigo
+// continua sendo servido — por isso o nome é versionado.
+const HERO_BG = '/hero/showroom-2026-02.webp'
 
 function Carrossel({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -32,7 +35,7 @@ function Carrossel({ children }: { children: React.ReactNode }) {
         type="button"
         onClick={() => rolar(-1)}
         aria-label="Motos em destaque - anterior"
-        className="absolute top-1/2 -left-4 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/10 bg-[#101010] text-[#f5f5f5] transition-colors duration-200 hover:border-[#d91f32] hover:text-[#f5f5f5] lg:-left-6 lg:grid"
+        className="absolute top-1/2 -left-4 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-night-900 text-steel-300 transition-colors duration-200 hover:border-line-forte hover:text-paper lg:-left-5 lg:grid"
       >
         <ChevronLeft className="size-5" aria-hidden="true" />
       </button>
@@ -48,7 +51,7 @@ function Carrossel({ children }: { children: React.ReactNode }) {
         type="button"
         onClick={() => rolar(1)}
         aria-label="Motos em destaque - próximo"
-        className="absolute top-1/2 -right-4 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/10 bg-[#101010] text-[#f5f5f5] transition-colors duration-200 hover:border-[#d91f32] lg:-right-6 lg:grid"
+        className="absolute top-1/2 -right-4 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-night-900 text-steel-300 transition-colors duration-200 hover:border-line-forte hover:text-paper lg:-right-5 lg:grid"
       >
         <ChevronRight className="size-5" aria-hidden="true" />
       </button>
@@ -73,87 +76,88 @@ export function Home() {
 
   return (
     <>
-      <section className="relative min-h-[88svh] overflow-hidden bg-[#101010] pt-16 lg:min-h-[92svh]">
+      <section className="relative flex min-h-[88svh] items-center overflow-hidden bg-night-950 pt-[71px] lg:min-h-[92svh] lg:pt-[79px]">
         <div className="absolute inset-0">
           <img
             src={HERO_BG}
             alt="Motocicleta em destaque no showroom da DG Motos em Belo Horizonte"
-            className="absolute inset-0 size-full object-cover object-[center_35%]"
+            className="absolute inset-0 size-full object-cover object-[center_38%]"
             fetchPriority="high"
             decoding="sync"
           />
         </div>
 
+        {/* Scrim editorial: escurece a metade onde vive o texto e solta a
+            foto à direita. Um único gradiente direcional cumpre a leitura
+            sem apagar a motocicleta — nada de uma película escura uniforme
+            sobre a imagem. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-r from-[#101010] via-[#101010]/90 to-[#101010]/55"
+          className="absolute inset-0 bg-gradient-to-r from-night-950 via-night-950/85 to-night-950/20 lg:via-night-950/70"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#101010] to-transparent"
+          className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-night-950 to-transparent"
         />
 
-        <div className="container-site relative z-10 flex min-h-[calc(88svh-4rem)] flex-col justify-center lg:min-h-[calc(92svh-4.75rem)]">
-          <div className="max-w-3xl">
-            <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
-              DG Motos • Belo Horizonte, MG
+        <div className="container-site relative z-10 py-16 lg:py-20">
+          <div className="max-w-[36rem]">
+            <p className="flex items-center gap-3 font-display text-xs font-semibold tracking-[0.28em] text-brand-500 uppercase">
+              <span aria-hidden="true" className="h-px w-8 bg-brand-500" />
+              DG Motos • Belo Horizonte
             </p>
-            <h1 className="mt-5 font-display text-4xl font-semibold tracking-[0.04em] text-[#f5f5f5] uppercase sm:text-5xl lg:text-6xl xl:text-7xl">
-              SUA PRÓXIMA MOTO COMEÇA AQUI
+            <h1 className="mt-6 font-display text-4xl leading-[1.04] font-semibold tracking-[0.02em] text-paper uppercase sm:text-5xl lg:text-6xl">
+              Realizando
+              <br className="hidden sm:block" /> sonhos
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-[#a3a3a3] sm:text-lg">
-              Motos seminovas em Belo Horizonte, MG, com procedência verificada, estoque selecionado e negociação direta.
+            <p className="mt-6 max-w-lg text-base leading-relaxed text-steel-300 sm:text-lg">
+              Seminovas em Belo Horizonte, MG. Estoque selecionado, procedência
+              verificada e negociação direta com quem entende de moto.
             </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               {wa ? (
                 <a
                   href={wa}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+                  className="inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-7 py-3.5 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
                 >
                   <MessageCircle className="size-4" aria-hidden="true" />
-                  TENHO INTERESSE
+                  Tenho interesse
                 </a>
               ) : (
                 <Link
                   to="/contato"
-                  className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+                  className="inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-7 py-3.5 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
                 >
                   <MessageCircle className="size-4" aria-hidden="true" />
-                  TENHO INTERESSE
+                  Tenho interesse
                 </Link>
               )}
               <Link
                 to="/estoque"
-                className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/25 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:border-white/60 hover:bg-white/5"
+                className="inline-flex items-center justify-center gap-2 rounded-sm border border-line-forte px-7 py-3.5 font-display text-xs font-semibold tracking-[0.2em] text-paper uppercase transition-colors duration-200 hover:border-white/40 hover:bg-white/5"
               >
-                VER ESTOQUE
+                Ver estoque
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="motos-em-destaque" className="bg-[#101010] border-t border-white/5">
+      <section id="motos-em-destaque" className="border-t border-line bg-night-950">
         <div className="container-site section">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
-                Destaques
-              </p>
-              <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.06em] text-[#f5f5f5] uppercase sm:text-4xl lg:text-5xl">
+              <h2 className="font-display text-3xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-4xl lg:text-5xl">
                 Motos em destaque
               </h2>
-              <p className="mt-3 max-w-xl text-base text-[#a3a3a3]">
-                Uma parte do que está disponível no nosso estoque.
-              </p>
             </div>
             <Link
               to="/estoque"
-              className="inline-flex items-center gap-2 font-display text-xs font-semibold tracking-[0.18em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:text-[#d91f32]"
+              className="inline-flex items-center gap-2 font-display text-xs font-semibold tracking-[0.18em] text-paper uppercase transition-colors duration-200 hover:text-brand-500"
             >
-              Ver todo o estoque
+              Ver todos os modelos
               <span aria-hidden="true">→</span>
             </Link>
           </div>
@@ -173,19 +177,17 @@ export function Home() {
               </Carrossel>
             </div>
           ) : (
-            <div className="mt-10 flex flex-col items-center border border-white/8 bg-[#181818] px-6 py-12 text-center sm:py-16">
-              <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
-                Estoque
-              </p>
-              <h3 className="mt-4 font-display text-2xl font-semibold tracking-[0.06em] text-[#f5f5f5] uppercase sm:text-3xl">
+            <div className="mt-10 flex flex-col items-center border border-line bg-night-900 px-6 py-12 text-center sm:py-16">
+              <p className="rotulo">Estoque</p>
+              <h3 className="mt-4 font-display text-2xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-3xl">
                 Estoque em atualização
               </h3>
-              <p className="mt-3 max-w-md text-[#a3a3a3]">
+              <p className="mt-3 max-w-md text-steel-400">
                 Nenhuma moto em destaque no momento. Confira o catálogo completo.
               </p>
               <Link
                 to="/estoque"
-                className="mt-8 inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+                className="mt-8 inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
               >
                 Ver estoque completo
               </Link>
@@ -194,29 +196,27 @@ export function Home() {
         </div>
       </section>
 
-      <section className="bg-[#101010] border-t border-white/5">
+      <section className="border-t border-line bg-night-950">
         <div className="container-site section">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
-                Onde estamos
-              </p>
-              <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.06em] text-[#f5f5f5] uppercase sm:text-4xl lg:text-5xl">
+              <p className="rotulo">Onde estamos</p>
+              <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-4xl lg:text-5xl">
                 Visite a DG Motos
               </h2>
-              <p className="mt-3 max-w-xl text-base text-[#a3a3a3]">
+              <p className="mt-3 max-w-xl text-base text-steel-400">
                 Conheça nosso showroom em Belo Horizonte, veja as motocicletas de perto e converse com nossa equipe.
               </p>
             </div>
           </div>
 
-          <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-12">
-            <div className="border border-white/8 bg-[#181818] px-6 py-8 sm:px-8">
-              <p className="font-display text-lg font-semibold tracking-[0.16em] text-[#f5f5f5] uppercase">
+          <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-stretch lg:gap-10">
+            <div className="flex flex-col border border-line bg-night-900 px-6 py-8 sm:px-8">
+              <p className="font-display text-lg font-semibold tracking-[0.14em] text-paper uppercase">
                 DG Motos
               </p>
-              <address className="mt-5 flex items-start gap-3 not-italic text-[#a3a3a3]">
-                <MapPin className="mt-1 size-5 shrink-0 text-[#d91f32]" aria-hidden="true" />
+              <address className="mt-5 flex items-start gap-3 not-italic text-steel-400">
+                <MapPin className="mt-1 size-5 shrink-0 text-brand-500" aria-hidden="true" />
                 <span>
                   {config.enderecoRua}
                   <br />
@@ -225,52 +225,51 @@ export function Home() {
               </address>
 
               {config.horarios.length > 0 && (
-                <dl className="mt-8 border-t border-white/6">
+                <dl className="mt-6 border-t border-line">
                   {config.horarios.map((h) => (
                     <div
                       key={h.dias}
-                      className="flex items-baseline justify-between gap-4 border-b border-white/6 py-3 text-sm"
+                      className="flex items-baseline justify-between gap-4 border-b border-line py-3 text-sm"
                     >
-                      <dt className="text-[#a3a3a3]">{h.dias}</dt>
-                      <dd className="font-medium text-[#f5f5f5]">{h.horas}</dd>
+                      <dt className="text-steel-400">{h.dias}</dt>
+                      <dd className="font-medium text-paper">{h.horas}</dd>
                     </div>
                   ))}
                 </dl>
               )}
 
-              <div className="mt-8 flex flex-col gap-3">
+              <div className="mt-8 flex flex-col gap-3 lg:mt-auto lg:pt-8">
                 <Button
                   href={buildMapsRouteUrl(config.mapsUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full justify-center"
                 >
-                  COMO CHEGAR
+                  Como chegar
                 </Button>
                 <WhatsAppCTA message={buildDefaultMessage()} className="w-full justify-center" />
               </div>
             </div>
 
-            <div className="overflow-hidden border border-white/8">
+            <div className="overflow-hidden border border-line">
               <MapaLoja
                 rotulo={`${config.enderecoRua}, ${config.enderecoCidadeUf}`}
-                className="h-[300px] sm:h-[380px] lg:h-[460px]"
+                className="h-[300px] sm:h-[380px] lg:h-full lg:min-h-[460px]"
               />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-[#181818] border-t border-white/5">
-        <div className="container-site grid gap-8 py-16 sm:py-18 lg:grid-cols-[1.2fr_auto] lg:items-center lg:py-20">
+      <section className="relative border-t border-line bg-night-900">
+        <div className="riscos absolute inset-0" aria-hidden="true" />
+        <div className="container-site relative z-10 grid gap-8 py-16 sm:py-18 lg:grid-cols-[1.2fr_auto] lg:items-center lg:py-20">
           <div>
-            <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
-              Negociação direta
-            </p>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.06em] text-[#f5f5f5] uppercase sm:text-4xl lg:text-5xl">
-              ENCONTRO MARCADO COM SUA PRÓXIMA MOTO
+            <p className="rotulo">Negociação direta</p>
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-4xl lg:text-5xl">
+              Encontro marcado com sua próxima moto
             </h2>
-            <p className="mt-4 max-w-xl text-base text-[#a3a3a3]">
+            <p className="mt-4 max-w-xl text-base text-steel-400">
               Consulte disponibilidade, valores e condições diretamente com a equipe DG Motos pelo WhatsApp.
             </p>
           </div>
@@ -280,25 +279,25 @@ export function Home() {
                 href={wa}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+                className="inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
               >
                 <MessageCircle className="size-4" aria-hidden="true" />
-                FALAR COM A DG MOTOS
+                Falar com a DG Motos
               </a>
             ) : (
               <Link
                 to="/contato"
-                className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+                className="inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
               >
                 <MessageCircle className="size-4" aria-hidden="true" />
-                FALAR COM A DG MOTOS
+                Falar com a DG Motos
               </Link>
             )}
             <Link
               to="/estoque"
-              className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/25 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:border-white/60 hover:bg-white/5"
+              className="inline-flex items-center justify-center gap-2 rounded-sm border border-line-forte px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-paper uppercase transition-colors duration-200 hover:border-white/40 hover:bg-white/5"
             >
-              VER ESTOQUE
+              Ver estoque
             </Link>
           </div>
         </div>

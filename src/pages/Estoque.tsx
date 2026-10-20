@@ -24,83 +24,90 @@ export function Estoque() {
   const resultados = useMemo(() => filtrarMotos(motos, filtros), [motos, filtros])
 
   return (
-    <div className="pt-16">
-      {/* Faixa vermelha fina que continua a do header: mantém a assinatura do topo */}
-      <div aria-hidden="true" className="h-[3px] w-full bg-gradient-to-r from-[#d91f32] via-[#d91f32] to-[#8a1220]" />
+    <div className="pt-[71px] lg:pt-[79px]">
+      {/* Faixa vermelha fina que continua a do header: mantém a assinatura
+          do topo. Vermelho sólido, sem gradiente — é um fio de identidade. */}
+      <div aria-hidden="true" className="h-px w-full bg-brand-500/30" />
 
-      {/* Cabeçalho da página */}
-      <section className="border-b border-white/10 bg-[#0c0c0c]">
-        <div className="container-site py-14 text-center sm:py-20">
-          <p className="eyebrow">
-            <span aria-hidden="true" className="mr-3 inline-block h-px w-8 align-middle bg-[#d91f32]" />
-            Catálogo
-            <span aria-hidden="true" className="ml-3 inline-block h-px w-8 align-middle bg-[#d91f32]" />
-          </p>
-          <h1 className="h-display mt-4 text-4xl tracking-[0.08em] sm:text-6xl">Estoque</h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-steel-400 sm:text-base">
-            Todas as motocicletas disponíveis na DG Motos. Os anúncios são
-            atualizados conforme o pátio muda — fale com a gente para confirmar
-            disponibilidade.
-          </p>
+      {/* Cabeçalho da página — só o título. Descrição e contagem saíram
+          de propósito: o catálogo é a página, e ele precisa começar alto. */}
+      <section className="border-b border-line bg-night-950">
+        <div className="container-site pt-7 pb-5 sm:pt-9 sm:pb-6">
+          <p className="rotulo">Catálogo</p>
+          <h1 className="h-display mt-3 text-4xl tracking-[0.04em] sm:text-5xl">Estoque</h1>
         </div>
       </section>
 
-      <section className="section">
+      <section className="pb-14 sm:pb-18 lg:pb-20">
         <div className="container-site">
-          {/* Marcas em círculos (estilo concessionária): atalho visual para
-              o filtro de marca. Toque numa marca filtra; tocar de novo
-              limpa. O select dentro de BikeFilters continua funcionando
-              e mostra o mesmo estado. */}
-          <MarcaGrid
-            marcas={marcasDisponiveis(motos)}
-            marcaAtiva={filtros.marca}
-            onSelecionar={(marca) => setFiltros({ ...filtros, marca })}
-          />
-
-          <div className="my-8 border-t border-white/8" aria-hidden="true" />
-
-          <BikeFilters
-            filtros={filtros}
-            motos={motos}
-            onChange={setFiltros}
-            onClear={() => setFiltros(FILTROS_PADRAO)}
-          />
-
-          <p aria-live="polite" className="mt-8 text-sm text-steel-400">
-            <span className="font-semibold text-paper">{resultados.length}</span>{' '}
-            {plural(resultados.length)}
-            {filtros.busca ? (
-              <>
-                {' '}
-                para <span className="text-paper">“{filtros.busca}”</span>
-              </>
-            ) : null}
+          {/* Contagem só para leitor de tela: quem filtra recebe o
+              anúncio da mudança, sem poluir a página. */}
+          <p aria-live="polite" className="sr-only">
+            {resultados.length} {plural(resultados.length)}
+            {filtros.busca ? ` para "${filtros.busca}"` : ''}
           </p>
+          {/* Mobile: marcas em círculos no topo (atalho visual) e os
+              filtros como faixa horizontal. Desktop: filtros viram uma
+              sidebar à esquerda, ao lado da grade. */}
+          <div className="lg:hidden">
+            <MarcaGrid
+              marcas={marcasDisponiveis(motos)}
+              marcaAtiva={filtros.marca}
+              onSelecionar={(marca) => setFiltros({ ...filtros, marca })}
+            />
 
-          {resultados.length > 0 ? (
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {resultados.map((bike) => (
-                <BikeCard key={bike.id} bike={bike} />
-              ))}
-            </div>
-          ) : (
-            <div className="surface mt-6 flex flex-col items-center rounded-lg px-6 py-16 text-center">
-              <SearchX className="size-8 text-steel-500" aria-hidden="true" />
-              <h2 className="mt-4 font-display text-xl font-semibold uppercase">
-                Nenhuma moto com esses filtros
-              </h2>
-              <p className="mt-2 max-w-sm text-sm leading-relaxed text-steel-400">
-                Ajuste a faixa de preço, o ano ou a categoria — ou fale com a
-                gente: pode ser que a moto que você procura esteja chegando.
-              </p>
-              <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <Button variant="outline" onClick={() => setFiltros(FILTROS_PADRAO)}>
-                  Limpar filtros
-                </Button>
-                <Button to="/contato">Falar com a loja</Button>
+            <div className="my-6 border-t border-line" aria-hidden="true" />
+
+            <BikeFilters
+              filtros={filtros}
+              motos={motos}
+              onChange={setFiltros}
+              onClear={() => setFiltros(FILTROS_PADRAO)}
+            />
+          </div>
+
+          <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8">
+            {/* Sidebar de filtros (desktop) */}
+            <aside className="hidden lg:block">
+              <div className="sticky top-[103px]">
+                <BikeFilters
+                  filtros={filtros}
+                  motos={motos}
+                  onChange={setFiltros}
+                  onClear={() => setFiltros(FILTROS_PADRAO)}
+                  layout="lateral"
+                />
               </div>
+            </aside>
+
+            {/* Grade de resultados */}
+            <div>
+              {resultados.length > 0 ? (
+                <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:mt-0 lg:gap-6 xl:grid-cols-3">
+                  {resultados.map((bike) => (
+                    <BikeCard key={bike.id} bike={bike} />
+                  ))}
+                </div>
+              ) : (
+                <div className="surface mt-6 flex flex-col items-center rounded-lg px-6 py-14 text-center lg:mt-0">
+                  <SearchX className="size-8 text-steel-500" aria-hidden="true" />
+                  <h2 className="mt-4 font-display text-xl font-semibold tracking-[0.03em] uppercase">
+                    Nenhuma moto com esses filtros
+                  </h2>
+                  <p className="mt-2 max-w-sm text-sm leading-relaxed text-steel-400">
+                    Ajuste a faixa de preço, o ano ou a categoria — ou fale com a
+                    gente: pode ser que a moto que você procura esteja chegando.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    <Button variant="outline" onClick={() => setFiltros(FILTROS_PADRAO)}>
+                      Limpar filtros
+                    </Button>
+                    <Button to="/contato">Falar com a loja</Button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </section>
     </div>

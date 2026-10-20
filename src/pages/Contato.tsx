@@ -73,11 +73,11 @@ export function Contato() {
   ]
 
   return (
-    <div className="pt-16">
+    <div className="pt-[71px] lg:pt-[79px]">
       <section className="border-b border-line bg-night-900">
         <div className="container-site py-12 sm:py-16">
-          <p className="eyebrow">Contato</p>
-          <h1 className="h-display mt-3 text-4xl sm:text-5xl">Fale com a DG Motos</h1>
+          <p className="rotulo">Contato</p>
+          <h1 className="h-display mt-3 text-4xl tracking-[0.04em] sm:text-5xl">Fale com a DG Motos</h1>
           <p className="mt-4 max-w-xl text-steel-400">
             Respondemos rápido no WhatsApp e no Instagram. Para ver as motos de
             perto, é só aparecer na loja.
@@ -86,13 +86,13 @@ export function Contato() {
       </section>
 
       <section className="section">
-        <div className="container-site grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-          <div className="reveal space-y-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
+        <div className="container-site grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-stretch">
+          <div className="reveal divide-y divide-line overflow-hidden rounded-lg border border-line bg-night-900">
             {canais.map(({ icon: Icon, titulo, descricao, acao }) => (
-              <div key={titulo} className="flex items-start gap-4 bg-night-950 p-6">
+              <div key={titulo} className="flex items-start gap-4 p-6">
                 <Icon className="mt-0.5 size-5 shrink-0 text-brand-500" aria-hidden="true" />
                 <div>
-                  <h2 className="font-display text-lg font-semibold uppercase">{titulo}</h2>
+                  <h2 className="font-display text-lg font-semibold tracking-[0.03em] uppercase">{titulo}</h2>
                   <p className="mt-1 text-sm text-steel-400">{descricao}</p>
                   <div className="mt-2">{acao}</div>
                 </div>
@@ -100,7 +100,7 @@ export function Contato() {
             ))}
           </div>
 
-          <div className="surface rounded-lg p-6 sm:p-8">
+          <div className="surface flex flex-col rounded-lg p-6 sm:p-8">
             <SectionHeading eyebrow="Localização" title="Onde estamos" />
             <p className="mt-4 flex items-start gap-2 text-steel-300">
               <MapPin className="mt-1 size-4 shrink-0 text-brand-500" aria-hidden="true" />
@@ -113,8 +113,8 @@ export function Contato() {
 
             {config.horarios.length > 0 ? (
               <div className="mt-6">
-                <h3 className="flex items-center gap-2 font-display text-xs font-semibold tracking-[0.22em] text-steel-400 uppercase">
-                  <Clock className="size-4" aria-hidden="true" /> Horários
+                <h3 className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.14em] text-steel-500 uppercase">
+                  <Clock className="size-3.5" aria-hidden="true" /> Horários
                 </h3>
                 <ul className="mt-3 space-y-1.5 text-sm text-steel-300">
                   {config.horarios.map((h) => (
@@ -137,11 +137,13 @@ export function Contato() {
               </p>
             ) : null}
 
-            {/* Mapa do Google (não usa cookie de rastreio) */}
-            <div className="mt-6 overflow-hidden rounded-md border border-line">
+            {/* Mapa do Google (não usa cookie de rastreio). Ocupa o espaço
+                restante da coluna: proporcional à função, sem virar um
+                retângulo pequeno perdido. */}
+            <div className="mt-6 min-h-[16rem] flex-1 overflow-hidden rounded-md border border-line">
               <MapaLoja
                 rotulo={`${config.enderecoRua}, ${config.enderecoCidadeUf}`}
-                className="h-64 sm:h-72"
+                className="h-full min-h-[16rem]"
               />
             </div>
 

@@ -15,7 +15,7 @@ export function autoDealerSchema(config?: ConfigLoja): object {
     name: 'DG Motos',
     slogan: SITE.slogan,
     url: SITE_URL,
-    image: `${SITE_URL}/hero/showroom.webp`,
+    image: `${SITE_URL}/hero/showroom-2026-02.webp`,
     logo: `${SITE_URL}/favicon.webp`,
     address: {
       '@type': 'PostalAddress',

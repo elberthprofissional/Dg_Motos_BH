@@ -91,11 +91,11 @@ async function run() {
     await mkdir(path.join(ROOT, 'public', 'hero'), { recursive: true })
     await toWebp(
       path.join(IMG_DIR, heroEntrada),
-      path.join(ROOT, 'public', 'hero', 'showroom.webp'),
+      path.join(ROOT, 'public', 'hero', 'showroom-2026-02.webp'),
       LARGURA_HERO,
     )
     convertidas++
-    console.log(`✔ ${heroEntrada} -> public/hero/showroom.webp`)
+    console.log(`✔ ${heroEntrada} -> public/hero/showroom-2026-02.webp`)
   } else {
     console.warn('AVISO: hero-showroom não encontrado em img/.')
   }

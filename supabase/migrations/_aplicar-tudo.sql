@@ -1,10 +1,9 @@
 -- ============================================================
 -- DG MOTOS — aplicar todas as migrações de uma vez
 -- ============================================================
--- Cole o conteúdo inteiro no Supabase (SQL Editor → New query → Run).
--- Idempotente: pode rodar de novo sem quebrar nem duplicar.
--- Ordem: 0001 estrutura · 0002 RLS/Storage · 0003 demo.
+-- Ordem: 0001 estrutura · 0002 RLS/Storage · 0003 demo · 0004 correção.
 -- Rodar 0003 é opcional — cria 5 motos de demonstração.
+-- 0004 conserta banco que já tinha uma tabela `motorcycles` incompleta.
 -- ============================================================
 
 -- ============================================================
@@ -222,3 +221,67 @@ join (values
   ('yamaha-fazer-150-2020','/motos/yamaha-fazer-150-2020/02.webp','Yamaha Fazer 150 2020 — vista lateral',1),
   ('yamaha-fazer-150-2020','/motos/yamaha-fazer-150-2020/03.webp','Yamaha Fazer 150 2020 — detalhe',2)
 ) as img(slug, src, alt, posicao) on img.slug = n.slug;
+
+-- ============================================================
+-- 0004: correção de banco incompleto (ver arquivo dedicado)
+-- ============================================================
+-- Se `motorcycles` já existia sem a coluna `status` (create table if not
+-- exists não altera tabela existente) e/ou `motorcycle_images` não existia,
+-- as linhas abaixo consertam sem apagar dados.
+
+alter table public.motorcycles
+  add column if not exists status text not null default 'disponivel';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'motorcycles_status_valido'
+      and conrelid = 'public.motorcycles'::regclass
+  ) then
+    alter table public.motorcycles
+      add constraint motorcycles_status_valido
+      check (status in ('disponivel','vendida','indisponivel'));
+  end if;
+end $$;
+
+create index if not exists idx_motos_status on public.motorcycles (status);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'motorcycle_images_motorcycle_id_fkey'
+      and conrelid = 'public.motorcycle_images'::regclass
+  ) then
+    alter table public.motorcycle_images
+      add constraint motorcycle_images_motorcycle_id_fkey
+      foreign key (motorcycle_id) references public.motorcycles(id)
+      on delete cascade;
+  end if;
+end $$;
+
+insert into public.motorcycle_images (motorcycle_id, src, alt, posicao)
+select m.id, img.src, img.alt, img.posicao
+from (values
+  ('honda-xre-300-2021','/motos/honda-xre-300-2021/01.webp','Honda XRE 300 2021 — vista frontal',0),
+  ('honda-xre-300-2021','/motos/honda-xre-300-2021/02.webp','Honda XRE 300 2021 — vista lateral',1),
+  ('honda-xre-300-2021','/motos/honda-xre-300-2021/03.webp','Honda XRE 300 2021 — painel',2),
+  ('yamaha-lander-2024','/motos/yamaha-lander-2024/01.webp','Yamaha Lander 2024 — vista frontal',0),
+  ('yamaha-lander-2024','/motos/yamaha-lander-2024/02.webp','Yamaha Lander 2024 — vista lateral',1),
+  ('yamaha-lander-2024','/motos/yamaha-lander-2024/03.webp','Yamaha Lander 2024 — detalhe',2),
+  ('honda-titan-2022','/motos/honda-titan-2022/01.webp','Honda Titan 2022 — vista frontal',0),
+  ('honda-titan-2022','/motos/honda-titan-2022/02.webp','Honda Titan 2022 — vista lateral',1),
+  ('honda-titan-2022','/motos/honda-titan-2022/03.webp','Honda Titan 2022 — detalhe',2),
+  ('honda-start-2024','/motos/honda-start-2024/01.webp','Honda CG 160 Start 2024 — vista frontal',0),
+  ('honda-start-2024','/motos/honda-start-2024/02.webp','Honda CG 160 Start 2024 — vista lateral',1),
+  ('honda-start-2024','/motos/honda-start-2024/03.webp','Honda CG 160 Start 2024 — detalhe',2),
+  ('yamaha-fazer-150-2020','/motos/yamaha-fazer-150-2020/01.webp','Yamaha Fazer 150 2020 — vista frontal',0),
+  ('yamaha-fazer-150-2020','/motos/yamaha-fazer-150-2020/02.webp','Yamaha Fazer 150 2020 — vista lateral',1),
+  ('yamaha-fazer-150-2020','/motos/yamaha-fazer-150-2020/03.webp','Yamaha Fazer 150 2020 — detalhe',2)
+) as img(slug, src, alt, posicao)
+join public.motorcycles m on m.slug = img.slug
+where not exists (
+  select 1 from public.motorcycle_images mi
+  where mi.motorcycle_id = m.id and mi.src = img.src
+);

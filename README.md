@@ -19,9 +19,8 @@ npm install
 npm run dev      # http://localhost:5173
 ```
 
-Atalho para quem não usa terminal: `launcher/iniciar-projeto.bat` (Windows)
-ou `bash launcher/iniciar-projeto.sh` (Linux/Mac). Instala as dependências
-na primeira vez e abre o navegador.
+Atalho para quem não usa terminal: `launcher/iniciar-projeto.bat` — instala
+as dependências na primeira vez e abre o navegador.
 
 ## Scripts
 
@@ -42,7 +41,8 @@ na primeira vez e abre o navegador.
 
 ```
 supabase/
-  migrations/       0001 schema, 0002 RLS+Storage, 0003 seed (rode em ordem)
+  migrations/       0001 schema, 0002 RLS+Storage, 0003 seed,
+                    0004 corrige banco incompleto (rode em ordem)
 docs/
   SUPABASE.md       passo a passo do painel do dono
   PENDENCIAS-CLIENTE.md
@@ -55,7 +55,7 @@ src/
   components/
     layout/     Header, Footer, RootLayout
     admin/      MotoForm, PhotoUploader, EstoqueTab, ConfiguracoesTab,
-                InstalarApp, SeletorMarca
+                InstalarApp, useInstalarApp, SeletorMarca
     motorcycles/ BikeCard, BikeFilters, BikeGallery, MarcaGrid
     ui/         Button, SmartImage, SectionHeading
   pages/        rotas (uma por página, code-split com React.lazy)
@@ -116,7 +116,13 @@ da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
   checa o `display-mode: standalone`: no PWA instalado, `/` cai em
   `/admin/login`; no navegador, mostra o catálogo.
 - **Fotos nunca são inventadas.** `img/` é a fonte; o script de conversão
-  gera WebP e crops. Faltando foto, entra o placeholder local.
+  gera WebP e crops. Faltando foto, entra o placeholder local. O hero tem a
+  versão no nome (`showroom-2026-02.webp`): trocar só o conteúdo mantendo
+  a URL faria o CDN servir a foto velha do cache.
+- **Identidade visual entra por textura, não por número decorativo.**
+  A assinatura é a faixa xadrez no topo do rodapé, os riscos diagonais da
+  CTA final e a etiqueta vermelha enviesada do preço — os três definidos em
+  `src/index.css`. A Home não tem seção de estatísticas decorativas.
 - **As fotos ficam na tabela `motorcycle_images`.** Excluir uma moto
   apaga as linhas em cascata e remove os arquivos do Storage — sem lixo
   acumulado no bucket.

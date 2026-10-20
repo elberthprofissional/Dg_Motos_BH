@@ -3,9 +3,9 @@ import { ArrowLeft, Calendar, Gauge, MapPin, Settings2 } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { vehicleSchema } from '../lib/schema'
-import { SITE } from '../data/site'
 import { buildBikeMessage, formatKm, formatPrice } from '../lib/format'
 import { usePageMeta } from '../hooks/usePageMeta'
+import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { BikeGallery } from '../components/motorcycles/BikeGallery'
 import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
 import { Button } from '../components/ui/Button'
@@ -13,6 +13,7 @@ import { Button } from '../components/ui/Button'
 export function BikeDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { motos, carregando } = useCatalogo()
+  const { config } = useSiteConfig()
   const bike = motos.find((m) => m.slug === slug)
 
   // JSON-LD precisa estar antes do early-return do 404
@@ -31,7 +32,7 @@ export function BikeDetail() {
   // mostrar "não encontrada" — senão o Google indexaria um 404 falso.
   if (!bike && carregando) {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center pt-16" role="status">
+      <div className="flex min-h-[70vh] items-center justify-center pt-[71px] lg:pt-[79px]" role="status">
         <span className="sr-only">Carregando</span>
         <span
           aria-hidden="true"
@@ -43,7 +44,7 @@ export function BikeDetail() {
 
   if (!bike) {
     return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center px-5 pt-16 text-center">
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-5 pt-[71px] text-center lg:pt-[79px]">
         <p className="eyebrow">Erro 404</p>
         <h1 className="h-display mt-3 text-3xl sm:text-4xl">
           Motocicleta não encontrada
@@ -64,7 +65,7 @@ export function BikeDetail() {
   const temEspecificacoes = bike.especificacoes.length > 0
 
   return (
-    <div className="pt-16">
+    <div className="pt-[71px] lg:pt-[79px]">
       <div className="container-site py-8 sm:py-10">
         <Link
           to="/estoque"
@@ -88,19 +89,21 @@ export function BikeDetail() {
             {titulo} <span className="text-steel-400">{bike.ano}</span>
           </h1>
 
-          <p className="mt-4 font-display text-4xl font-semibold text-paper">
-            {formatPrice(bike.preco)}
+          <p className="mt-5 font-display">
+            <span className="etiqueta-preco py-2.5 text-3xl leading-none sm:text-4xl">
+              <span>{formatPrice(bike.preco)}</span>
+            </span>
           </p>
 
           <span
-            className={`mt-4 inline-block rounded px-2.5 py-1 font-display text-[11px] font-semibold tracking-[0.14em] uppercase ${
-              disponivel ? 'bg-white/10 text-paper' : 'bg-steel-600/70 text-paper'
+            className={`mt-4 inline-block rounded px-2.5 py-1 text-[11px] font-semibold tracking-[0.14em] uppercase ${
+              disponivel ? 'bg-ok/15 text-ok ring-1 ring-inset ring-ok/30' : 'bg-night-800 text-steel-400 ring-1 ring-inset ring-line-forte'
             }`}
           >
             {disponivel ? 'Disponível' : 'Indisponível'}
           </span>
 
-          <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
+          <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
             <div className="bg-night-900 p-4">
               <dt className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-steel-400 uppercase">
                 <Calendar className="size-3.5" aria-hidden="true" /> Ano
@@ -138,7 +141,7 @@ export function BikeDetail() {
 
           <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-steel-500">
             <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-            {SITE.endereco.rua} — {SITE.endereco.cidadeUf}. Visite a loja para
+            {config.enderecoRua} — {config.enderecoCidadeUf}. Visite a loja para
             conferir o veículo pessoalmente.
           </p>
         </aside>
@@ -161,7 +164,7 @@ export function BikeDetail() {
             {temEspecificacoes ? (
               <div>
                 <h2 className="h-display text-2xl">Especificações</h2>
-                <dl className="mt-4 divide-y divide-white/10 border-y border-white/10">
+                <dl className="mt-4 divide-y divide-line border-y border-line">
                   {bike.especificacoes.map((spec) => (
                     <div key={spec.label} className="flex items-center justify-between gap-4 py-3">
                       <dt className="text-sm text-steel-400">{spec.label}</dt>

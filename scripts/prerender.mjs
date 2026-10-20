@@ -188,7 +188,7 @@ async function run() {
     const ficha = fichaDe(moto, base)
     const titulo = `${escapar(ficha.titulo)} | DG Motos`
     const resumo = escapar(ficha.resumo)
-    const imagem = ficha.fotos[0] ?? absoluta(base, '/hero/showroom.webp')
+    const imagem = ficha.fotos[0] ?? absoluta(base, '/hero/showroom-2026-02.webp')
 
     // Mesmo formato do JSON-LD emitido em runtime por src/lib/schema.ts,
     // para o buscador ver exatamente a mesma coisa antes e depois do JS.

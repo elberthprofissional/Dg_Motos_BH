@@ -47,53 +47,55 @@ export function Header() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0c0c0c]/95 backdrop-blur-md transition-shadow duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 border-b border-line bg-night-950/95 backdrop-blur-md transition-shadow duration-300 ${
         scrolled ? 'shadow-lg shadow-black/40' : ''
       }`}
     >
-      {/* Faixa vermelha fina no topo — assinatura visual da barra */}
-      <div aria-hidden="true" className="h-[3px] w-full bg-gradient-to-r from-[#d91f32] via-[#d91f32] to-[#8a1220]" />
+      {/* Faixa vermelha fina no topo — assinatura visual da barra.
+          Vermelho sólido da marca (sem gradiente): é um fio de identidade,
+          não um efeito. */}
+      <div aria-hidden="true" className="h-[3px] w-full bg-brand-500" />
 
-      <div className="relative flex h-16 items-center justify-between gap-4 lg:h-[72px]">
-        {/* ---------------------------------------------------------
-            Coluna esquerda: menu. No celular é o hamburger (44px de
-            alvo). No desktop entra o nav inline, e o hamburger some.
-        --------------------------------------------------------- */}
-        <div className="flex flex-1 items-center justify-start">
+      {/* Composição em 3 colunas: menu | marca | ações.
+          As laterais são `minmax(0,1fr)` — iguais e livres para encolher —
+          então a coluna central (auto, do tamanho da marca) fica com o
+          centro sempre no centro da barra. O logo não depende da largura
+          dos links para se centralizar: centralização geométrica de verdade,
+          mesmo que o menu e as ações cresçam de forma diferente. */}
+      <div className="container-site grid h-[68px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 lg:h-[76px]">
+        {/* ---------------- Zona esquerda: navegação ---------------- */}
+        <div className="flex items-center justify-start">
           <button
             type="button"
             onClick={() => setOpen(!open)}
             aria-expanded={open}
             aria-controls="menu-mobile"
             aria-label={open ? 'Fechar menu' : 'Abrir menu'}
-            className="grid size-11 place-items-center text-[#f5f5f5] transition-colors hover:text-[#d91f32] lg:hidden"
+            className="-ml-2 grid size-11 place-items-center text-paper transition-colors hover:text-brand-500 lg:hidden"
           >
             {open ? <X className="size-6" aria-hidden="true" /> : <Menu className="size-6" aria-hidden="true" />}
           </button>
 
-          <nav
-            aria-label="Navegação principal"
-            className="hidden items-center gap-7 lg:flex"
-          >
+          <nav aria-label="Navegação principal" className="hidden items-center gap-8 lg:flex">
             {NAV.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `relative font-display text-[13px] font-medium tracking-[0.18em] uppercase transition-colors duration-200 ${
-                    isActive ? 'text-[#d91f32]' : 'text-[#b3b3b3] hover:text-[#f5f5f5]'
+                  `relative py-1 text-[13px] font-medium tracking-[0.02em] transition-colors duration-200 ${
+                    isActive ? 'text-paper' : 'text-steel-400 hover:text-paper'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     {item.label}
-                    {/* Sublinha vermelha só no ativo: nada de animação de
-                        hover aqui, a cor já comunica. */}
+                    {/* Indicador ativo: um fio curto e fino, centrado sob o
+                        rótulo — não uma faixa que ocupa a altura toda. */}
                     <span
                       aria-hidden="true"
-                      className={`absolute inset-x-0 -bottom-2 h-[2px] bg-[#d91f32] transition-opacity duration-200 ${
-                        isActive ? 'opacity-100' : 'opacity-0'
+                      className={`absolute -bottom-1.5 left-1/2 h-px -translate-x-1/2 bg-brand-500 transition-all duration-200 ${
+                        isActive ? 'w-5 opacity-100' : 'w-0 opacity-0'
                       }`}
                     />
                   </>
@@ -103,34 +105,37 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Logo centrada absolutamente: 3 zonas (menu | logo | ação) */}
+        {/* ---------------- Zona central: marca DG Motos ----------------
+            Lockup horizontal (símbolo + nome): ocupa menos altura que a
+            versão empilhada, libera a barra para ficar mais baixa e dá
+            mais presença ao nome, que é o que a marca precisa comunicar. */}
         <Link
           to="/"
           aria-label="DG Motos — Página inicial"
-          className="absolute left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 transition-opacity duration-200 hover:opacity-90"
+          className="group flex items-center gap-2.5 justify-self-center transition-opacity duration-200 hover:opacity-90"
         >
           <img
             src="/logo.webp"
             alt=""
             aria-hidden="true"
-            width={40}
-            height={40}
-            className="size-9 object-contain"
+            width={44}
+            height={44}
+            className="h-10 w-10 object-contain"
           />
-          <span className="font-display text-xl leading-none font-bold tracking-[0.18em] text-[#f5f5f5] uppercase">
+          <span className="font-display text-lg leading-none font-semibold tracking-[0.04em] text-paper uppercase sm:text-[22px]">
             DG Motos
           </span>
         </Link>
 
-        {/* Ação: WhatsApp (se configurado) senão Contato */}
-        <div className="flex flex-1 items-center justify-end gap-3">
+        {/* ---------------- Zona direita: ações ---------------- */}
+        <div className="flex items-center justify-end gap-2.5">
           {config.instagramUrl ? (
             <a
               href={config.instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Instagram ${config.instagramHandle ?? 'da DG Motos'}`}
-              className="hidden size-10 place-items-center rounded-sm border border-white/15 text-[#b3b3b3] transition-colors hover:border-[#d91f32] hover:text-[#d91f32] xl:grid"
+              className="hidden size-10 place-items-center rounded-md border border-line-forte text-steel-400 transition-colors hover:border-ok/50 hover:text-ok md:grid"
             >
               <InstagramIcon className="size-4" aria-hidden="true" />
             </a>
@@ -141,18 +146,18 @@ export function Header() {
               href={wa}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-10 items-center gap-2 rounded-sm bg-[#d91f32] px-5 font-display text-xs font-semibold tracking-[0.18em] text-white uppercase transition-colors duration-200 hover:bg-[#b71c2b]"
+              className="inline-flex h-10 items-center gap-2 rounded-md bg-brand-500 px-4 text-[13px] font-semibold text-white transition-colors duration-200 hover:bg-brand-600 active:bg-brand-700 sm:px-5"
             >
               <MessageCircle className="size-4" aria-hidden="true" />
-              Contato
+              <span className="hidden sm:inline">Contato</span>
             </a>
           ) : (
             <Link
               to="/contato"
-              className="inline-flex h-10 items-center gap-2 rounded-sm bg-[#d91f32] px-5 font-display text-xs font-semibold tracking-[0.18em] text-white uppercase transition-colors duration-200 hover:bg-[#b71c2b]"
+              className="inline-flex h-10 items-center gap-2 rounded-md bg-brand-500 px-4 text-[13px] font-semibold text-white transition-colors duration-200 hover:bg-brand-600 active:bg-brand-700 sm:px-5"
             >
               <MessageCircle className="size-4" aria-hidden="true" />
-              Contato
+              <span className="hidden sm:inline">Contato</span>
             </Link>
           )}
         </div>
@@ -162,20 +167,20 @@ export function Header() {
       <div
         id="menu-mobile"
         inert={!open}
-        className={`fixed inset-x-0 bottom-0 top-16 z-50 overflow-y-auto overscroll-contain bg-[#0c0c0c] transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-x-0 bottom-0 top-[71px] z-50 overflow-y-auto overscroll-contain bg-night-950 transition-transform duration-300 lg:hidden ${
           open ? 'translate-x-0' : 'pointer-events-none -translate-x-full'
         }`}
       >
         <nav aria-label="Navegação mobile" className="container-site flex flex-col pt-6 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
-          <ul className="flex flex-col divide-y divide-white/5">
+          <ul className="flex flex-col divide-y divide-line">
             {NAV.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
-                    `flex min-h-16 items-center font-display text-2xl font-semibold tracking-[0.14em] uppercase transition-colors duration-200 ${
-                      isActive ? 'text-[#d91f32]' : 'text-[#f5f5f5] hover:text-[#d91f32]'
+                    `flex min-h-16 items-center font-display text-2xl font-semibold tracking-[0.08em] uppercase transition-colors duration-200 ${
+                      isActive ? 'text-brand-500' : 'text-paper hover:text-brand-500'
                     }`
                   }
                 >
@@ -192,7 +197,7 @@ export function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setOpen(false)}
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-sm bg-[#d91f32] px-5 font-display text-sm font-semibold tracking-[0.18em] text-white uppercase"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-sm bg-brand-500 px-5 font-display text-sm font-semibold tracking-[0.18em] text-white uppercase transition-colors hover:bg-brand-600"
               >
                 <MessageCircle className="size-4" aria-hidden="true" />
                 Falar com a loja
@@ -201,7 +206,7 @@ export function Header() {
               <Link
                 to="/contato"
                 onClick={() => setOpen(false)}
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-sm bg-[#d91f32] px-5 font-display text-sm font-semibold tracking-[0.18em] text-white uppercase"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-sm bg-brand-500 px-5 font-display text-sm font-semibold tracking-[0.18em] text-white uppercase transition-colors hover:bg-brand-600"
               >
                 <MessageCircle className="size-4" aria-hidden="true" />
                 Falar com a loja
@@ -214,7 +219,7 @@ export function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setOpen(false)}
-                className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-sm border border-white/15 px-5 font-display text-sm font-semibold tracking-[0.18em] text-[#f5f5f5] uppercase transition-colors hover:border-[#d91f32] hover:text-[#d91f32]"
+                className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-sm border border-line-forte px-5 font-display text-sm font-semibold tracking-[0.18em] text-paper uppercase transition-colors hover:border-brand-500/60 hover:text-brand-500"
               >
                 <InstagramIcon className="size-4" aria-hidden="true" />
                 {config.instagramHandle ?? 'Instagram'}
@@ -222,7 +227,7 @@ export function Header() {
             ) : null}
           </div>
 
-          <p className="mt-10 text-center font-display text-xs tracking-[0.18em] text-[#6b6b6b] uppercase">
+          <p className="mt-10 text-center font-display text-xs tracking-[0.14em] text-steel-600 uppercase">
             Av. Basílio da Gama, 139 — Belo Horizonte, MG
           </p>
         </nav>
@@ -231,7 +236,7 @@ export function Header() {
       <div
         aria-hidden="true"
         onClick={() => setOpen(false)}
-        className={`fixed inset-0 top-16 z-40 bg-black/80 transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 top-[71px] z-40 bg-black/80 transition-opacity duration-300 lg:hidden ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       />

@@ -33,9 +33,9 @@ export function EstadoVazio({
   className = '',
   compacto = false,
 }: {
-  icone: ReactNode
+  icone?: ReactNode
   titulo: string
-  descricao: string
+  descricao?: string
   acao?: ReactNode
   className?: string
   /** Versão reduzida para usar dentro de um card, não como página. */
@@ -44,28 +44,34 @@ export function EstadoVazio({
   return (
     <div
       className={`flex flex-col items-center text-center ${
-        compacto ? 'px-4 py-7' : 'px-6 py-12'
+        compacto ? 'px-4 py-10' : 'px-6 py-12'
       } ${className}`}
       role="note"
     >
-      <span
-        aria-hidden="true"
-        className={`grid place-items-center rounded-lg border border-white/10 bg-white/5 text-steel-500 ${
-          compacto ? 'size-9' : 'size-11'
-        }`}
+      {icone && (
+        <span
+          aria-hidden="true"
+          className={`text-steel-600 ${compacto ? 'size-6' : 'size-7'}`}
+        >
+          {icone}
+        </span>
+      )}
+      <p
+        className={`font-display font-semibold tracking-wide text-steel-400 uppercase ${
+          icone ? 'mt-3.5' : ''
+        } ${compacto ? 'text-sm' : 'text-base'}`}
       >
-        {icone}
-      </span>
-      <p className="mt-3.5 font-display text-sm font-semibold tracking-wide text-steel-300 uppercase">
         {titulo}
       </p>
-      <p
-        className={`mt-1.5 leading-relaxed text-steel-500 ${
-          compacto ? 'max-w-[36ch] text-xs' : 'max-w-sm text-sm'
-        }`}
-      >
-        {descricao}
-      </p>
+      {descricao && (
+        <p
+          className={`mt-1.5 leading-relaxed text-steel-600 ${
+            compacto ? 'max-w-[36ch] text-xs' : 'max-w-sm text-sm'
+          }`}
+        >
+          {descricao}
+        </p>
+      )}
       {acao && <div className="mt-4">{acao}</div>}
     </div>
   )

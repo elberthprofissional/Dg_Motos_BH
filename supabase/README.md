@@ -8,6 +8,7 @@ em `migrations/` é aplicado uma vez, na ordem do nome.
 | `20260101000000_init_schema.sql` | Cria `motorcycles` e `motorcycle_images`, índices e o trigger de `updated_at`. |
 | `20260101000001_rls_storage.sql` | Liga o RLS, cria as políticas e o bucket público `motos` no Storage. |
 | `20260101000002_seed.sql` | Insere 5 motos de **demonstração** (só quando a tabela está vazia). |
+| `20260101000003_corrige_esquema.sql` | **Corrige um banco incompleto** (sem `status` / sem `motorcycle_images`). Rode se o `/admin` aparecer vazio. Idempotente. |
 
 ## Como aplicar
 
@@ -21,6 +22,18 @@ Não há CLI do Supabase configurada: as migrações são aplicadas pelo painel.
 
 Os scripts são idempotentes (`create ... if not exists`, `drop policy if
 exists`), então rodar de novo não quebra nem duplica.
+
+## Banco incompleto (painel vazio)
+
+Se a página inicial mostra as motos mas o painel `/admin` diz
+"Nenhuma moto no estoque", o banco provavelmente ficou pela metade: uma
+tabela `motorcycles` antiga (sem a coluna `status`) e nenhuma
+`motorcycle_images`. Como `create table if not exists` **não** altera
+tabela existente, reaplicar o `init_schema` não resolve.
+
+Nesse caso, rode `20260101000003_corrige_esquema.sql`: ele adiciona a
+coluna que falta, cria a tabela de imagens com a FK e religa as fotos das
+5 motos — sem apagar nada.
 
 ## Modelo de dados
 

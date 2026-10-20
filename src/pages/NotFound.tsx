@@ -5,7 +5,7 @@ export function NotFound() {
   usePageMeta('Página não encontrada | DG Motos')
 
   return (
-    <div className="flex min-h-[80vh] flex-col items-center justify-center px-5 pt-16 text-center">
+    <div className="flex min-h-[80vh] flex-col items-center justify-center px-5 pt-[71px] text-center lg:pt-[79px]">
       <p className="font-display text-7xl font-semibold text-brand-500">404</p>
       <h1 className="h-display mt-4 text-3xl sm:text-4xl">
         Essa pista não existe
