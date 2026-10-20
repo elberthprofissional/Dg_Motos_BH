@@ -41,6 +41,19 @@ export function marcasDisponiveis(motos: Motorcycle[]): string[] {
   )
 }
 
+/**
+ * Categorias presentes no estoque, na ordem canônica de CATEGORIAS.
+ *
+ * O filtro público só oferece o que existe de verdade: um chip "Scooter"
+ * sem nenhuma scooter no catálogo é um filtro que sempre leva ao estado
+ * vazio — ruído, não ajuda. Quem consome decide: com menos de duas
+ * categorias distintas não vale mostrar o controle.
+ */
+export function categoriasDisponiveis(motos: Motorcycle[]): MotorcycleCategory[] {
+  const presentes = new Set(motos.map((m) => m.categoria).filter(Boolean))
+  return CATEGORIAS.filter((c) => presentes.has(c))
+}
+
 export function filtrarMotos(
   motos: Motorcycle[],
   f: BikeFilterState,

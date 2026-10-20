@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, MapPin, MessageCircle } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
@@ -21,12 +21,38 @@ const HERO_BG = '/hero/showroom-2026-02.webp'
 
 function Carrossel({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
+  // Pontas da trilha: a seta some do estado "clicável" quando não há
+  // onde rolar — controle puro é decoração, e decoração some.
+  const [ponta, setPonta] = useState({ inicio: true, fim: true })
+
+  const atualizarPontas = () => {
+    const el = ref.current
+    if (!el) return
+    setPonta({
+      inicio: el.scrollLeft <= 4,
+      fim: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4,
+    })
+  }
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    atualizarPontas()
+    el.addEventListener('scroll', atualizarPontas, { passive: true })
+    window.addEventListener('resize', atualizarPontas)
+    return () => {
+      el.removeEventListener('scroll', atualizarPontas)
+      window.removeEventListener('resize', atualizarPontas)
+    }
+  }, [children])
 
   const rolar = (direcao: -1 | 1) => {
     if (!ref.current) return
     const card = ref.current.querySelector<HTMLElement>('[data-carousel-item]')
     const step = card ? card.clientWidth + 24 : Math.round(ref.current.clientWidth * 0.7)
-    ref.current.scrollBy({ left: direcao * step, behavior: 'smooth' })
+    // Quem pediu menos movimento ganha salto em vez de animação.
+    const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ref.current.scrollBy({ left: direcao * step, behavior: suave ? 'smooth' : 'auto' })
   }
 
   return (
@@ -34,8 +60,9 @@ function Carrossel({ children }: { children: React.ReactNode }) {
       <button
         type="button"
         onClick={() => rolar(-1)}
+        disabled={ponta.inicio}
         aria-label="Motos em destaque - anterior"
-        className="absolute top-1/2 -left-4 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-night-900 text-steel-300 transition-colors duration-200 hover:border-line-forte hover:text-paper lg:-left-5 lg:grid"
+        className="absolute top-1/2 -left-4 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-night-900 text-steel-300 transition-colors duration-200 hover:border-line-forte hover:text-paper disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-line disabled:hover:text-steel-300 lg:-left-5 lg:grid"
       >
         <ChevronLeft className="size-5" aria-hidden="true" />
       </button>
@@ -50,8 +77,9 @@ function Carrossel({ children }: { children: React.ReactNode }) {
       <button
         type="button"
         onClick={() => rolar(1)}
+        disabled={ponta.fim}
         aria-label="Motos em destaque - próximo"
-        className="absolute top-1/2 -right-4 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-night-900 text-steel-300 transition-colors duration-200 hover:border-line-forte hover:text-paper lg:-right-5 lg:grid"
+        className="absolute top-1/2 -right-4 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-night-900 text-steel-300 transition-colors duration-200 hover:border-line-forte hover:text-paper disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-line disabled:hover:text-steel-300 lg:-right-5 lg:grid"
       >
         <ChevronRight className="size-5" aria-hidden="true" />
       </button>
@@ -66,7 +94,7 @@ export function Home() {
 
   usePageMeta(
     'DG Motos — Realizando Sonhos | Motocicletas seminovas em Belo Horizonte',
-    'Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque conferido, procedência verificada e negociação direta pelo WhatsApp.',
+    'Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque com fotos, ficha e preço em cada anúncio; atendimento direto pelo WhatsApp.',
   )
   useJsonLd(autoDealerSchema(config))
 
@@ -109,7 +137,7 @@ export function Home() {
                 Motos em destaque
               </h1>
               <p className="mt-3 max-w-xl text-base text-steel-400">
-                Procedência conferida, preço na vitrine e conversa direta com a loja.
+                Ano, cilindrada e preço em cada anúncio — a conversa é direto com a loja.
               </p>
             </div>
             <Link

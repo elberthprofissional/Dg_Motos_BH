@@ -49,8 +49,8 @@ export function Footer() {
             </span>
           </div>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-steel-400">
-            Motocicletas seminovas selecionadas em Belo Horizonte. Atendimento
-            direto, procedência conferida e negociação sem complicação.
+            Motocicletas seminovas em Belo Horizonte. Atendimento direto pelo
+            WhatsApp e negociação sem complicação.
           </p>
         </div>
 

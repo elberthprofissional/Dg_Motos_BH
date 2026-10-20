@@ -3,10 +3,10 @@ import type { BikeFilterState, Motorcycle } from '../../types'
 import {
   ANO_MAX,
   ANO_MIN,
-  CATEGORIAS,
   ORDENACOES,
   PRECO_MAX,
   PRECO_MIN,
+  categoriasDisponiveis,
   marcasDisponiveis,
   temFiltroAtivo,
 } from '../../lib/filters'
@@ -36,7 +36,39 @@ export function BikeFilters({
     onChange({ ...filtros, [key]: value })
 
   const marcas = marcasDisponiveis(motos)
+  const categorias = categoriasDisponiveis(motos)
   const lateral = layout === 'lateral'
+
+  // Chips de categoria só com o que existe no estoque. Com menos de duas
+  // categorias distintas o controle não ajuda ninguém — some.
+  const seletorDeCategoria =
+    categorias.length >= 2 ? (
+      <div role="group" aria-label="Categoria">
+        <span aria-hidden="true" className="field-label">
+          Categoria
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {(['todas', ...categorias] as BikeFilterState['categoria'][]).map((valor) => {
+            const ativa = filtros.categoria === valor
+            return (
+              <button
+                key={valor}
+                type="button"
+                aria-pressed={ativa}
+                onClick={() => set('categoria', valor)}
+                className={`min-h-11 rounded-md border px-3.5 font-display text-xs font-semibold tracking-[0.12em] uppercase transition-colors ${
+                  ativa
+                    ? 'border-brand-500 bg-brand-500/15 text-brand-500'
+                    : 'border-line-forte bg-night-800 text-steel-400 hover:border-white/25 hover:text-paper'
+                }`}
+              >
+                {valor === 'todas' ? 'Todas' : valor}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    ) : null
 
   return (
     <form
@@ -64,7 +96,13 @@ export function BikeFilters({
         </div>
       )}
 
+      {lateral && seletorDeCategoria}
+
       <div className={lateral ? 'flex flex-col gap-5' : 'grid gap-4 md:grid-cols-2 lg:grid-cols-4'}>
+        {!lateral && seletorDeCategoria && (
+          <div className="md:col-span-2 lg:col-span-4">{seletorDeCategoria}</div>
+        )}
+
         {/* Busca */}
         <div className={lateral ? '' : 'lg:col-span-2'}>
           <label htmlFor="filtro-busca" className="field-label">
@@ -101,28 +139,6 @@ export function BikeFilters({
             {marcas.map((m) => (
               <option key={m} value={m}>
                 {m}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Categoria */}
-        <div>
-          <label htmlFor="filtro-categoria" className="field-label">
-            Categoria
-          </label>
-          <select
-            id="filtro-categoria"
-            value={filtros.categoria}
-            onChange={(e) =>
-              set('categoria', e.target.value as BikeFilterState['categoria'])
-            }
-            className="select"
-          >
-            <option value="todas">Todas as categorias</option>
-            {CATEGORIAS.map((c) => (
-              <option key={c} value={c}>
-                {c}
               </option>
             ))}
           </select>

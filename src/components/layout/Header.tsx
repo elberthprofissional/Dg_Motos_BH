@@ -228,7 +228,7 @@ export function Header() {
           </div>
 
           <p className="mt-10 text-center font-display text-xs tracking-[0.14em] text-steel-600 uppercase">
-            Av. Basílio da Gama, 139 — Belo Horizonte, MG
+            {config.enderecoRua} — {config.enderecoCidadeUf}
           </p>
         </nav>
       </div>
