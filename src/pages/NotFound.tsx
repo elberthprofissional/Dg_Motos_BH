@@ -1,4 +1,4 @@
-import { usePageMeta } from '../hooks/useNavigation'
+import { usePageMeta } from '../hooks/usePageMeta'
 import { Button } from '../components/ui/Button'
 
 export function NotFound() {

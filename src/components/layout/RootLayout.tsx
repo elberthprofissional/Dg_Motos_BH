@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { useScrollToTop, useRevealOnScroll } from '../../hooks/useNavigation'
+import { useScrollToTop } from '../../hooks/useScroll'
+import { useRevealOnScroll } from '../../hooks/useReveal'
 import { CatalogoContexto } from '../../hooks/useCatalogo'
 import type { EstadoCatalogo } from '../../hooks/useCatalogo'
 import { buscarCatalogo } from '../../lib/catalog'
@@ -67,7 +68,5 @@ function CatalogoProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const valor = useMemo(() => estado, [estado])
-
-  return <CatalogoContexto value={valor}>{children}</CatalogoContexto>
+  return <CatalogoContexto value={estado}>{children}</CatalogoContexto>
 }

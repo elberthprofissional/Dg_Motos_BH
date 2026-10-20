@@ -10,6 +10,12 @@ O site tem duas camadas:
 Nada do passo 2 é obrigatório para o site no ar. Se as variáveis de
 ambiente não existirem, o site simplesmente ignora o Supabase.
 
+> **PWA:** o painel também é instalável como app (manifest em
+> `public/manifest.webmanifest`). O app instalado abre direto em
+> `/admin/login` — quem abriu o aplicativo quer gerenciar estoque, não
+> passear pela vitrine. No navegador, `/` continua mostrando o catálogo.
+> O botão de instalação fica na aba **Configurações**.
+
 ---
 
 ## 1. Criar o projeto
@@ -72,6 +78,17 @@ Entre em `/admin` e use a aba **Estoque**. No cadastro:
 - **Status**: `disponivel`, `indisponivel` ou `vendida`. Só as
   `disponivel` aparecem no site e no sitemap.
 
+### Aba Configurações
+
+O contato, o Instagram, o endereço e os horários saem de
+`src/data/site.ts` (padrão de fábrica). A aba **Configurações** deixa o
+dono editar isso e salvar; o valor vai para o `localStorage` e a vitrine
+passa a usá-lo na hora, sem novo build. Duas ressalvas:
+
+- vale só **neste navegador/aparelho** — os visitantes continuam vendo o
+  padrão de fábrica até essa config migrar para uma tabela do Supabase;
+- o mesmo local tem o botão **Instalar o aplicativo** (ver PWA abaixo).
+
 ---
 
 ## Publicar mudanças (importante para o SEO)
@@ -129,5 +146,6 @@ embaladas no JavaScript e ficam públicas para qualquer visitante.
 | Login diz "E-mail ou senha incorretos" | Usuário não criado em Authentication → Users, ou e-mail não confirmado. |
 | Fotos não sobem | Bucket `motos` não criado (rode `..._rls_storage.sql`) ou política de Storage faltando. |
 | `duplicate key` ao salvar | Já existe uma moto com o mesmo slug. Troque o modelo/ano ou edite o slug. |
-| Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). |
+| Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). A config da loja (aba Configurações) é exceção: vale na hora, mas só no navegador onde foi salva. |
+| Instalar o app não aparece | Precisa HTTPS e o manifest acessível. No iPhone/Safari não há prompt: use *Compartilhar → Adicionar à Tela de Início*. |
 | `npm run build` usa o catálogo antigo | Faltam as chaves no `.env` **no ambiente do build**, não só localmente. |

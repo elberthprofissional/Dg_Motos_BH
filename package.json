@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "convert-images": "node scripts/convert-images.mjs",
+    "marcas": "node scripts/baixar-marcas.mjs",
+    "icones-pwa": "node scripts/gerar-icones-pwa.mjs",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:watch": "vitest",

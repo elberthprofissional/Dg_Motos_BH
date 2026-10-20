@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Lock } from 'lucide-react'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
-import { buildDefaultMessage, useWhatsappLink } from '../../lib/format'
+import { buildDefaultMessage } from '../../lib/format'
+import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { buildMapsRouteUrl } from '../../lib/maps'
 
 const NAV = [

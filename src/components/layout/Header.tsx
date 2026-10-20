@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Menu, MessageCircle, X } from 'lucide-react'
-import { buildDefaultMessage, useWhatsappLink } from '../../lib/format'
-import { useScrolled } from '../../hooks/useNavigation'
+import { buildDefaultMessage } from '../../lib/format'
+import { useWhatsappLink } from '../../hooks/useWhatsappLink'
+import { useScrolled } from '../../hooks/useScroll'
 import { InstagramIcon } from '../ui/InstagramIcon'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
 

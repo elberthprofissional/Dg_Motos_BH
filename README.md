@@ -1,7 +1,8 @@
-# DG Motos — site institucional e catálogo
+# DG Motos — site institucional, catálogo e painel
 
 Loja de motocicletas seminovas em Belo Horizonte, MG. Site estático
-(React + TypeScript + Vite). O catálogo tem duas camadas:
+(React + TypeScript + Vite) que também é **instalável como app** (PWA) no
+celular do dono. O catálogo tem duas camadas:
 
 - **sem configuração**, vem de `src/data/motorcycles.ts` (o site funciona
   sozinho, sem backend);
@@ -34,6 +35,8 @@ na primeira vez e abre o navegador.
 | `npm run typecheck`     | TypeScript sem emitir arquivos                           |
 | `npm test`              | Vitest (testes de `src/lib`)                             |
 | `npm run convert-images`| Converte fotos de `img/` para WebP em `public/`          |
+| `npm run marcas`        | Baixa/converte os logos das marcas para `public/marcas/` |
+| `npm run icones-pwa`    | Gera os ícones do app em `public/icons/`                 |
 
 ## Estrutura
 
@@ -45,16 +48,25 @@ docs/
   PENDENCIAS-CLIENTE.md
 src/
   data/         site.ts (contato/endereço) e motorcycles.ts (fallback)
-  lib/          filtros, formatação, schema.org, catálogo, painel, supabase
-  hooks/        usePageMeta, useJsonLd, useCatalogo, auth
+  lib/          funções puras: catálogo, filtros, formatação, schema.org,
+                config da loja, marcas, supabase
+  hooks/        useCatalogo, useAuth, useWhatsappLink, usePageMeta,
+                useScroll, useReveal, useInstalarPwa, contexto de config
   components/
     layout/     Header, Footer, RootLayout
-    admin/      MotoForm, PhotoUploader, EstoqueTab
-    motorcycles/ BikeCard, BikeFilters, BikeGallery
+    admin/      MotoForm, PhotoUploader, EstoqueTab, ConfiguracoesTab,
+                InstalarApp, SeletorMarca
+    motorcycles/ BikeCard, BikeFilters, BikeGallery, MarcaGrid
     ui/         Button, SmartImage, SectionHeading
   pages/        rotas (uma por página, code-split com React.lazy)
+public/
+  manifest.webmanifest + sw.js   PWA (app instalável)
+  icons/                         ícones do app
+  marcas/                        logos dos fabricantes
 scripts/
-  prerender.mjs  HTML estático das fichas + sitemap + robots
+  prerender.mjs          HTML estático das fichas + sitemap + robots
+  gerar-icones-pwa.mjs   ícones do PWA a partir de public/logo.webp
+  baixar-marcas.mjs      logos das marcas para public/marcas/
 ```
 
 ## Como o catálogo se comporta
@@ -91,9 +103,18 @@ da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
 - **A chave anônima do Supabase é pública por design.** Ela fica no
   bundle; a segurança do banco depende das políticas RLS em
   `supabase/migrations/`. A `service_role` nunca entra em `VITE_*`.
-- **Sem número de WhatsApp, todo CTA cai para `/contato`.** O helper
-  `useWhatsappLink()` (`src/lib/format.ts`) devolve `null` enquanto
-  `WHATSAPP_NUMBER` for `null`, e os componentes degradam sozinhos.
+- **Sem número de WhatsApp, todo CTA cai para `/contato`.** O hook
+  `useWhatsappLink()` (`src/hooks/useWhatsappLink.ts`) devolve `null`
+  enquanto `WHATSAPP_NUMBER` for `null`, e os componentes degradam
+  sozinhos.
+- **A config da loja tem dois níveis.** O padrão de fábrica vive em
+  `src/data/site.ts`; o que o dono salva em `/admin` vai para o
+  `localStorage` (`src/lib/configLoja.ts`) e a vitrine lê na hora via
+  `useSiteConfig` — sem esperar um novo build. A config salva vale só no
+  navegador onde foi gravada; os visitantes veem o padrão.
+- **O app instalado abre no login, não na vitrine.** `src/pages/Entrada.tsx`
+  checa o `display-mode: standalone`: no PWA instalado, `/` cai em
+  `/admin/login`; no navegador, mostra o catálogo.
 - **Fotos nunca são inventadas.** `img/` é a fonte; o script de conversão
   gera WebP e crops. Faltando foto, entra o placeholder local.
 - **As fotos ficam na tabela `motorcycle_images`.** Excluir uma moto
@@ -102,6 +123,21 @@ da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
 - **O `/admin` fica fora do `RootLayout` de propósito.** A vitrine e o painel
   são mundos separados: o dono não deve ver o menu da loja enquanto gerencia
   estoque. O link fica no rodapé, com cadeado, e o `robots.txt` bloqueia a rota.
+
+## App instalável (PWA)
+
+O painel pode ser instalado como aplicativo no celular do dono:
+
+- `public/manifest.webmanifest` — `display: standalone`, ícones *any* e
+  *maskable*; `start_url` aponta para `/admin/login`.
+- `public/sw.js` — service worker de **casca**: nunca cacheia HTML das
+  fichas nem chamadas ao Supabase, só o essencial do app. Registrado
+  apenas em produção (`src/main.tsx`), para o HMR não brigar com cache.
+- `src/components/admin/InstalarApp.tsx` — item nas Configurações com o
+  modal de instalação. No Chrome/Edge usa o prompt nativo
+  (`beforeinstallprompt`); no iOS mostra o passo a passo
+  *Compartilhar → Adicionar à Tela de Início*.
+- Ícones: `npm run icones-pwa` regenera a partir de `public/logo.webp`.
 
 ## Antes de publicar
 

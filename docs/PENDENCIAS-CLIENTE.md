@@ -4,6 +4,13 @@ Antes de publicar, os itens abaixo precisam de confirmação do proprietário.
 Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 **não pode ser inventado**.
 
+> **Onde editar contato/Instagram/endereço/horários:** o padrão de fábrica
+> vive em `src/data/site.ts` (itens 1–3 e 6 abaixo). O dono também pode
+> editar tudo isso na aba **Configurações** do `/admin`, que salva no
+> navegador e vale na hora — mas só naquele aparelho. Para valer para todos
+> os visitantes, ou o valor entra em `src/data/site.ts` (exige build) ou a
+> config migra para o Supabase (ver `docs/SUPABASE.md`).
+
 ## 1. WhatsApp oficial (crítico)
 
 - Arquivo: `src/data/site.ts` → `WHATSAPP_NUMBER`
@@ -78,8 +85,12 @@ Com o painel configurado (recomendado):
 1. Entre em `/admin` com o e-mail do dono.
 2. Aba **Estoque** → **Nova moto** (ou **Editar** numa existente).
 3. Preencha os dados, arraste as fotos e salve.
-4. Faça o deploy pelo painel do host (um `git push` na Vercel já basta)
+4. Para contato, Instagram, endereço e horários: aba **Configurações**.
+5. Faça o deploy pelo painel do host (um `git push` na Vercel já basta)
    para o Google e as páginas estáticas receberem a versão nova.
+
+No celular, a aba **Configurações** também tem **Instalar o aplicativo**:
+o painel vira um app em tela cheia, abrindo direto no login.
 
 Sem Supabase, o caminho é pelo código:
 

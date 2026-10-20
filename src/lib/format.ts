@@ -1,6 +1,4 @@
 import type { Motorcycle } from '../types'
-import { whatsappUrlCom } from './configLoja'
-import { useSiteConfig } from '../hooks/siteConfigContexto'
 
 export function formatPrice(value: number): string {
   return value.toLocaleString('pt-BR', {
@@ -23,17 +21,6 @@ export function buildBikeMessage(marca: string, modelo: string, ano: number): st
 /** CTA geral de negociação. */
 export function buildDefaultMessage(): string {
   return 'Olá! Vim pelo site da DG Motos e gostaria de negociar uma motocicleta.'
-}
-
-/**
- * Link wa.me com o número configurado pelo dono (banco) ou, na falta,
- * o de src/data/site.ts. `null` = sem número: o componente cai para /contato.
- *
- * Hook: só funciona dentro da vitrine (componentes sob o RootLayout).
- */
-export function useWhatsappLink(message: string): string | null {
-  const { config } = useSiteConfig()
-  return whatsappUrlCom(config, message)
 }
 
 export function bikeTitle(bike: Motorcycle): string {

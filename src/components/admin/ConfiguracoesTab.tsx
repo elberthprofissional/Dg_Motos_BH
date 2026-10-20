@@ -8,9 +8,8 @@ import {
   RotateCcw,
   Trash2,
 } from 'lucide-react'
-import { configPadrao } from '../../lib/configLoja'
+import { configPadrao, gravarConfig, lerConfig, limparConfig } from '../../lib/configLoja'
 import type { ConfigLoja } from '../../lib/configLoja'
-import { gravarSiteConfig, limparSiteConfig, lerSiteConfig } from '../../lib/configStorage'
 import { InstagramIcon } from '../ui/InstagramIcon'
 import { InstalarApp } from './InstalarApp'
 import { Toast } from '../ui/Toast'
@@ -178,7 +177,7 @@ function AcoesGerais({
 export function ConfiguracoesTab() {
   // A config nasce do storage: o componente é remontado a cada troca de
   // aba, então não há posição defasada entre abas.
-  const [config, setConfig] = useState<ConfigLoja>(() => lerSiteConfig())
+  const [config, setConfig] = useState<ConfigLoja>(() => lerConfig())
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [secao, setSecao] = useState<Secao | null>(null)
 
@@ -192,13 +191,13 @@ export function ConfiguracoesTab() {
   }
 
   function salvar() {
-    gravarSiteConfig(config)
+    gravarConfig(config)
     setSalvo(config)
     setFeedback({ tipo: 'ok', texto: 'Configurações salvas. O site já usa os novos valores.' })
   }
 
   function restaurar() {
-    limparSiteConfig()
+    limparConfig()
     const padrao = configPadrao()
     setConfig(padrao)
     setSalvo(padrao)

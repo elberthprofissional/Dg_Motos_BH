@@ -45,9 +45,3 @@ export const SITE = {
     longitude: -43.922776,
   },
 } as const
-
-export function getWhatsAppUrl(message?: string): string | null {
-  if (!WHATSAPP_NUMBER) return null
-  const text = message ? `?text=${encodeURIComponent(message)}` : ''
-  return `https://wa.me/${WHATSAPP_NUMBER}${text}`
-}

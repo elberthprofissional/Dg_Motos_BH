@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { atualizarStatus, buscarCatalogo, excluirMoto } from '../lib/catalog'
 import type { MotoParaSalvar } from '../lib/catalog'
-import { usePageMeta } from '../hooks/useNavigation'
+import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
 import { EstoqueTab } from '../components/admin/EstoqueTab'
 import { ConfiguracoesTab } from '../components/admin/ConfiguracoesTab'

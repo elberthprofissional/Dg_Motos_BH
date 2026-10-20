@@ -1,6 +1,6 @@
 import { MessageCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useWhatsappLink } from '../../lib/format'
+import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 
 interface WhatsAppCTAProps {
   message: string
