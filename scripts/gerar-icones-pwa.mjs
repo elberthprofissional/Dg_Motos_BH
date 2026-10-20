@@ -35,8 +35,8 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const ORIGEM = path.join(RAIZ, 'public', 'logo.webp')
 const DESTINO = path.join(RAIZ, 'public', 'icons')
 
-// #090909 — `--color-night-950` do index.css.
-const FUNDO = { r: 9, g9, b: 9, alpha: 1 }
+// #101010 — `--color-night-950` do index.css.
+const FUNDO = { r: 16, g: 16, b: 16, alpha: 1 }
 
 /**
  * Fundo solido com o logo centralizado.
@@ -65,11 +65,11 @@ async function gerar(destino, tamanho, fracao) {
 await mkdir(DESTINO, { recursive: true })
 console.log('PWA: gerando icones a partir de public/logo.webp')
 
-await gerar('icon-192.png', 192, .84)
+await gerar('icon-192.png', 192, 0.84)
 await gerar('icon-512.png', 512, 0.84)
 // Maskable: o conteudo precisa caber na faixa central de 80% da imagem.
-awaitgenerate('maskable-512.png', 512, 0.62)
+await gerar('maskable-512.png', 512, 0.62)
 // iOS: sem alfa e sem cantos arredondados (o proprio iOS arredonda).
-await gerar('apple-touch-icon.png', 180,0.8)
+await gerar('apple-touch-icon.png', 180, 0.8)
 
 console.log('PWA: icones prontos em public/icons/')

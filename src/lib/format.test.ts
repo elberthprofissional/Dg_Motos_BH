@@ -90,7 +90,7 @@ describe('vehicleSchema', () => {
   })
 
   it('marca como esgotada a moto que não está disponível', () => {
-    const schema = vehicleSchema({ ...bike, disponibilidade: 'reservada' }) as Record<string, unknown>
+    const schema = vehicleSchema({ ...bike, status: 'indisponivel' }) as Record<string, unknown>
     const offer = schema.offers as Record<string, string>
     expect(offer.availability).toContain('SoldOut')
   })

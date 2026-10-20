@@ -127,8 +127,8 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
           setArrastando(false)
           void enviar(e.dataTransfer.files)
         }}
-        className={`rounded-lg border border-dashed p-4 text-center transition-colors ${
-          arrastando ? 'border-brand-500 bg-brand-500/5' : 'border-white/15'
+        className={`rounded-lg border border-dashed p-6 text-center transition-colors sm:p-8 ${
+          arrastando ? 'border-brand-500 bg-brand-500/5' : 'border-white/15 bg-night-950/40'
         }`}
       >
         <input
@@ -140,22 +140,27 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
           className="sr-only"
           id="admin-fotos"
         />
-<label
-          htmlFor="admin-fotos"
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded bg-night-800 px-4 py-2 text-sm font-medium text-steel-300 transition-colors hover:text-paper"
-        >
+        <div className="mx-auto grid size-12 place-items-center rounded-full bg-brand-500/10 text-brand-500">
           {enviando ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            <Loader2 className="size-6 animate-spin" aria-hidden="true" />
           ) : (
-            <Upload className="size-4" aria-hidden="true" />
+            <ImagePlus className="size-6" aria-hidden="true" />
           )}
-          {enviando ? 'Enviando...' : 'Escolher fotos'}
+        </div>
+        <p className="mt-3 text-sm font-medium text-steel-300">
+          {enviando ? 'Enviando fotos...' : 'Arraste as fotos aqui ou'}
+        </p>
+        <label
+          htmlFor="admin-fotos"
+          className="btn btn-secondary btn-sm mt-3 inline-flex cursor-pointer"
+        >
+          {!enviando && <Upload className="size-4" aria-hidden="true" />}
+          {enviando ? 'Aguarde' : 'Escolher fotos'}
         </label>
         {/* "Arraste também" só faz sentido com mouse: no celular o input de
             arquivo é o caminho, e a frase só ocupava espaço. */}
-        <p className="mt-2 text-[11px] text-steel-500">
-          <span className="hidden sm:inline">Arraste também. </span>
-          Convertidas para WebP automaticamente. A primeira vira a capa do anúncio.
+        <p className="mt-3 text-[11px] text-steel-500">
+          <span className="hidden sm:inline">Convertidas para WebP automaticamente. </span>A primeira vira a capa do anúncio.
         </p>
       </div>
 

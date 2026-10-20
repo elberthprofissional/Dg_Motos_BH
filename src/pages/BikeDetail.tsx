@@ -1,15 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Calendar, Gauge, MapPin, Settings2 } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
-import { useRegisterView, useRecentlyViewed } from '../hooks/useRecentlyViewed'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { vehicleSchema } from '../lib/schema'
 import { SITE } from '../data/site'
 import { buildBikeMessage, formatKm, formatPrice } from '../lib/format'
 import { usePageMeta } from '../hooks/useNavigation'
 import { BikeGallery } from '../components/motorcycles/BikeGallery'
-import { SmartImage } from '../components/ui/SmartImage'
-import { PLACEHOLDER_CARD } from '../lib/placeholder'
 import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
 import { Button } from '../components/ui/Button'
 
@@ -17,8 +14,6 @@ export function BikeDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { motos, carregando } = useCatalogo()
   const bike = motos.find((m) => m.slug === slug)
-  useRegisterView(slug)
-  const recentes = useRecentlyViewed(slug)
 
   // JSON-LD precisa estar antes do early-return do 404
   useJsonLd(bike ? vehicleSchema(bike) : {})
@@ -64,7 +59,9 @@ export function BikeDetail() {
   }
 
   const titulo = `${bike.marca} ${bike.modelo}`
-  const disponivel = bike.disponibilidade === 'disponivel'
+  const disponivel = bike.status === 'disponivel'
+  const temDescricao = bike.descricao.trim().length > 0
+  const temEspecificacoes = bike.especificacoes.length > 0
 
   return (
     <div className="pt-16">
@@ -100,7 +97,7 @@ export function BikeDetail() {
               disponivel ? 'bg-white/10 text-paper' : 'bg-steel-600/70 text-paper'
             }`}
           >
-            {disponivel ? 'Disponível' : 'Reservada'}
+            {disponivel ? 'Disponível' : 'Indisponível'}
           </span>
 
           <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
@@ -134,11 +131,8 @@ export function BikeDetail() {
               label="Negociar pelo WhatsApp"
               className="w-full"
             />
-            <Button to="/financiamento" variant="outline" className="w-full">
-              Quero financiamento
-            </Button>
-            <Button to="/troca" variant="ghost" className="w-full">
-              Tenho uma moto para trocar
+            <Button to="/estoque" variant="outline" className="w-full">
+              Ver outras motos
             </Button>
           </div>
 
@@ -150,62 +144,36 @@ export function BikeDetail() {
         </aside>
       </div>
 
-      {/* Vistas recentemente */}
-      {recentes.length > 0 && (
-        <section className="border-t border-white/10">
-          <div className="container-site py-10">
-            <h2 className="font-display text-sm font-semibold tracking-[0.22em] text-steel-400 uppercase">
-              Vistas recentemente
-            </h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {recentes.slice(0, 4).map((r) => (
-                <Link
-                  key={r.id}
-                  to={`/moto/${r.slug}`}
-                  className="group surface flex items-center gap-3 rounded-lg p-3 transition-colors hover:border-white/25"
-                >
-                  <SmartImage
-                    src={r.imagens[0]?.src ?? PLACEHOLDER_CARD}
-                    alt={`${r.marca} ${r.modelo}`}
-                    className="h-14 w-20 shrink-0 rounded"
-                    width={80}
-                    height={56}
-                  />
-                  <span>
-                    <span className="block font-display text-sm font-semibold uppercase">
-                      {r.marca} {r.modelo}
-                    </span>
-                    <span className="block text-xs text-steel-400">
-                      {r.ano} · {formatPrice(r.preco)}
-                    </span>
-                  </span>
-                </Link>
-              ))}
-            </div>
+      {/* Descrição e especificações */}
+      {temDescricao || temEspecificacoes ? (
+        <section className="border-t border-line bg-night-900">
+          <div
+            className={`container-site grid gap-10 py-14 ${
+              temDescricao && temEspecificacoes ? 'lg:grid-cols-2' : ''
+            }`}
+          >
+            {temDescricao ? (
+              <div>
+                <h2 className="h-display text-2xl">Sobre esta moto</h2>
+                <p className="mt-4 leading-relaxed text-steel-300">{bike.descricao}</p>
+              </div>
+            ) : null}
+            {temEspecificacoes ? (
+              <div>
+                <h2 className="h-display text-2xl">Especificações</h2>
+                <dl className="mt-4 divide-y divide-white/10 border-y border-white/10">
+                  {bike.especificacoes.map((spec) => (
+                    <div key={spec.label} className="flex items-center justify-between gap-4 py-3">
+                      <dt className="text-sm text-steel-400">{spec.label}</dt>
+                      <dd className="text-sm font-medium text-paper">{spec.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ) : null}
           </div>
         </section>
-      )}
-
-      {/* Descrição e especificações */}
-      <section className="border-t border-white/10 bg-night-900">
-        <div className="container-site grid gap-10 py-14 lg:grid-cols-2">
-          <div>
-            <h2 className="h-display text-2xl">Sobre esta moto</h2>
-            <p className="mt-4 leading-relaxed text-steel-300">{bike.descricao}</p>
-          </div>
-          <div>
-            <h2 className="h-display text-2xl">Especificações</h2>
-            <dl className="mt-4 divide-y divide-white/10 border-y border-white/10">
-              {bike.especificacoes.map((spec) => (
-                <div key={spec.label} className="flex items-center justify-between gap-4 py-3">
-                  <dt className="text-sm text-steel-400">{spec.label}</dt>
-                  <dd className="text-sm font-medium text-paper">{spec.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-      </section>
+      ) : null}
     </div>
   )
 }

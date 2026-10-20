@@ -6,7 +6,7 @@ Loja de motocicletas seminovas em Belo Horizonte, MG. Site estático
 - **sem configuração**, vem de `src/data/motorcycles.ts` (o site funciona
   sozinho, sem backend);
 - **com Supabase configurado**, vem do Postgres e passa a ser gerenciado
-  pelo dono em `/admin` — estoque, preços, fotos e leads.
+  pelo dono em `/admin` — estoque, preços, fotos e status.
 
 Stack: React 19, Vite 8, Tailwind 4, TypeScript 6, oxlint, Vitest,
 `@supabase/supabase-js`.
@@ -32,26 +32,25 @@ na primeira vez e abre o navegador.
 | `npm run prerender`     | Só as páginas estáticas das fichas + sitemap + robots     |
 | `npm run lint`          | Oxlint                                                    |
 | `npm run typecheck`     | TypeScript sem emitir arquivos                           |
-| `npm test`              | Vitest (89 testes de `src/lib`)                          |
+| `npm test`              | Vitest (testes de `src/lib`)                             |
 | `npm run convert-images`| Converte fotos de `img/` para WebP em `public/`          |
 
 ## Estrutura
 
 ```
 supabase/
-  schema.sql        tabelas, RLS, Storage e seed (rode no SQL Editor)
+  migrations/       0001 schema, 0002 RLS+Storage, 0003 seed (rode em ordem)
 docs/
   SUPABASE.md       passo a passo do painel do dono
   PENDENCIAS-CLIENTE.md
 src/
   data/         site.ts (contato/endereço) e motorcycles.ts (fallback)
-  lib/          filtros, formatação, parcelas, schema.org, catálogo, leads, painel, supabase
-  hooks/        usePageMeta, useCompare, useJsonLd, useCatalogo, auth
+  lib/          filtros, formatação, schema.org, catálogo, painel, supabase
+  hooks/        usePageMeta, useJsonLd, useCatalogo, auth
   components/
     layout/     Header, Footer, RootLayout
-    admin/      MotoForm, PhotoUploader
-    motorcycles/ BikeCard, BikeFilters, BikeGallery, comparador
-    forms/      Financiamento, Troca, SimuladorParcelas
+    admin/      MotoForm, PhotoUploader, EstoqueTab
+    motorcycles/ BikeCard, BikeFilters, BikeGallery
     ui/         Button, SmartImage, SectionHeading
   pages/        rotas (uma por página, code-split com React.lazy)
 scripts/
@@ -83,22 +82,23 @@ gerenciar.
 
 Sem isso, o Google receberia a ficha `/moto/*` vazia.
 
-Como o site é estático, **salvar no painel não publica**. Use o botão
-*Publicar site* (requer `VITE_DEPLOY_HOOK_URL`) ou faça deploy pelo painel
-do host. Detalhes em [`docs/SUPABASE.md`](docs/SUPABASE.md).
+Como o site é estático, **salvar no painel não publica**. Faça o deploy
+pelo painel do host (a Vercel reconstrói a cada push). Os dados comerciais
+da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
 
 ## Decisões que valem saber
 
 - **A chave anônima do Supabase é pública por design.** Ela fica no
   bundle; a segurança do banco depende das políticas RLS em
-  `supabase/schema.sql`. A `service_role` nunca entra em `VITE_*`.
+  `supabase/migrations/`. A `service_role` nunca entra em `VITE_*`.
 - **Sem número de WhatsApp, todo CTA cai para `/contato`.** O helper
-  `whatsappLink()` (`src/lib/format.ts`) devolve `null` enquanto
+  `useWhatsappLink()` (`src/lib/format.ts`) devolve `null` enquanto
   `WHATSAPP_NUMBER` for `null`, e os componentes degradam sozinhos.
 - **Fotos nunca são inventadas.** `img/` é a fonte; o script de conversão
   gera WebP e crops. Faltando foto, entra o placeholder local.
-- **`lib/finance.ts` é puro de propósito.** A fórmula de Price é testada
-  sem React no meio.
+- **As fotos ficam na tabela `motorcycle_images`.** Excluir uma moto
+  apaga as linhas em cascata e remove os arquivos do Storage — sem lixo
+  acumulado no bucket.
 - **O `/admin` fica fora do `RootLayout` de propósito.** A vitrine e o painel
   são mundos separados: o dono não deve ver o menu da loja enquanto gerencia
   estoque. O link fica no rodapé, com cadeado, e o `robots.txt` bloqueia a rota.

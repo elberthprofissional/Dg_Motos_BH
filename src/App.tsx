@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { RootLayout } from './components/layout/RootLayout'
-import { Home } from './pages/Home'
+import { Entrada } from './pages/Entrada'
 import { AuthProvider } from './hooks/useAuth'
 import { RotaAdmin } from './pages/AdminGuard'
 
@@ -9,11 +9,6 @@ import { RotaAdmin } from './pages/AdminGuard'
 // acessa é baixado. Home fica no bundle inicial (é a entrada do site).
 const Estoque = lazy(() => import('./pages/Estoque').then((m) => ({ default: m.Estoque })))
 const BikeDetail = lazy(() => import('./pages/BikeDetail').then((m) => ({ default: m.BikeDetail })))
-const Financiamento = lazy(() =>
-  import('./pages/Financiamento').then((m) => ({ default: m.Financiamento })),
-)
-const Troca = lazy(() => import('./pages/Troca').then((m) => ({ default: m.Troca })))
-const Sobre = lazy(() => import('./pages/Sobre').then((m) => ({ default: m.Sobre })))
 const Contato = lazy(() => import('./pages/Contato').then((m) => ({ default: m.Contato })))
 const NotFound = lazy(() => import('./pages/NotFound').then((m) => ({ default: m.NotFound })))
 
@@ -45,12 +40,11 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route element={<RootLayout />}>
-            <Route index element={<Home />} />
+            {/* No app instalado "/" cai no login; no navegador, na
+                vitrine. Ver src/pages/Entrada.tsx. */}
+            <Route index element={<Entrada />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="moto/:slug" element={<BikeDetail />} />
-            <Route path="financiamento" element={<Financiamento />} />
-            <Route path="troca" element={<Troca />} />
-            <Route path="sobre" element={<Sobre />} />
             <Route path="contato" element={<Contato />} />
 
             <Route path="*" element={<NotFound />} />

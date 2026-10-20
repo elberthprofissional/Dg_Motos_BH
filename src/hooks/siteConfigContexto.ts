@@ -1,26 +1,21 @@
-import { createContext, useContext } from 'react'
+import { configPadrao } from '../lib/configLoja'
 import type { ConfigLoja } from '../lib/configLoja'
 
 /**
- * Contrato do contexto de configuração da loja.
+ * Configuração da loja para a vitrine.
  *
- * Fica num arquivo só de tipos (sem componente) para não atrapalhar o
- * Fast Refresh do Vite, que não funciona quando um arquivo exporta
- * componente e hook ao mesmo tempo.
+ * Não há mais provider nem busca no banco: os valores vêm direto de
+ * src/data/site.ts (ver src/lib/configLoja.ts). O hook existe apenas para
+ * os componentes não precisarem saber de onde a config vem.
  */
 export interface EstadoSiteConfig {
-  /** Config mesclada (banco sobre defaults). Nunca é null. */
   config: ConfigLoja
-  /** `true` enquanto o banco ainda não respondeu. */
   carregando: boolean
-  /** `true` quando os valores vieram do banco (e não do fallback). */
   doBanco: boolean
 }
 
-export const SiteConfigContexto = createContext<EstadoSiteConfig | null>(null)
+const CONFIG: EstadoSiteConfig = { config: configPadrao(), carregando: false, doBanco: false }
 
 export function useSiteConfig(): EstadoSiteConfig {
-  const ctx = useContext(SiteConfigContexto)
-  if (!ctx) throw new Error('useSiteConfig precisa estar dentro do <SiteConfigProvider>')
-  return ctx
+  return CONFIG
 }

@@ -4,28 +4,27 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Oswald", "Arial Narrow", ui-sans-serif, sans-serif;
 
-  /* Paleta DG Motos. O vermelho é cor de ação, nunca de fundo decorativo:
-     o resto da interface vive em preto/cinza com a foto como cor principal. */
-  --color-night-950: #080808;
-  --color-night-900: #111111;
-  --color-superficie: #171717;
-  --color-night-800: #191919;
-  --color-night-700: #232323;
+  /* Paleta DG Motos — Preto grafite, cinzas e vermelho sóbrio.
+     O vermelho é reservado a ações, destaques e preços. */
+  --color-night-950: #101010;
+  --color-night-900: #181818;
+  --color-night-800: #202020;
+  --color-night-700: #262626;
+  --color-superficie: #181818;
 
-  --color-brand-500: #e21b23;
-  --color-brand-600: #c3131a;
-  --color-brand-700: #9a0f15;
+  --color-brand-500: #d91f32;
+  --color-brand-600: #b71c2b;
+  --color-brand-700: #991723;
 
-  --color-paper: #f4f4f4;
-  --color-steel-300: #c6c6c6;
-  --color-steel-400: #a1a1a1;
-  --color-steel-500: #7a7a7a;
-  --color-steel-600: #565656;
+  --color-paper: #f5f5f5;
+  --color-steel-300: #bfbfbf;
+  --color-steel-400: #a3a3a3;
+  --color-steel-500: #8c8c8c;
+  --color-steel-600: #6b6b6b;
 
-  /* Divisória da vitrine. Fica como token para que card, seção e footer
-     compartilhem exatamente o mesmo fio de 1px. */
-  --color-line: rgb(255 255 255 / 0.1);
-  --color-line-forte: rgb(255 255 255 / 0.18);
+  /* Divisores discretos */
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-forte: rgb(255 255 255 / 0.14);
 
   /* Estados semânticos. Verde é exclusivamente positivo, âmbar é
      exclusivamente alerta — o resto da interface é cinza + vermelho de
@@ -33,13 +32,6 @@
      "parece verde". */
   --color-ok: #16a36a;
   --color-warn: #d99a22;
-
-  /* Altura da barra de navegação inferior do painel no celular.
-     Fica em `--spacing-*` de propósito: a barra, o respiro do <main>, o
-     deslocamento do toast e o da barra de "salvar" leem o mesmo número.
-     Se um deles mudasse sozinho, o conteúdo voltaria a sumir atrás da
-     navegação. 56px é o menor alvo confortável para o polegar. */
-  --spacing-nav-painel: 3.5rem;
 
   /* Duração curta e com decelerada: movimento de sistema, não de
      animação decorativa. A regra global de `prefers-reduced-motion`
@@ -135,11 +127,11 @@
 
 @layer components {
   .container-site {
-    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10;
   }
 
   .section {
-    @apply py-14 sm:py-20 lg:py-24;
+    @apply py-16 sm:py-20 lg:py-28;
   }
 
   .eyebrow {
@@ -183,7 +175,7 @@
   /* Select: mesma base do .input, com a seta desenhada em background para
      não depender de um segundo elemento no DOM. */
   .select {
-    @apply w-full cursor-pointer rounded-md border border-white/10 bg-night-800 px-3.5 py-2.5 pr-9 text-sm text-paper transition-colors placeholder:text-steel-500 focus:border-brand-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-brand-500;
+    @apply w-full cursor-pointer appearance-none rounded-md border border-white/10 bg-night-800 px-3.5 py-2.5 pr-9 text-sm text-paper transition-colors placeholder:text-steel-500 focus:border-brand-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-brand-500;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237a7a7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.7rem center;
@@ -264,25 +256,6 @@
     @apply outline-2 outline-offset-0 outline-brand-500;
   }
 
-  /* ------------------------------------------------------------------
-   * Painel: navegação inferior do celular.
-   *
-   * Quatro destinos em uma linha só. O item ativo é marcado por uma barra
-   * vermelha no topo (posicionada, não no fluxo — se ocupasse linha, o
-   * ícone desceria a cada troca de aba) e pelo ícone em vermelho. Sem
-   * fundo, sem pill: o mesmo peso visual do menu do sistema.
-   * ------------------------------------------------------------------ */
-  .nav-painel-item {
-    @apply relative flex h-full flex-1 flex-col items-center justify-center gap-1 text-[11px] leading-none transition-colors;
-  }
-
-  /* O anel de foco é declarado aqui em vez de `@apply foco-painel`: no
-     Tailwind 4 só utilidades entram no `@apply`, e `foco-painel` é uma
-     classe de componente do próprio arquivo. */
-  .nav-painel-item:focus-visible {
-    @apply outline-2 outline-offset-0 outline-brand-500;
-  }
-
   /* Linha de lista dentro da planilha do Menu e das listas do painel.
      py-2.5 dá 40px de altura — acima do mínimo de dedo mesmo com o
      `text-xs` das descrições. */
@@ -305,6 +278,95 @@
 
   .painel-titulo {
     @apply font-display text-base font-semibold tracking-wide text-paper uppercase;
+  }
+
+  /* ------------------------------------------------------------------
+   * Cartão de perfil no estilo Instagram (aba Configurações).
+   *
+   * O gradiente não tinge o fundo do botão: numa loja que vende, um
+   * gradiente do Instagram ocupando a tela compete com o vermelho de
+   * ação. Ele fica só na moldura do avatar e no fio do topo — o
+   * suficiente para o dono reconhecer a rede sem virar uma tela do IG.
+   * ------------------------------------------------------------------ */
+
+  .ig-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-line);
+    background-color: var(--color-night-900);
+  }
+
+  /* Fio de 3px no topo, mesma linguagem da faixa do site. */
+  .ig-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      #f9ce34 0%,
+      #ee2a7b 45%,
+      #6228d7 100%
+    );
+    opacity: 0.85;
+  }
+
+  /* Anel do avatar: gradiente do IG + o body como "furo" central. */
+  .ig-avatar-ring {
+    background: conic-gradient(
+      from 210deg,
+      #f9ce34,
+      #ee2a7b,
+      #6228d7,
+      #ee2a7b,
+      #f9ce34
+    );
+    padding: 3px;
+  }
+
+  .ig-avatar-furo {
+    background-color: var(--color-night-900);
+  }
+
+  .ig-btn-gradiente {
+    background-image: linear-gradient(
+      90deg,
+      #f9ce34 0%,
+      #ee2a7b 50%,
+      #6228d7 100%
+    );
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+    transition: filter 0.2s ease, transform 0.2s ease;
+  }
+
+  .ig-btn-gradiente:hover {
+    filter: brightness(1.08);
+  }
+
+  .ig-btn-gradiente:active {
+    transform: scale(0.98);
+  }
+
+  /* Campo que imita o input de bio do Instagram: sem caixa, só um fio
+     embaixo que acende no foco. */
+  .ig-campo {
+    @apply w-full resize-none bg-transparent px-0.5 py-1.5 text-sm text-paper placeholder:text-steel-500 focus:outline-none;
+    border-bottom: 1px solid var(--color-line-forte);
+    transition: border-color 0.2s ease;
+  }
+
+  .ig-campo:focus {
+    border-bottom-color: var(--color-brand-500);
+  }
+
+  .ig-stat-valor {
+    @apply font-display text-lg font-semibold tabular-nums text-paper;
+  }
+
+  .ig-stat-rotulo {
+    @apply text-[11px] tracking-[0.08em] text-steel-500 uppercase;
   }
 
   /* Reveal on scroll (controlado por useRevealOnScroll) */

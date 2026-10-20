@@ -41,9 +41,12 @@ const SITE_TS = path.join(ROOT, 'src', 'data', 'site.ts')
  * catálogo estático, que é o mesmo fallback do site em runtime.
  */
 async function motosDoBanco(url, key) {
-  const resposta = await fetch(`${url}/rest/v1/motorcycles?select=*&disponibilidade=neq.vendida`, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` },
-  })
+  const resposta = await fetch(
+    `${url}/rest/v1/motorcycles?select=*,motorcycle_images(src,alt,posicao)&status=eq.disponivel`,
+    {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    },
+  )
   if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`)
   return resposta.json()
 }
@@ -88,7 +91,21 @@ function absoluta(base, src) {
 
 /** Só fichas que ainda podem aparecer no site. */
 function publicaveis(lista) {
-  return (lista ?? []).filter((m) => m?.slug && m?.disponibilidade !== 'vendida')
+  return (lista ?? []).filter((m) => m?.slug && m?.status === 'disponivel')
+}
+
+/**
+ * Lista de fotos de uma moto, tolerando as duas formas:
+ *   banco   → relationships em `motorcycle_images` (com posicao)
+ *   estático → `imagens` de src/data/motorcycles.ts
+ */
+function fotosDe(moto) {
+  if (Array.isArray(moto.motorcycle_images)) {
+    return moto.motorcycle_images
+      .filter((i) => i?.src)
+      .sort((a, b) => (a.posicao ?? 0) - (b.posicao ?? 0))
+  }
+  return (moto.imagens ?? []).filter((i) => i?.src)
 }
 
 /** "2021" ou uma data ISO do banco → "2021-03-15" (o que o Google prefere). */
@@ -107,7 +124,7 @@ function fichaDe(moto, base) {
   })
   const url = `${base}/moto/${moto.slug}`
   const descricao = moto.descricao ?? ''
-  const fotos = (moto.imagens ?? []).filter((i) => i?.src)
+  const fotos = fotosDe(moto)
 
   const specs = (moto.especificacoes ?? [])
     .filter((s) => s?.label && s?.value)
@@ -127,7 +144,7 @@ function fichaDe(moto, base) {
   <p class="ano">Ano ${escapar(moto.ano)}${moto.cilindrada ? ` · ${escapar(moto.cilindrada)} cc` : ''}${moto.quilometragem ? ` · ${escapar(moto.quilometragem)} km` : ''}</p>
   <p class="descricao">${escapar(descricao)}</p>
   ${specs ? `<dl class="especificacoes">${specs}</dl>` : ''}
-  <p><a href="/contato">Falar com a loja</a> · <a href="/financiamento">Financiar</a></p>
+  <p><a href="/contato">Falar com a loja</a></p>
 </article>`,
   }
 }
@@ -189,9 +206,9 @@ async function run() {
         price: moto.preco,
         priceCurrency: 'BRL',
         availability:
-          moto.disponibilidade === 'disponivel'
+          moto.status === 'disponivel'
             ? 'https://schema.org/InStock'
-            : 'https://schema.org/PreOrder',
+            : 'https://schema.org/SoldOut',
         itemCondition: 'https://schema.org/UsedCondition',
       },
     }
@@ -222,9 +239,6 @@ async function run() {
     { loc: `${base}/`, lastmod: null, priority: '1.0', freq: 'weekly' },
     { loc: `${base}/estoque`, lastmod: null, priority: '0.9', freq: 'daily' },
     ...fichas.map((f) => ({ ...f, priority: '0.8', freq: 'weekly' })),
-    { loc: `${base}/financiamento`, lastmod: null, priority: '0.7', freq: 'monthly' },
-    { loc: `${base}/troca`, lastmod: null, priority: '0.7', freq: 'monthly' },
-    { loc: `${base}/sobre`, lastmod: null, priority: '0.6', freq: 'monthly' },
     { loc: `${base}/contato`, lastmod: null, priority: '0.6', freq: 'monthly' },
   ]
 

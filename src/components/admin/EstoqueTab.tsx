@@ -1,7 +1,19 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown, Eye, Inbox, Pencil, Plus, SearchX, SlidersHorizontal, Star, Trash2 } from 'lucide-react'
-import type { Motorcycle, MotorcycleAvailability } from '../../types'
+import {
+  ArchiveRestore,
+  BadgeCheck,
+  ChevronDown,
+  Eye,
+  Inbox,
+  Pencil,
+  Plus,
+  SearchX,
+  SlidersHorizontal,
+  Star,
+  Trash2,
+} from 'lucide-react'
+import type { Motorcycle, MotorcycleStatus } from '../../types'
 import { motoParaFormulario } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
 import { filtrarEstoque } from '../../lib/painel'
@@ -18,21 +30,21 @@ import { MotoForm } from './MotoForm'
 /**
  * Status da moto no estoque.
  *
- * `disponivel` é o único estado positivo (verde). `reservada` é um estado
- * comercial normal, então fica em cinza — âmbar é alerta, e uma moto
- * reservada não é alerta. `vendida` é histórica: some do site, continua
- * no painel para o dono reativar.
+ * `disponivel` é o único estado positivo. `indisponivel` é um estado
+ * temporário (âmbar, alerta leve): a moto existe mas não pode ser vendida
+ * agora. `vendida` é histórica: some do site e continua no painel para o
+ * dono consultar ou reativar.
  */
-const STATUS: Record<MotorcycleAvailability, { rotulo: string; variante: VarianteBadge; margem: string }> = {
+const STATUS: Record<MotorcycleStatus, { rotulo: string; variante: VarianteBadge; margem: string }> = {
   disponivel: { rotulo: 'Disponível', variante: 'ok', margem: 'before:bg-ok' },
-  reservada: { rotulo: 'Reservada', variante: 'atencao', margem: 'before:bg-warn' },
+  indisponivel: { rotulo: 'Indisponível', variante: 'atencao', margem: 'before:bg-warn' },
   vendida: { rotulo: 'Vendida', variante: 'apagado', margem: 'before:bg-white/15' },
 }
 
-const FILTROS: { valor: FiltroEstoque['disponibilidade']; rotulo: string }[] = [
+const FILTROS: { valor: FiltroEstoque['status']; rotulo: string }[] = [
   { valor: 'todas', rotulo: 'Todos os status' },
   { valor: 'disponivel', rotulo: 'Disponíveis' },
-  { valor: 'reservada', rotulo: 'Reservadas' },
+  { valor: 'indisponivel', rotulo: 'Indisponíveis' },
   { valor: 'vendida', rotulo: 'Vendidas' },
 ]
 
@@ -50,15 +62,15 @@ const FILTROS: { valor: FiltroEstoque['disponibilidade']; rotulo: string }[] = [
  * não garantia.
  */
 function PainelFiltros({
-  disponibilidade,
-  onDisponibilidade,
+  status,
+  onStatus,
 }: {
-  disponibilidade: FiltroEstoque['disponibilidade']
-  onDisponibilidade: (v: FiltroEstoque['disponibilidade']) => void
+  status: FiltroEstoque['status']
+  onStatus: (v: FiltroEstoque['status']) => void
 }) {
   const [aberto, setAberto] = useState(false)
-  const rotulo = FILTROS.find((f) => f.valor === disponibilidade)?.rotulo ?? 'Todos os status'
-  const filtrando = disponibilidade !== 'todas'
+  const rotulo = FILTROS.find((f) => f.valor === status)?.rotulo ?? 'Todos os status'
+  const filtrando = status !== 'todas'
 
   return (
     <div className="sm:hidden">
@@ -86,9 +98,9 @@ function PainelFiltros({
       {aberto && (
         <div id="estoque-filtros" className="animate-fade mt-2">
           <select
-            value={disponibilidade}
+            value={status}
             onChange={(e) => {
-              onDisponibilidade(e.target.value as FiltroEstoque['disponibilidade'])
+              onStatus(e.target.value as FiltroEstoque['status'])
               setAberto(false)
             }}
             aria-label="Filtrar por status"
@@ -113,6 +125,8 @@ export function EstoqueTab({
   editando,
   onEditando,
   onPedirExclusao,
+  onAlterarStatus,
+  onSalva,
 }: {
   motos: Motorcycle[] | null
   busca: string
@@ -120,36 +134,30 @@ export function EstoqueTab({
   editando: { id?: string; dados?: MotoParaSalvar } | null
   onEditando: (v: { id?: string; dados?: MotoParaSalvar } | null) => void
   onPedirExclusao: (moto: Motorcycle) => void
+  onAlterarStatus: (moto: Motorcycle, status: MotorcycleStatus) => void
+  /** Chamado após o formulário salvar: fecha a edição e recarrega a lista. */
+  onSalva: () => void
 }) {
-  const [disponibilidade, setDisponibilidade] = useState<FiltroEstoque['disponibilidade']>('todas')
+  const [status, setStatus] = useState<FiltroEstoque['status']>('todas')
 
   const visiveis = useMemo(
-    () => (motos === null ? [] : filtrarEstoque(motos, { busca, disponibilidade })),
-    [motos, busca, disponibilidade],
+    () => (motos === null ? [] : filtrarEstoque(motos, { busca, status })),
+    [motos, busca, status],
   )
-  const filtrando = busca.trim() !== '' || disponibilidade !== 'todas'
+  const filtrando = busca.trim() !== '' || status !== 'todas'
 
   /* ---------------------------- Formulário ---------------------------- */
 
   if (editando) {
     return (
-      <div className="space-y-5">
-        <button
-          type="button"
-          onClick={() => onEditando(null)}
-          className="foco-painel inline-flex items-center gap-1.5 rounded text-sm text-steel-400 transition-colors hover:text-paper"
-        >
-          <Eye className="size-4" aria-hidden="true" />
-          Voltar ao estoque
-        </button>
-        <MotoForm
-          key={editando.id ?? 'nova'}
-          id={editando.id}
-          inicial={editando.dados}
-          onSalvo={() => onEditando(null)}
-          onCancelar={() => onEditando(null)}
-        />
-      </div>
+      <MotoForm
+        key={editando.id ?? 'nova'}
+        id={editando.id}
+        inicial={editando.dados}
+        estoque={motos ?? []}
+        onSalvo={onSalva}
+        onCancelar={() => onEditando(null)}
+      />
     )
   }
 
@@ -184,10 +192,8 @@ export function EstoqueTab({
               className="sm:w-64"
             />
             <select
-              value={disponibilidade}
-              onChange={(e) =>
-                setDisponibilidade(e.target.value as FiltroEstoque['disponibilidade'])
-              }
+              value={status}
+              onChange={(e) => setStatus(e.target.value as FiltroEstoque['status'])}
               aria-label="Filtrar por status"
               className="select h-10 sm:w-44"
             >
@@ -219,10 +225,7 @@ export function EstoqueTab({
             placeholder="Buscar por marca, modelo ou ano"
             rotulo="Buscar no estoque"
           />
-          <PainelFiltros
-            disponibilidade={disponibilidade}
-            onDisponibilidade={setDisponibilidade}
-          />
+          <PainelFiltros status={status} onStatus={setStatus} />
           <button
             type="button"
             onClick={() => onEditando({})}
@@ -237,7 +240,7 @@ export function EstoqueTab({
       {motos === null ? (
         <EsqueletoLinha />
       ) : visiveis.length === 0 ? (
-        <div className="card">
+        <div className="rounded-lg border border-dashed border-white/10">
           {filtrando ? (
             <EstadoVazio
               compacto
@@ -249,7 +252,7 @@ export function EstoqueTab({
                   type="button"
                   onClick={() => {
                     onBusca('')
-                    setDisponibilidade('todas')
+                    setStatus('todas')
                   }}
                   className="btn btn-secondary btn-sm"
                 >
@@ -262,7 +265,7 @@ export function EstoqueTab({
               compacto
               icone={<Inbox className="size-4" aria-hidden="true" />}
               titulo="Estoque vazio"
-              descricao="Nenhuma moto cadastrada. A primeira cadastro é o que faz o site ter vitrine — e o que o Google começa a indexar."
+              descricao="Nenhuma moto cadastrada ainda. Cadastre a primeira para o site ter vitrine — e o Google começar a indexar."
               acao={
                 <button type="button" onClick={() => onEditando({})} className="btn btn-primary btn-sm">
                   <Plus className="size-4" aria-hidden="true" />
@@ -286,11 +289,11 @@ export function EstoqueTab({
          * ============================================================ */
         <ul className="space-y-2.5 sm:space-y-2">
           {visiveis.map((moto) => {
-            const status = STATUS[moto.disponibilidade]
+            const selo = STATUS[moto.status]
             return (
               <li
                 key={moto.id}
-                className={`card relative transition-colors hover:border-white/20 before:absolute before:top-3 before:bottom-3 before:left-0 before:w-0.5 before:rounded-full ${status.margem}`}
+                className={`card relative transition-colors hover:border-white/20 before:absolute before:top-3 before:bottom-3 before:left-0 before:w-0.5 before:rounded-full ${selo.margem}`}
               >
                 <div className="p-3">
                   <div className="flex gap-3 sm:items-center sm:gap-4">
@@ -316,8 +319,8 @@ export function EstoqueTab({
                         {moto.cilindrada ? ` · ${moto.cilindrada} cc` : ''} · {formatKm(moto.quilometragem)}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <Badge variante={status.variante} ponto>
-                          {status.rotulo}
+                        <Badge variante={selo.variante} ponto>
+                          {selo.rotulo}
                         </Badge>
                         {moto.destaque && (
                           <Badge variante="marca">
@@ -344,12 +347,22 @@ export function EstoqueTab({
                     <p className="valor-moeda font-display text-lg font-semibold text-paper">
                       {formatPrice(moto.preco)}
                     </p>
-                    <AcoesMoto moto={moto} onPedirExclusao={onPedirExclusao} onEditando={onEditando} />
+                    <AcoesMoto
+                      moto={moto}
+                      onPedirExclusao={onPedirExclusao}
+                      onEditando={onEditando}
+                      onAlterarStatus={onAlterarStatus}
+                    />
                   </div>
                 </div>
 
                 <div className="absolute top-3 right-3 hidden sm:block">
-                  <AcoesMoto moto={moto} onPedirExclusao={onPedirExclusao} onEditando={onEditando} />
+                  <AcoesMoto
+                    moto={moto}
+                    onPedirExclusao={onPedirExclusao}
+                    onEditando={onEditando}
+                    onAlterarStatus={onAlterarStatus}
+                  />
                 </div>
               </li>
             )
@@ -384,14 +397,36 @@ function AcoesMoto({
   moto,
   onPedirExclusao,
   onEditando,
+  onAlterarStatus,
 }: {
   moto: Motorcycle
   onPedirExclusao: (moto: Motorcycle) => void
   onEditando: (v: { id?: string; dados?: MotoParaSalvar }) => void
+  onAlterarStatus: (moto: Motorcycle, status: MotorcycleStatus) => void
 }) {
   const tamanho = 'size-11 sm:size-9'
+  // Vender/reativar alterna entre os dois estados comerciais. Um botão só,
+  // com rótulo explícito, para não empilhar ação demais no card.
+  const vendida = moto.status === 'vendida'
   return (
     <div className="flex shrink-0 items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => onAlterarStatus(moto, vendida ? 'disponivel' : 'vendida')}
+        className={`foco-painel btn btn-icone ${tamanho}`}
+        aria-label={
+          vendida
+            ? `Reativar ${moto.modelo} (disponível para venda)`
+            : `Marcar ${moto.modelo} como vendida`
+        }
+        title={vendida ? 'Reativar' : 'Marcar como vendida'}
+      >
+        {vendida ? (
+          <ArchiveRestore className="size-4" aria-hidden="true" />
+        ) : (
+          <BadgeCheck className="size-4" aria-hidden="true" />
+        )}
+      </button>
       <Link
         to={`/moto/${moto.slug}`}
         className={`foco-painel btn btn-icone ${tamanho}`}

@@ -97,7 +97,7 @@ export function AdminLogin() {
             <button
               type="submit"
               disabled={enviando || carregando || !email || !senha}
-              className="mt-2 w-full rounded-lg bg-brand-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-50"
+              className="btn btn-primary mt-2 w-full"
             >
               {enviando ? 'Entrando...' : 'Entrar'}
             </button>

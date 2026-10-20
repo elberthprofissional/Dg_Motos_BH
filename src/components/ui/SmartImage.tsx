@@ -27,7 +27,7 @@ export function SmartImage({
 }: SmartImageProps) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
 
-  // `src` muda ao trocar de moto na mesma rota (ex.: "vistas recentemente"),
+  // `src` muda ao trocar de moto na mesma rota (ex.: navegar entre fichas),
   // então o estado precisa ser reiniciado para a imagem nova aparecer.
   const [ultimoSrc, setUltimoSrc] = useState(src)
   if (src !== ultimoSrc) {

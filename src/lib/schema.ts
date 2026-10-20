@@ -49,15 +49,18 @@ export function vehicleSchema(bike: Motorcycle): object {
     vehicleEngine: bike.cilindrada
       ? { '@type': 'EngineSpecification', engineDisplacement: `${bike.cilindrada} cc` }
       : undefined,
-    image: bike.imagens.map((img) => `${SITE_URL}${img.src}`),
+    image: bike.imagens.map((img) =>
+      img.src.startsWith('http') ? img.src : `${SITE_URL}${img.src}`,
+    ),
     description: bike.descricao,
     offers: {
       '@type': 'Offer',
       price: bike.preco,
       priceCurrency: 'BRL',
-      availability: bike.disponibilidade === 'disponivel'
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/SoldOut',
+      availability:
+        bike.status === 'disponivel'
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/SoldOut',
       itemCondition: 'https://schema.org/UsedCondition',
       seller: { '@id': `${SITE_URL}/#loja` },
     },

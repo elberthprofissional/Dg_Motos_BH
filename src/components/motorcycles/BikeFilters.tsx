@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react'
-import type { BikeFilterState } from '../../types'
+import type { BikeFilterState, Motorcycle } from '../../types'
 import {
   ANO_MAX,
   ANO_MIN,
@@ -7,19 +7,24 @@ import {
   ORDENACOES,
   PRECO_MAX,
   PRECO_MIN,
+  marcasDisponiveis,
   temFiltroAtivo,
 } from '../../lib/filters'
 import { formatPrice } from '../../lib/format'
 
 interface BikeFiltersProps {
   filtros: BikeFilterState
+  /** Estoque atual — usado só para listar as marcas que existem. */
+  motos: Motorcycle[]
   onChange: (next: BikeFilterState) => void
   onClear: () => void
 }
 
-export function BikeFilters({ filtros, onChange, onClear }: BikeFiltersProps) {
+export function BikeFilters({ filtros, motos, onChange, onClear }: BikeFiltersProps) {
   const set = <K extends keyof BikeFilterState>(key: K, value: BikeFilterState[K]) =>
     onChange({ ...filtros, [key]: value })
+
+  const marcas = marcasDisponiveis(motos)
 
   return (
     <form
@@ -49,6 +54,26 @@ export function BikeFilters({ filtros, onChange, onClear }: BikeFiltersProps) {
           </div>
         </div>
 
+        {/* Marca */}
+        <div>
+          <label htmlFor="filtro-marca" className="field-label">
+            Marca
+          </label>
+          <select
+            id="filtro-marca"
+            value={filtros.marca}
+            onChange={(e) => set('marca', e.target.value)}
+            className="select"
+          >
+            <option value="">Todas as marcas</option>
+            {marcas.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Categoria */}
         <div>
           <label htmlFor="filtro-categoria" className="field-label">
@@ -60,7 +85,7 @@ export function BikeFilters({ filtros, onChange, onClear }: BikeFiltersProps) {
             onChange={(e) =>
               set('categoria', e.target.value as BikeFilterState['categoria'])
             }
-            className="input"
+            className="select"
           >
             <option value="todas">Todas as categorias</option>
             {CATEGORIAS.map((c) => (
@@ -72,7 +97,7 @@ export function BikeFilters({ filtros, onChange, onClear }: BikeFiltersProps) {
         </div>
 
         {/* Ordenação */}
-        <div>
+        <div className="md:col-span-2 lg:col-span-1">
           <label htmlFor="filtro-ordenacao" className="field-label">
             Ordenar por
           </label>
@@ -80,7 +105,7 @@ export function BikeFilters({ filtros, onChange, onClear }: BikeFiltersProps) {
             id="filtro-ordenacao"
             value={filtros.ordenacao}
             onChange={(e) => set('ordenacao', e.target.value as BikeFilterState['ordenacao'])}
-            className="input"
+            className="select"
           >
             {ORDENACOES.map((o) => (
               <option key={o.value} value={o.value}>
@@ -103,7 +128,7 @@ export function BikeFilters({ filtros, onChange, onClear }: BikeFiltersProps) {
             step={1000}
             value={filtros.precoMax}
             onChange={(e) => set('precoMax', Number(e.target.value))}
-            className="w-full accent-[#E21B23]"
+            className="w-full accent-brand-500"
           />
           <div className="mt-1 flex justify-between text-[11px] text-steel-500">
             <span>{formatPrice(PRECO_MIN)}</span>
@@ -124,7 +149,7 @@ export function BikeFilters({ filtros, onChange, onClear }: BikeFiltersProps) {
             step={1}
             value={filtros.anoMin}
             onChange={(e) => set('anoMin', Number(e.target.value))}
-            className="w-full accent-[#E21B23]"
+            className="w-full accent-brand-500"
           />
           <div className="mt-1 flex justify-between text-[11px] text-steel-500">
             <span>{ANO_MIN}</span>
@@ -134,7 +159,7 @@ export function BikeFilters({ filtros, onChange, onClear }: BikeFiltersProps) {
       </div>
 
       {temFiltroAtivo(filtros) && (
-        <div className="mt-4 border-t border-white/10 pt-4">
+        <div className="mt-4 border-t border-line pt-4">
           <button
             type="button"
             onClick={onClear}

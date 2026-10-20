@@ -65,13 +65,14 @@ export function DialogoConfirmacao({
 
   if (!pedido) return null
 
-  /* No celular o diálogo sobe de baixo (alcance do polegar) e o rodapé
-     reserva a altura da barra de navegação: com `p-4` puro os botões de
-     confirmar/cancelar ficavam escondidos atrás dela — justamente a decisão
-     que o diálogo existe para pedir. `max-h` + scroll interno cobrem a
-     descrição longa da exclusão em telas de 320×568. */
+/* No celular o diálogo sobe de baixo (alcance do polegar) e o rodapé
+      soma a safe area ao respiro inferior: a barra de navegação do painel
+      foi removida, então só o entalhe do iPhone precisa de folga para os
+      botões de confirmar/cancelar não ficarem atrás do gesto de voltar.
+      `max-h` + scroll interno cobrem a descrição longa da exclusão em
+      telas de 320×568. */
   return (
-    <div className="fixed inset-0 z-60 flex items-end justify-center pt-4 pb-[calc(var(--spacing-nav-painel)+env(safe-area-inset-bottom,0px)+1rem)] sm:items-center sm:p-4 sm:pb-4">
+    <div className="fixed inset-0 z-60 flex items-end justify-center pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] sm:items-center sm:p-4 sm:pb-4">
       <button
         type="button"
         aria-label="Fechar confirmação"

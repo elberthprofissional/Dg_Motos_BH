@@ -12,10 +12,16 @@ describe('filtrarMotos', () => {
     expect(filtrarMotos(motorcycles, COM_TODAS)).toHaveLength(motorcycles.length)
   })
 
-  it('nunca exibe moto vendida', () => {
-    const vendas = motorcycles.filter((m) => m.disponibilidade === 'vendida')
+  it('nunca exibe moto vendida nem indisponível', () => {
+    const fora = motorcycles.filter((m) => m.status !== 'disponivel')
     const slugs = filtrarMotos(motorcycles, COM_TODAS).map((m) => m.slug)
-    for (const v of vendas) expect(slugs).not.toContain(v.slug)
+    for (const m of fora) expect(slugs).not.toContain(m.slug)
+  })
+
+  it('filtra por marca', () => {
+    const hondas = filtrarMotos(motorcycles, com({ marca: 'Honda' }))
+    expect(hondas.length).toBeGreaterThan(0)
+    for (const m of hondas) expect(m.marca).toBe('Honda')
   })
 
   it('busca por marca e modelo, sem diferenciar maiúsculas', () => {
@@ -117,6 +123,7 @@ describe('temFiltroAtivo', () => {
 
   it('detecta cada filtro individualmente', () => {
     expect(temFiltroAtivo(com({ busca: 'honda' }))).toBe(true)
+    expect(temFiltroAtivo(com({ marca: 'Honda' }))).toBe(true)
     expect(temFiltroAtivo(com({ precoMax: 20000 }))).toBe(true)
     expect(temFiltroAtivo(com({ anoMin: 2021 }))).toBe(true)
     expect(temFiltroAtivo(com({ categoria: 'Trail' }))).toBe(true)

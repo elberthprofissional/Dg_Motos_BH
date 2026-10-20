@@ -1,19 +1,33 @@
-import type { Motorcycle, MotorcycleAvailability, MotorcycleCategory, MotorcycleSpec } from '../types'
-import { getSupabase } from './supabase'
-import { urlPublica } from './supabase'
+import type { Motorcycle, MotorcycleStatus, MotorcycleCategory, MotorcycleSpec } from '../types'
+import { getSupabase, urlPublica, BUCKET_FOTOS } from './supabase'
+import { caminhoDeBucket } from './fotos'
 
 /**
  * ============================================================
  * CATÁLOGO — leitura e escrita
  * ============================================================
  *
- * Fonte de verdade: o Postgres (tabela `motorcycles`).
+ * Fonte de verdade: o Postgres.
+ *   motorcycles        → a moto
+ *   motorcycle_images  → fotos em relação 1:N, ordenadas por `posicao`
  *
  * O arquivo src/data/motorcycles.ts continua existindo como **fallback**
  * para quando o Supabase não está configurado ou está fora do ar. Isso
  * mantém o site no ar mesmo com o banco derrubado — o que importa para
  * uma loja que perde venda por site fora do ar.
  */
+
+/**
+ * Linha crua do Postgres, do jeito que o PostgREST devolve.
+ *
+ * `numeric` chega como string; `motorcycle_images` chega como recurso
+ * embutido (select `*, motorcycle_images(...)`), por isso o nome aninhado.
+ */
+interface LinhaImagem {
+  src?: unknown
+  alt?: unknown
+  posicao?: unknown
+}
 
 interface LinhaCatalogo {
   id: string
@@ -27,12 +41,24 @@ interface LinhaCatalogo {
   categoria: string
   descricao: string
   especificacoes: unknown
-  imagens: unknown
   destaque: boolean
-  disponibilidade: string
+  status: string
   created_at?: string | null
-  preco_compra?: number | string | null
-  vendido_em?: string | null
+  updated_at?: string | null
+  motorcycle_images?: LinhaImagem[] | null
+}
+
+/** Normaliza a lista de imagens embutida e a ordena por `posicao`. */
+function lerImagens(linhas: LinhaImagem[] | null | undefined, altPadrao: string) {
+  return (linhas ?? [])
+    .filter((f) => typeof f?.src === 'string' && (f.src as string).trim().length > 0)
+    .map((f) => ({
+      src: f.src as string,
+      alt: typeof f.alt === 'string' && f.alt.trim() ? f.alt : altPadrao,
+      posicao: typeof f.posicao === 'number' ? f.posicao : 0,
+    }))
+    .sort((a, b) => a.posicao - b.posicao)
+    .map(({ src, alt }) => ({ src, alt }))
 }
 
 /**
@@ -44,7 +70,7 @@ interface LinhaCatalogo {
  */
 export function linhaParaMotos(linha: LinhaCatalogo): Motorcycle {
   const specs = Array.isArray(linha.especificacoes) ? linha.especificacoes : []
-  const fotos = Array.isArray(linha.imagens) ? linha.imagens : []
+  const nomeCompleto = `${linha.marca} ${linha.modelo}`
 
   return {
     id: linha.id,
@@ -60,20 +86,11 @@ export function linhaParaMotos(linha: LinhaCatalogo): Motorcycle {
     especificacoes: specs.filter(
       (s): s is MotorcycleSpec => typeof s?.label === 'string' && typeof s?.value === 'string',
     ),
-    imagens: fotos
-      // `src` vazio também é string: sem este teste, entraria um item
-      // quebrado e o componente de imagem renderizaria <img src="">.
-      .filter(
-        (f): f is { src: string; alt?: unknown } =>
-          typeof f?.src === 'string' && f.src.trim().length > 0,
-      )
-      .map((f) => ({ src: f.src, alt: typeof f.alt === 'string' ? f.alt : linha.modelo })),
+    imagens: lerImagens(linha.motorcycle_images, nomeCompleto),
     destaque: Boolean(linha.destaque),
-    disponibilidade: linha.disponibilidade as MotorcycleAvailability,
+    status: linha.status as MotorcycleStatus,
     criadoEm: linha.created_at ?? undefined,
-    precoCompra:
-      linha.preco_compra == null ? null : Number(linha.preco_compra) || null,
-    vendidoEm: linha.vendido_em ?? null,
+    atualizadoEm: linha.updated_at ?? undefined,
   }
 }
 
@@ -85,11 +102,15 @@ export interface ResultadoCatalogo {
   erro: string | null
 }
 
+/** Select usado em toda leitura: a moto + as fotos já ordenadas. */
+const SELECT_MOTO = '*, motorcycle_images(src, alt, posicao)'
+
 /**
  * Busca o catálogo completo.
  *
- * Motos vendidas vêm junto de propósito: o dono precisa vê-las no admin
- * para poder reativar. Quem filtra é a página pública, em filtrarMotos().
+ * Motos vendidas e indisponíveis vêm junto de propósito: o dono precisa
+ * vê-las no admin para poder reativar. Quem filtra é a página pública,
+ * em filtrarMotos().
  */
 export async function buscarCatalogo(): Promise<ResultadoCatalogo> {
   const sb = getSupabase()
@@ -99,14 +120,18 @@ export async function buscarCatalogo(): Promise<ResultadoCatalogo> {
 
   const { data, error } = await sb
     .from('motorcycles')
-    .select('*')
+    .select(SELECT_MOTO)
     .order('ano', { ascending: false })
 
   if (error) {
     return { motos: [], doBanco: false, erro: error.message }
   }
 
-  return { motos: ((data ?? []) as LinhaCatalogo[]).map(linhaParaMotos), doBanco: true, erro: null }
+  return {
+    motos: ((data ?? []) as LinhaCatalogo[]).map(linhaParaMotos),
+    doBanco: true,
+    erro: null,
+  }
 }
 
 export interface MotoParaSalvar {
@@ -115,8 +140,6 @@ export interface MotoParaSalvar {
   modelo: string
   ano: number
   preco: number
-  /** Custo de aquisição; null = dono não controla. */
-  precoCompra: number | null
   quilometragem: number | null
   cilindrada: number | null
   categoria: MotorcycleCategory
@@ -124,7 +147,27 @@ export interface MotoParaSalvar {
   especificacoes: MotorcycleSpec[]
   imagens: { src: string; alt: string }[]
   destaque: boolean
-  disponibilidade: MotorcycleAvailability
+  status: MotorcycleStatus
+}
+
+/**
+ * Modelos únicos já cadastrados, para o formulário sugerir de forma
+ * atalho (chip clicável). Não obriga escolher — é atalho, não lista
+ * fechada: um modelo novo continua sendo digitado à mão.
+ */
+export function modelosDisponiveis(
+  motos: Motorcycle[],
+): { marca: string; modelo: string; categoria: MotorcycleCategory }[] {
+  const mapa = new Map<string, { marca: string; modelo: string; categoria: MotorcycleCategory }>()
+  for (const m of motos) {
+    const chave = `${m.marca}|${m.modelo}`.toLowerCase()
+    if (!mapa.has(chave)) {
+      mapa.set(chave, { marca: m.marca, modelo: m.modelo, categoria: m.categoria })
+    }
+  }
+  return [...mapa.values()].sort((a, b) =>
+    (a.marca + a.modelo).localeCompare(b.marca + b.modelo, 'pt-BR'),
+  )
 }
 
 /** Normaliza um texto para virar parte de um slug (sem acento, sem espaço). */
@@ -150,6 +193,31 @@ export function montarSlug(marca: string, modelo: string, ano: number): string {
   return unicas.join('-')
 }
 
+/**
+ * Substitui as fotos da moto.
+ *
+ * Estratégia "apaga e regrava": o form manda a lista completa e ordenada,
+ * então o estado final é sempre a lista enviada — sem risco de sobrar foto
+ * órfã no banco. As linhas antigas caem por delete; os arquivos no Storage
+ * seguem a mesma lista (quem remove do Storage é o PhotoUploader ao tirar
+ * a foto no formulário).
+ */
+async function salvarImagens(motoId: string, imagens: { src: string; alt: string }[]) {
+  const sb = getSupabase()!
+  await sb.from('motorcycle_images').delete().eq('motorcycle_id', motoId)
+
+  if (imagens.length === 0) return null
+
+  const linhas = imagens.map((f, i) => ({
+    motorcycle_id: motoId,
+    src: f.src,
+    alt: f.alt,
+    posicao: i,
+  }))
+  const { error } = await sb.from('motorcycle_images').insert(linhas)
+  return error?.message ?? null
+}
+
 export async function salvarMoto(
   dados: MotoParaSalvar,
   id?: string,
@@ -163,76 +231,69 @@ export async function salvarMoto(
     modelo: dados.modelo,
     ano: dados.ano,
     preco: dados.preco,
-    preco_compra: dados.precoCompra,
     quilometragem: dados.quilometragem,
     cilindrada: dados.cilindrada,
     categoria: dados.categoria,
     descricao: dados.descricao,
     especificacoes: dados.especificacoes,
-    imagens: dados.imagens,
     destaque: dados.destaque,
-    disponibilidade: dados.disponibilidade,
+    status: dados.status,
   }
 
-  const query = id
-    ? sb.from('motorcycles').update(payload).eq('id', id)
-    : sb.from('motorcycles').insert(payload)
+  let motoId = id
 
-  const { error } = await query
-  return error
-    ? { ok: false, erro: error.message }
-    : { ok: true, erro: null }
+  if (id) {
+    const { error } = await sb.from('motorcycles').update(payload).eq('id', id)
+    if (error) return { ok: false, erro: error.message }
+  } else {
+    const { data, error } = await sb.from('motorcycles').insert(payload).select('id').single()
+    if (error) return { ok: false, erro: error.message }
+    motoId = (data as { id: string }).id
+  }
+
+  const erroImagens = await salvarImagens(motoId!, dados.imagens)
+  return erroImagens ? { ok: false, erro: erroImagens } : { ok: true, erro: null }
 }
 
+/**
+ * Exclui a moto e limpa os arquivos dela no Storage.
+ *
+ * As linhas de `motorcycle_images` caem sozinhas (on delete cascade), mas
+ * os arquivos no bucket NÃO — por isso buscamos as fotos antes e apagamos
+ * cada uma. Sem isso, o bucket acumularia lixo a cada moto removida.
+ */
 export async function excluirMoto(id: string): Promise<{ ok: boolean; erro: string | null }> {
   const sb = getSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
 
+  const { data: fotos } = await sb
+    .from('motorcycle_images')
+    .select('src')
+    .eq('motorcycle_id', id)
+
   const { error } = await sb.from('motorcycles').delete().eq('id', id)
-  return error ? { ok: false, erro: error.message } : { ok: true, erro: null }
+  if (error) return { ok: false, erro: error.message }
+
+  const caminhos = (fotos ?? [])
+    .map((f: { src?: string }) => (f.src ? caminhoDeBucket(f.src) : null))
+    .filter((c): c is string => c !== null)
+
+  if (caminhos.length > 0) {
+    await sb.storage.from(BUCKET_FOTOS).remove(caminhos)
+  }
+
+  return { ok: true, erro: null }
 }
 
-/**
- * Marca a moto como vendida e registra a data da venda (usada no
- * financeiro e no tempo médio de venda).
- */
-export async function marcarComoVendida(
+/** Altera somente o status (usado nos atalhos do painel). */
+export async function atualizarStatus(
   id: string,
+  status: MotorcycleStatus,
 ): Promise<{ ok: boolean; erro: string | null }> {
   const sb = getSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
 
-  const { error } = await sb
-    .from('motorcycles')
-    .update({ disponibilidade: 'vendida', vendido_em: new Date().toISOString() })
-    .eq('id', id)
-  return error ? { ok: false, erro: error.message } : { ok: true, erro: null }
-}
-
-/**
- * Grava um lead antes de abrir o WhatsApp.
- *
- * Falha de envio não pode travar o atendimento: se o banco estiver
- * fora, o visitante ainda precisa falar com a loja. Por isso o erro é
- * devolvido, mas o fluxo do form continua.
- */
-export async function registrarLead(dados: {
-  tipo: 'financiamento' | 'troca'
-  nome: string
-  telefone: string
-  dados: Record<string, unknown>
-  origem: string
-}): Promise<{ ok: boolean; erro: string | null }> {
-  const sb = getSupabase()
-  if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
-
-  const { error } = await sb.from('leads').insert({
-    tipo: dados.tipo,
-    nome: dados.nome,
-    telefone: dados.telefone,
-    dados: dados.dados,
-    origem: dados.origem,
-  })
+  const { error } = await sb.from('motorcycles').update({ status }).eq('id', id)
   return error ? { ok: false, erro: error.message } : { ok: true, erro: null }
 }
 
@@ -244,7 +305,6 @@ export function motoParaFormulario(m: Motorcycle): MotoParaSalvar {
     modelo: m.modelo,
     ano: m.ano,
     preco: m.preco,
-    precoCompra: m.precoCompra ?? null,
     quilometragem: m.quilometragem,
     cilindrada: m.cilindrada,
     categoria: m.categoria,
@@ -252,7 +312,7 @@ export function motoParaFormulario(m: Motorcycle): MotoParaSalvar {
     especificacoes: m.especificacoes,
     imagens: m.imagens,
     destaque: m.destaque,
-    disponibilidade: m.disponibilidade,
+    status: m.status,
   }
 }
 

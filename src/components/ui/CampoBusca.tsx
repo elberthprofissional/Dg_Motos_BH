@@ -14,7 +14,7 @@ interface CampoBuscaProps {
  * Campo de busca do painel.
  *
  * Antes cada tela reescrevia o input com a lupa e o padding à mão
- * (topbar, estoque e leads tinham três cópias divergentes). Aqui o
+ * (estoque e listagens tinham cópias divergentes). Aqui o
  * botão de limpar é explícito: `type="search"` só mostra o ✕ nativo em
  * alguns navegadores, e o dono não pode ficar preso num filtro sem
  * notar por quê.

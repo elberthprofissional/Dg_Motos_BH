@@ -6,6 +6,7 @@ import { buildDefaultMessage, useWhatsappLink } from '../lib/format'
 import { buildMapsRouteUrl } from '../lib/maps'
 import { MapaLoja } from '../components/ui/MapaLoja'
 import { SectionHeading } from '../components/ui/SectionHeading'
+import { Button } from '../components/ui/Button'
 
 export function Contato() {
   usePageMeta(
@@ -40,7 +41,7 @@ export function Contato() {
       icon: InstagramIcon,
       titulo: 'Instagram',
       descricao: `Novidades e motos chegando: ${config.instagramHandle}.`,
-      acao: (
+      acao: config.instagramUrl ? (
         <a
           href={config.instagramUrl}
           target="_blank"
@@ -49,6 +50,8 @@ export function Contato() {
         >
           Seguir e mandar mensagem
         </a>
+      ) : (
+        <span className="text-sm text-steel-500">Chame pelo WhatsApp enquanto isso.</span>
       ),
     },
     {
@@ -70,7 +73,7 @@ export function Contato() {
 
   return (
     <div className="pt-16">
-      <section className="border-b border-white/10 bg-night-900">
+      <section className="border-b border-line bg-night-900">
         <div className="container-site py-12 sm:py-16">
           <p className="eyebrow">Contato</p>
           <h1 className="h-display mt-3 text-4xl sm:text-5xl">Fale com a DG Motos</h1>
@@ -141,15 +144,16 @@ export function Contato() {
               />
             </div>
 
-            <a
+            <Button
               href={buildMapsRouteUrl(config.mapsUrl)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded border border-line-forte px-5 py-2.5 font-display text-sm font-semibold tracking-[0.08em] uppercase transition-colors hover:border-white/40 hover:bg-white/5"
+              variant="outline"
+              className="mt-6 w-full"
             >
               <MapPin className="size-4" aria-hidden="true" />
               Abrir no Google Maps
-            </a>
+            </Button>
           </div>
         </div>
       </section>

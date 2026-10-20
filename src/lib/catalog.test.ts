@@ -23,9 +23,9 @@ const linhaBase = {
   categoria: 'Trail',
   descricao: 'Trail versátil.',
   especificacoes: [{ label: 'Motor', value: 'Mono OHc' }],
-  imagens: [{ src: '/motos/honda-xre-300-2021/01.webp', alt: 'frontal' }],
+  motorcycle_images: [{ src: '/motos/honda-xre-300-2021/01.webp', alt: 'frontal', posicao: 0 }],
   destaque: false,
-  disponibilidade: 'disponivel',
+  status: 'disponivel',
 }
 
 describe('linhaParaMotos', () => {
@@ -49,24 +49,38 @@ describe('linhaParaMotos', () => {
     expect(moto.cilindrada).toBeNull()
   })
 
-  it('normaliza jsonb vazio ou nulo sem quebrar as páginas', () => {
+  it('normaliza lista de imagens vazia ou nula sem quebrar as páginas', () => {
     const moto = linhaParaMotos({
       ...linhaBase,
       especificacoes: null as unknown as [],
-      imagens: null as unknown as [],
+      motorcycle_images: null,
     })
     // As páginas fazem .map() direto nestas listas: se vier null, quebraria.
     expect(moto.especificacoes).toEqual([])
     expect(moto.imagens).toEqual([])
   })
 
-  it('descarta item de foto sem src e completa o alt com o modelo', () => {
+  it('ordena as fotos por posicao e descarta item sem src', () => {
     const moto = linhaParaMotos({
       ...linhaBase,
-      imagens: [{ src: '/a.webp' }, { src: '' }, {}],
+      motorcycle_images: [
+        { src: '/b.webp', posicao: 1 },
+        { src: '/a.webp', posicao: 0 },
+        { src: '' },
+        {},
+      ],
     })
-    expect(moto.imagens).toHaveLength(1)
-    expect(moto.imagens[0].alt).toBe('XRE 300')
+    expect(moto.imagens).toHaveLength(2)
+    expect(moto.imagens[0].src).toBe('/a.webp')
+    expect(moto.imagens[1].src).toBe('/b.webp')
+  })
+
+  it('completa o alt com marca e modelo quando ausente', () => {
+    const moto = linhaParaMotos({
+      ...linhaBase,
+      motorcycle_images: [{ src: '/a.webp' }],
+    })
+    expect(moto.imagens[0].alt).toBe('Honda XRE 300')
   })
 
   it('descarta especificação incompleta', () => {

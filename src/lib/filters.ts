@@ -24,10 +24,21 @@ export const CATEGORIAS: MotorcycleCategory[] = [
 
 export const FILTROS_PADRAO: BikeFilterState = {
   busca: '',
+  marca: '',
   precoMax: PRECO_MAX,
   anoMin: ANO_MIN,
   categoria: 'todas',
   ordenacao: 'relevancia',
+}
+
+/**
+ * Marcas presentes no estoque, para popular o filtro sem exigir uma lista
+ * fixa em código (a loja pode receber qualquer marca).
+ */
+export function marcasDisponiveis(motos: Motorcycle[]): string[] {
+  return [...new Set(motos.map((m) => m.marca.trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, 'pt-BR'),
+  )
 }
 
 export function filtrarMotos(
@@ -37,7 +48,9 @@ export function filtrarMotos(
   const busca = f.busca.trim().toLowerCase()
 
   const filtradas = motos.filter((m) => {
-    if (m.disponibilidade === 'vendida') return false
+    // O catálogo público só mostra o que está realmente à venda.
+    if (m.status !== 'disponivel') return false
+    if (f.marca && m.marca !== f.marca) return false
     if (f.precoMax < PRECO_MAX && m.preco > f.precoMax) return false
     if (f.anoMin > ANO_MIN && m.ano < f.anoMin) return false
     if (f.categoria !== 'todas' && m.categoria !== f.categoria) return false
@@ -66,6 +79,7 @@ export function filtrarMotos(
 export function temFiltroAtivo(f: BikeFilterState): boolean {
   return (
     f.busca.trim() !== '' ||
+    f.marca !== '' ||
     f.precoMax < PRECO_MAX ||
     f.anoMin > ANO_MIN ||
     f.categoria !== 'todas' ||

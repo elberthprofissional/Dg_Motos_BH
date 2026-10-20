@@ -1,62 +1,50 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell } from 'lucide-react'
-import { buscarCatalogo, excluirMoto, marcarComoVendida } from '../lib/catalog'
+import {
+  ArrowLeft,
+  ExternalLink,
+  Settings,
+  LogOut,
+  Menu as MenuIcon,
+  Package,
+  X,
+} from 'lucide-react'
+import { atualizarStatus, buscarCatalogo, excluirMoto } from '../lib/catalog'
 import type { MotoParaSalvar } from '../lib/catalog'
-import { buscarLeads } from '../lib/leads'
-import type { Lead } from '../lib/leads'
-import { contarLeadsRecentes } from '../lib/painel'
 import { usePageMeta } from '../hooks/useNavigation'
-import { AdminSidebar } from '../components/admin/AdminSidebar'
-import { AdminBottomNav, AdminMenuPlanilha } from '../components/admin/AdminBottomNav'
-import { DashboardTab } from '../components/admin/DashboardTab'
+import { useAuth } from '../hooks/authContexto'
 import { EstoqueTab } from '../components/admin/EstoqueTab'
-import { LeadsTab } from '../components/admin/LeadsTab'
-import { FinanceiroTab } from '../components/admin/FinanceiroTab'
-import { RelatoriosTab } from '../components/admin/RelatoriosTab'
 import { ConfiguracoesTab } from '../components/admin/ConfiguracoesTab'
 import { DialogoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import type { PedidoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import { Toast } from '../components/ui/Toast'
 import type { Feedback } from '../components/ui/Toast'
-import { PublicacaoStatus } from '../components/admin/PublicacaoStatus'
-import { tituloDaAba } from '../components/admin/tiposAdmin'
-import type { AbaAdmin } from '../components/admin/tiposAdmin'
-import type { Motorcycle } from '../types'
+import type { Motorcycle, MotorcycleStatus } from '../types'
+
+type Aba = 'estoque' | 'configuracoes'
+
+const ABAS: { id: Aba; rotulo: string; icone: typeof Package }[] = [
+  { id: 'estoque', rotulo: 'Estoque', icone: Package },
+  { id: 'configuracoes', rotulo: 'Configurações', icone: Settings },
+]
 
 /**
- * Casca do painel: carrega os dados uma vez, controla a aba ativa e
- * distribui o feedback das operações.
- *
- * Cada aba é um componente próprio (DashboardTab, EstoqueTab, LeadsTab,
- * ConfiguracoesTab). Antes elas viviam todas neste arquivo, que passou de
- * mil linhas — separar em arquivos para que mexer no Leads não arriscasse
- * o Estoque.
- *
- * A busca do estoque mora aqui porque o campo fica no cabeçalho da aba de
- * estoque e na busca é recarregar a lista inteira; assim o texto sobrevive
- * à troca de aba.
- *
  * ============================================================
- * NAVEGAÇÃO
+ * PAINEL DO PROPRIETÁRIO
  * ============================================================
- * Duas leituras para a mesma lista de seis seções:
+ * Duas áreas: gestão de estoque e configurações da loja (contato,
+ * endereço, horários). Sem dashboard, financeiro ou relatórios — o
+ * que a operação usa de verdade cabe nestas duas telas.
  *
- *   lg+  → `AdminSidebar` fixa, com as seis. A largura que sobra num
- *          monitor largo torna aceitável ler rótulos por extenso.
- *   <lg  → `AdminBottomNav` fixa, com quatro destinos, e a planilha do
- *          "Menu" para as três seções de consulta.
- *
- * Só uma das duas existe por breakpoint. Não há menu hamburger: com a
- * barra inferior no lugar, ele repetiria a navegação e comeria largura
- * de tela justamente onde ela é escassa.
+ * Navegação por menu lateral fixo no desktop; no celular vira drawer
+ * sobreposto acionado pelo hamburger da topbar.
  */
 export function Admin() {
-  const [aba, setAba] = useState<AbaAdmin>('painel')
-  const [menuAberto, setMenuAberto] = useState(false) // planilha do "Menu" (celular)
+  const { sessao, sair } = useAuth()
+  const [aba, setAba] = useState<Aba>('estoque')
+  const [menuAberto, setMenuAberto] = useState(false)
   const [busca, setBusca] = useState('')
   const [motos, setMotos] = useState<Motorcycle[] | null>(null)
-  const [leads, setLeads] = useState<Lead[] | null>(null)
   const [editando, setEditando] = useState<{ id?: string; dados?: MotoParaSalvar } | null>(null)
   const [confirmacao, setConfirmacao] = useState<PedidoConfirmacao | null>(null)
   const [excluindo, setExcluindo] = useState(false)
@@ -64,56 +52,42 @@ export function Admin() {
 
   usePageMeta('Painel | DG Motos', 'Área restrita do proprietário.')
 
-  const carregar = useCallback(async () => {
-    const [catalogo, lista] = await Promise.all([buscarCatalogo(), buscarLeads()])
-    return { motos: catalogo.motos, leads: lista }
-  }, [])
-
   const recarregar = useCallback(async () => {
-    const dados = await carregar()
-    setMotos(dados.motos)
-    setLeads(dados.leads)
-  }, [carregar])
+    const r = await buscarCatalogo()
+    setMotos(r.motos)
+  }, [])
 
   useEffect(() => {
     let vivo = true
-    void carregar().then((dados) => {
-      if (!vivo) return
-      setMotos(dados.motos)
-      setLeads(dados.leads)
+    void buscarCatalogo().then((r) => {
+      if (vivo) setMotos(r.motos)
     })
     return () => {
       vivo = false
     }
-  }, [carregar])
-
-  const leadsRecentes = useMemo(() => contarLeadsRecentes(leads ?? [], 30), [leads])
-  const carregando = motos === null || leads === null
-
-  function irPara(proxima: AbaAdmin) {
-    setAba(proxima)
-    setMenuAberto(false)
-  }
-
-  function abrirNovaMoto() {
-    setEditando({})
-    irPara('estoque')
-  }
+  }, [])
 
   function avisar(novo: Feedback) {
     setFeedback(novo)
   }
 
-  /** Salvar/excluir mexem no banco: a lista precisa voltar do servidor. */
   async function concluirAcao(texto: string) {
     await recarregar()
     avisar({ tipo: 'ok', texto })
   }
 
+  /** O formulário salvou (novo cadastro ou edição): recarrega o estoque. */
+  async function aoSalvarMoto() {
+    const eraNova = !editando?.id
+    setEditando(null)
+    await recarregar()
+    avisar({ tipo: 'ok', texto: eraNova ? 'Moto adicionada ao estoque.' : 'Alterações salvas.' })
+  }
+
   function pedirExclusao(moto: Motorcycle) {
     setConfirmacao({
       titulo: 'Excluir moto',
-      descricao: `"${moto.marca} ${moto.modelo} ${moto.ano}" sai do site e do painel. As fotos no Storage continuam lá e o preço não pode ser recuperado por este caminho.`,
+      descricao: `"${moto.marca} ${moto.modelo} ${moto.ano}" sai do site e do painel. As fotos também são removidas e não é possível desfazer.`,
       rotuloConfirmar: 'Excluir',
       onConfirmar: async () => {
         setExcluindo(true)
@@ -129,145 +103,193 @@ export function Admin() {
     })
   }
 
-  /**
-   * CRM → Estoque: cliente fechou negócio. Um clique marca a moto como
-   * vendida (com data, que alimenta o financeiro e os relatórios).
-   */
-  function pedirVenda(moto: Motorcycle, leadNome: string) {
-    setConfirmacao({
-      titulo: 'Fechar negócio',
-      descricao: `${leadNome} fechou com a ${moto.marca} ${moto.modelo} ${moto.ano}. Marcar como vendida no estoque? Ela sai da vitrine e entra no financeiro com a data de hoje.`,
-      rotuloConfirmar: 'Marcar como vendida',
-      onConfirmar: async () => {
-        const r = await marcarComoVendida(moto.id)
-        setConfirmacao(null)
-        if (!r.ok) {
-          avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível marcar a venda.' })
-          return
-        }
-        await concluirAcao(
-          `${moto.marca} ${moto.modelo} marcada como vendida. O financeiro já registra a venda.`,
-        )
-      },
-    })
+  /** Atalho de status: vender, reativar ou marcar como indisponível. */
+  async function alterarStatus(moto: Motorcycle, status: MotorcycleStatus) {
+    const r = await atualizarStatus(moto.id, status)
+    if (!r.ok) {
+      avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível alterar o status.' })
+      return
+    }
+    const texto: Record<MotorcycleStatus, string> = {
+      disponivel: `${moto.marca} ${moto.modelo} está disponível de novo.`,
+      indisponivel: `${moto.marca} ${moto.modelo} foi marcada como indisponível.`,
+      vendida: `${moto.marca} ${moto.modelo} foi marcada como vendida.`,
+    }
+    await concluirAcao(texto[status])
   }
+
+  function trocarAba(proxima: Aba) {
+    setAba(proxima)
+    setMenuAberto(false)
+  }
+
+  const rotuloAba = ABAS.find((a) => a.id === aba)?.rotulo ?? 'Painel'
 
   return (
     <div className="flex min-h-dvh bg-night-950">
-      {/* Sidebar fixa (desktop) */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 border-r border-white/10 bg-night-900 p-4 lg:block">
-        <AdminSidebar aba={aba} onNavegar={irPara} leadsRecentes={leadsRecentes} />
+      {/* ---------------------------------------------------------- */}
+      {/* Sidebar — fixa no desktop, drawer no celular                 */}
+      {/* ---------------------------------------------------------- */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-night-900 transition-transform duration-300 lg:translate-x-0 ${
+          menuAberto ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        aria-label="Menu do painel"
+      >
+        {/* Faixa vermelha de topo, mesma assinatura do site */}
+        <div aria-hidden="true" className="h-[3px] w-full shrink-0 bg-gradient-to-r from-[#d91f32] via-[#d91f32] to-[#8a1220]" />
+
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4 lg:h-16">
+          <Link
+            to="/"
+            aria-label="DG Motos — ver o site"
+            className="foco-painel flex items-center gap-2.5 rounded"
+          >
+            <img src="/logo.webp" alt="" width={28} height={28} className="size-7 object-contain" />
+            <span className="font-display text-base font-bold tracking-[0.18em] text-paper uppercase">
+              DG Motos
+            </span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMenuAberto(false)}
+            aria-label="Fechar menu"
+            className="foco-painel toque-minimo grid size-9 place-items-center rounded-md text-steel-400 transition-colors hover:text-paper lg:hidden"
+          >
+            <X className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+          <p className="px-2 pb-2 font-display text-[10px] font-semibold tracking-[0.22em] text-steel-600 uppercase">
+            Gerenciar
+          </p>
+          {ABAS.map(({ id, rotulo, icone: Icone }) => {
+            const ativa = aba === id
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => trocarAba(id)}
+                aria-current={ativa ? 'page' : undefined}
+                className={`foco-painel item-linha relative w-full rounded-md text-sm font-medium transition-colors ${
+                  ativa
+                    ? 'bg-brand-500/10 text-paper before:absolute before:top-2 before:bottom-2 before:left-0 before:w-0.5 before:rounded-full before:bg-brand-500'
+                    : 'text-steel-300 hover:bg-white/5 hover:text-paper'
+                }`}
+              >
+                <Icone
+                  className={`size-4 shrink-0 ${ativa ? 'text-brand-500' : 'text-steel-500'}`}
+                  aria-hidden="true"
+                />
+                {rotulo}
+                {id === 'estoque' && motos !== null ? (
+                  <span
+                    className={`ml-auto rounded-full px-2 py-0.5 text-[11px] leading-4 tabular-nums ${
+                      ativa ? 'bg-brand-500/20 text-brand-500' : 'bg-white/5 text-steel-500'
+                    }`}
+                  >
+                    {motos.length}
+                  </span>
+                ) : null}
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="shrink-0 space-y-1 border-t border-white/10 p-3">
+          <p className="truncate px-2 pb-1 text-xs text-steel-500" title={sessao?.user.email}>
+            {sessao?.user.email ?? 'Conta'}
+          </p>
+          <Link
+            to="/"
+            className="foco-painel item-linha w-full rounded-md text-sm text-steel-300 transition-colors hover:bg-white/5 hover:text-paper"
+          >
+            <ExternalLink className="size-4 shrink-0 text-steel-500" aria-hidden="true" />
+            Ver o site
+          </Link>
+          <button
+            type="button"
+            onClick={() => void sair()}
+            className="foco-painel item-linha w-full rounded-md text-sm text-steel-300 transition-colors hover:bg-white/5 hover:text-brand-500"
+          >
+            <LogOut className="size-4 shrink-0 text-steel-500" aria-hidden="true" />
+            Sair
+          </button>
+        </div>
       </aside>
 
-      <AdminMenuPlanilha
-        aberto={menuAberto}
-        aba={aba}
-        onFechar={() => setMenuAberto(false)}
-        onNavegar={irPara}
-      />
+      {/* Backdrop do drawer no celular */}
+      {menuAberto && (
+        <div
+          aria-hidden="true"
+          onClick={() => setMenuAberto(false)}
+          className="fixed inset-0 z-40 bg-black/70 lg:hidden"
+        />
+      )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Topbar: identificação da seção + avisos.
-            Sem backdrop: o painel é denso e o desfoque só competia com o
-            texto. No celular é uma barra de 48px — o logotipo ocupa 24px
-            e o título fica em `truncate` para nunca quebrar layout com
-            nomes longos. */}
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-night-950">
-          <div className="flex h-12 items-center gap-2.5 px-4 sm:h-14 sm:gap-3 sm:px-6">
-            <Link
-              to="/"
-              aria-label="DG Motos — ver o site"
-              className="foco-painel shrink-0 rounded sm:hidden"
-            >
-              <img src="/logo.webp" alt="" width={24} height={24} className="size-6 object-contain" />
-            </Link>
-
-            <h1 className="min-w-0 flex-1 truncate font-display text-xs font-semibold tracking-[0.16em] text-steel-300 uppercase sm:text-sm">
-              {tituloDaAba(aba)}
-            </h1>
-
-            {/* No celular a pílula de publicação vira só o ícone: o texto
-                "Publica em 42s" roubaria a largura do título. O `title`
-                preserva a informação no hover, e o leitor de tela continua
-                recebendo o texto via aria-label. */}
-            <span className="hidden sm:contents">
-              <PublicacaoStatus />
-            </span>
-            <PublicacaoStatus compacto />
-
+      {/* ---------------------------------------------------------- */}
+      {/* Conteúdo                                                     */}
+      {/* ---------------------------------------------------------- */}
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
+        {/* Topbar */}
+        <header className="sticky top-0 z-30 border-b border-white/10 bg-night-950/95 backdrop-blur-sm">
+          <div className="flex h-14 items-center gap-3 px-4 sm:px-6 lg:h-16 lg:px-8">
             <button
               type="button"
-              onClick={() => irPara('clientes')}
-              aria-label={`Clientes: ${leadsRecentes} nos últimos 30 dias`}
-              className="foco-painel toque-minimo relative -mr-1.5 rounded-md p-2 text-steel-300 transition-colors hover:bg-white/5 hover:text-paper"
+              onClick={() => setMenuAberto(true)}
+              aria-label="Abrir menu"
+              aria-expanded={menuAberto}
+              className="foco-painel toque-minimo grid size-10 place-items-center rounded-md text-steel-300 transition-colors hover:bg-white/5 hover:text-paper lg:hidden"
             >
-              <Bell className="size-5" aria-hidden="true" />
-              {leadsRecentes > 0 && (
-                <span className="absolute top-0.5 right-0.5 grid size-4 place-items-center rounded-full bg-brand-500 text-[9px] font-bold text-white tabular-nums">
-                  {leadsRecentes > 9 ? '9+' : leadsRecentes}
-                </span>
-              )}
+              <MenuIcon className="size-5" aria-hidden="true" />
             </button>
+
+            <h1 className="min-w-0 flex-1 truncate font-display text-sm font-semibold tracking-[0.16em] text-paper uppercase">
+              {editando ? (editando.id ? 'Editar moto' : 'Nova moto') : rotuloAba}
+            </h1>
+
+            {/* Com o formulário aberto, o "voltar" sobe para a topbar:
+                fecha a edição e volta à lista, fora do rolar do form. */}
+            {aba === 'estoque' && editando && (
+              <button
+                type="button"
+                onClick={() => setEditando(null)}
+                className="foco-painel inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs text-steel-300 transition-colors hover:border-white/30 hover:text-paper"
+              >
+                <ArrowLeft className="size-3.5" aria-hidden="true" />
+                Voltar ao estoque
+              </button>
+            )}
+
+            {aba === 'estoque' && !editando && (
+              <Link
+                to="/"
+                className="foco-painel hidden items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs text-steel-300 transition-colors hover:border-white/30 hover:text-paper lg:inline-flex"
+              >
+                <ExternalLink className="size-3.5" aria-hidden="true" />
+                Ver no site
+              </Link>
+            )}
           </div>
         </header>
 
-        {/* `max-w-7xl` em vez de `max-w-6xl`: o painel é uma ferramenta
-            de trabalho, não uma vitrine — em monitor largo, limitar a
-            1152px deixava a tabela do Financeiro e os cards de Configurações
-            perdidos no meio da tela. */}
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 pb-[calc(var(--spacing-nav-painel)+1.5rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-6 lg:px-8 lg:pb-10">
-          {aba === 'painel' && (
-            <DashboardTab
-              motos={motos}
-              leads={leads}
-              carregando={carregando}
-              onNavegar={irPara}
-              onNovaMoto={abrirNovaMoto}
-            />
-          )}
-
-          {aba === 'estoque' && (
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {aba === 'estoque' ? (
             <EstoqueTab
               motos={motos}
               busca={busca}
               onBusca={setBusca}
               editando={editando}
-              onEditando={(v) => {
-                setEditando(v)
-                avisar({
-                  tipo: 'ok',
-                  texto: v === null ? 'Estoque atualizado.' : '',
-                })
-              }}
+              onEditando={setEditando}
               onPedirExclusao={pedirExclusao}
+              onAlterarStatus={alterarStatus}
+              onSalva={aoSalvarMoto}
             />
+          ) : (
+            <ConfiguracoesTab />
           )}
-
-          {aba === 'clientes' && (
-            <LeadsTab
-              leads={leads}
-              motos={motos ?? []}
-              onMotoVendida={pedirVenda}
-            />
-          )}
-
-          {aba === 'financeiro' && (
-            <FinanceiroTab motos={motos} carregando={carregando} />
-          )}
-
-          {aba === 'relatorios' && (
-            <RelatoriosTab leads={leads} motos={motos} carregando={carregando} />
-          )}
-
-          {aba === 'config' && <ConfiguracoesTab onFeedback={avisar} />}
         </main>
-
-        <AdminBottomNav
-          aba={aba}
-          menuAberto={menuAberto}
-          onNavegar={irPara}
-          onAbrirMenu={() => setMenuAberto(true)}
-        />
       </div>
 
       <DialogoConfirmacao

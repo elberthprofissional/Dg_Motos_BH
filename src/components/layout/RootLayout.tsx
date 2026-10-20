@@ -5,7 +5,6 @@ import { Footer } from './Footer'
 import { useScrollToTop, useRevealOnScroll } from '../../hooks/useNavigation'
 import { CatalogoContexto } from '../../hooks/useCatalogo'
 import type { EstadoCatalogo } from '../../hooks/useCatalogo'
-import { SiteConfigProvider } from '../../hooks/SiteConfigProvider'
 import { buscarCatalogo } from '../../lib/catalog'
 import { supabaseConfigured } from '../../lib/supabase'
 import { motorcycles as catalogoEstatico } from '../../data/motorcycles'
@@ -20,15 +19,13 @@ export function RootLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteConfigProvider>
-        <Header />
-        <main id="conteudo" className="flex-1">
-          <CatalogoProvider>
-            <Outlet />
-          </CatalogoProvider>
-        </main>
-        <Footer />
-      </SiteConfigProvider>
+      <Header />
+      <main id="conteudo" className="flex-1">
+        <CatalogoProvider>
+          <Outlet />
+        </CatalogoProvider>
+      </main>
+      <Footer />
     </div>
   )
 }

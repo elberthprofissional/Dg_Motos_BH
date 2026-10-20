@@ -12,12 +12,20 @@
       fetchpriority="high"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- PWA: app instalável (painel do dono). O manifest aponta
+         start_url para /admin/login, então quem abre o app cai no
+         login; o site no navegador segue abrindo no catálogo. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DG Motos" />
     <title>DG Motos — Realizando Sonhos | Motocicletas seminovas em Belo Horizonte</title>
     <meta
       name="description"
-      content="Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque conferido, financiamento, avaliação de troca e negociação direta pelo WhatsApp."
+      content="Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque conferido, procedência verificada e negociação direta pelo WhatsApp."
     />
-    <meta name="theme-color" content="#090909" />
+    <meta name="theme-color" content="#111111" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:site_name" content="DG Motos" />
@@ -26,7 +34,7 @@
     <meta property="og:image" content="https://dgmotos.com.br/hero/showroom.webp" />
     <meta
       property="og:description"
-      content="Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque conferido, financiamento, avaliação de troca e negociação direta pelo WhatsApp."
+      content="Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque conferido, procedência verificada e negociação direta pelo WhatsApp."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

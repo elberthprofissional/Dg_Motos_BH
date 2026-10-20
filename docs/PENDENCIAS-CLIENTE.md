@@ -43,7 +43,8 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 - Descrições e especificações são rascunho editorial; revisar antes de
   publicar (principalmente câmbio da Start e detalhes da Lander).
 - Confirmar se alguma das motos já foi vendida e usar
-  `disponibilidade: 'reservada' | 'vendida'` conforme o caso.
+  `status: 'indisponivel' | 'vendida'` conforme o caso (só `disponivel`
+  aparece no site).
 
 ## 5. Fotografias
 
@@ -77,19 +78,19 @@ Com o painel configurado (recomendado):
 1. Entre em `/admin` com o e-mail do dono.
 2. Aba **Estoque** → **Nova moto** (ou **Editar** numa existente).
 3. Preencha os dados, arraste as fotos e salve.
-4. Clique em **Publicar site** (ou faça deploy pelo painel do host) para
-   o Google e as páginas estáticas receberem a versão nova.
+4. Faça o deploy pelo painel do host (um `git push` na Vercel já basta)
+   para o Google e as páginas estáticas receberem a versão nova.
 
 Sem Supabase, o caminho é pelo código:
 
 1. Abra `src/data/motorcycles.ts`.
 2. Cada moto é um objeto com `marca, modelo, ano, preco, quilometragem,
    cilindrada, categoria, descricao, especificacoes, imagens, destaque,
-   disponibilidade, slug`.
+   status, slug`.
 3. Para **adicionar**: copie um bloco existente, mude `id`, `slug`
    (formato `marca-modelo-ano`) e os dados.
-4. Para **marcar como vendida**: `disponibilidade: 'vendida'` (some do
-   catálogo automaticamente).
+4. Para **marcar como vendida**: `status: 'vendida'` (some do catálogo
+   automaticamente).
 5. Fotos: coloque os arquivos em `public/motos/<pasta>/` listados em
    `imagens[]` — a primeira é a capa.
 

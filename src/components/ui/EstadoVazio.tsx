@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 /**
  * Estado vazio / sem resultado.
  *
- * O painel tem cinco listas que podem ficar vazias (estoque, leads,
- * atividade do dono, resultados de filtro). Todas respondem a mesma
+ * O painel tem listas que podem ficar vazias (estoque, resultados de
+ * filtro). Todas respondem a mesma
  * pergunta — "por que estou vendo nada?" — então a resposta tem o mesmo
  * formato: ícone discreto, o que aconteceu em uma linha e, quando faz
  * sentido, a ação que resolve.
@@ -16,10 +16,10 @@ import type { ReactNode } from 'react'
  * `compacto`
  * ============================================================
  * A versão completa (py-12, ícone 44px) serve para uma página inteira
- * sem resultado — Estoque vazio, Clientes sem contato. Mas dentro de um
- * card do painel ela comia a tela: o bloco "últimos leads" do Dashboard
- * tem pouco mais que um terço da altura do celular, e 96px de padding
- * deixava a seção parecendo um buraco.
+ * sem resultado — Estoque vazio, filtro sem retorno. Mas dentro de um
+ * card do painel ela comia a tela: o card tem pouco mais que um terço
+ * da altura do celular, e 96px de padding deixava a seção parecendo um
+ * buraco.
  *
 * `compacto` reduz para py-7 e ícone 36px. O texto continua o mesmo —
  * encurtar a descrição para ganhar espaço esconderia a informação que o

@@ -1,9 +1,10 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronDown, ClipboardCheck, FileCheck, MapPin, MessageSquare } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, MessageCircle } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { usePageMeta } from '../hooks/useNavigation'
-import { buildDefaultMessage } from '../lib/format'
+import { buildDefaultMessage, useWhatsappLink } from '../lib/format'
 import { buildMapsRouteUrl } from '../lib/maps'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
@@ -11,254 +12,210 @@ import { BikeCard } from '../components/motorcycles/BikeCard'
 import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
 import { MapaLoja } from '../components/ui/MapaLoja'
 import { Button } from '../components/ui/Button'
-import { SectionHeading } from '../components/ui/SectionHeading'
 
-/** Foto real do showroom (convertida de img/hero-showroom.jpg via npm run convert-images). */
 const HERO_BG = '/hero/showroom.webp'
 
-const ETAPAS = [
-  {
-    numero: '01',
-    titulo: 'Escolha a moto',
-    texto: 'Navegue pelo estoque e encontre a cilindrada e o preço que cabem no seu plano.',
-  },
-  {
-    numero: '02',
-    titulo: 'Converse com a gente',
-    texto: 'Pelo WhatsApp ou na loja: condições reais, sem promessa que a gente não pode cumprir.',
-  },
-  {
-    numero: '03',
-    titulo: 'Documentação em dia',
-    texto: 'Transferência e procedência conferidas com acompanhamento da loja.',
-  },
-]
+function Carrossel({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
 
-const DIFERENCIAIS = [
-  {
-    icon: ClipboardCheck,
-    titulo: 'Procedência conferida',
-    texto: 'Documentação, revisão e histórico verificados antes do anúncio.',
-  },
-  {
-    icon: MessageSquare,
-    titulo: 'Negociação direta',
-    texto: 'Atendimento pelo WhatsApp ou na loja, sem formulário perdido.',
-  },
-  {
-    icon: FileCheck,
-    titulo: 'Financiamento orientado',
-    texto: 'A gente conduz a análise de crédito com você, etapa por etapa.',
-  },
-]
+  const rolar = (direcao: -1 | 1) => {
+    if (!ref.current) return
+    const card = ref.current.querySelector<HTMLElement>('[data-carousel-item]')
+    const step = card ? card.clientWidth + 24 : Math.round(ref.current.clientWidth * 0.7)
+    ref.current.scrollBy({ left: direcao * step, behavior: 'smooth' })
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => rolar(-1)}
+        aria-label="Motos em destaque - anterior"
+        className="absolute top-1/2 -left-4 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/10 bg-[#101010] text-[#f5f5f5] transition-colors duration-200 hover:border-[#d91f32] hover:text-[#f5f5f5] lg:-left-6 lg:grid"
+      >
+        <ChevronLeft className="size-5" aria-hidden="true" />
+      </button>
+
+      <div
+        ref={ref}
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden"
+      >
+        {children}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => rolar(1)}
+        aria-label="Motos em destaque - próximo"
+        className="absolute top-1/2 -right-4 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/10 bg-[#101010] text-[#f5f5f5] transition-colors duration-200 hover:border-[#d91f32] lg:-right-6 lg:grid"
+      >
+        <ChevronRight className="size-5" aria-hidden="true" />
+      </button>
+    </div>
+  )
+}
 
 export function Home() {
   const { motos } = useCatalogo()
   const { config } = useSiteConfig()
+  const wa = useWhatsappLink(buildDefaultMessage())
 
   usePageMeta(
     'DG Motos — Realizando Sonhos | Motocicletas seminovas em Belo Horizonte',
-    'Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque conferido, financiamento, avaliação de troca e negociação direta pelo WhatsApp.',
+    'Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque conferido, procedência verificada e negociação direta pelo WhatsApp.',
   )
   useJsonLd(autoDealerSchema(config))
 
   const destaques = motos
-    .filter((m) => m.destaque && m.disponibilidade !== 'vendida')
-    .slice(0, 3)
+    .filter((m) => m.destaque && m.status === 'disponivel')
+    .slice(0, 8)
 
   return (
     <>
-      {/* ============ HERO ============ */}
-      {/* Só a foto, sem texto nem botão: a vitrine é o primeiro contato
-          visual e o bloco de marca (logo + frase + CTAs) fica no meio da
-          página. O degradê na base existe para a foto dissolver na seção
-          seguinte em vez de terminar em corte reto. */}
-      <section className="relative min-h-[92svh] overflow-hidden pt-16 lg:min-h-[86svh]">
-        <img
-          src={HERO_BG}
-          alt="Showroom da DG Motos em Belo Horizonte"
-          className="absolute inset-0 size-full object-cover object-center"
-          fetchPriority="high"
-          decoding="sync"
+      <section className="relative min-h-[88svh] overflow-hidden bg-[#101010] pt-16 lg:min-h-[92svh]">
+        <div className="absolute inset-0">
+          <img
+            src={HERO_BG}
+            alt="Motocicleta em destaque no showroom da DG Motos em Belo Horizonte"
+            className="absolute inset-0 size-full object-cover object-[center_35%]"
+            fetchPriority="high"
+            decoding="sync"
+          />
+        </div>
+
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-r from-[#101010] via-[#101010]/90 to-[#101010]/55"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-night-950 via-night-950/25 to-night-950/45"
+          className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#101010] to-transparent"
         />
 
-        {/* Indicador de rolagem: sem texto, o hero precisa mostrar que há
-            conteúdo abaixo. Sem animação em loop — a seta só reage ao
-            hover, para não competir com a foto. */}
-        <a
-          href="#conteudo"
-          aria-label="Rolar para o conteúdo"
-          className="group absolute inset-x-0 bottom-8 z-10 mx-auto flex w-fit flex-col items-center gap-3 text-steel-400 transition-colors hover:text-paper"
-        >
-          <span className="font-display text-[10px] font-semibold tracking-[0.28em] uppercase">
-            Deslize
-          </span>
-          <ChevronDown
-            className="size-4 transition-transform duration-300 group-hover:translate-y-1"
-            aria-hidden="true"
-          />
-        </a>
+        <div className="container-site relative z-10 flex min-h-[calc(88svh-4rem)] flex-col justify-center lg:min-h-[calc(92svh-4.75rem)]">
+          <div className="max-w-3xl">
+            <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
+              DG Motos • Belo Horizonte, MG
+            </p>
+            <h1 className="mt-5 font-display text-4xl font-semibold tracking-[0.04em] text-[#f5f5f5] uppercase sm:text-5xl lg:text-6xl xl:text-7xl">
+              SUA PRÓXIMA MOTO COMEÇA AQUI
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-[#a3a3a3] sm:text-lg">
+              Motos seminovas em Belo Horizonte, MG, com procedência verificada, estoque selecionado e negociação direta.
+            </p>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              {wa ? (
+                <a
+                  href={wa}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+                >
+                  <MessageCircle className="size-4" aria-hidden="true" />
+                  TENHO INTERESSE
+                </a>
+              ) : (
+                <Link
+                  to="/contato"
+                  className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+                >
+                  <MessageCircle className="size-4" aria-hidden="true" />
+                  TENHO INTERESSE
+                </Link>
+              )}
+              <Link
+                to="/estoque"
+                className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/25 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:border-white/60 hover:bg-white/5"
+              >
+                VER ESTOQUE
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* ============ DESTAQUES DO ESTOQUE ============ */}
-      <section className="section border-t border-line">
-        <div className="container-site">
+      <section id="motos-em-destaque" className="bg-[#101010] border-t border-white/5">
+        <div className="container-site section">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <SectionHeading
-              eyebrow="No pátio agora"
-              title="Destaques do estoque"
-              description="Uma parte do que está disponível. O catálogo completo mostra tudo, com filtro por preço, ano e categoria."
-            />
+            <div>
+              <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
+                Destaques
+              </p>
+              <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.06em] text-[#f5f5f5] uppercase sm:text-4xl lg:text-5xl">
+                Motos em destaque
+              </h2>
+              <p className="mt-3 max-w-xl text-base text-[#a3a3a3]">
+                Uma parte do que está disponível no nosso estoque.
+              </p>
+            </div>
             <Link
               to="/estoque"
-              className="group/link inline-flex items-center gap-2 pb-1 text-sm font-semibold text-paper"
+              className="inline-flex items-center gap-2 font-display text-xs font-semibold tracking-[0.18em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:text-[#d91f32]"
             >
-              <span className="link-editorial">Ver estoque completo</span>
-              <ArrowRight
-                className="size-4 text-brand-500 transition-transform duration-300 group-hover/link:translate-x-1"
-                aria-hidden="true"
-              />
+              Ver todo o estoque
+              <span aria-hidden="true">→</span>
             </Link>
           </div>
 
-          <div className="reveal mt-10 grid gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-            {destaques.map((bike) => (
-              <BikeCard key={bike.id} bike={bike} priority />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============ COMO FUNCIONA ============ */}
-      {/* Sem caixas: a coluna é separada por um fio vertical e o número
-          carrega a hierarquia. No celular os mesmos itens viram uma
-          sequência vertical com fio à esquerda. */}
-      <section className="section border-t border-line">
-        <div className="container-site">
-          <SectionHeading
-            eyebrow="Como funciona"
-            title="Comprar na DG Motos é direto"
-            description="Você escolhe, conversa com a gente e resolve a documentação com acompanhamento."
-          />
-
-          <ol className="reveal mt-10 grid gap-y-8 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-0 lg:mt-14">
-            {ETAPAS.map(({ numero, titulo, texto }) => (
-              <li key={numero} className="sm:border-l sm:border-line sm:pl-8">
-                <span className="font-display text-4xl leading-none font-semibold text-brand-500">
-                  {numero}
-                </span>
-                <h3 className="mt-5 font-display text-lg font-semibold tracking-wide uppercase">
-                  {titulo}
-                </h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-steel-400">{texto}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* ============ BLOCO DE MARCA ============ */}
-      {/* Fica no meio da home, entre duas seções de texto, para o olho
-          respirar. Ordem: logo, selo de cidade, frase, apoio e CTAs. A frase
-          aparece uma única vez no site inteiro. */}
-      <section className="section border-b border-line" aria-label="Nosso compromisso">
-        <div className="container-site flex flex-col items-center text-center">
-          <img
-            src="/logo.webp"
-            alt=""
-            aria-hidden="true"
-            width={88}
-            height={88}
-            className="size-20 object-contain lg:size-24"
-          />
-
-          {/* Selo flanqueado por fios: marca o bloco sem precisar de caixa. */}
-          <div aria-hidden="true" className="mt-7 flex w-full max-w-sm items-center gap-4">
-            <span className="h-px flex-1 bg-line" />
-            <span className="size-1.5 shrink-0 rotate-45 bg-brand-500" />
-            <span className="h-px flex-1 bg-line" />
-          </div>
-          <p className="mt-5 font-display text-[11px] font-semibold tracking-[0.22em] text-steel-400 uppercase">
-            DG Motos — Belo Horizonte, MG
-          </p>
-
-          <h1 className="h-display mt-6 max-w-3xl text-3xl text-paper sm:text-5xl lg:text-6xl">
-            Seu próximo destino começa sobre duas rodas.
-          </h1>
-
-          <p className="mt-6 max-w-2xl leading-relaxed text-steel-300 text-pretty">
-            Motos com qualidade, procedência e atendimento que faz a diferença.
-            Seminovas selecionadas e negociação sem complicação.
-          </p>
-
-          <div className="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Button to="/estoque" size="lg">
-              Explorar estoque
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Button>
-            <WhatsAppCTA
-              message={buildDefaultMessage()}
-              label="Falar com a loja"
-              variant="outline"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ============ DIFERENCIAIS ============ */}
-      {/* Assimetria proposital: o texto institucional ocupa menos coluna que
-          a lista, e a lista resolve o espaço com peso. */}
-      <section className="section border-t border-line bg-night-900">
-        <div className="container-site grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
-          <div className="reveal">
-            <SectionHeading
-              eyebrow="O que a gente garante"
-              title="Procedência conferida antes do anúncio"
-              description="Documentação, revisão e histórico verificados antes da moto entrar no pátio. E a negociação é com quem vende."
-            />
-          </div>
-          <ul className="reveal border-t border-line">
-            {DIFERENCIAIS.map(({ icon: Icon, titulo, texto }) => (
-              <li
-                key={titulo}
-                className="flex gap-4 border-b border-line py-6 sm:gap-5 sm:py-7"
+          {destaques.length > 0 ? (
+            <div className="mt-10 lg:mt-14">
+              <Carrossel>
+                {destaques.map((bike) => (
+                  <div
+                    key={bike.id}
+                    data-carousel-item
+                    className="w-[88vw] shrink-0 snap-start sm:w-[380px] lg:w-[calc((100%-2rem)/3)]"
+                  >
+                    <BikeCard bike={bike} priority />
+                  </div>
+                ))}
+              </Carrossel>
+            </div>
+          ) : (
+            <div className="mt-10 flex flex-col items-center border border-white/8 bg-[#181818] px-6 py-12 text-center sm:py-16">
+              <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
+                Estoque
+              </p>
+              <h3 className="mt-4 font-display text-2xl font-semibold tracking-[0.06em] text-[#f5f5f5] uppercase sm:text-3xl">
+                Estoque em atualização
+              </h3>
+              <p className="mt-3 max-w-md text-[#a3a3a3]">
+                Nenhuma moto em destaque no momento. Confira o catálogo completo.
+              </p>
+              <Link
+                to="/estoque"
+                className="mt-8 inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
               >
-                <Icon className="mt-1 size-5 shrink-0 text-brand-500" aria-hidden="true" />
-                <div>
-                  <h3 className="font-display text-base font-semibold tracking-wide uppercase">
-                    {titulo}
-                  </h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-steel-400">{texto}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+                Ver estoque completo
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ============ LOCALIZAÇÃO ============ */}
-      {/* O mapa é a ponte entre o site e a visita. Endereço, horário (só se
-          existir na config) e rota à esquerda; o mapa à direita no desktop e
-          embaixo, com largura total, no celular. */}
-      <section className="section border-t border-line">
-        <div className="container-site">
-          <SectionHeading
-            eyebrow="Onde estamos"
-            title="Nos encontre na rua"
-            description="Conheça nosso espaço, veja as motocicletas de perto e converse pessoalmente com nossa equipe."
-          />
-
-          <div className="mt-10 grid gap-8 lg:mt-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-12">
+      <section className="bg-[#101010] border-t border-white/5">
+        <div className="container-site section">
+          <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="font-display text-2xl font-semibold tracking-wide uppercase">
+              <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
+                Onde estamos
+              </p>
+              <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.06em] text-[#f5f5f5] uppercase sm:text-4xl lg:text-5xl">
+                Visite a DG Motos
+              </h2>
+              <p className="mt-3 max-w-xl text-base text-[#a3a3a3]">
+                Conheça nosso showroom em Belo Horizonte, veja as motocicletas de perto e converse com nossa equipe.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-12">
+            <div className="border border-white/8 bg-[#181818] px-6 py-8 sm:px-8">
+              <p className="font-display text-lg font-semibold tracking-[0.16em] text-[#f5f5f5] uppercase">
                 DG Motos
               </p>
-              <address className="mt-4 flex items-start gap-3 not-italic text-steel-300">
-                <MapPin className="mt-1 size-5 shrink-0 text-brand-500" aria-hidden="true" />
+              <address className="mt-5 flex items-start gap-3 not-italic text-[#a3a3a3]">
+                <MapPin className="mt-1 size-5 shrink-0 text-[#d91f32]" aria-hidden="true" />
                 <span>
                   {config.enderecoRua}
                   <br />
@@ -267,63 +224,81 @@ export function Home() {
               </address>
 
               {config.horarios.length > 0 && (
-                <dl className="mt-7 border-t border-line">
+                <dl className="mt-8 border-t border-white/6">
                   {config.horarios.map((h) => (
                     <div
                       key={h.dias}
-                      className="flex items-baseline justify-between gap-4 border-b border-line py-3 text-sm"
+                      className="flex items-baseline justify-between gap-4 border-b border-white/6 py-3 text-sm"
                     >
-                      <dt className="text-steel-400">{h.dias}</dt>
-                      <dd className="font-medium text-paper">{h.horas}</dd>
+                      <dt className="text-[#a3a3a3]">{h.dias}</dt>
+                      <dd className="font-medium text-[#f5f5f5]">{h.horas}</dd>
                     </div>
                   ))}
                 </dl>
               )}
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <div className="mt-8 flex flex-col gap-3">
                 <Button
                   href={buildMapsRouteUrl(config.mapsUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto lg:w-full"
+                  className="w-full justify-center"
                 >
-                  Como chegar
-                  <ArrowRight className="size-4" aria-hidden="true" />
+                  COMO CHEGAR
                 </Button>
-                <WhatsAppCTA
-                  message={buildDefaultMessage()}
-                  variant="outline"
-                  className="w-full sm:w-auto lg:w-full"
-                />
+                <WhatsAppCTA message={buildDefaultMessage()} className="w-full justify-center" />
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-md border border-line">
+            <div className="overflow-hidden border border-white/8">
               <MapaLoja
                 rotulo={`${config.enderecoRua}, ${config.enderecoCidadeUf}`}
-                className="h-[300px] sm:h-[360px] lg:h-[420px]"
+                className="h-[300px] sm:h-[380px] lg:h-[460px]"
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ============ CTA FINAL ============ */}
-      <section className="border-t border-line bg-night-900">
-        <div className="container-site grid gap-8 py-16 sm:py-20 lg:grid-cols-[1.2fr_auto] lg:items-center">
+      <section className="bg-[#181818] border-t border-white/5">
+        <div className="container-site grid gap-8 py-16 sm:py-18 lg:grid-cols-[1.2fr_auto] lg:items-center lg:py-20">
           <div>
-            <h2 className="h-display text-3xl sm:text-4xl">
-              Encontro marcado com sua próxima moto.
+            <p className="font-display text-xs font-semibold tracking-[0.28em] text-[#d91f32] uppercase">
+              Negociação direta
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.06em] text-[#f5f5f5] uppercase sm:text-4xl lg:text-5xl">
+              ENCONTRO MARCADO COM SUA PRÓXIMA MOTO
             </h2>
-            <p className="mt-3 max-w-lg text-steel-400">
-              Fale com nossa equipe e consulte as condições disponíveis.
+            <p className="mt-4 max-w-xl text-base text-[#a3a3a3]">
+              Consulte disponibilidade, valores e condições diretamente com a equipe DG Motos pelo WhatsApp.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-stretch">
-            <WhatsAppCTA message={buildDefaultMessage()} label="Falar com a DG Motos" />
-            <Button to="/troca" variant="outline">
-              Avaliar minha moto
-            </Button>
+            {wa ? (
+              <a
+                href={wa}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+              >
+                <MessageCircle className="size-4" aria-hidden="true" />
+                FALAR COM A DG MOTOS
+              </a>
+            ) : (
+              <Link
+                to="/contato"
+                className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#d91f32] bg-[#d91f32] px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:bg-[#b71c2b] hover:border-[#b71c2b]"
+              >
+                <MessageCircle className="size-4" aria-hidden="true" />
+                FALAR COM A DG MOTOS
+              </Link>
+            )}
+            <Link
+              to="/estoque"
+              className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/25 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-[#f5f5f5] uppercase transition-colors duration-200 hover:border-white/60 hover:bg-white/5"
+            >
+              VER ESTOQUE
+            </Link>
           </div>
         </div>
       </section>

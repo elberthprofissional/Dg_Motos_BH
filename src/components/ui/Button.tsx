@@ -4,13 +4,13 @@ import { Link } from 'react-router-dom'
 type Variant = 'primary' | 'outline' | 'ghost'
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded font-display text-sm font-semibold tracking-[0.08em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex items-center justify-center gap-2 rounded-sm font-display text-xs font-semibold tracking-[0.18em] uppercase transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand-500 text-white hover:bg-brand-600',
+  primary: 'border border-[#d91f32] bg-[#d91f32] text-[#f5f5f5] hover:bg-[#b71c2b] hover:border-[#b71c2b]',
   outline:
-    'border border-white/20 text-paper hover:border-white/40 hover:bg-white/5',
-  ghost: 'text-paper hover:bg-white/5',
+    'border border-white/25 text-[#f5f5f5] hover:border-white/60 hover:bg-white/5',
+  ghost: 'text-[#a3a3a3] hover:text-[#f5f5f5]',
 }
 
 const sizes = {

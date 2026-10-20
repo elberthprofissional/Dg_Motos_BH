@@ -16,16 +16,13 @@
     "postbuild": "node scripts/prerender.mjs"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.9.1",
     "@supabase/supabase-js": "^2.117.2",
     "@tailwindcss/vite": "^4.3.3",
     "lucide-react": "^1.49.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-hook-form": "^7.89.0",
     "react-router-dom": "^7.18.4",
-    "tailwindcss": "^4.3.3",
-    "zod": "^4.6.5"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
