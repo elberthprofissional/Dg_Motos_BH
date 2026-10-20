@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
+import { MessageCircle } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
-import { formatPrice } from '../../lib/format'
+import { buildBikeMessage, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
+import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 
 interface BikeCardProps {
   bike: Motorcycle
@@ -9,15 +11,14 @@ interface BikeCardProps {
 }
 
 /**
- * Selo de disponibilidade.
+ * Selo de status na foto — só para os estados negativos.
  *
- * Fica sobre a foto, então precisa de fundo sólido para ser legível em
- * qualquer imagem. `disponivel` é o único estado positivo (verde da
- * identidade); `indisponivel`/`vendida` ficam em grafite apagado — a
- * moto ainda aparece, mas sem competir com as que estão à venda.
+ * "Disponível" não ganha selo: o card só existe pra vender, e o selo
+ * verde em toda foto virava ruído. "Indisponível"/"Vendida" ficam em
+ * grafite apagado com fundo sólido — a moto ainda aparece, mas avisa
+ * que não está à venda sem competir com as que estão.
  */
-const SELO: Record<MotorcycleStatus, { texto: string; classe: string }> = {
-  disponivel: { texto: 'Disponível', classe: 'bg-night-950/90 text-ok ring-1 ring-inset ring-ok/40' },
+const SELO: Partial<Record<MotorcycleStatus, { texto: string; classe: string }>> = {
   indisponivel: { texto: 'Indisponível', classe: 'bg-night-950/90 text-steel-400 ring-1 ring-inset ring-line-forte' },
   vendida: { texto: 'Vendida', classe: 'bg-night-950/90 text-steel-600 ring-1 ring-inset ring-line-forte' },
 }
@@ -34,10 +35,13 @@ const SELO: Record<MotorcycleStatus, { texto: string; classe: string }> = {
 export function BikeCard({ bike, priority = false }: BikeCardProps) {
   const title = `${bike.marca} ${bike.modelo}`
   const capa = bike.imagens[0]
-  const selo = SELO[bike.status] ?? SELO.disponivel
+  const selo = SELO[bike.status]
+  const whats = useWhatsappLink(
+    buildBikeMessage(bike.marca, bike.modelo, bike.ano),
+  )
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden border border-line bg-night-900 transition-colors duration-200 hover:border-line-forte">
+    <article className="group flex h-full flex-col overflow-hidden border border-line bg-night-900 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-1 hover:border-line-forte hover:shadow-[0_24px_48px_-28px_rgba(0,0,0,0.9)]">
       <div className="relative">
         <Link
           to={`/moto/${bike.slug}`}
@@ -55,11 +59,58 @@ export function BikeCard({ bike, priority = false }: BikeCardProps) {
             className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
         </Link>
-        <span
-          className={`pointer-events-none absolute top-3 left-3 px-2.5 py-1 font-display text-[10px] font-semibold tracking-[0.16em] uppercase ${selo.classe}`}
-        >
-          {selo.texto}
-        </span>
+        {selo && (
+          <span
+            className={`pointer-events-none absolute top-3 left-3 px-2.5 py-1 font-display text-[10px] font-semibold tracking-[0.16em] uppercase ${selo.classe}`}
+          >
+            {selo.texto}
+          </span>
+        )}
+
+        {/* Faixa de ações no pé da foto. No Android/tela de toque ela
+            fica sempre visível (não existe hover). Em desktop
+            (`hover: hover`) some por padrão e aparece quando o mouse
+            entra no card — `invisible` também tira os botões do clique
+            e da navegação por teclado enquanto escondida. Só os
+            botões recebem clique (pointer-events-auto); o resto do véu
+            deixa o clique atravessar pro Link da foto. Fica dentro da
+            imagem, acima do corpo do card — a marca nunca é coberta. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950/95 via-night-950/55 to-transparent p-3 opacity-100 transition-all duration-300 sm:p-3.5 [@media(hover:hover)]:invisible [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-hover:opacity-100">
+          <div className="flex gap-1.5">
+            <Link
+              to={`/moto/${bike.slug}`}
+              className="pointer-events-auto inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap border border-line-forte bg-night-950/85 px-2.5 py-2 font-display text-[9px] font-semibold tracking-[0.1em] text-paper uppercase backdrop-blur-sm transition-colors duration-200 hover:border-brand-500 hover:text-brand-500 sm:px-3 sm:text-[10px] sm:tracking-[0.12em]"
+            >
+              Ver detalhes
+              <span aria-hidden="true">→</span>
+            </Link>
+            {whats ? (
+              <a
+                href={whats}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pointer-events-auto inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap bg-brand-500 px-2.5 py-2 font-display text-[9px] font-semibold tracking-[0.1em] text-white uppercase transition-colors duration-200 hover:bg-brand-600 sm:px-3 sm:text-[10px] sm:tracking-[0.12em]"
+              >
+                <MessageCircle
+                  aria-hidden="true"
+                  className="hidden size-3.5 min-[400px]:inline"
+                />
+                Entrar em contato
+              </a>
+            ) : (
+              <Link
+                to="/contato"
+                className="pointer-events-auto inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap bg-brand-500 px-2.5 py-2 font-display text-[9px] font-semibold tracking-[0.1em] text-white uppercase transition-colors duration-200 hover:bg-brand-600 sm:px-3 sm:text-[10px] sm:tracking-[0.12em]"
+              >
+                <MessageCircle
+                  aria-hidden="true"
+                  className="hidden size-3.5 min-[400px]:inline"
+                />
+                Entrar em contato
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col px-5 py-5 sm:px-6">

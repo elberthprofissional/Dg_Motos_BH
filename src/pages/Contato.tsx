@@ -61,7 +61,7 @@ export function Contato() {
       descricao: `${config.enderecoRua} — ${config.enderecoCidadeUf}.`,
       acao: (
         <a
-          href={config.mapsUrl}
+          href={buildMapsRouteUrl(config)}
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm font-semibold text-brand-500 transition-colors hover:text-brand-600"
@@ -148,7 +148,7 @@ export function Contato() {
             </div>
 
             <Button
-              href={buildMapsRouteUrl(config.mapsUrl)}
+              href={buildMapsRouteUrl(config)}
               target="_blank"
               rel="noopener noreferrer"
               variant="outline"

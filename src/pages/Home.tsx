@@ -87,10 +87,9 @@ export function Home() {
           />
         </div>
 
-        {/* Scrim editorial: escurece a metade onde vive o texto e solta a
-            foto à direita. Um único gradiente direcional cumpre a leitura
-            sem apagar a motocicleta — nada de uma película escura uniforme
-            sobre a imagem. */}
+        {/* Scrim editorial: escurece a borda esquerda (onde o olho entra)
+            e solta a foto à direita — sem película uniforme por cima da
+            motocicleta. */}
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-gradient-to-r from-night-950 via-night-950/85 to-night-950/20 lg:via-night-950/70"
@@ -99,65 +98,25 @@ export function Home() {
           aria-hidden="true"
           className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-night-950 to-transparent"
         />
-
-        <div className="container-site relative z-10 py-16 lg:py-20">
-          <div className="max-w-[36rem]">
-            <p className="flex items-center gap-3 font-display text-xs font-semibold tracking-[0.28em] text-brand-500 uppercase">
-              <span aria-hidden="true" className="h-px w-8 bg-brand-500" />
-              DG Motos • Belo Horizonte
-            </p>
-            <h1 className="mt-6 font-display text-4xl leading-[1.04] font-semibold tracking-[0.02em] text-paper uppercase sm:text-5xl lg:text-6xl">
-              Realizando
-              <br className="hidden sm:block" /> sonhos
-            </h1>
-            <p className="mt-6 max-w-lg text-base leading-relaxed text-steel-300 sm:text-lg">
-              Seminovas em Belo Horizonte, MG. Estoque selecionado, procedência
-              verificada e negociação direta com quem entende de moto.
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              {wa ? (
-                <a
-                  href={wa}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-7 py-3.5 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
-                >
-                  <MessageCircle className="size-4" aria-hidden="true" />
-                  Tenho interesse
-                </a>
-              ) : (
-                <Link
-                  to="/contato"
-                  className="inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-7 py-3.5 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
-                >
-                  <MessageCircle className="size-4" aria-hidden="true" />
-                  Tenho interesse
-                </Link>
-              )}
-              <Link
-                to="/estoque"
-                className="inline-flex items-center justify-center gap-2 rounded-sm border border-line-forte px-7 py-3.5 font-display text-xs font-semibold tracking-[0.2em] text-paper uppercase transition-colors duration-200 hover:border-white/40 hover:bg-white/5"
-              >
-                Ver estoque
-              </Link>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section id="motos-em-destaque" className="border-t border-line bg-night-950">
         <div className="container-site section">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <h2 className="font-display text-3xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-4xl lg:text-5xl">
+              <p className="rotulo">SELEÇÃO DG</p>
+              <h1 className="mt-4 font-display text-3xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-4xl lg:text-5xl">
                 Motos em destaque
-              </h2>
+              </h1>
+              <p className="mt-3 max-w-xl text-base text-steel-400">
+                Procedência conferida, preço na vitrine e conversa direta com a loja.
+              </p>
             </div>
             <Link
               to="/estoque"
               className="inline-flex items-center gap-2 font-display text-xs font-semibold tracking-[0.18em] text-paper uppercase transition-colors duration-200 hover:text-brand-500"
             >
-              Ver todos os modelos
+              Ver todo o estoque
               <span aria-hidden="true">→</span>
             </Link>
           </div>
@@ -240,7 +199,7 @@ export function Home() {
 
               <div className="mt-8 flex flex-col gap-3 lg:mt-auto lg:pt-8">
                 <Button
-                  href={buildMapsRouteUrl(config.mapsUrl)}
+                  href={buildMapsRouteUrl(config)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full justify-center"

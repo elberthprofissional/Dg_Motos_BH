@@ -1,0 +1,36 @@
+# Verificação a cada push e pull request: lint, tipos, testes e build
+# de produção. O prerender degrada sozinho sem as chaves do Supabase
+# (fallback pro catálogo estático), então o job não precisa de secret —
+# com secret (repository variable/secret VITE_*) ele já usa o banco.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Testes
+        run: npm test
+
+      - name: Build de produção
+        run: npm run build

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { configPadrao, gravarConfig, lerConfig, limparConfig } from '../../lib/configLoja'
 import type { ConfigLoja } from '../../lib/configLoja'
+import { buildMapsRouteUrl } from '../../lib/maps'
 import { InstagramIcon } from '../ui/InstagramIcon'
 import { LinhaInstalarApp, PainelInstalarApp } from './InstalarApp'
 import { Toast } from '../ui/Toast'
@@ -273,19 +274,19 @@ export function ConfiguracoesTab() {
               onChange={(e) => set('enderecoCidadeUf', e.target.value)}
             />
           </Campo>
-          <Campo
-            id="cfg-maps"
-            label="Link do Google Maps"
-            dica='Cole aqui o link "Compartilhar" do Google Meu Negócio. Vazio = o site monta uma busca com o endereço.'
-          >
-            <input
-              id="cfg-maps"
-              className="input"
-              value={config.mapsUrl}
-              onChange={(e) => set('mapsUrl', e.target.value.trim())}
-              placeholder="https://maps.google.com/..."
-            />
-          </Campo>
+          {config.enderecoRua.trim() || config.enderecoCidadeUf.trim() ? (
+            <p className="text-[11px] text-steel-500">
+              Link do Google Maps (montado automaticamente):{' '}
+              <a
+                href={buildMapsRouteUrl(config)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-steel-300 underline decoration-white/20 underline-offset-2 hover:text-paper"
+              >
+                testar rota →
+              </a>
+            </p>
+          ) : null}
           <AcoesSecao onSalvar={salvar} onRestaurar={restaurar} />
         </fieldset>
       )

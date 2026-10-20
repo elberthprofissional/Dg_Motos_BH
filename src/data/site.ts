@@ -36,8 +36,6 @@ export const SITE = {
   },
   telefoneExibicao: null as string | null,
   horarios: null as { dias: string; horas: string }[] | null,
-  mapsUrl:
-    'https://www.google.com/maps/search/?api=1&query=Av.+Bas%C3%ADlio+da+Gama%2C+139%2C+Tupi%2C+Belo+Horizonte%2C+MG',
   // Coordenadas do embed oficial do Google Maps (pin na entrada da loja,
   // bairro Tupi). Alimentam os dados estruturados (schema.org).
   geo: {

@@ -85,7 +85,7 @@ export function Footer() {
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <a
-              href={buildMapsRouteUrl(config.mapsUrl)}
+              href={buildMapsRouteUrl(config)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-steel-300 transition-colors hover:text-paper"

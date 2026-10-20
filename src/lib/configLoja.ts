@@ -30,7 +30,6 @@ export interface ConfigLoja {
   telefoneExibicao: string | null
   enderecoRua: string
   enderecoCidadeUf: string
-  mapsUrl: string
   horarios: { dias: string; horas: string }[]
 }
 
@@ -43,7 +42,6 @@ export function configPadrao(): ConfigLoja {
     telefoneExibicao: SITE.telefoneExibicao,
     enderecoRua: SITE.endereco.rua,
     enderecoCidadeUf: SITE.endereco.cidadeUf,
-    mapsUrl: SITE.mapsUrl,
     horarios: SITE.horarios ?? [],
   }
 }
