@@ -61,26 +61,24 @@ moto + showroom + favicon. Elas foram convertidas para WebP e já estão no site
 
 - Para converter/atualizar fotos: colocar os arquivos em `img/` (mesmos
   nomes-base) e rodar `npm run convert-images`.
-- **Estado atual da fonte:** `img/` hoje guarda só as fontes de hero e logo
-  (`hero-showroom-2026-07.jfif`, `hero-showroom-2026-06.png`,
-  `hero-login-noite.jpg` e `logo.webp`). Nenhum original do catálogo está
-  mais ali; os WebP já convertidos continuam em `public/motos/<modelo>/` e
-  no site. Para trocar a foto de uma moto, reponha o arquivo em `img/` com o
-  nome-base esperado (`xre-300-2021`, `lander-2024`, `titan-2022`,
-  `start-2024`, `fazer-150-2020`) e rode `npm run convert-images`.
-- **Hero atual:** `img/hero-showroom-2026-07.jfif` gera duas versões em
-  `public/hero/`: `showroom-2026-07.webp` (1024×434, tamanho natural) e
-  `showroom-2026-07-hd.webp` (1920×814, reampliada — é a que a home carrega,
-  porque o hero ocupa a tela inteira). A versão no nome fura cache. Ao
-  chegar outra foto, renomeie com a data seguinte
-  (`hero-showroom-2026-08.jpg`), acrescente o nome no topo da lista
-  `HERO_FONTES` em `scripts/convert-images.mjs` e rode
-  `npm run convert-images`.
-- **Resolução do hero:** o arquivo atual tem 1024×434 px. Em tela cheia
-  (1440 px ou mais) ele é ampliado e fica suave. O site já serve a versão
-  reampliada para 1920 px, que evita a ampliação do navegador, mas não cria
-  detalhe novo. Para o hero em tela cheia, o ideal é uma export de 1920 px
-  de largura ou mais.
+- **Estado atual da fonte:** `img/` guarda `hero-desktop.png` (hero da home),
+  `troca.png` (banner de troca), `hero-login-noite.jpg` (entrada do painel),
+  `hero-showroom-2026-07.jfif`, `hero-showroom-2026-06.png` e `logo.webp`.
+  Nenhum original do catálogo está mais ali; os WebP já convertidos
+  continuam em `public/motos/<modelo>/` e no site. Para trocar a foto de uma
+  moto, reponha o arquivo em `img/` com o nome-base esperado
+  (`xre-300-2021`, `lander-2024`, `titan-2022`, `start-2024`,
+  `fazer-150-2020`) e rode `npm run convert-images`.
+- **Hero atual:** a home importa `img/hero-desktop.png` diretamente; o Vite
+  publica o arquivo com hash em `dist/assets/`. Já os arquivos
+  `public/hero/showroom-2026-07.webp` e `showroom-2026-07-hd.webp` atendem
+  Open Graph, JSON-LD e o preload do `index.html`. Ao trocar a foto da home,
+  substitua `img/hero-desktop.png` e rode o build; para atualizar também as
+  metatags, ajuste `index.html`, `src/lib/schema.ts` e a lista `HERO_FONTES`
+  em `scripts/convert-images.mjs`.
+- **Peso dos novos assets:** `hero-desktop.png` tem ~1,8 MB e `troca.png`
+  ~1,7 MB. Funcionam, mas o ideal antes de publicar é exportá-los em WebP
+  (ou AVIF) e reduzir a largura para o tamanho real de exibição.
 - **Pendente:** o cliente enviou apenas **1 foto por moto** — o script gera
   2 recortes extras (02.webp, 03.webp) só para a galeria não ficar vazia.
   O ideal é receber 3–5 fotos reais por moto (frente, lateral, painel,

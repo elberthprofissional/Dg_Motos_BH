@@ -55,6 +55,7 @@ src/
                 useJsonLd, useScroll, useInstalarPwa, contexto de config
   components/
     layout/     Header, Footer, RootLayout
+    home/       MarcasProcuradas
     admin/      MotoForm, PhotoUploader, EstoqueTab, ConfiguracoesTab,
                 InstalarApp, useInstalarApp, SeletorMarca
     motorcycles/ BikeCard, BikeFilters, BikeGallery, LinhaEstoque,
@@ -77,6 +78,26 @@ scripts/
   gerar-icones-pwa.mjs    ícones do PWA a partir de public/logo.webp
   baixar-marcas.mjs       logos das marcas para public/marcas/
 ```
+
+## Última rodada de layout (22/10/2026)
+
+- **`/admin/login`** — no desktop, a foto do showroom ocupa a metade
+  esquerda e o formulário flutua num cartão de vidro na metade direita. O
+  acesso do celular permanece igual: logo, campos e botão direto no fundo,
+  sem cartão.
+- **`/moto/<slug>`** — a ordem agora é galeria + preço/ações, ficha técnica,
+  descrição e, por fim, as motos recomendadas. As especificações viraram um
+  grid de cartões (2 colunas no celular, 4 no desktop).
+- **Home** — a seção "Marcas mais procuradas" usa o fundo escuro do site e
+  os logos são normalizados para branco (`brightness-0 invert`).
+- **Catálogo e estoque** — os cards de moto são a referência visual das
+  demais telas: foto 4:3, superfície arredondada, badges de ano/km e CTA
+  "Tenho interesse"; a página de estoque ganhou filtros em rascunho com
+  "Aplicar" e "Limpar".
+
+Verificação desta rodada: `lint`, `typecheck`, 79 testes, `build` com
+prerender de 4 fichas e auditoria CDP sem transbordo, contraste baixo ou
+imagem quebrada.
 
 ## Como o catálogo se comporta
 
@@ -124,16 +145,19 @@ da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
 - **O app instalado abre no login, não na vitrine.** `src/pages/Entrada.tsx`
   checa o `display-mode: standalone`: no PWA instalado, `/` cai em
   `/admin/login`; no navegador, mostra o catálogo.
-- **Fotos nunca são inventadas.** `img/` guarda só as fontes de hero/logo;
-  as fotos do catálogo já convertidas vivem em `public/motos/`. O script de
-  conversão gera WebP e crops; faltando foto, entra o placeholder local. O
-  hero tem a versão no nome (`showroom-2026-07.webp` e
-  `showroom-2026-07-hd.webp`): trocar só o conteúdo mantendo a URL faria o
-  CDN servir a foto velha do cache.
+- **Fotos nunca são inventadas.** `img/` guarda as fontes do hero
+  (`hero-desktop.png`), do banner de troca (`troca.png`), da entrada do
+  painel (`hero-login-noite.jpg`) e a logo; as fotos do catálogo já
+  convertidas vivem em `public/motos/` e os logos de marca em
+  `public/marcas/`. O script de conversão gera WebP e crops; faltando foto,
+  entra o placeholder local. O hero da home é importado pelo Vite (URL com
+  hash); os arquivos `public/hero/showroom-2026-07*.webp` continuam servindo
+  Open Graph, JSON-LD e o preload do `index.html`.
 - **A identidade visual entra pelo material, não por número decorativo.**
-  A assinatura é a moldura de registro (cantos vermelhos), o quadro de dados
-  com filete de 1 px e o canto reto. A Home não tem seção de estatísticas
-  decorativas nem faixa de texto sobre a foto.
+  A base é a bancada escura com um único vermelho de sinal. No catálogo, as
+  fichas de moto usam foto 4:3, cantos arredondados e CTA de WhatsApp; no
+  desktop, o login vira uma porta de showroom com foto e cartão de vidro.
+  O login do celular continua direto, sem cartão em volta.
 - **As fotos ficam na tabela `motorcycle_images`.** Excluir uma moto
   apaga as linhas em cascata e remove os arquivos do Storage — sem lixo
   acumulado no bucket.

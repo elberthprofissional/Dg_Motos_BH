@@ -246,3 +246,83 @@ inteira, o ideal é uma exportação com 1920 px de largura ou mais.
 - `WHATSAPP_NUMBER` continua nulo; todo CTA cai em `/contato` até o número
   real existir.
 - Instagram, endereço e horários: ver `docs/PENDENCIAS-CLIENTE.md`.
+
+---
+
+## 7. Atualização — 22/10/2026
+
+Rodada focada em três telas e na coerência do catálogo. A lógica de rotas,
+Supabase, autenticação e catálogo não mudou.
+
+### 7.1 `/admin/login` (desktop)
+
+- A tela virou um split 50/50 no `lg`: foto do showroom em `object-cover` na
+  metade esquerda, com gradientes que fundem a borda direita no formulário.
+- O texto "Realizando Sonhos" fica no canto inferior esquerdo, precedido do
+  badge vermelho "PAINEL DO DONO / ADMIN".
+- O formulário flutua num cartão `rounded-3xl` com fundo translúcido,
+  `backdrop-blur`, borda sutil, padding amplo e sombra. Os campos têm 48 px,
+  ícones de e-mail/cadeado e foco vermelho; o botão tem 48 px, raio de 12 px
+  e sombra vermelha.
+- **Mobile preservado:** a foto, o cartão, os ícones e os raios só existem a
+  partir de `lg`. No celular continuam a logo, os campos diretos e o botão,
+  sem cartão.
+- O `data-tema="painel"` foi removido só desta tela: a regra global do painel
+  zera os raios (`border-radius: 0 !important`) e impediria o cartão pedido.
+
+### 7.2 `/moto/<slug>`
+
+- Ordem vertical: topo com galeria + nome/preço/badges/WhatsApp → ficha
+  técnica e descrição → motos recomendadas no fim da página.
+- A galeria principal usa `aspect-[4/3]`, `rounded-2xl`, `overflow-hidden` e
+  miniaturas arredondadas abaixo.
+- Nome, preço, status e badges (Ano, KM, Cilindrada) ficam no bloco direito;
+  no celular o nome e o preço continuam abrindo a página.
+- As especificações viraram cards `rounded-xl` com fundo `bg-painel/80`
+  (2 colunas no celular, 4 no desktop). A descrição fica num card limpo
+  abaixo da ficha.
+- As recomendadas usam os cards novos do catálogo e fecham a página antes do
+  rodapé.
+
+### 7.3 Marcas mais procuradas
+
+- A seção deixou o fundo claro e passou a usar `bg-fundo` com
+  `border-t border-borda`.
+- Título em `text-texto`; link em vermelho da casa.
+- Logos em flexbox centralizada com `gap-8`, normalizadas por
+  `brightness-0 invert opacity-70` e `hover:opacity-100`.
+
+### 7.4 Catálogo, estoque e acessibilidade
+
+- `BikeCard`: foto 4:3, `rounded-2xl`, hover com elevação, badges de ano/km/
+  combustível, preço vermelho e CTA "Tenho interesse".
+- `/estoque`: filtros em rascunho com "Aplicar filtros"/"Limpar filtros",
+  sidebar em cartão arredondado, chips de categoria e etiquetas removíveis.
+- Links do rodapé e do breadcrumb do estoque ganharam altura mínima de 24 px,
+  eliminando os alvos de toque pequenos da auditoria.
+- A auditoria CDP foi atualizada para o fundo real do menu do celular
+  (`rgb(8, 8, 8)`).
+
+### 7.5 Verificação
+
+- `lint`: ok. `typecheck`: ok. `test`: 79/79.
+- `build` + prerender: 4 fichas, sitemap com 7 URLs, robots bloqueando
+  `/admin`.
+- Auditoria CDP (1440 px e 390 px): 0 transbordo horizontal, 0 contraste
+  abaixo de 4,5:1, 0 imagem quebrada, 0 id duplicado, 0 salto de título.
+- Medições de layout: cartão do login centralizado (448×568 px em 1440),
+  raio de 24 px, campos de 48 px; galeria da ficha em 792×594 px (4:3);
+  ficha técnica em 4 colunas no desktop e 2 no celular.
+- **Limitação:** este modelo não lê imagens. A conferência visual das
+  capturas de tela não foi possível; a validação foi feita por geometria e
+  estilos computados no DOM. Recomenda-se uma revisão humana das três telas
+  antes do deploy.
+
+### 7.6 Nota de documentação
+
+O relatório das seções 1–6 descreve uma iteração anterior e cita IBM Plex e
+"canto reto" como regra absoluta. O código atual usa **Lato** como família
+única e admite superfícies arredondadas no catálogo e no login desktop; o
+painel administrativo continua com a regra de canto reto. Os tokens de cor
+vigentes são os de `src/index.css` (`--cor-fundo: #080808`,
+`--cor-painel: #111111`, `--cor-marca: #e5161d`).

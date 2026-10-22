@@ -94,24 +94,28 @@
    ============================================================ */
 :root {
   /* --- A bancada (chão padrão do site) --- */
-  --cor-fundo: #0a0a0b;
-  --cor-painel: #111114;
-  --cor-painel-2: #19191d;
-  --cor-painel-3: #202026;
+  --cor-fundo: #080808;
+  --cor-painel: #111111;
+  --cor-painel-2: #171717;
+  --cor-painel-3: #1f1f1f;
 
-  --cor-texto: #ffffff;
-  --cor-texto-2: #b6b6c0;
-  --cor-texto-3: #8a8a94;
+  --cor-texto: #f5f5f5;
+  --cor-texto-2: #a6a6a6;
+  --cor-texto-3: #929292;
 
-  --cor-borda: rgba(255, 255, 255, 0.11);
-  --cor-borda-forte: rgba(255, 255, 255, 0.24);
+  --cor-borda: rgba(245, 245, 245, 0.09);
+  --cor-borda-forte: rgba(245, 245, 245, 0.18);
 
-  /* Vermelho de preenchimento: branco sobre ele passa de 4,5:1. */
-  --cor-marca: #e01b22;
-  /* Vermelho de texto miúdo sobre preto: 5,9:1. */
-  --cor-marca-texto: #ff4740;
+  /* Vermelho de preenchimento: branco sobre ele passa de 4,5:1.
+     O tom puro (#f01820) fica no realce (.preco), onde o corpo grande
+     ja sustenta o contraste. */
+  --cor-marca: #e5161d;
+  --cor-marca-viva: #f01820;
+  /* Vermelho de texto sobre preto: o tom puro fica no limite do
+     contraste em corpo pequeno; este sobe o suficiente para ler. */
+  --cor-marca-texto: #ff4348;
   /* Vermelho pressionado: mais fundo, nunca mais claro. */
-  --cor-marca-forte: #b5161c;
+  --cor-marca-forte: #c00f16;
 
   --cor-ok: #3fbf7f;
   --cor-alerta: #e0a33c;
@@ -144,22 +148,23 @@
 /* A ficha: chapa escura levemente mais clara que a bancada para
    criar hierarquia sem virar papel branco. */
 [data-tema='folha'] {
-  --cor-fundo: #161618;
-  --cor-painel: #1b1b1f;
-  --cor-painel-2: #222226;
-  --cor-painel-3: #29292e;
+  --cor-fundo: #111111;
+  --cor-painel: #171717;
+  --cor-painel-2: #1d1d1d;
+  --cor-painel-3: #242424;
 
-  --cor-texto: #ffffff;
-  --cor-texto-2: #b6b6c0;
-  --cor-texto-3: #8a8a94;
+  --cor-texto: #f5f5f5;
+  --cor-texto-2: #a6a6a6;
+  --cor-texto-3: #929292;
 
-  --cor-borda: rgba(255, 255, 255, 0.09);
-  --cor-borda-forte: rgba(255, 255, 255, 0.18);
+  --cor-borda: rgba(245, 245, 245, 0.09);
+  --cor-borda-forte: rgba(245, 245, 245, 0.18);
 
-  --cor-marca: #e01b22;
-  --cor-marca-texto: #ff4740;
-  --cor-marca-forte: #b5161c;
-  --cor-foco: #ff5b52;
+  --cor-marca: #e5161d;
+  --cor-marca-viva: #f01820;
+  --cor-marca-texto: #ff4348;
+  --cor-marca-forte: #c00f16;
+  --cor-foco: #ff4b50;
 
   --cor-papel-claro: #ffffff;
   --cor-tinta: #ffffff;
@@ -168,21 +173,22 @@
 /* O painel do dono é a mesma bancada, com a luz de serviço acesa:
    a área restrita é da casa, não do público. */
 [data-tema='painel'] {
-  --cor-fundo: #08080a;
-  --cor-painel: #0f0f12;
-  --cor-painel-2: #17171b;
-  --cor-painel-3: #202026;
-  --cor-texto: #ffffff;
-  --cor-texto-2: #b2b2bd;
-  --cor-texto-3: #8a8a94;
-  --cor-borda: rgba(255, 255, 255, 0.1);
-  --cor-borda-forte: rgba(255, 255, 255, 0.2);
-  --cor-marca: #e01b22;
-  --cor-marca-texto: #ff4740;
-  --cor-marca-forte: #b5161c;
+  --cor-fundo: #080808;
+  --cor-painel: #111111;
+  --cor-painel-2: #171717;
+  --cor-painel-3: #1f1f1f;
+  --cor-texto: #f5f5f5;
+  --cor-texto-2: #a6a6a6;
+  --cor-texto-3: #929292;
+  --cor-borda: rgba(245, 245, 245, 0.09);
+  --cor-borda-forte: rgba(245, 245, 245, 0.18);
+  --cor-marca: #e5161d;
+  --cor-marca-viva: #f01820;
+  --cor-marca-texto: #ff4348;
+  --cor-marca-forte: #c00f16;
   --cor-ok: #3fbf7f;
   --cor-alerta: #e0a33c;
-  --cor-foco: #ff5b52;
+  --cor-foco: #ff4b50;
   --cor-papel-claro: #ffffff;
   --cor-tinta: #ffffff;
 }
@@ -198,6 +204,7 @@
   --color-borda: var(--cor-borda);
   --color-borda-forte: var(--cor-borda-forte);
   --color-marca: var(--cor-marca);
+  --color-marca-viva: var(--cor-marca-viva);
   --color-marca-texto: var(--cor-marca-texto);
   --color-marca-forte: var(--cor-marca-forte);
   --color-ok: var(--cor-ok);
@@ -396,7 +403,8 @@
   /* Preço: o número que o cliente procura primeiro. Vermelho de
      texto, condensado, com algarismos de odômetro. */
   .preco {
-    @apply font-display font-bold text-marca-texto numeros;
+    @apply font-display font-bold numeros;
+    color: var(--cor-marca-viva);
     letter-spacing: 0.005em;
   }
 
@@ -426,6 +434,64 @@
 
   .surface {
     @apply border border-borda bg-painel;
+  }
+
+  /* ============================================================
+     VITRINE DO PÁTIO
+     A ficha da moto como chapa de exposição: superfície própria,
+     borda discreta, elevação curta e zoom contido na foto. O
+     vermelho fica para o selo, o preço e o contato.
+     ============================================================ */
+  .card-vitrine {
+    @apply relative flex flex-col overflow-hidden border border-borda bg-painel;
+    transition:
+      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.32s ease,
+      background-color 0.32s ease;
+  }
+
+  .card-vitrine:hover {
+    border-color: var(--cor-borda-forte);
+    background-color: #141414;
+  }
+
+  .card-vitrine:focus-within {
+    border-color: var(--cor-borda-forte);
+  }
+
+  .card-vitrine img {
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card-vitrine:hover {
+      transform: translateY(-4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-vitrine,
+    .card-vitrine img {
+      transition: none;
+    }
+
+    .card-vitrine:hover {
+      transform: none;
+    }
+  }
+
+  /* Contorno do card: a ação secundária da vitrine. */
+  .btn-vitrine {
+    @apply bg-marca text-white hover:bg-marca-forte;
+  }
+
+  /* Chip de filtro: pílula, com o estado ativo preenchido. */
+  .chip-filtro {
+    @apply inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-borda bg-painel-2 px-4 font-sans text-xs font-semibold text-texto-2 transition-colors hover:border-borda-forte hover:text-texto;
+  }
+
+  .chip-filtro[aria-pressed='true'] {
+    @apply border-marca bg-marca text-white;
   }
 
   /* ============================================================
@@ -501,7 +567,8 @@
   }
 
   .prerender .preco {
-    @apply mt-6 font-display text-3xl font-bold text-marca-texto numeros;
+    @apply mt-6 font-display text-3xl font-bold numeros;
+    color: var(--cor-marca-viva);
   }
 
   .prerender .ano {

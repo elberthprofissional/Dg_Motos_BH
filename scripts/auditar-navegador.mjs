@@ -409,7 +409,7 @@ const ok = (nome, passou, detalhe = '') => {
   )
   ok('menu: abre com showModal', aberto.aberto === true)
   ok('menu: ocupa a tela toda', aberto.largura === 390, 'largura=' + aberto.largura)
-  ok('menu: fundo preto', aberto.fundo === 'rgb(10, 10, 11)', aberto.fundo)
+  ok('menu: fundo preto', aberto.fundo === 'rgb(8, 8, 8)', aberto.fundo)
   ok('menu: rolagem do fundo travada', aberto.bodyOverflow === 'hidden', aberto.bodyOverflow)
   ok('menu: foco dentro do diálogo', aberto.focoDentro)
 

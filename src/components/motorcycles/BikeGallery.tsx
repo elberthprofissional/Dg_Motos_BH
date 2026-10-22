@@ -27,14 +27,14 @@ export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-painel-2">
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-painel-2">
         <img
           key={atual.src}
           src={atual.src}
           alt={atual.alt || titulo}
           width={1600}
-          height={1000}
-          className="size-full object-contain"
+          height={1200}
+          className="size-full object-cover object-center"
           onError={(e) => {
             ;(e.currentTarget as HTMLImageElement).src = PLACEHOLDER_CARD
           }}
@@ -54,7 +54,7 @@ export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
               aria-pressed={i === ativa}
               aria-label={`Ver foto ${i + 1} de ${lista.length}`}
               onClick={() => setAtiva(i)}
-              className={`overflow-hidden border transition-colors ${
+              className={`overflow-hidden rounded-xl border transition-colors ${
                 i === ativa
                   ? 'border-marca'
                   : 'border-borda hover:border-borda-forte'

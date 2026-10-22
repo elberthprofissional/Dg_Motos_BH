@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Calendar, Gauge, MessageCircle } from 'lucide-react'
+import { Calendar, Fuel, Gauge } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
 import { buildBikeMessage, formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
+import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 
 interface BikeCardProps {
   bike: Motorcycle
@@ -28,23 +29,32 @@ const ESTADO: Partial<Record<MotorcycleStatus, string>> = {
 }
 
 /**
- * Ficha do pátio.
+ * Ficha do pátio — a vitrine da moto.
  *
- * Não é cartão: é uma folha com a foto em cima e os dados embaixo,
- * como a ficha de vistoria de verdade. Sem moldura, sem fundo, sem
- * etiqueta — a foto é o bloco, o texto fica embaixo dela e o preço é
- * o único vermelho.
+ * A foto é a peça principal: ocupa toda a largura do card no
+ * enquadramento 4:3, sem moldura interna. Marca, modelo, ano,
+ * quilometragem e combustível descem em hierarquia clara; o preço
+ * fecha o bloco em vermelho e o contato vira a única ação do card.
  *
- * Um link só: o título estica a área clicável sobre a ficha inteira
- * (também sobre a foto), o que dá um alvo grande para o dedo sem
- * duplicar link para quem navega por teclado ou leitor de tela.
+ * O card inteiro leva à ficha (um link só, com alvo grande para o
+ * dedo); o botão "Tenho interesse" fica fora desse link porque leva
+ * a outra ação, o contato direto pelo WhatsApp.
  */
 export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCardProps) {
   const titulo = `${bike.marca} ${bike.modelo}`
-  const capa = bike.imagens[0]
+  // O card usa a segunda foto (lateral, mais larga) quando existe: ela
+  // enquadra melhor no 4:3 e costuma ser a imagem limpa do anúncio. A
+  // galeria da ficha continua com todas as fotos cadastradas.
+  const capa = bike.imagens[1] ?? bike.imagens[0]
   const estado = ESTADO[bike.status]
   const selo = bike.destaque && bike.status === 'disponivel'
   const waLink = useWhatsappLink(buildBikeMessage(bike.marca, bike.modelo, bike.ano))
+
+  const kmTexto = formatKm(bike.quilometragem)
+  const kmConfirmar = bike.quilometragem == null
+  // O combustível não é um campo próprio no catálogo: quando a ficha
+  // traz essa especificação, ela vira badge ao lado do ano e da km.
+  const combustivel = bike.especificacoes.find((e) => /combust/i.test(e.label))?.value
 
   const foto = (
     <>
@@ -54,29 +64,70 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
         loading={priority ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : 'auto'}
         decoding={priority ? 'sync' : 'async'}
-        width={1200}
-        height={900}
-        className={`w-full object-cover ${
-          variante === 'lista' ? 'h-full' : 'aspect-[4/3]'
-        }`}
+        className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 motion-safe:group-hover:scale-105"
       />
 
       {selo ? (
-        <span className="pointer-events-none absolute top-2 left-2 bg-fundo/80 px-2 py-0.5 text-[11px] font-semibold tracking-[0.12em] text-texto uppercase backdrop-blur-sm">
-          DESTAQUE
+        <span className="pointer-events-none absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-fundo/90 px-2.5 py-1.5 font-sans text-[10px] leading-none font-bold tracking-[0.14em] text-texto uppercase">
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-marca" />
+          Destaque
         </span>
       ) : null}
 
       {estado ? (
-        <span className="pointer-events-none absolute top-0 right-0 bg-fundo px-3 py-1.5 text-sm font-semibold text-texto">
+        <span className="pointer-events-none absolute top-3 right-3 rounded-md bg-fundo/90 px-2.5 py-1.5 font-sans text-xs font-semibold text-texto-2">
           {estado}
+        </span>
+      ) : null}
+
+      {bike.categoria && !estado ? (
+        <span className="pointer-events-none absolute right-3 bottom-3 rounded-md bg-fundo/90 px-2.5 py-1 font-sans text-[11px] font-medium text-texto-2">
+          {bike.categoria}
         </span>
       ) : null}
     </>
   )
 
-  const kmTexto = formatKm(bike.quilometragem)
-  const kmConfirmar = bike.quilometragem == null
+  const informacoes = (
+    <>
+      <p className="font-sans text-[13px] leading-none font-medium text-texto-3">
+        {bike.marca}
+      </p>
+
+      <h3
+        className={`mt-2 font-display font-bold leading-tight tracking-[-0.02em] text-white transition-colors group-hover:text-marca-texto ${
+          variante === 'lista' ? 'text-xl sm:text-2xl' : 'text-lg'
+        }`}
+      >
+        {bike.modelo}
+      </h3>
+
+      <div className="mt-3 mb-3 flex flex-wrap items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-md bg-painel-3/60 px-2.5 py-1 text-xs text-texto-2">
+          <Calendar aria-hidden="true" className="size-3.5 text-texto-3" />
+          {bike.ano}
+        </span>
+        <span
+          className={`inline-flex items-center gap-1 rounded-md bg-painel-3/60 px-2.5 py-1 text-xs ${
+            kmConfirmar ? 'text-texto-3' : 'text-texto-2'
+          }`}
+        >
+          <Gauge aria-hidden="true" className="size-3.5 text-texto-3" />
+          {kmTexto}
+        </span>
+        {combustivel ? (
+          <span className="inline-flex items-center gap-1 rounded-md bg-painel-3/60 px-2.5 py-1 text-xs text-texto-2">
+            <Fuel aria-hidden="true" className="size-3.5 text-texto-3" />
+            {combustivel}
+          </span>
+        ) : null}
+      </div>
+
+      <p className="preco numeros mt-auto whitespace-nowrap pt-2 text-xl leading-none font-extrabold">
+        {formatPrice(bike.preco)}
+      </p>
+    </>
+  )
 
   const cta =
     bike.status === 'disponivel' ? (
@@ -85,117 +136,60 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
-          className={`btn btn-secondary btn-sm gap-2 border-borda-forte bg-claro/5 hover:border-texto hover:bg-claro/10 hover:text-texto ${
-            variante === 'grade' ? 'w-full justify-center' : 'w-fit'
-          }`}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-marca px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-marca-viva"
         >
-          <MessageCircle className="size-4" aria-hidden="true" />
+          <IconeWhatsapp className="size-4" />
           Tenho interesse
         </a>
       ) : (
         <Link
           to="/contato"
-          className={`btn btn-secondary btn-sm gap-2 border-borda-forte bg-claro/5 hover:border-texto hover:bg-claro/10 hover:text-texto ${
-            variante === 'grade' ? 'w-full justify-center' : 'w-fit'
-          }`}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-marca px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-marca-viva"
         >
-          <MessageCircle className="size-4" aria-hidden="true" />
+          <IconeWhatsapp className="size-4" />
           Tenho interesse
         </Link>
       )
     ) : null
 
+  const artigo =
+    'card-vitrine group h-full rounded-2xl bg-painel/90 transition-all duration-300 hover:border-marca/50 hover:shadow-xl hover:shadow-marca/10'
+
   if (variante === 'lista') {
     return (
-      <article className="group relative border border-borda bg-painel transition-colors hover:border-borda-forte">
+      <article className={artigo}>
         <Link
           to={`/moto/${bike.slug}`}
           aria-label={`Ver a ficha de ${titulo} ${bike.ano}`}
-          className="block focus-visible:outline-none"
+          className="block flex-1 focus-visible:outline-offset-[-4px]"
         >
-          <div className="flex flex-col sm:flex-row">
-            <div className="relative w-full overflow-hidden bg-painel-2 sm:w-60 sm:shrink-0">
+          <div className="flex h-full flex-col sm:flex-row">
+            <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-fundo sm:aspect-auto sm:w-60">
               {foto}
             </div>
 
-            <div className="flex min-w-0 flex-1 flex-col gap-3 p-3.5 pb-0 sm:p-4 sm:pb-0">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="pequeno text-texto-3">{bike.marca}</p>
-                  <h3 className="mt-0.5 font-display text-xl font-semibold leading-tight tracking-[-0.01em] text-texto transition-colors group-hover:text-marca-texto truncate sm:text-2xl">
-                    {bike.modelo} <span className="text-texto-3">· {bike.ano}</span>
-                  </h3>
-                </div>
-                <p className="preco mt-1 text-2xl whitespace-nowrap">
-                  {formatPrice(bike.preco)}
-                </p>
-              </div>
-
-              <p className="pequeno flex flex-wrap items-center gap-x-5 gap-y-1 text-texto-2">
-                <span className="inline-flex items-center gap-1.5">
-                  <Calendar aria-hidden="true" className="size-3.5" />
-                  {bike.ano}
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1.5 ${
-                    kmConfirmar ? 'text-texto-3' : ''
-                  }`}
-                >
-                  <Gauge aria-hidden="true" className="size-3.5" />
-                  {kmTexto}
-                </span>
-                {bike.cilindrada ? <span>{bike.cilindrada} cc</span> : null}
-                {bike.categoria ? <span>{bike.categoria}</span> : null}
-              </p>
-            </div>
+            <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">{informacoes}</div>
           </div>
         </Link>
 
-        {cta ? <div className="px-3.5 pb-3.5 sm:px-4 sm:pb-4">{cta}</div> : null}
+        {cta ? <div className="px-4 pb-4 sm:px-5 sm:pb-5">{cta}</div> : null}
       </article>
     )
   }
 
   return (
-    <article className="group relative">
+    <article className={artigo}>
       <Link
         to={`/moto/${bike.slug}`}
         aria-label={`Ver a ficha de ${titulo} ${bike.ano}`}
-        className="block focus-visible:outline-none"
+        className="flex flex-1 flex-col focus-visible:outline-offset-[-4px]"
       >
-        <div className="relative overflow-hidden bg-painel-2">{foto}</div>
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-fundo">{foto}</div>
 
-        <div className="mt-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-sm text-texto-3">{bike.marca}</p>
-              <h3 className="mt-0.5 font-display text-lg font-semibold leading-tight tracking-[-0.01em] text-texto transition-colors group-hover:text-marca-texto truncate">
-                {bike.modelo} <span className="text-texto-3">· {bike.ano}</span>
-              </h3>
-            </div>
-            <p className="preco mt-0.5 text-2xl whitespace-nowrap sm:text-[1.75rem]">
-              {formatPrice(bike.preco)}
-            </p>
-          </div>
-
-          <p className="pequeno mt-1.5 flex items-center gap-4 text-texto-2">
-            <span className="inline-flex items-center gap-1.5">
-              <Calendar aria-hidden="true" className="size-3.5" />
-              {bike.ano}
-            </span>
-            <span
-              className={`inline-flex items-center gap-1.5 ${
-                kmConfirmar ? 'text-texto-3' : ''
-              }`}
-            >
-              <Gauge aria-hidden="true" className="size-3.5" />
-              {kmTexto}
-            </span>
-          </p>
-        </div>
+        <div className="flex flex-1 flex-col p-5">{informacoes}</div>
       </Link>
 
-      {cta ? <div className="mt-3">{cta}</div> : null}
+      {cta ? <div className="px-5 pb-5">{cta}</div> : null}
     </article>
   )
 }

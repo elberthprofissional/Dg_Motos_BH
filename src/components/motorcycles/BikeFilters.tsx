@@ -3,12 +3,11 @@ import type { BikeFilterState, Motorcycle } from '../../types'
 import {
   ANO_MAX,
   ANO_MIN,
+  ORDENACOES,
   PRECO_MAX,
   PRECO_MIN,
-  categoriasDisponiveis,
   marcasDisponiveis,
   modelosDisponiveis,
-  temFiltroAtivo,
 } from '../../lib/filters'
 import { formatPrice } from '../../lib/format'
 
@@ -17,7 +16,8 @@ interface BikeFiltersProps {
   /** Estoque atual — usado só para listar as marcas que existem. */
   motos: Motorcycle[]
   onChange: (next: BikeFilterState) => void
-  onClear: () => void
+  /** Aplica o rascunho quando o formulário é enviado (Enter em um campo). */
+  onAplicar?: () => void
   /**
    * Prefixo dos `id` dos campos.
    *
@@ -31,19 +31,18 @@ interface BikeFiltersProps {
 }
 
 /**
- * Filtros do estoque — a coluna de trabalho.
+ * Filtros do estoque — a bancada de trabalho da vitrine.
  *
- * Estreita e vertical, como a bancada de quem separa peças: campos
- * empilhados, cada um com o rótulo em cima. O visitante desce a
- * lista estreitando o pátio: marca, depois modelo (em cascata),
- * ano, faixa de preço e categoria — e o resultado reage na hora,
- * sem botão de busca no meio do caminho.
+ * A coluna é organizada em seções curtas (marca/modelo, preço, ano e
+ * ordenação) em vez de uma pilha de controles soltos. Cada campo
+ * compartilha o mesmo desenho de input: fundo da bancada, canto
+ * arredondado e foco vermelho.
  */
 export function BikeFilters({
   filtros,
   motos,
   onChange,
-  onClear,
+  onAplicar,
   prefix = 'filtro',
 }: BikeFiltersProps) {
   const set = <K extends keyof BikeFilterState>(key: K, value: BikeFilterState[K]) =>
@@ -54,46 +53,20 @@ export function BikeFilters({
   // modelo no onChange do select acima).
   const modelos = modelosDisponiveis(motos, filtros.marca)
 
-  const categorias = categoriasDisponiveis(motos)
-
-  // Chips de categoria só com o que existe no estoque. Com menos de duas
-  // categorias distintas o controle não ajuda ninguém — some.
-  const seletorDeCategoria =
-    categorias.length >= 2 ? (
-      <div role="group" aria-label="Categoria">
-        <span aria-hidden="true" className="field-label">
-          Categoria
-        </span>
-        <div className="flex flex-wrap gap-x-5 gap-y-1.5">
-          {(['todas', ...categorias] as BikeFilterState['categoria'][]).map((valor) => {
-            const ativa = filtros.categoria === valor
-            return (
-              <button
-                key={valor}
-                type="button"
-                aria-pressed={ativa}
-                onClick={() => set('categoria', valor)}
-                className={`min-h-11 py-2 font-sans text-sm font-medium transition-colors ${
-                  ativa ? 'text-marca-texto' : 'text-texto-3 hover:text-texto'
-                }`}
-              >
-                {valor === 'todas' ? 'Todas' : valor}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    ) : null
+  const legenda = 'mb-3 block font-sans text-[13px] leading-none font-semibold text-texto'
 
   return (
     <form
-      className="flex flex-col gap-5 border-t border-borda pt-5"
-      onSubmit={(e) => e.preventDefault()}
+      className="flex flex-col gap-6"
+      onSubmit={(e) => {
+        e.preventDefault()
+        onAplicar?.()
+      }}
       aria-label="Filtros do estoque"
     >
       <div>
         <label htmlFor={`${prefix}-busca`} className="field-label">
-          Buscar por marca ou modelo
+          Buscar
         </label>
         <div className="relative">
           <Search
@@ -105,67 +78,151 @@ export function BikeFilters({
             type="search"
             value={filtros.busca}
             onChange={(e) => set('busca', e.target.value)}
-            placeholder="Ex.: Honda XRE, Fazer, Lander..."
-            className="input text-base pl-9"
+            placeholder="Marca, modelo ou ano"
+            className="h-11 w-full rounded-xl border border-borda bg-fundo px-3 py-2 pr-10 pl-9 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:ring-1 focus:ring-marca/30 focus:outline-none"
           />
+          {filtros.busca ? (
+            <button
+              type="button"
+              onClick={() => set('busca', '')}
+              aria-label="Limpar busca"
+              className="absolute top-1/2 right-1.5 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-texto-3 transition-colors hover:bg-painel-2 hover:text-texto"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          ) : null}
         </div>
       </div>
 
-      <div>
-        <label htmlFor={`${prefix}-marca`} className="field-label">
-          Marca
-        </label>
-        <select
-          id={`${prefix}-marca`}
-          value={filtros.marca}
-          onChange={(e) => {
-            const marca = e.target.value
-            onChange({
-              ...filtros,
-              marca,
-              modelo: '',
-            })
-          }}
-          className="select text-base"
-        >
-          <option value="">Todas as marcas</option>
-          {marcas.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
-      </div>
+      <fieldset className="min-w-0 border-0 p-0">
+        <legend className={legenda}>Marca e modelo</legend>
+        <div className="space-y-3">
+          <div>
+            <label htmlFor={`${prefix}-marca`} className="field-label">
+              Marca
+            </label>
+            <select
+              id={`${prefix}-marca`}
+              value={filtros.marca}
+              onChange={(e) => {
+                const marca = e.target.value
+                onChange({
+                  ...filtros,
+                  marca,
+                  modelo: '',
+                })
+              }}
+              className="select h-11 rounded-xl bg-fundo text-sm"
+            >
+              <option value="">Todas as marcas</option>
+              {marcas.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div>
-        <label htmlFor={`${prefix}-modelo`} className="field-label">
-          Modelo
-        </label>
-        {filtros.marca ? (
-          <select
-            id={`${prefix}-modelo`}
-            value={filtros.modelo}
-            onChange={(e) => set('modelo', e.target.value)}
-            className="select text-base"
-          >
-            <option value="">Todos os modelos</option>
-            {modelos.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <select id={`${prefix}-modelo`} disabled aria-disabled="true" className="select text-base opacity-60">
-            <option value="">Escolha a marca primeiro</option>
-          </select>
-        )}
-      </div>
+          <div>
+            <label htmlFor={`${prefix}-modelo`} className="field-label">
+              Modelo
+            </label>
+            {filtros.marca ? (
+              <select
+                id={`${prefix}-modelo`}
+                value={filtros.modelo}
+                onChange={(e) => set('modelo', e.target.value)}
+                className="select h-11 rounded-xl bg-fundo text-sm"
+              >
+                <option value="">Todos os modelos</option>
+                {modelos.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <select
+                id={`${prefix}-modelo`}
+                disabled
+                aria-disabled="true"
+                className="select h-11 rounded-xl bg-fundo text-sm opacity-60"
+              >
+                <option value="">Escolha a marca</option>
+              </select>
+            )}
+          </div>
+        </div>
+      </fieldset>
 
-      <div>
-        <label htmlFor={`${prefix}-ano`} className="field-label">
-          Ano a partir de <span className="text-texto numeros">{filtros.anoMin}</span>
-        </label>
+      {/* Faixa de preço em dois puxadores (o chão e o teto), o par
+          clássico dos catálogos de veículos. Um não passa do outro. */}
+      <fieldset className="min-w-0 border-0 p-0">
+        <legend className={legenda}>Faixa de preço</legend>
+        <div className="space-y-4">
+          <div>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <label
+                htmlFor={`${prefix}-preco-min`}
+                className="text-xs text-texto-3"
+              >
+                Mínimo
+              </label>
+              <span className="numeros rounded-md bg-painel-3/60 px-2 py-0.5 text-xs font-semibold text-texto">
+                {formatPrice(filtros.precoMin)}
+              </span>
+            </div>
+            <input
+              id={`${prefix}-preco-min`}
+              type="range"
+              min={PRECO_MIN}
+              max={PRECO_MAX}
+              step={1000}
+              value={filtros.precoMin}
+              onChange={(e) =>
+                set('precoMin', Math.min(Number(e.target.value), filtros.precoMax - 1000))
+              }
+              className="w-full"
+            />
+          </div>
+          <div>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <label
+                htmlFor={`${prefix}-preco-max`}
+                className="text-xs text-texto-3"
+              >
+                Máximo
+              </label>
+              <span className="numeros rounded-md bg-painel-3/60 px-2 py-0.5 text-xs font-semibold text-texto">
+                {formatPrice(filtros.precoMax)}
+              </span>
+            </div>
+            <input
+              id={`${prefix}-preco-max`}
+              type="range"
+              min={PRECO_MIN}
+              max={PRECO_MAX}
+              step={1000}
+              value={filtros.precoMax}
+              onChange={(e) =>
+                set('precoMax', Math.max(Number(e.target.value), filtros.precoMin + 1000))
+              }
+              className="w-full"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset className="min-w-0 border-0 p-0">
+        <legend className={legenda}>Ano</legend>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <label htmlFor={`${prefix}-ano`} className="text-xs text-texto-3">
+            A partir de
+          </label>
+          <span className="numeros rounded-md bg-painel-3/60 px-2 py-0.5 text-xs font-semibold text-texto">
+            {filtros.anoMin}
+          </span>
+        </div>
         <input
           id={`${prefix}-ano`}
           type="range"
@@ -176,64 +233,31 @@ export function BikeFilters({
           onChange={(e) => set('anoMin', Number(e.target.value))}
           className="w-full"
         />
-        <div className="pequeno mt-1 flex justify-between text-texto-3 numeros">
+        <div className="numeros mt-1 flex justify-between text-[11px] text-texto-3">
           <span>{ANO_MIN}</span>
           <span>{ANO_MAX}</span>
         </div>
-      </div>
-
-      {/* Faixa de preço em dois puxadores (o chão e o teto), o par
-          clássico dos catálogos de veículos. Um não passa do outro. */}
-      <fieldset className="border-0 p-0">
-        <legend className="field-label">Preço</legend>
-        <div>
-          <label htmlFor={`${prefix}-preco-min`} className="pequeno mb-1 block text-texto-3">
-            De <span className="text-texto numeros">{formatPrice(filtros.precoMin)}</span>
-          </label>
-          <input
-            id={`${prefix}-preco-min`}
-            type="range"
-            min={PRECO_MIN}
-            max={PRECO_MAX}
-            step={1000}
-            value={filtros.precoMin}
-            onChange={(e) =>
-              set('precoMin', Math.min(Number(e.target.value), filtros.precoMax - 1000))
-            }
-            className="w-full"
-          />
-        </div>
-        <div className="mt-2">
-          <label htmlFor={`${prefix}-preco-max`} className="pequeno mb-1 block text-texto-3">
-            Até <span className="text-texto numeros">{formatPrice(filtros.precoMax)}</span>
-          </label>
-          <input
-            id={`${prefix}-preco-max`}
-            type="range"
-            min={PRECO_MIN}
-            max={PRECO_MAX}
-            step={1000}
-            value={filtros.precoMax}
-            onChange={(e) =>
-              set('precoMax', Math.max(Number(e.target.value), filtros.precoMin + 1000))
-            }
-            className="w-full"
-          />
-        </div>
       </fieldset>
 
-      {seletorDeCategoria}
-
-      {temFiltroAtivo(filtros) && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="btn btn-secondary btn-sm w-full justify-center"
+      <div>
+        <label htmlFor={`${prefix}-ordenacao`} className="mb-2 block text-[13px] font-semibold text-texto">
+          Ordenação
+        </label>
+        <select
+          id={`${prefix}-ordenacao`}
+          value={filtros.ordenacao}
+          onChange={(e) =>
+            set('ordenacao', e.target.value as BikeFilterState['ordenacao'])
+          }
+          className="select h-11 rounded-xl bg-fundo text-sm"
         >
-          <X className="size-4" aria-hidden="true" />
-          Limpar filtros
-        </button>
-      )}
+          {ORDENACOES.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </form>
   )
 }

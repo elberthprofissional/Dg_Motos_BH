@@ -1,25 +1,19 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  ArrowUpRight,
-  FileCheck2,
-  Handshake,
-  RefreshCw,
-  Wrench,
-} from 'lucide-react'
+import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
 import { buildMapsRouteUrl } from '../lib/maps'
-import { SectionHeading } from '../components/ui/SectionHeading'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { Revelar } from '../components/ui/Revelar'
 import { useWhatsappLink } from '../hooks/useWhatsappLink'
 import { buildDefaultMessage } from '../lib/format'
-
-const HERO_BG = '/hero/showroom-2026-07-hd.webp'
+import trocaImg from '../../img/troca.png'
+import heroImg from '../../img/hero-desktop.png'
+import { MarcasProcuradas } from '../components/home/MarcasProcuradas'
 
 /**
  * Página inicial — a bancada da loja.
@@ -59,77 +53,149 @@ export function Home() {
   }, [disponiveis])
 
   const marcasNoPatio = useMemo(() => {
-    const set = new Set(disponiveis.map((m) => m.marca))
-    return Array.from(set).sort()
+    const mapa = new Map<string, number>()
+    for (const moto of disponiveis) {
+      mapa.set(moto.marca, (mapa.get(moto.marca) ?? 0) + 1)
+    }
+    return [...mapa.entries()].sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
   }, [disponiveis])
 
   return (
     <>
       {/* ============================================================
-          1. HERO — banner com identidade e CTAs
+          1. HERO — a entrada do showroom
+          Texto à esquerda, a foto da loja à direita. A altura é curta
+          de propósito: a vitrine começa logo abaixo.
           ============================================================ */}
-      <h1 className="sr-only">DG Motos - Motos seminovas com inspeção mecânica e laudo cautelar</h1>
-      <section className="bg-fundo pt-cabecalho">
-        <div className="relative overflow-hidden">
+      <section data-hero className="relative isolate overflow-hidden bg-fundo pt-cabecalho">
+        <div data-hero-media className="pointer-events-none absolute inset-0 hidden xl:block" aria-hidden="true">
           <img
-            src={HERO_BG}
-            alt="Banner da DG Motos: motocicleta esportiva e a marca Realizando Sonhos"
-            className="respira w-full"
+            data-hero-image
+            src={heroImg}
+            alt=""
+            className="h-full w-full object-cover object-right min-[2000px]:object-contain"
             fetchPriority="high"
             decoding="sync"
-            width={1920}
-            height={814}
+            width={1910}
+            height={823}
           />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-fundo to-transparent"
-          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#080808_0%,rgba(8,8,8,0.96)_30%,rgba(8,8,8,0.72)_52%,rgba(8,8,8,0.22)_78%,transparent_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0.7)_42%,transparent_100%)]" />
         </div>
-        <div className="container-site flex flex-col items-center pt-6 pb-8 text-center sm:pt-10 sm:pb-12">
-          <h2 className="titulo max-w-[20ch] text-texto">Motos seminovas inspecionadas em Belo Horizonte</h2>
-          <p className="mt-4 max-w-[44ch] text-base text-texto-2 sm:text-lg">
-            Inspeção mecânica e ciclística • Laudo cautelar • Negociação direta
-          </p>
-          <div className="mt-6 hidden sm:flex flex-wrap items-center justify-center gap-3">
-            <Link to="/estoque" className="btn btn-primary h-12 px-7 font-bold">
-              Ver estoque
-            </Link>
-            {waLink ? (
-              <a
-                href={waLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary h-12 px-7 font-bold"
-              >
-                Conversar no WhatsApp
-              </a>
-            ) : (
-              <Link to="/contato" className="btn btn-secondary h-12 px-7 font-bold">
-                Conversar no WhatsApp
+
+        <div data-hero-content className="container-site relative z-10 flex flex-col justify-center pt-10 pb-14 sm:pt-14 sm:pb-16 xl:min-h-[720px] xl:py-24 2xl:min-h-[780px]">
+          <div className="max-w-[760px] xl:max-w-[840px]">
+            <p className="mb-5 text-[13px] font-semibold tracking-[0.18em] text-texto-2 uppercase">
+              Seminovas de alta qualidade
+            </p>
+
+            <h1 className="font-display text-[clamp(2.35rem,8.4vw,4.25rem)] leading-[0.9] font-bold tracking-[-0.045em] text-texto uppercase xl:text-[clamp(2.75rem,4.6vw,4.5rem)]">
+              <span className="block">Seminovas</span>
+              <span className="block text-marca-texto">Inspecionadas</span>
+              <span className="block">em BH</span>
+            </h1>
+
+            <p className="mt-6 max-w-[46ch] text-base leading-relaxed text-texto-2 sm:text-lg">
+              Inspe??o mec?nica e cicl?stica, laudo cautelar e negocia??o direta.
+              Escolha a sua no p?tio da DG Motos.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link to="/estoque" className="btn btn-primary h-12 gap-2 px-6 font-bold">
+                Ver motos dispon?veis
+                <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
-            )}
+              {waLink ? (
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary h-12 px-6 font-bold"
+                >
+                  Falar no WhatsApp
+                </a>
+              ) : (
+                <Link to="/contato" className="btn btn-secondary h-12 px-6 font-bold">
+                  Falar no WhatsApp
+                </Link>
+              )}
+            </div>
+
+            <dl className="mt-10 grid max-w-[520px] grid-cols-3 gap-5 sm:gap-8">
+              <div>
+                <dt className="text-[11px] font-medium tracking-[0.14em] text-texto-3 uppercase">
+                  No p?tio
+                </dt>
+                <dd className="numeros mt-1.5 font-display text-3xl leading-none font-bold text-texto">
+                  {disponiveis.length}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-medium tracking-[0.14em] text-texto-3 uppercase">
+                  Marcas
+                </dt>
+                <dd className="numeros mt-1.5 font-display text-3xl leading-none font-bold text-texto">
+                  {marcasNoPatio.length}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-medium tracking-[0.14em] text-texto-3 uppercase">
+                  Inspe??o
+                </dt>
+                <dd className="mt-1.5 font-display text-sm leading-tight font-bold text-texto">
+                  Mec?nica e cicl?stica
+                </dd>
+              </div>
+            </dl>
           </div>
+        </div>
+
+        <div data-hero-mobile className="relative xl:hidden">
+          <img
+            data-hero-mobile-image
+            src={heroImg}
+            alt="Moto em destaque no showroom da DG Motos"
+            className="aspect-[4/3] w-full object-cover object-right sm:aspect-[16/9]"
+            fetchPriority="high"
+            decoding="async"
+            width={1910}
+            height={823}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0.35)_38%,transparent_100%)]" />
         </div>
       </section>
 
       {/* ============================================================
           2. PATIO — as fichas no pátio
           ============================================================ */}
-      <section id="acervo" className="section bg-fundo">
+      <section id="acervo" className="bg-fundo pt-12 pb-16 sm:pt-16 sm:pb-24">
         <div className="container-site">
-          <SectionHeading
-            title="Motos disponíveis"
-            acao={
-              <Link to="/estoque" className="link-acao">
-                <span>Ver todo o estoque</span>
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="titulo text-texto">Motos disponíveis</h2>
+              <p className="corpo mt-3 max-w-[52ch] text-texto-2">
+                Cada unidade do pátio passa por inspeção mecânica e ciclística
+                antes de entrar na vitrine.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-5">
+              <p className="text-sm text-texto-3">
+                <span className="numeros font-display text-2xl leading-none font-bold text-texto">
+                  {disponiveis.length}
+                </span>{' '}
+                no pátio
+              </p>
+              <Link to="/estoque" className="btn btn-secondary h-11 gap-2 px-5 text-sm">
+                Ver todo o estoque
                 <ArrowUpRight className="size-4" aria-hidden="true" />
               </Link>
-            }
-          />
+            </div>
+          </div>
 
           {patio.length > 0 ? (
             <>
-              <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
                 {patio.map((bike, i) => (
                   <Revelar key={bike.id} atraso={i * 60}>
                     <BikeCard bike={bike} priority={i < 3} />
@@ -137,22 +203,6 @@ export function Home() {
                 ))}
               </div>
 
-          {marcasNoPatio.length > 0 ? (
-            <div className="mt-12">
-              <p className="text-sm uppercase tracking-[0.16em] text-texto-3">Marcas no pátio</p>
-              <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3">
-                {marcasNoPatio.map((marca) => (
-                  <Link
-                    key={marca}
-                    to={`/estoque?marca=${encodeURIComponent(marca)}`}
-                    className="font-display text-2xl text-texto transition-colors hover:text-marca-texto sm:text-3xl"
-                  >
-                    {marca}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : null}
             </>
           ) : (
             <div className="mt-12">
@@ -170,99 +220,66 @@ export function Home() {
       </section>
 
       {/* ============================================================
-          3. DIFERENCIAIS — a vistoria em registro
-          É a única vez que os diferenciais aparecem: uma linha,
-          uma palavra, e nada repetindo o que já foi dito. O
-          número ser ordinal (01, 02…) é o registro de vistoria.
-          ============================================================ */}
-      <section className="section bg-painel">
-        <div className="container-site">
-          <SectionHeading
-            title="Confiança em cada moto"
-            description="O que já fazemos hoje: inspeção, documentação e negociação direta."
-          />
-
-          <div className="mt-12 border-t border-borda">
-            <div className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-5">
-              {[
-                {
-                  numero: '01',
-                  icone: Wrench,
-                  titulo: 'Inspeção mecânica e ciclística',
-                  texto: 'Cada moto passa pela vistoria antes de ir para o pátio.',
-                },
-                {
-                  numero: '02',
-                  icone: FileCheck2,
-                  titulo: 'Laudo cautelar',
-                  texto: 'Verificação da documentação antes da venda.',
-                },
-                {
-                  numero: '03',
-                  icone: RefreshCw,
-                  titulo: 'Avaliação de troca',
-                  texto: 'Aceitamos sua moto usada como parte do pagamento.',
-                },
-                {
-                  numero: '04',
-                  icone: Handshake,
-                  titulo: 'Negociação direta',
-                  texto: 'Sem intermediários. Atendimento direto na loja.',
-                },
-              ].map(({ icone: Icone, ...item }) => (
-                <article key={item.titulo} className="border-b border-borda py-7 lg:border-b-0">
-                  <div className="flex items-center gap-3">
-                    <span aria-hidden="true" className="grid size-9 place-items-center border border-borda text-texto-3">
-                      <Icone className="size-4" />
-                    </span>
-                    <span aria-hidden="true" className="numeros font-display text-sm font-bold text-marca-texto">
-                      {item.numero}
-                    </span>
-                  </div>
-                  <h3 className="mt-4 font-display text-xl font-semibold leading-snug text-texto">
-                    {item.titulo}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-texto-2">
-                    {item.texto}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================
           4. FECHAMENTO — troca, showroom e pedido específico
           ============================================================ */}
-      {/* O verso da folha: o que encerra a leitura é o que pede ação —
-          trazer a moto usada, encontrar a loja, pedir um modelo.
-          Uma seção só, com as três ações em leitura vertical — não
-          algo thrown junto. O texto duplicado dos diferenciais saiu:
-          repetir não é reforçar, é ruído. */}
       <section className="section bg-fundo">
-        <div className="container-site grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
-          <div>
-            <h2 className="titulo text-texto">Sua moto usada entra na troca</h2>
-            <p className="corpo mt-6 max-w-[46ch] text-texto-2">
-              Aceitamos sua moto usada como parte do pagamento. A avaliação é feita
-              na loja, com a documentação orientada.
-            </p>
-            <Link to="/contato" className="btn btn-primary mt-8 h-12 px-6">
-              Falar com a loja
-            </Link>
+        <Revelar>
+          <div className="banner-troca relative w-full overflow-hidden">
+            <div
+              className="absolute inset-0 bg-[linear-gradient(180deg,#3b0004_0%,#8f0310_9%,#86020c_48%,#6b0108_86%,#2c0003_100%)]"
+              aria-hidden="true"
+            />
+            <div
+              className="absolute inset-0 bg-cover bg-[position:88%_center] bg-no-repeat xl:bg-contain xl:bg-right"
+              style={{
+                backgroundImage: `url(${trocaImg})`,
+              }}
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(40,0,2,0.45)_0%,rgba(60,0,4,0.34)_35%,rgba(80,0,6,0.1)_70%,transparent_100%)]"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(35,0,2,0.5)_0%,rgba(60,0,4,0.38)_55%,rgba(70,0,5,0.22)_100%)] lg:hidden"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,rgba(40,0,2,0.38)_0%,rgba(40,0,2,0.08)_55%,transparent_100%)] lg:hidden"
+              aria-hidden="true"
+            />
 
-            <div className="mt-14 border-t border-borda pt-10">
-              <h2 className="titulo text-texto">Procurando algo específico?</h2>
-              <p className="corpo mt-4 max-w-[46ch] text-texto-2">
-                Se você não encontrou o modelo que queria, fala com a gente. A gente
-                procura e avisa quando chegar.
-              </p>
+            <div className="container-site relative z-10 flex min-h-[500px] flex-col justify-center py-16 sm:min-h-[540px] sm:py-20 lg:min-h-[580px] lg:py-24">
+              <div className="max-w-[560px] lg:max-w-[44%]">
+                <h2 className="font-display text-[clamp(2.2rem,5.2vw,4.5rem)] leading-[0.93] font-bold tracking-[-0.04em] text-texto">
+                  <span className="block">Sua moto usada</span>
+                  <span className="block text-marca-texto">entra na troca</span>
+                </h2>
+                <p className="mt-6 max-w-[44ch] text-base leading-relaxed text-texto-2 sm:text-lg">
+                  Aceitamos sua moto usada como parte do pagamento.
+                  <br />
+                  A avaliação é feita na loja, com a documentação orientada.
+                </p>
+                <Link to="/contato" className="btn btn-primary mt-8 h-12 px-6 font-bold">
+                  Falar com a loja
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
+                </Link>
+              </div>
             </div>
+          </div>
+        </Revelar>
+
+        <div className="container-site mt-14 grid gap-10 sm:mt-16 lg:grid-cols-2 lg:gap-20">
+          <div>
+            <h2 className="titulo text-texto">Procurando algo específico?</h2>
+            <p className="corpo mt-4 max-w-[46ch] text-texto-2">
+              Se você não encontrou o modelo que queria, fala com a gente. A gente
+              procura e avisa quando chegar.
+            </p>
           </div>
 
           <div>
-            <p className="etiqueta">Showroom</p>
+            <p className="text-sm text-texto-3">Showroom</p>
             <address className="mt-4 not-italic">
               <p className="font-display text-3xl leading-tight font-bold text-texto">
                 {config.enderecoRua}
@@ -281,6 +298,8 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      <MarcasProcuradas />
     </>
   )
 }
