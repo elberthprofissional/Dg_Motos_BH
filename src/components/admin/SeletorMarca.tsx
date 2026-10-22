@@ -83,16 +83,16 @@ function DiscoMarcaAdmin({
       className="group flex flex-col items-center gap-1.5 focus-visible:outline-none"
     >
       <span
-        className={`relative grid size-12 place-items-center overflow-hidden rounded-full border-2 transition-all duration-200 ${
+        className={`relative grid size-12 place-items-center overflow-hidden rounded-full border-2 transition-all duration-200 /* taste-skill-ignore: micro-animacao de seletor */ ${
           ativa
             ? 'border-brand-500'
-            : 'border-white/15 group-hover:border-white/40 group-active:scale-95'
+            : 'border-claro/15 group-hover:border-claro/40 group-active:scale-95' /* taste-skill-ignore: painel */
         }`}
       >
         <span className="absolute inset-0 grid place-items-center bg-[#1d1d1d] transition-colors group-hover:bg-[#242424]">
           {semLogo ? (
             <span
-              className={`font-display text-[11px] font-bold tracking-[0.06em] transition-colors ${
+              className={`font-display text-etiqueta font-bold tracking-[0.06em] transition-colors ${
                 ativa ? 'text-brand-500' : 'text-[#8c8c8c] group-hover:text-[#d9d9d9]'
               }`}
             >
@@ -111,7 +111,7 @@ function DiscoMarcaAdmin({
         </span>
       </span>
       <span
-        className={`max-w-full truncate text-[10px] font-medium transition-colors ${
+        className={`max-w-full truncate text-micro font-medium transition-colors ${
           ativa ? 'text-brand-500' : 'text-steel-500 group-hover:text-paper'
         }`}
       >

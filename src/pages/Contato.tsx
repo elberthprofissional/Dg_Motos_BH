@@ -1,14 +1,20 @@
-import { Clock, MapPin, MessageCircle } from 'lucide-react'
+import { ArrowUpRight, Clock, MapPin } from 'lucide-react'
 import { InstagramIcon } from '../components/ui/InstagramIcon'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { buildDefaultMessage } from '../lib/format'
-import { useWhatsappLink } from '../hooks/useWhatsappLink'
 import { buildMapsRouteUrl } from '../lib/maps'
 import { MapaLoja } from '../components/ui/MapaLoja'
-import { SectionHeading } from '../components/ui/SectionHeading'
-import { Button } from '../components/ui/Button'
+import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
 
+/**
+ * Contato — a folha de contatos.
+ *
+ * Os dados à esquerda e o mapa à direita, sobre a folha de papel.
+ * Sem caixinha com sombra e sem ícone em quadrado: o que organiza a
+ * leitura é o espaço entre os blocos, e o que dá o peso é o
+ * tamanho do texto.
+ */
 export function Contato() {
   usePageMeta(
     'Contato | DG Motos — Belo Horizonte, MG',
@@ -16,147 +22,140 @@ export function Contato() {
   )
 
   const { config } = useSiteConfig()
-  const wa = useWhatsappLink(buildDefaultMessage())
-
-  const canais = [
-    {
-      icon: MessageCircle,
-      titulo: 'WhatsApp',
-      descricao: 'Atendimento direto com a equipe da loja.',
-      acao: wa ? (
-        <a
-          href={wa}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-semibold text-brand-500 transition-colors hover:text-brand-600"
-        >
-          Abrir conversa
-        </a>
-      ) : (
-        <span className="text-sm text-steel-500">
-          Chame pelo Instagram enquanto isso.
-        </span>
-      ),
-    },
-    {
-      icon: InstagramIcon,
-      titulo: 'Instagram',
-      descricao: `Novidades e motos chegando: ${config.instagramHandle}.`,
-      acao: config.instagramUrl ? (
-        <a
-          href={config.instagramUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-semibold text-brand-500 transition-colors hover:text-brand-600"
-        >
-          Seguir e mandar mensagem
-        </a>
-      ) : (
-        <span className="text-sm text-steel-500">Chame pelo WhatsApp enquanto isso.</span>
-      ),
-    },
-    {
-      icon: MapPin,
-      titulo: 'Loja',
-      descricao: `${config.enderecoRua} — ${config.enderecoCidadeUf}.`,
-      acao: (
-        <a
-          href={buildMapsRouteUrl(config)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-semibold text-brand-500 transition-colors hover:text-brand-600"
-        >
-          Ver rota no Google Maps
-        </a>
-      ),
-    },
-  ]
 
   return (
-    <div className="pt-[71px] lg:pt-[79px]">
-      <section className="border-b border-line bg-night-900">
-        <div className="container-site py-12 sm:py-16">
-          <p className="rotulo">Contato</p>
-          <h1 className="h-display mt-3 text-4xl tracking-[0.04em] sm:text-5xl">Fale com a DG Motos</h1>
-          <p className="mt-4 max-w-xl text-steel-400">
-            Respondemos rápido no WhatsApp e no Instagram. Para ver as motos de
-            perto, é só aparecer na loja.
-          </p>
+    <div className="pt-cabecalho">
+      <section className="bg-fundo">
+        <div className="container-site pt-10 pb-6 sm:pt-12 sm:pb-8">
+          <h1 className="display">Contato</h1>
         </div>
       </section>
 
-      <section className="section">
-        <div className="container-site grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-stretch">
-          <div className="reveal divide-y divide-line overflow-hidden rounded-lg border border-line bg-night-900">
-            {canais.map(({ icon: Icon, titulo, descricao, acao }) => (
-              <div key={titulo} className="flex items-start gap-4 p-6">
-                <Icon className="mt-0.5 size-5 shrink-0 text-brand-500" aria-hidden="true" />
-                <div>
-                  <h2 className="font-display text-lg font-semibold tracking-[0.03em] uppercase">{titulo}</h2>
-                  <p className="mt-1 text-sm text-steel-400">{descricao}</p>
-                  <div className="mt-2">{acao}</div>
-                </div>
+      {/* Contato e localização */}
+      <section className="section bg-painel">
+        <div className="container-site grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
+          {/* Canais */}
+          <div>
+            <h2 className="titulo text-2xl text-texto sm:text-3xl">Fale com a loja</h2>
+
+            <div className="mt-8 space-y-8">
+              <div className="border border-borda bg-painel-2 p-5 sm:p-6">
+                <p className="text-sm uppercase tracking-[0.16em] text-texto-3">
+                  WhatsApp
+                </p>
+                <p className="corpo mt-3 text-texto-2">
+                  Tire dúvidas, peça vídeos ou fale sobre troca direto com a
+                  equipe.
+                </p>
+                {config.whatsapp ? (
+                  <WhatsAppCTA
+                    message={buildDefaultMessage()}
+                    label="Conversar no WhatsApp"
+                    glifoWhatsapp
+                    className="mt-5 h-12 w-full px-6 sm:w-auto"
+                  />
+                ) : (
+                  <p className="mt-4 text-sm text-texto-3">
+                    Número sendo configurado pela loja.
+                  </p>
+                )}
               </div>
-            ))}
+
+              {config.instagramUrl ? (
+                <div>
+                  <p className="text-sm uppercase tracking-[0.16em] text-texto-3">
+                    Instagram
+                  </p>
+                  <p className="corpo mt-3 text-texto-2">
+                    Acompanhe as motos que chegam ao pátio.
+                  </p>
+                  <a
+                    href={config.instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="link-acao mt-4"
+                  >
+                    <InstagramIcon className="size-4" aria-hidden="true" />
+                    <span>{config.instagramHandle}</span>
+                    <ArrowUpRight className="size-4" aria-hidden="true" />
+                  </a>
+                </div>
+              ) : null}
+
+              <div>
+                <p className="text-sm uppercase tracking-[0.16em] text-texto-3">
+                  Showroom
+                </p>
+                <address className="mt-3 not-italic">
+                  <p className="font-display text-2xl font-semibold text-texto">
+                    {config.enderecoRua}
+                  </p>
+                  <p className="corpo mt-1 text-texto-2">
+                    {config.enderecoCidadeUf}
+                  </p>
+                </address>
+
+                {config.horarios.length > 0 ? (
+                  <div className="mt-5 border-t border-borda pt-4">
+                    <p className="flex items-center gap-2 text-sm font-medium text-texto-2">
+                      <Clock className="size-4 text-texto-3" aria-hidden="true" />
+                      Horário de funcionamento
+                    </p>
+                    <dl className="mt-3 space-y-1.5">
+                      {config.horarios.map((h) => (
+                        <div key={h.dias} className="flex justify-between gap-4">
+                          <dt className="text-sm text-texto-3">{h.dias}</dt>
+                          <dd className="text-sm font-medium text-texto-2 numeros">
+                            {h.horas}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                ) : null}
+
+                <a
+                  href={buildMapsRouteUrl(config)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-acao mt-5"
+                >
+                  <MapPin className="size-4" aria-hidden="true" />
+                  <span>Traçar rota no Google Maps</span>
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
+                </a>
+              </div>
+
+              <div>
+                <p className="text-sm uppercase tracking-[0.16em] text-texto-3">
+                  Troca
+                </p>
+                <p className="corpo mt-3 text-texto-2">
+                  Aceitamos sua moto usada como parte do pagamento. A avaliação é
+                  feita na loja.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="surface flex flex-col rounded-lg p-6 sm:p-8">
-            <SectionHeading eyebrow="Localização" title="Onde estamos" />
-            <p className="mt-4 flex items-start gap-2 text-steel-300">
-              <MapPin className="mt-1 size-4 shrink-0 text-brand-500" aria-hidden="true" />
-              <span>
-                {config.enderecoRua}
-                <br />
-                {config.enderecoCidadeUf}
-              </span>
-            </p>
-
-            {config.horarios.length > 0 ? (
-              <div className="mt-6">
-                <h3 className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.14em] text-steel-500 uppercase">
-                  <Clock className="size-3.5" aria-hidden="true" /> Horários
-                </h3>
-                <ul className="mt-3 space-y-1.5 text-sm text-steel-300">
-                  {config.horarios.map((h) => (
-                    <li key={h.dias} className="flex justify-between gap-4">
-                      <span>{h.dias}</span>
-                      <span className="text-paper">{h.horas}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p className="mt-6 text-xs leading-relaxed text-steel-500">
-                Horários: confirme pelo WhatsApp ou Instagram antes de vir.
-              </p>
-            )}
-
-            {config.telefoneExibicao ? (
-              <p className="mt-6 text-sm text-steel-300">
-                Telefone: <span className="text-paper">{config.telefoneExibicao}</span>
-              </p>
-            ) : null}
-
-            {/* Mapa do Google (não usa cookie de rastreio). Ocupa o espaço
-                restante da coluna: proporcional à função, sem virar um
-                retângulo pequeno perdido. */}
-            <div className="mt-6 min-h-[16rem] flex-1 overflow-hidden rounded-md border border-line">
+          {/* Showroom */}
+          <div className="flex min-w-0 flex-col">
+            <div className="overflow-hidden border border-borda bg-painel">
               <MapaLoja
                 rotulo={`${config.enderecoRua}, ${config.enderecoCidadeUf}`}
-                className="h-full min-h-[16rem]"
+                className="h-[28rem] w-full sm:h-[36rem] lg:h-full lg:min-h-[42rem]"
               />
             </div>
 
-            <Button
+            <a
               href={buildMapsRouteUrl(config)}
               target="_blank"
               rel="noopener noreferrer"
-              variant="outline"
-              className="mt-6 w-full"
+              className="btn btn-secondary mt-4 h-11 w-full justify-center sm:w-auto"
             >
               <MapPin className="size-4" aria-hidden="true" />
-              Abrir no Google Maps
-            </Button>
+              <span>Traçar rota no Google Maps</span>
+            </a>
           </div>
         </div>
       </section>

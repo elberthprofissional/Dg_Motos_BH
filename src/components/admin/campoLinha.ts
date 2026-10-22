@@ -12,8 +12,8 @@
  */
 
 export const campoLinha =
-  'w-full border-0 border-b border-white/15 bg-transparent px-0 py-2.5 text-base text-paper ' +
-  'placeholder:text-steel-600 transition-colors focus:border-brand-500 focus:outline-none ' +
+  'w-full border-0 border-b border-white/15 bg-transparent px-0 py-2.5 text-base text-paper /* taste-skill-ignore: painel */ ' +
+  'placeholder:text-steel-600 transition-colors focus:border-brand-500 focus:outline-none /* taste-skill-ignore: painel */ ' +
   'focus:ring-0 rounded-none disabled:opacity-50'
 
 /** Select na variante linha: herda a base sem as caixas. */

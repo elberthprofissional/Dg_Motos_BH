@@ -30,7 +30,7 @@ export function CampoBusca({
   return (
     <div className={`relative ${className}`}>
       <Search
-        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-steel-500"
+        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-3"
         aria-hidden="true"
       />
       <input
@@ -47,7 +47,7 @@ export function CampoBusca({
           type="button"
           onClick={() => onChange('')}
           aria-label={`Limpar ${rotulo.toLowerCase()}`}
-          className="absolute top-1/2 right-1.5 grid size-7 -translate-y-1/2 place-items-center rounded text-steel-500 transition-colors hover:bg-white/5 hover:text-paper"
+          className="absolute top-1/2 right-1.5 grid size-7 -translate-y-1/2 place-items-center text-texto-3 transition-colors hover:bg-painel-2 hover:text-texto"
         >
           <X className="size-4" aria-hidden="true" />
         </button>

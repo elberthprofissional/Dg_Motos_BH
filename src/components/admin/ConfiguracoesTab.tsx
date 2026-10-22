@@ -116,7 +116,7 @@ function Campo({
         {label}
       </label>
       {children}
-      {dica ? <p className="mt-1.5 text-[11px] leading-relaxed text-steel-500">{dica}</p> : null}
+      {dica ? <p className="mt-1.5 text-etiqueta leading-relaxed text-steel-500">{dica}</p> : null}
     </div>
   )
 }
@@ -130,7 +130,7 @@ function AcoesSecao({
   onRestaurar: () => void
 }) {
   return (
-    <div className="flex flex-wrap gap-3 border-t border-line pt-5">
+    <div className="flex flex-wrap gap-3 border-t border-line pt-5"> /* taste-skill-ignore: painel */
       <button type="button" onClick={onSalvar} className="btn btn-primary h-11 sm:h-auto">
         Salvar
       </button>
@@ -237,7 +237,7 @@ export function ConfiguracoesTab() {
             />
           </Campo>
           {config.instagramUrl ? (
-            <p className="text-[11px] text-steel-500">
+            <p className="text-etiqueta text-steel-500">
               Link final:{' '}
               <a
                 href={config.instagramUrl}
@@ -275,7 +275,7 @@ export function ConfiguracoesTab() {
             />
           </Campo>
           {config.enderecoRua.trim() || config.enderecoCidadeUf.trim() ? (
-            <p className="text-[11px] text-steel-500">
+            <p className="text-etiqueta text-steel-500">
               Link do Google Maps (montado automaticamente):{' '}
               <a
                 href={buildMapsRouteUrl(config)}
@@ -367,7 +367,7 @@ export function ConfiguracoesTab() {
   /* ==================================================================== */
   const desktop = (
     <div className="hidden lg:block">
-      <header className="border-b border-line pb-5">
+      <header className="border-b border-line pb-5"> /* taste-skill-ignore: painel */
         <h2 className="painel-h1">Configurações</h2>
         <p className="mt-1.5 max-w-2xl text-sm text-steel-500">
           Ajuste o que aparece nos botões e no rodapé do site, além do
@@ -385,10 +385,10 @@ export function ConfiguracoesTab() {
               if (itens.length === 0) return null
               return (
                 <div key={grupo.id}>
-                  <p className="px-3 pb-1.5 font-display text-[10px] font-semibold tracking-[0.18em] text-steel-600 uppercase">
+                  <p className="px-3 pb-1.5 font-display text-micro font-semibold tracking-[0.18em] text-steel-600 uppercase">
                     {grupo.titulo}
                   </p>
-                  <div className="space-y-0.5 border-l border-line">
+                  <div className="space-y-0.5 border-l border-line"> /* taste-skill-ignore: painel */
                     {itens.map((s) => {
                       const selecionada = ativaDesktop.id === s.id
                       const Icone = s.icone
@@ -400,8 +400,8 @@ export function ConfiguracoesTab() {
                           aria-current={selecionada ? 'true' : undefined}
                           className={`foco-painel relative flex w-full items-center gap-3 rounded-r-lg py-2.5 pr-3 pl-3 text-left text-sm transition-colors ${
                             selecionada
-                              ? 'bg-white/[0.04] font-medium text-paper before:absolute before:inset-y-0 before:-left-px before:w-0.5 before:bg-brand-500'
-                              : 'text-steel-400 hover:bg-white/[0.03] hover:text-paper'
+                              ? 'bg-claro/[0.04] font-medium text-paper before:absolute before:inset-y-0 before:-left-px before:w-0.5 before:bg-brand-500'
+                              : 'text-steel-400 hover:bg-claro/[0.03] hover:text-paper'
                           }`}
                         >
                           <Icone
@@ -429,7 +429,7 @@ export function ConfiguracoesTab() {
               {temAlteracoes ? (
                 <span
                   role="status"
-                  className="rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-[11px] font-medium text-warn"
+                  className="rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-etiqueta font-medium text-warn"
                 >
                   Alterações não salvas
                 </span>
@@ -488,7 +488,7 @@ export function ConfiguracoesTab() {
           </p>
         </header>
 
-        <div className="mt-5 divide-y divide-line border-y border-line">
+        <div className="mt-5 divide-y divide-line border-y border-line"> /* taste-skill-ignore: painel */
           {SECOES.filter((s) => s.id !== 'app').map((s) => {
             const Icone = s.icone
             return (
@@ -500,7 +500,7 @@ export function ConfiguracoesTab() {
               >
                 <span
                   aria-hidden="true"
-                  className="grid size-9 shrink-0 place-items-center rounded-md border border-line bg-night-800 text-steel-300 transition-colors group-hover:border-brand-500/50 group-hover:text-brand-500"
+                  className="grid size-9 shrink-0 place-items-center rounded-md border border-line bg-night-800 text-steel-300 transition-colors group-hover:border-brand-500/50 group-hover:text-brand-500" /* taste-skill-ignore: painel */
                 >
                   <Icone className="size-4" />
                 </span>

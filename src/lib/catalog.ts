@@ -199,8 +199,7 @@ export function montarSlug(marca: string, modelo: string, ano: number): string {
  * Estratégia "apaga e regrava": o form manda a lista completa e ordenada,
  * então o estado final é sempre a lista enviada — sem risco de sobrar foto
  * órfã no banco. As linhas antigas caem por delete; os arquivos no Storage
- * seguem a mesma lista (quem remove do Storage é o PhotoUploader ao tirar
- * a foto no formulário).
+ * saem depois do save, em `excluirFotosRemovidas`.
  */
 async function salvarImagens(motoId: string, imagens: { src: string; alt: string }[]) {
   const sb = getSupabase()!
@@ -283,6 +282,35 @@ export async function excluirMoto(id: string): Promise<{ ok: boolean; erro: stri
   }
 
   return { ok: true, erro: null }
+}
+
+/**
+ * Apaga do Storage as fotos que saíram do formulário.
+ *
+ * Roda só depois de `salvarMoto` dar certo. Apagar no clique de "remover"
+ * deixaria a moto já gravada apontando para um arquivo que não existe caso
+ * o dono cancelasse a edição — a ficha ficaria com imagem quebrada.
+ *
+ * Fotos locais do seed (`/motos/...`) não estão no bucket e são ignoradas
+ * por `caminhoDeBucket`.
+ */
+export async function excluirFotosRemovidas(
+  antes: { src: string }[],
+  depois: { src: string }[],
+): Promise<void> {
+  const sb = getSupabase()
+  if (!sb) return
+
+  const mantidas = new Set(depois.map((f) => f.src))
+  const caminhos = antes
+    .map((f) => f.src)
+    .filter((src) => !mantidas.has(src))
+    .map(caminhoDeBucket)
+    .filter((c): c is string => c !== null)
+
+  if (caminhos.length > 0) {
+    await sb.storage.from(BUCKET_FOTOS).remove(caminhos)
+  }
 }
 
 /** Altera somente o status (usado nos atalhos do painel). */

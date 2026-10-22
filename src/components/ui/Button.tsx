@@ -3,19 +3,26 @@ import { Link } from 'react-router-dom'
 
 type Variant = 'primary' | 'outline' | 'ghost'
 
-const base =
-  'inline-flex items-center justify-center gap-2 rounded-sm font-display text-xs font-semibold tracking-[0.18em] uppercase transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50'
-
+/**
+ * Botão do site e do painel.
+ *
+ * Retangular e sem brilho: a forma de um botão de oficina. A
+ * hierarquia vem da variante, não do raio — `primary` é a chapa de
+ * sinal, `outline` é contorno, `ghost` é só o texto.
+ *
+ * As classes vêm do sistema (`.btn` e variantes) em vez de serem
+ * reescritas aqui: assim o botão do site e o do painel do dono são
+ * literalmente o mesmo objeto, e mexer no sistema muda os dois.
+ */
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700',
-  outline:
-    'border border-line-forte text-paper hover:border-white/40 hover:bg-white/5 active:bg-white/10',
-  ghost: 'text-steel-400 hover:text-paper',
+  primary: 'btn-primary',
+  outline: 'btn-secondary',
+  ghost: 'btn-ghost',
 }
 
 const sizes = {
-  md: 'px-5 py-2.5',
-  lg: 'px-6 py-3 text-base',
+  md: 'h-11 px-5',
+  lg: 'h-12 px-6 text-sm',
 }
 
 interface CommonProps {
@@ -40,7 +47,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   { variant = 'primary', size = 'md', className = '', children, ...rest },
   ref,
 ) {
-  const cls = [base, variants[variant], sizes[size], className].filter(Boolean).join(' ')
+  const cls = ['btn', variants[variant], sizes[size], className].filter(Boolean).join(' ')
 
   if ('to' in rest && rest.to) {
     const { to, ...linkRest } = rest as ButtonAsLink

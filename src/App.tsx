@@ -28,7 +28,7 @@ function PageFallback() {
       <span className="sr-only">Carregando página</span>
       <span
         aria-hidden="true"
-        className="size-8 animate-spin rounded-full border-2 border-white/15 border-t-brand-500"
+        className="size-8 animate-spin rounded-full border-2 border-claro/15 border-t-brand-500"
       />
     </div>
   )

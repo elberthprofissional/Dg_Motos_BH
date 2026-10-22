@@ -1,291 +1,283 @@
-import { useEffect, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, MapPin, MessageCircle } from 'lucide-react'
+import {
+  ArrowUpRight,
+  FileCheck2,
+  Handshake,
+  RefreshCw,
+  Wrench,
+} from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { usePageMeta } from '../hooks/usePageMeta'
-import { buildDefaultMessage } from '../lib/format'
-import { useWhatsappLink } from '../hooks/useWhatsappLink'
-import { buildMapsRouteUrl } from '../lib/maps'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
+import { buildMapsRouteUrl } from '../lib/maps'
+import { SectionHeading } from '../components/ui/SectionHeading'
 import { BikeCard } from '../components/motorcycles/BikeCard'
-import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
-import { MapaLoja } from '../components/ui/MapaLoja'
-import { Button } from '../components/ui/Button'
+import { Revelar } from '../components/ui/Revelar'
+import { useWhatsappLink } from '../hooks/useWhatsappLink'
+import { buildDefaultMessage } from '../lib/format'
 
-// Sufixo -2026-02 no nome: força o navegador/CDN a baixar a foto nova.
-// Trocar só o conteúdo do arquivo mantém a mesma URL, e o cache antigo
-// continua sendo servido — por isso o nome é versionado.
-const HERO_BG = '/hero/showroom-2026-02.webp'
+const HERO_BG = '/hero/showroom-2026-07-hd.webp'
 
-function Carrossel({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null)
-  // Pontas da trilha: a seta some do estado "clicável" quando não há
-  // onde rolar — controle puro é decoração, e decoração some.
-  const [ponta, setPonta] = useState({ inicio: true, fim: true })
-
-  const atualizarPontas = () => {
-    const el = ref.current
-    if (!el) return
-    setPonta({
-      inicio: el.scrollLeft <= 4,
-      fim: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4,
-    })
-  }
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    atualizarPontas()
-    el.addEventListener('scroll', atualizarPontas, { passive: true })
-    window.addEventListener('resize', atualizarPontas)
-    return () => {
-      el.removeEventListener('scroll', atualizarPontas)
-      window.removeEventListener('resize', atualizarPontas)
-    }
-  }, [children])
-
-  const rolar = (direcao: -1 | 1) => {
-    if (!ref.current) return
-    const card = ref.current.querySelector<HTMLElement>('[data-carousel-item]')
-    const step = card ? card.clientWidth + 24 : Math.round(ref.current.clientWidth * 0.7)
-    // Quem pediu menos movimento ganha salto em vez de animação.
-    const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ref.current.scrollBy({ left: direcao * step, behavior: suave ? 'smooth' : 'auto' })
-  }
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => rolar(-1)}
-        disabled={ponta.inicio}
-        aria-label="Motos em destaque - anterior"
-        className="absolute top-1/2 -left-4 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-night-900 text-steel-300 transition-colors duration-200 hover:border-line-forte hover:text-paper disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-line disabled:hover:text-steel-300 lg:-left-5 lg:grid"
-      >
-        <ChevronLeft className="size-5" aria-hidden="true" />
-      </button>
-
-      <div
-        ref={ref}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden"
-      >
-        {children}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => rolar(1)}
-        disabled={ponta.fim}
-        aria-label="Motos em destaque - próximo"
-        className="absolute top-1/2 -right-4 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-night-900 text-steel-300 transition-colors duration-200 hover:border-line-forte hover:text-paper disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-line disabled:hover:text-steel-300 lg:-right-5 lg:grid"
-      >
-        <ChevronRight className="size-5" aria-hidden="true" />
-      </button>
-    </div>
-  )
-}
-
+/**
+ * Página inicial — a bancada da loja.
+ *
+ * O preto é o chão e a folha de papel é o que pousa sobre ele: a
+ * vitrine de motos é uma folha inteira de papel, a vistoria é o
+ * registro em texto e o fechamento volta ao preto, onde a logo
+ * (traço branco) funciona.
+ *
+ * O texto é o mesmo que o dono aprovou: nada de promessa de origem
+ * ou garantia que não possa ser comprovada (ver
+ * docs/RELATORIO-REDESIGN.md).
+ */
 export function Home() {
   const { motos } = useCatalogo()
   const { config } = useSiteConfig()
-  const wa = useWhatsappLink(buildDefaultMessage())
+  const waLink = useWhatsappLink(buildDefaultMessage())
 
   usePageMeta(
-    'DG Motos — Realizando Sonhos | Motocicletas seminovas em Belo Horizonte',
-    'Loja de motocicletas seminovas em Belo Horizonte, MG. Estoque com fotos, ficha e preço em cada anúncio; atendimento direto pelo WhatsApp.',
+    'DG Motos — Seminovas inspecionadas em Belo Horizonte',
+    'Loja de motocicletas seminovas em Belo Horizonte, MG. Inspeção mecânica e ciclística, laudo cautelar aprovado e negociação direta pelo WhatsApp.',
   )
   useJsonLd(autoDealerSchema(config))
 
-  const destaques = motos
-    .filter((m) => m.destaque && m.status === 'disponivel')
-    .slice(0, 8)
+  const disponiveis = useMemo(
+    () => motos.filter((m) => m.status === 'disponivel'),
+    [motos],
+  )
+
+  // A vitrine mostra o patio inteiro: a moto marcada como destaque
+  // primeiro, depois as demais. Sem mais que isso — a página mostra
+  // o que existe, e o estoque completo tem a lista.
+  const patio = useMemo(() => {
+    const comDestaque = disponiveis.filter((m) => m.destaque)
+    const semDestaque = disponiveis.filter((m) => !m.destaque)
+    return [...comDestaque, ...semDestaque].slice(0, 6)
+  }, [disponiveis])
+
+  const marcasNoPatio = useMemo(() => {
+    const set = new Set(disponiveis.map((m) => m.marca))
+    return Array.from(set).sort()
+  }, [disponiveis])
 
   return (
     <>
-      <section className="relative flex min-h-[88svh] items-center overflow-hidden bg-night-950 pt-[71px] lg:min-h-[92svh] lg:pt-[79px]">
-        <div className="absolute inset-0">
+      {/* ============================================================
+          1. HERO — banner com identidade e CTAs
+          ============================================================ */}
+      <h1 className="sr-only">DG Motos - Motos seminovas com inspeção mecânica e laudo cautelar</h1>
+      <section className="bg-fundo pt-cabecalho">
+        <div className="relative overflow-hidden">
           <img
             src={HERO_BG}
-            alt="Motocicleta em destaque no showroom da DG Motos em Belo Horizonte"
-            className="absolute inset-0 size-full object-cover object-[center_38%]"
+            alt="Banner da DG Motos: motocicleta esportiva e a marca Realizando Sonhos"
+            className="respira w-full"
             fetchPriority="high"
             decoding="sync"
+            width={1920}
+            height={814}
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-fundo to-transparent"
           />
         </div>
-
-        {/* Scrim editorial: escurece a borda esquerda (onde o olho entra)
-            e solta a foto à direita — sem película uniforme por cima da
-            motocicleta. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-r from-night-950 via-night-950/85 to-night-950/20 lg:via-night-950/70"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-night-950 to-transparent"
-        />
+        <div className="container-site flex flex-col items-center pt-6 pb-8 text-center sm:pt-10 sm:pb-12">
+          <h2 className="titulo max-w-[20ch] text-texto">Motos seminovas inspecionadas em Belo Horizonte</h2>
+          <p className="mt-4 max-w-[44ch] text-base text-texto-2 sm:text-lg">
+            Inspeção mecânica e ciclística • Laudo cautelar • Negociação direta
+          </p>
+          <div className="mt-6 hidden sm:flex flex-wrap items-center justify-center gap-3">
+            <Link to="/estoque" className="btn btn-primary h-12 px-7 font-bold">
+              Ver estoque
+            </Link>
+            {waLink ? (
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary h-12 px-7 font-bold"
+              >
+                Conversar no WhatsApp
+              </a>
+            ) : (
+              <Link to="/contato" className="btn btn-secondary h-12 px-7 font-bold">
+                Conversar no WhatsApp
+              </Link>
+            )}
+          </div>
+        </div>
       </section>
 
-      <section id="motos-em-destaque" className="border-t border-line bg-night-950">
-        <div className="container-site section">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <p className="rotulo">SELEÇÃO DG</p>
-              <h1 className="mt-4 font-display text-3xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-4xl lg:text-5xl">
-                Motos em destaque
-              </h1>
-              <p className="mt-3 max-w-xl text-base text-steel-400">
-                Ano, cilindrada e preço em cada anúncio — a conversa é direto com a loja.
-              </p>
-            </div>
-            <Link
-              to="/estoque"
-              className="inline-flex items-center gap-2 font-display text-xs font-semibold tracking-[0.18em] text-paper uppercase transition-colors duration-200 hover:text-brand-500"
-            >
-              Ver todo o estoque
-              <span aria-hidden="true">→</span>
-            </Link>
-          </div>
+      {/* ============================================================
+          2. PATIO — as fichas no pátio
+          ============================================================ */}
+      <section id="acervo" className="section bg-fundo">
+        <div className="container-site">
+          <SectionHeading
+            title="Motos disponíveis"
+            acao={
+              <Link to="/estoque" className="link-acao">
+                <span>Ver todo o estoque</span>
+                <ArrowUpRight className="size-4" aria-hidden="true" />
+              </Link>
+            }
+          />
 
-          {destaques.length > 0 ? (
-            <div className="mt-10 lg:mt-14">
-              <Carrossel>
-                {destaques.map((bike) => (
-                  <div
-                    key={bike.id}
-                    data-carousel-item
-                    className="w-[88vw] shrink-0 snap-start sm:w-[380px] lg:w-[calc((100%-2rem)/3)]"
-                  >
-                    <BikeCard bike={bike} priority />
-                  </div>
+          {patio.length > 0 ? (
+            <>
+              <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {patio.map((bike, i) => (
+                  <Revelar key={bike.id} atraso={i * 60}>
+                    <BikeCard bike={bike} priority={i < 3} />
+                  </Revelar>
                 ))}
-              </Carrossel>
+              </div>
+
+          {marcasNoPatio.length > 0 ? (
+            <div className="mt-12">
+              <p className="text-sm uppercase tracking-[0.16em] text-texto-3">Marcas no pátio</p>
+              <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3">
+                {marcasNoPatio.map((marca) => (
+                  <Link
+                    key={marca}
+                    to={`/estoque?marca=${encodeURIComponent(marca)}`}
+                    className="font-display text-2xl text-texto transition-colors hover:text-marca-texto sm:text-3xl"
+                  >
+                    {marca}
+                  </Link>
+                ))}
+              </div>
             </div>
+          ) : null}
+            </>
           ) : (
-            <div className="mt-10 flex flex-col items-center border border-line bg-night-900 px-6 py-12 text-center sm:py-16">
-              <p className="rotulo">Estoque</p>
-              <h3 className="mt-4 font-display text-2xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-3xl">
-                Estoque em atualização
-              </h3>
-              <p className="mt-3 max-w-md text-steel-400">
-                Nenhuma moto em destaque no momento. Confira o catálogo completo.
+            <div className="mt-12">
+              <p className="titulo text-2xl text-texto">Estoque em atualização</p>
+              <p className="corpo mt-3 text-texto-2">
+                Estamos preparando as próximas unidades. Enquanto isso, fale com a
+                equipe para saber o que está chegando.
               </p>
-              <Link
-                to="/estoque"
-                className="mt-8 inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
-              >
-                Ver estoque completo
+              <Link to="/contato" className="btn btn-primary mt-6 h-11 px-5">
+                Falar com a loja
               </Link>
             </div>
           )}
         </div>
       </section>
 
-      <section className="border-t border-line bg-night-950">
-        <div className="container-site section">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <p className="rotulo">Onde estamos</p>
-              <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-4xl lg:text-5xl">
-                Visite a DG Motos
-              </h2>
-              <p className="mt-3 max-w-xl text-base text-steel-400">
-                Conheça nosso showroom em Belo Horizonte, veja as motocicletas de perto e converse com nossa equipe.
-              </p>
-            </div>
-          </div>
+      {/* ============================================================
+          3. DIFERENCIAIS — a vistoria em registro
+          É a única vez que os diferenciais aparecem: uma linha,
+          uma palavra, e nada repetindo o que já foi dito. O
+          número ser ordinal (01, 02…) é o registro de vistoria.
+          ============================================================ */}
+      <section className="section bg-painel">
+        <div className="container-site">
+          <SectionHeading
+            title="Confiança em cada moto"
+            description="O que já fazemos hoje: inspeção, documentação e negociação direta."
+          />
 
-          <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-stretch lg:gap-10">
-            <div className="flex flex-col border border-line bg-night-900 px-6 py-8 sm:px-8">
-              <p className="font-display text-lg font-semibold tracking-[0.14em] text-paper uppercase">
-                DG Motos
-              </p>
-              <address className="mt-5 flex items-start gap-3 not-italic text-steel-400">
-                <MapPin className="mt-1 size-5 shrink-0 text-brand-500" aria-hidden="true" />
-                <span>
-                  {config.enderecoRua}
-                  <br />
-                  {config.enderecoCidadeUf}
-                </span>
-              </address>
-
-              {config.horarios.length > 0 && (
-                <dl className="mt-6 border-t border-line">
-                  {config.horarios.map((h) => (
-                    <div
-                      key={h.dias}
-                      className="flex items-baseline justify-between gap-4 border-b border-line py-3 text-sm"
-                    >
-                      <dt className="text-steel-400">{h.dias}</dt>
-                      <dd className="font-medium text-paper">{h.horas}</dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
-
-              <div className="mt-8 flex flex-col gap-3 lg:mt-auto lg:pt-8">
-                <Button
-                  href={buildMapsRouteUrl(config)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full justify-center"
-                >
-                  Como chegar
-                </Button>
-                <WhatsAppCTA message={buildDefaultMessage()} className="w-full justify-center" />
-              </div>
-            </div>
-
-            <div className="overflow-hidden border border-line">
-              <MapaLoja
-                rotulo={`${config.enderecoRua}, ${config.enderecoCidadeUf}`}
-                className="h-[300px] sm:h-[380px] lg:h-full lg:min-h-[460px]"
-              />
+          <div className="mt-12 border-t border-borda">
+            <div className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-5">
+              {[
+                {
+                  numero: '01',
+                  icone: Wrench,
+                  titulo: 'Inspeção mecânica e ciclística',
+                  texto: 'Cada moto passa pela vistoria antes de ir para o pátio.',
+                },
+                {
+                  numero: '02',
+                  icone: FileCheck2,
+                  titulo: 'Laudo cautelar',
+                  texto: 'Verificação da documentação antes da venda.',
+                },
+                {
+                  numero: '03',
+                  icone: RefreshCw,
+                  titulo: 'Avaliação de troca',
+                  texto: 'Aceitamos sua moto usada como parte do pagamento.',
+                },
+                {
+                  numero: '04',
+                  icone: Handshake,
+                  titulo: 'Negociação direta',
+                  texto: 'Sem intermediários. Atendimento direto na loja.',
+                },
+              ].map(({ icone: Icone, ...item }) => (
+                <article key={item.titulo} className="border-b border-borda py-7 lg:border-b-0">
+                  <div className="flex items-center gap-3">
+                    <span aria-hidden="true" className="grid size-9 place-items-center border border-borda text-texto-3">
+                      <Icone className="size-4" />
+                    </span>
+                    <span aria-hidden="true" className="numeros font-display text-sm font-bold text-marca-texto">
+                      {item.numero}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 font-display text-xl font-semibold leading-snug text-texto">
+                    {item.titulo}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-texto-2">
+                    {item.texto}
+                  </p>
+                </article>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="relative border-t border-line bg-night-900">
-        <div className="riscos absolute inset-0" aria-hidden="true" />
-        <div className="container-site relative z-10 grid gap-8 py-16 sm:py-18 lg:grid-cols-[1.2fr_auto] lg:items-center lg:py-20">
+      {/* ============================================================
+          4. FECHAMENTO — troca, showroom e pedido específico
+          ============================================================ */}
+      {/* O verso da folha: o que encerra a leitura é o que pede ação —
+          trazer a moto usada, encontrar a loja, pedir um modelo.
+          Uma seção só, com as três ações em leitura vertical — não
+          algo thrown junto. O texto duplicado dos diferenciais saiu:
+          repetir não é reforçar, é ruído. */}
+      <section className="section bg-fundo">
+        <div className="container-site grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
           <div>
-            <p className="rotulo">Negociação direta</p>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-4xl lg:text-5xl">
-              Encontro marcado com sua próxima moto
-            </h2>
-            <p className="mt-4 max-w-xl text-base text-steel-400">
-              Consulte disponibilidade, valores e condições diretamente com a equipe DG Motos pelo WhatsApp.
+            <h2 className="titulo text-texto">Sua moto usada entra na troca</h2>
+            <p className="corpo mt-6 max-w-[46ch] text-texto-2">
+              Aceitamos sua moto usada como parte do pagamento. A avaliação é feita
+              na loja, com a documentação orientada.
             </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-stretch">
-            {wa ? (
-              <a
-                href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
-              >
-                <MessageCircle className="size-4" aria-hidden="true" />
-                Falar com a DG Motos
-              </a>
-            ) : (
-              <Link
-                to="/contato"
-                className="inline-flex items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-white uppercase transition-colors duration-200 hover:bg-brand-600"
-              >
-                <MessageCircle className="size-4" aria-hidden="true" />
-                Falar com a DG Motos
-              </Link>
-            )}
-            <Link
-              to="/estoque"
-              className="inline-flex items-center justify-center gap-2 rounded-sm border border-line-forte px-8 py-3 font-display text-xs font-semibold tracking-[0.2em] text-paper uppercase transition-colors duration-200 hover:border-white/40 hover:bg-white/5"
-            >
-              Ver estoque
+            <Link to="/contato" className="btn btn-primary mt-8 h-12 px-6">
+              Falar com a loja
             </Link>
+
+            <div className="mt-14 border-t border-borda pt-10">
+              <h2 className="titulo text-texto">Procurando algo específico?</h2>
+              <p className="corpo mt-4 max-w-[46ch] text-texto-2">
+                Se você não encontrou o modelo que queria, fala com a gente. A gente
+                procura e avisa quando chegar.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <p className="etiqueta">Showroom</p>
+            <address className="mt-4 not-italic">
+              <p className="font-display text-3xl leading-tight font-bold text-texto">
+                {config.enderecoRua}
+              </p>
+              <p className="corpo mt-2 text-texto-2">{config.enderecoCidadeUf}</p>
+            </address>
+            <a
+              href={buildMapsRouteUrl(config)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link-acao mt-6"
+            >
+              <span>Traçar rota no Google Maps</span>
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </a>
           </div>
         </div>
       </section>

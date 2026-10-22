@@ -14,6 +14,7 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint",
     "preview": "vite preview",
+    "auditar": "node scripts/auditar-navegador.mjs",
     "prerender": "node scripts/prerender.mjs",
     "postbuild": "node scripts/prerender.mjs"
   },

@@ -2,15 +2,16 @@ import type { Motorcycle, MotorcycleCategory } from '../types'
 import type { BikeFilterState } from '../types'
 
 export const PRECO_MAX = 60000
-export const PRECO_MIN = 5000
+/** Piso da busca: 0 = "sem chão", a faixa abre do zero como a Barroca. */
+export const PRECO_MIN = 0
 export const ANO_MIN = 2015
 export const ANO_MAX = 2026
 
 export const ORDENACOES: { value: BikeFilterState['ordenacao']; label: string }[] = [
-  { value: 'relevancia', label: 'Relevância' },
+  { value: 'ano-desc', label: 'Mais recentes' },
   { value: 'preco-asc', label: 'Menor preço' },
   { value: 'preco-desc', label: 'Maior preço' },
-  { value: 'ano-desc', label: 'Mais recentes (ano)' },
+  { value: 'relevancia', label: 'Relevância' },
 ]
 
 export const CATEGORIAS: MotorcycleCategory[] = [
@@ -25,6 +26,8 @@ export const CATEGORIAS: MotorcycleCategory[] = [
 export const FILTROS_PADRAO: BikeFilterState = {
   busca: '',
   marca: '',
+  modelo: '',
+  precoMin: PRECO_MIN,
   precoMax: PRECO_MAX,
   anoMin: ANO_MIN,
   categoria: 'todas',
@@ -54,6 +57,24 @@ export function categoriasDisponiveis(motos: Motorcycle[]): MotorcycleCategory[]
   return CATEGORIAS.filter((c) => presentes.has(c))
 }
 
+/**
+ * Modelos presentes no estoque para a marca escolhida (ou de todas as
+ * marcas, quando nenhuma foi escolhida). O <select> de modelo só é útil
+ * com a marca na mão — sem ela é uma lista genuína de centenas de
+ * modelos, e esse controle não ajuda ninguém.
+ */
+export function modelosDisponiveis(motos: Motorcycle[], marca: string): string[] {
+  const alvo = marca.trim().toLowerCase()
+  return [
+    ...new Set(
+      motos
+        .filter((m) => !alvo || m.marca.toLowerCase() === alvo)
+        .map((m) => m.modelo.trim())
+        .filter(Boolean),
+    ),
+  ].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+}
+
 export function filtrarMotos(
   motos: Motorcycle[],
   f: BikeFilterState,
@@ -64,6 +85,8 @@ export function filtrarMotos(
     // O catálogo público só mostra o que está realmente à venda.
     if (m.status !== 'disponivel') return false
     if (f.marca && m.marca !== f.marca) return false
+    if (f.modelo && m.modelo.trim() !== f.modelo) return false
+    if (f.precoMin > PRECO_MIN && m.preco < f.precoMin) return false
     if (f.precoMax < PRECO_MAX && m.preco > f.precoMax) return false
     if (f.anoMin > ANO_MIN && m.ano < f.anoMin) return false
     if (f.categoria !== 'todas' && m.categoria !== f.categoria) return false
@@ -93,6 +116,8 @@ export function temFiltroAtivo(f: BikeFilterState): boolean {
   return (
     f.busca.trim() !== '' ||
     f.marca !== '' ||
+    f.modelo !== '' ||
+    f.precoMin > PRECO_MIN ||
     f.precoMax < PRECO_MAX ||
     f.anoMin > ANO_MIN ||
     f.categoria !== 'todas' ||

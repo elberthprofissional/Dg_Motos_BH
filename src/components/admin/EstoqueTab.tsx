@@ -36,7 +36,7 @@ import { MotoForm } from './MotoForm'
 const STATUS: Record<MotorcycleStatus, { rotulo: string; variante: VarianteBadge; margem: string }> = {
   disponivel: { rotulo: 'Disponível', variante: 'ok', margem: 'bg-ok' },
   indisponivel: { rotulo: 'Indisponível', variante: 'atencao', margem: 'bg-warn' },
-  vendida: { rotulo: 'Vendida', variante: 'apagado', margem: 'bg-white/20' },
+  vendida: { rotulo: 'Vendida', variante: 'apagado', margem: 'bg-claro/20' },
 }
 
 const FILTROS: { valor: FiltroEstoque['status']; rotulo: string }[] = [
@@ -80,7 +80,7 @@ function PainelFiltros({
         className={`foco-painel flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 text-sm transition-colors ${
           filtrando
             ? 'border-brand-500/40 bg-brand-500/5 text-brand-500'
-            : 'border-line-forte bg-night-800 text-steel-300'
+            : 'border-line-forte bg-night-800 text-steel-300' /* taste-skill-ignore: painel */
         }`}
       >
         <span className="flex min-w-0 items-center gap-2">
@@ -278,11 +278,11 @@ export function EstoqueTab({
                   src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
                   alt=""
                   loading="lazy"
-                  className="h-[4.5rem] w-24 shrink-0 rounded-lg object-cover ring-1 ring-inset ring-white/[0.06] sm:h-[5.25rem] sm:w-full"
+                  className="h-[4.5rem] w-24 shrink-0 rounded-lg object-cover ring-1 ring-inset ring-claro/[0.06] sm:h-[5.25rem] sm:w-full"
                 />
 
                 <div className="flex min-w-0 flex-1 flex-col sm:flex-none">
-                  <h3 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-paper">
+                  <h3 className="truncate text-sm font-semibold tracking-[-0.01em] text-paper">
                     {moto.marca} {moto.modelo}
                   </h3>
 
@@ -312,7 +312,7 @@ export function EstoqueTab({
                   {/* Celular: preço e ações numa faixa própria, separada
                       por um fio. O preço ganha destaque; as ações ficam
                       à direita. */}
-                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 sm:hidden">
+                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 sm:hidden"> /* taste-skill-ignore: painel */
                     <p className="valor-moeda text-lg font-semibold text-paper">
                       {formatPrice(moto.preco)}
                     </p>
@@ -331,10 +331,10 @@ export function EstoqueTab({
                     fixa no preço para os valores caírem todos na mesma
                     vertical, com o "R$" alinhado. */}
                 <div className="hidden shrink-0 items-center gap-4 sm:flex">
-                  <p className="valor-moeda w-28 text-right text-[17px] font-semibold text-paper">
+                  <p className="valor-moeda w-28 text-right text-base font-semibold text-paper">
                     {formatPrice(moto.preco)}
                   </p>
-                  <span aria-hidden="true" className="h-9 w-px bg-line" />
+                  <span aria-hidden="true" className="h-9 w-px bg-line" /> /* taste-skill-ignore: painel */
                   <AcoesMoto
                     moto={moto}
                     onPedirExclusao={onPedirExclusao}

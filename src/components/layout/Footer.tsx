@@ -1,138 +1,100 @@
 import { Link } from 'react-router-dom'
-import { Lock, MapPin, MessageCircle } from 'lucide-react'
+import { ArrowUpRight, Lock } from 'lucide-react'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
 import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { buildMapsRouteUrl } from '../../lib/maps'
 import { InstagramIcon } from '../ui/InstagramIcon'
+import { SITE } from '../../data/site'
 
 const NAV = [
-  { to: '/', label: 'Início' },
+  { to: '/', label: 'Página inicial' },
   { to: '/estoque', label: 'Estoque' },
   { to: '/contato', label: 'Contato' },
 ]
 
-const ANO_CORRENTE = new Date().getFullYear()
+const ANO_ATUAL = new Date().getFullYear()
 
-/**
- * Rodapé da vitrine.
- *
- * Duas zonas em vez de uma pilha centralizada: à esquerda a marca e a
- * frase institucional (o "quem somos"), à direita a navegação e o
- * contato (o "para onde ir"). A barra inferior fecha com o dado legal,
- * cinza e pequeno — encerramento discreto, sem virar grade de cards.
- */
 export function Footer() {
   const { config } = useSiteConfig()
   const wa = useWhatsappLink(buildDefaultMessage())
-  const ano = ANO_CORRENTE
+  const ano = ANO_ATUAL
 
   return (
-    <footer className="bg-night-950">
-      {/* Linha de chegada: o xadrez separa o conteúdo do rodapé em toda
-          rota da vitrine — é o motivo da marca no ponto de descida. */}
-      <div className="xadrez" aria-hidden="true" />
-      <div className="container-site grid gap-10 py-12 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-12">
-        {/* Marca + descrição institucional */}
-        <div>
-          <div className="flex items-center gap-3">
-            <img
-              src="/logo.webp"
-              alt=""
-              aria-hidden="true"
-              width={36}
-              height={36}
-              className="size-9 shrink-0 object-contain"
-            />
-            <span className="font-display text-xl font-semibold tracking-[0.14em] text-paper uppercase">
-              DG Motos
-            </span>
+    <footer className="border-t border-borda bg-fundo">
+      <div className="container-site py-10">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-lg">
+            <p className="font-display text-lg font-semibold tracking-[-0.01em] text-texto">{SITE.slogan}</p>
+            <p className="mt-2 text-sm leading-relaxed text-texto-2">
+              Curadoria de motocicletas seminovas em Belo Horizonte. Cada moto do pátio passa por inspeção mecânica e ciclística e chega com laudo cautelar.
+            </p>
           </div>
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-steel-400">
-            Motocicletas seminovas em Belo Horizonte. Atendimento direto pelo
-            WhatsApp e negociação sem complicação.
-          </p>
-        </div>
 
-        {/* Navegação */}
-        <nav aria-label="Links do rodapé" className="flex flex-col gap-3">
-          <p className="text-[11px] font-semibold tracking-[0.14em] text-steel-500 uppercase">
-            Navegação
-          </p>
-          {NAV.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="w-fit text-sm text-steel-300 transition-colors hover:text-paper"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+          <div className="flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-start sm:gap-10">
+            <nav aria-label="Navegação do rodapé" className="flex flex-col gap-2">
+              {NAV.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="text-sm text-texto-2 transition-colors hover:text-texto"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
 
-        {/* Contato e localização */}
-        <div className="flex flex-col gap-3">
-          <p className="text-[11px] font-semibold tracking-[0.14em] text-steel-500 uppercase">
-            Contato
-          </p>
-          <p className="flex items-start gap-2 text-sm leading-relaxed text-steel-300">
-            <MapPin className="mt-0.5 size-4 shrink-0 text-steel-500" aria-hidden="true" />
-            <span>
-              {config.enderecoRua}
-              <br />
-              {config.enderecoCidadeUf}
-            </span>
-          </p>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <a
-              href={buildMapsRouteUrl(config)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-steel-300 transition-colors hover:text-paper"
-            >
-              Como chegar
-            </a>
-            {wa ? (
+            <div className="flex flex-col gap-2">
+              {wa ? (
+                <a
+                  href={wa}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-texto-2 transition-colors hover:text-texto"
+                >
+                  <span>WhatsApp</span>
+                  <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                </a>
+              ) : null}
               <a
-                href={wa}
+                href={buildMapsRouteUrl(config)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-steel-300 transition-colors hover:text-paper"
+                className="inline-flex items-center gap-1.5 text-sm text-texto-2 transition-colors hover:text-texto"
               >
-                <MessageCircle className="size-3.5" aria-hidden="true" />
-                WhatsApp
+                <span>Traçar rota</span>
+                <ArrowUpRight className="size-3.5" aria-hidden="true" />
               </a>
-            ) : null}
-            {config.instagramUrl ? (
-              <a
-                href={config.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-steel-300 transition-colors hover:text-paper"
-              >
-                <InstagramIcon className="size-3.5" aria-hidden="true" />
-                Instagram
-              </a>
-            ) : null}
+              {config.instagramUrl ? (
+                <a
+                  href={config.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-texto-2 transition-colors hover:text-texto"
+                >
+                  <InstagramIcon className="size-4" aria-hidden="true" />
+                  <span>{config.instagramHandle}</span>
+                  <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                </a>
+              ) : null}
+            </div>
+
+            <address className="not-italic">
+              <p className="text-sm text-texto">{config.enderecoRua}</p>
+              <p className="mt-1 text-sm text-texto-2">{config.enderecoCidadeUf}</p>
+            </address>
           </div>
         </div>
-      </div>
 
-      <div className="border-t border-line">
-        <div className="container-site flex flex-col items-start justify-between gap-3 py-5 text-xs text-steel-500 sm:flex-row sm:items-center">
-          <p>© {ano} DG Motos — Realizando Sonhos. Todos os direitos reservados.</p>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <p>Belo Horizonte, Minas Gerais.</p>
-            {/* Aponta para /admin e não /admin/login: quem já está logado cai
-                direto no painel, quem não está é levado ao login. */}
-            <Link
-              to="/admin"
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-steel-300"
-            >
-              <Lock className="size-3.5" aria-hidden="true" />
-              Área administrativa
-            </Link>
-          </div>
+        <div className="mt-8 flex flex-col items-start justify-between gap-3 border-t border-borda pt-6 text-texto-3 sm:flex-row sm:items-center">
+          <p className="text-xs">© {ano} DG Motos — Belo Horizonte, MG.</p>
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-1.5 text-xs transition-colors hover:text-texto-2"
+          >
+            <Lock className="size-3" aria-hidden="true" />
+            <span>Acesso restrito</span>
+          </Link>
         </div>
       </div>
     </footer>

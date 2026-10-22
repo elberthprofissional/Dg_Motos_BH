@@ -48,7 +48,8 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 - **Quilometragem**: `null` em todas — o site mostra "Km a confirmar" até o
   cliente passar os valores reais.
 - Descrições e especificações são rascunho editorial; revisar antes de
-  publicar (principalmente câmbio da Start e detalhes da Lander).
+  publicar (principalmente o câmbio da Start — o seed diz 4 marchas, mas a
+  CG 160 usa 5 — e os detalhes da Lander).
 - Confirmar se alguma das motos já foi vendida e usar
   `status: 'indisponivel' | 'vendida'` conforme o caso (só `disponivel`
   aparece no site).
@@ -59,16 +60,27 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 moto + showroom + favicon. Elas foram convertidas para WebP e já estão no site.
 
 - Para converter/atualizar fotos: colocar os arquivos em `img/` (mesmos
-  nomes) e rodar `npm run convert-images`.
-- **Estado atual da fonte:** `img/` hoje guarda só Fazer, Lander, hero e
-  logo — os arquivos de XRE, Titan e Start foram removidos da fonte, mas
-  os WebP já convertidos continuam em `public/motos/<modelo>/` e no site.
-  Para trocar a foto dessas três, repor o arquivo em `img/` (mesmo nome) e
-  rodar `npm run convert-images`.
-- **Hero novo:** `img/hero-showroom.webp` foi atualizado e sai convertido
-  para `public/hero/showroom-2026-02.webp` (versão no nome para furar
-  cache). O `showroom.webp` antigo ficou órfão em `public/hero/` e pode
-  ser apagado quando quiser.
+  nomes-base) e rodar `npm run convert-images`.
+- **Estado atual da fonte:** `img/` hoje guarda só as fontes de hero e logo
+  (`hero-showroom-2026-07.jfif`, `hero-showroom-2026-06.png`,
+  `hero-login-noite.jpg` e `logo.webp`). Nenhum original do catálogo está
+  mais ali; os WebP já convertidos continuam em `public/motos/<modelo>/` e
+  no site. Para trocar a foto de uma moto, reponha o arquivo em `img/` com o
+  nome-base esperado (`xre-300-2021`, `lander-2024`, `titan-2022`,
+  `start-2024`, `fazer-150-2020`) e rode `npm run convert-images`.
+- **Hero atual:** `img/hero-showroom-2026-07.jfif` gera duas versões em
+  `public/hero/`: `showroom-2026-07.webp` (1024×434, tamanho natural) e
+  `showroom-2026-07-hd.webp` (1920×814, reampliada — é a que a home carrega,
+  porque o hero ocupa a tela inteira). A versão no nome fura cache. Ao
+  chegar outra foto, renomeie com a data seguinte
+  (`hero-showroom-2026-08.jpg`), acrescente o nome no topo da lista
+  `HERO_FONTES` em `scripts/convert-images.mjs` e rode
+  `npm run convert-images`.
+- **Resolução do hero:** o arquivo atual tem 1024×434 px. Em tela cheia
+  (1440 px ou mais) ele é ampliado e fica suave. O site já serve a versão
+  reampliada para 1920 px, que evita a ampliação do navegador, mas não cria
+  detalhe novo. Para o hero em tela cheia, o ideal é uma export de 1920 px
+  de largura ou mais.
 - **Pendente:** o cliente enviou apenas **1 foto por moto** — o script gera
   2 recortes extras (02.webp, 03.webp) só para a galeria não ficar vazia.
   O ideal é receber 3–5 fotos reais por moto (frente, lateral, painel,

@@ -27,7 +27,7 @@ export const SITE = {
   estado: 'MG',
   endereco: {
     rua: 'Av. Basílio da Gama, 139',
-    bairro: 'Belo Horizonte',
+    bairro: 'Tupi',
     cidadeUf: 'Belo Horizonte, MG',
   },
   instagram: {
@@ -35,7 +35,10 @@ export const SITE = {
     url: 'https://instagram.com/dgmotosbh',
   },
   telefoneExibicao: null as string | null,
-  horarios: null as { dias: string; horas: string }[] | null,
+  horarios: [
+    { dias: 'Seg a Sex', horas: '9h–18h' },
+    { dias: 'Sáb', horas: '9h–13h' },
+  ] as { dias: string; horas: string }[] | null,
   // Coordenadas do embed oficial do Google Maps (pin na entrada da loja,
   // bairro Tupi). Alimentam os dados estruturados (schema.org).
   geo: {

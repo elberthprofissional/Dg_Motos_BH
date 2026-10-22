@@ -55,6 +55,9 @@ export type BikeSort = 'relevancia' | 'preco-asc' | 'preco-desc' | 'ano-desc'
 export interface BikeFilterState {
   busca: string
   marca: string
+  /** Modelo escolhido em cascata (só os do marca escolhida). Vazio = todos. */
+  modelo: string
+  precoMin: number
   precoMax: number
   anoMin: number
   categoria: MotorcycleCategory | 'todas'

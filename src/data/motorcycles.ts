@@ -34,7 +34,7 @@ export const motorcycles: Motorcycle[] = [
     cilindrada: 291,
     categoria: 'Trail',
     descricao:
-      'Trail da Honda, ano 2021, com motor de um cilindro que responde bem em baixa rotação. Pilotagem erta, boa para cidade e estrada, e manutenção de custo previsível. Revisão e documentação em dia.',
+      'Trail da Honda, ano 2021, com motor de um cilindro que responde bem em baixa rotação. Pilotagem ereta, boa para cidade e estrada, e manutenção de custo previsível. Revisão e documentação em dia.',
     especificacoes: [
       { label: 'Motor', value: 'Mono OHC, 291,6 cc' },
       { label: 'Câmbio', value: '6 marchas' },

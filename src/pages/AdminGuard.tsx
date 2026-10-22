@@ -19,7 +19,7 @@ export function RotaAdmin({ children }: { children: React.ReactNode }) {
     return (
       <div className="container-site flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
         <Lock className="size-8 text-brand-500" aria-hidden="true" />
-        <h1 className="h-display mt-4 text-2xl">Área restrita desativada</h1>
+        <h1 className="titulo mt-4 text-2xl">Área restrita desativada</h1>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-steel-400">
           Este build não tem o Supabase configurado. Para habilitar o painel, copie{' '}
           <code className="text-steel-300">.env.example</code> para{' '}
@@ -39,7 +39,7 @@ export function RotaAdmin({ children }: { children: React.ReactNode }) {
         <span className="sr-only">Verificando sessão</span>
         <span
           aria-hidden="true"
-          className="size-8 animate-spin rounded-full border-2 border-white/15 border-t-brand-500"
+          className="size-8 animate-spin rounded-full border-2 border-claro/15 border-t-brand-500"
         />
       </div>
     )

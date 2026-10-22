@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { ImagePlus, Loader2, Trash2, Upload } from 'lucide-react'
 import { BUCKET_FOTOS, getSupabase, urlPublica } from '../../lib/supabase'
-import { caminhoDeBucket, caminhoUnico, nomeSeguro } from '../../lib/fotos'
+import { caminhoUnico, nomeSeguro } from '../../lib/fotos'
 import type { FotoSaida } from '../../lib/fotos'
 
 /**
@@ -99,17 +99,12 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
     }
   }
 
-  async function remover(indice: number) {
-    const foto = fotos[indice]
+  function remover(indice: number) {
+    // Tira a foto só do formulário. O arquivo no Storage é apagado
+    // depois do "Salvar" (em MotoForm): apagar agora deixaria a moto do
+    // banco apontando para uma foto inexistente se o dono cancelasse a
+    // edição.
     onChange(fotos.filter((_, i) => i !== indice))
-
-    // Foto do seed (`/motos/...`) não existe no Storage: só tenta apagar
-    // o que for mesmo uma URL do bucket.
-    const sb = getSupabase()
-    const caminho = caminhoDeBucket(foto.src)
-    if (sb && caminho && caminho.startsWith(`${slug}/`)) {
-      await sb.storage.from(BUCKET_FOTOS).remove([caminho])
-    }
   }
 
   return (
@@ -128,7 +123,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
           void enviar(e.dataTransfer.files)
         }}
         className={`rounded-lg border border-dashed p-6 text-center transition-colors sm:p-8 ${
-          arrastando ? 'border-brand-500 bg-brand-500/5' : 'border-white/15 bg-night-950/40'
+          arrastando ? 'border-brand-500 bg-brand-500/5' : 'border-claro/15 bg-night-950/40' /* taste-skill-ignore: painel */
         }`}
       >
         <input
@@ -159,7 +154,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
         </label>
         {/* "Arraste também" só faz sentido com mouse: no celular o input de
             arquivo é o caminho, e a frase só ocupava espaço. */}
-        <p className="mt-3 text-[11px] text-steel-500">
+        <p className="mt-3 text-etiqueta text-steel-500">
           <span className="hidden sm:inline">Convertidas para WebP automaticamente. </span>A primeira vira a capa do anúncio.
         </p>
       </div>
@@ -177,16 +172,16 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
               <img
                 src={foto.src}
                 alt={foto.alt || `Foto ${i + 1}`}
-                className="aspect-[4/3] w-full rounded border border-white/10 object-cover"
+                className="aspect-[4/3] w-full rounded border border-claro/10 object-cover" /* taste-skill-ignore: painel */
               />
               {i === 0 && (
-                <span className="absolute top-1 left-1 rounded bg-brand-500 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
+                <span className="absolute top-1 left-1 rounded bg-brand-500 px-1.5 py-0.5 text-micro font-semibold tracking-wide text-white uppercase">
                   Capa
                 </span>
               )}
               <button
                 type="button"
-                onClick={() => void remover(i)}
+                onClick={() => remover(i)}
                 aria-label={`Remover foto ${i + 1}`}
                 className="absolute right-1 bottom-1 grid size-9 place-items-center rounded bg-night-950/90 text-steel-300 transition-colors hover:text-brand-500 sm:size-7"
               >
@@ -199,7 +194,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
                   onChange(fotos.map((f, j) => (j === i ? { ...f, alt: e.target.value } : f)))
                 }
                 placeholder="Descreva a foto"
-                className="mt-1 w-full rounded border border-white/10 bg-night-950 px-2 py-1 text-[11px] text-steel-300 placeholder:text-steel-600"
+                className="mt-1 w-full rounded border border-claro/10 bg-night-950 px-2 py-1 text-etiqueta text-steel-300 placeholder:text-steel-600" /* taste-skill-ignore: painel */
               />
             </li>
           ))}

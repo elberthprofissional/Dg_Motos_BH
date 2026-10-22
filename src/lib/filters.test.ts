@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { motorcycles } from '../data/motorcycles'
-import { ANO_MAX, ANO_MIN, FILTROS_PADRAO, filtrarMotos, temFiltroAtivo } from './filters'
+import {
+  ANO_MAX,
+  ANO_MIN,
+  FILTROS_PADRAO,
+  PRECO_MIN,
+  filtrarMotos,
+  modelosDisponiveis,
+  temFiltroAtivo,
+} from './filters'
 import type { BikeFilterState } from '../types'
 
 const COM_TODAS = FILTROS_PADRAO
@@ -51,6 +59,25 @@ describe('filtrarMotos', () => {
     for (const m of filtrarMotos(motorcycles, com({ precoMax: teto }))) {
       expect(m.preco).toBeLessThanOrEqual(teto)
     }
+  })
+
+  it('filtra por preço mínimo', () => {
+    const piso = 25000
+    for (const m of filtrarMotos(motorcycles, com({ precoMin: piso }))) {
+      expect(m.preco).toBeGreaterThanOrEqual(piso)
+    }
+  })
+
+  it('faixa de preço completa não restringe o catálogo', () => {
+    expect(
+      filtrarMotos(motorcycles, com({ precoMin: PRECO_MIN, precoMax: 60000 })),
+    ).toHaveLength(motorcycles.length)
+  })
+
+  it('filtra por modelo', () => {
+    const resultado = filtrarMotos(motorcycles, com({ modelo: 'XRE 300' }))
+    expect(resultado.length).toBeGreaterThan(0)
+    for (const m of resultado) expect(m.modelo).toBe('XRE 300')
   })
 
   it('filtra por ano mínimo', () => {
@@ -124,9 +151,33 @@ describe('temFiltroAtivo', () => {
   it('detecta cada filtro individualmente', () => {
     expect(temFiltroAtivo(com({ busca: 'honda' }))).toBe(true)
     expect(temFiltroAtivo(com({ marca: 'Honda' }))).toBe(true)
+    expect(temFiltroAtivo(com({ modelo: 'XRE 300' }))).toBe(true)
+    expect(temFiltroAtivo(com({ precoMin: 10000 }))).toBe(true)
     expect(temFiltroAtivo(com({ precoMax: 20000 }))).toBe(true)
     expect(temFiltroAtivo(com({ anoMin: 2021 }))).toBe(true)
     expect(temFiltroAtivo(com({ categoria: 'Trail' }))).toBe(true)
     expect(temFiltroAtivo(com({ ordenacao: 'preco-asc' }))).toBe(true)
+  })
+})
+
+describe('modelosDisponiveis', () => {
+  it('sem marca, devolve modelos de todas as marcas', () => {
+    const modelos = modelosDisponiveis(motorcycles, '')
+    expect(modelos).toContain('XRE 300')
+    expect([...modelos]).toEqual([...modelos].sort((a, b) => a.localeCompare(b, 'pt-BR')))
+  })
+
+  it('com marca, devolve só os modelos dela', () => {
+    const modelos = modelosDisponiveis(motorcycles, 'Honda')
+    expect(modelos.length).toBeGreaterThan(0)
+    for (const modelo of modelos) {
+      expect(
+        motorcycles.some((m) => m.marca === 'Honda' && m.modelo === modelo),
+      ).toBe(true)
+    }
+  })
+
+  it('marca sem nenhuma moto no estoque devolve lista vazia', () => {
+    expect(modelosDisponiveis(motorcycles, 'Beto')).toEqual([])
   })
 })

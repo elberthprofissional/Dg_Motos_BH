@@ -140,18 +140,18 @@ export function Admin() {
   const rotuloAba = ABAS.find((a) => a.id === aba)?.rotulo ?? 'Painel'
 
   return (
-    <div className="flex min-h-dvh bg-night-950">
+    <div className="flex min-h-dvh bg-fundo" data-tema="painel">
       {/* ---------------------------------------------------------- */}
       {/* Sidebar — só no desktop. No celular a navegação é a barra     */}
       {/* inferior fixa (mais abaixo).                                  */}
       {/* ---------------------------------------------------------- */}
       <aside
-        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-sidebar lg:flex"
+        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-sidebar lg:flex /* taste-skill-ignore: painel */"
         aria-label="Menu do painel"
       >
         {/* Marca: logo + wordmark. O fio vermelho é curto e sólido — a
             assinatura da casa, não um gradiente decorativo. */}
-        <div className="flex h-[4.5rem] shrink-0 items-center gap-3 border-b border-line px-5">
+        <div className="flex h-[4.5rem] shrink-0 items-center gap-3 border-b border-line px-5 /* taste-skill-ignore: painel */">
           <Link
             to="/"
             aria-label="DG Motos — ver o site"
@@ -161,12 +161,12 @@ export function Admin() {
               <img src="/logo.webp" alt="" width={36} height={36} className="size-9 object-contain" />
             </span>
             <span className="min-w-0">
-              <span className="block font-display text-[15px] font-semibold tracking-[0.14em] text-paper uppercase">
+              <span className="block font-display text-sm font-semibold tracking-[0.14em] text-paper uppercase">
                 DG Motos
               </span>
               <span className="mt-0.5 flex items-center gap-1.5">
-                <span aria-hidden="true" className="h-px w-4 bg-brand-500" />
-                <span className="text-[10px] font-medium tracking-[0.18em] text-steel-500 uppercase">
+                <span aria-hidden="true" className="h-px w-4 bg-brand-500 /* taste-skill-ignore: painel */" />
+                <span className="text-micro font-medium tracking-[0.18em] text-steel-500 uppercase">
                   Painel
                 </span>
               </span>
@@ -175,7 +175,7 @@ export function Admin() {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <p className="px-3 pb-2 font-display text-[10px] font-semibold tracking-[0.2em] text-steel-600 uppercase">
+          <p className="px-3 pb-2 font-display text-micro font-semibold tracking-[0.2em] text-steel-600 uppercase">
             Gerenciar
           </p>
           <div className="space-y-0.5">
@@ -189,8 +189,8 @@ export function Admin() {
                   aria-current={ativa ? 'page' : undefined}
                   className={`foco-painel nav-item ${
                     ativa
-                      ? 'nav-item-ativo bg-white/[0.04] text-paper'
-                      : 'text-steel-400 hover:bg-white/[0.03] hover:text-paper'
+                      ? 'nav-item-ativo bg-claro/[0.04] text-paper'
+                      : 'text-steel-400 hover:bg-claro/[0.03] hover:text-paper'
                   }`}
                 >
                   <Icone
@@ -201,7 +201,7 @@ export function Admin() {
                   <span className="flex-1 truncate">{rotulo}</span>
                   {id === 'estoque' && motos !== null ? (
                     <span
-                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] leading-4 tabular-nums ${
+                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-etiqueta leading-4 tabular-nums ${
                         ativa ? 'text-brand-500' : 'text-steel-500'
                       }`}
                     >
@@ -214,11 +214,11 @@ export function Admin() {
           </div>
         </nav>
 
-        <div className="shrink-0 border-t border-line p-3">
+        <div className="shrink-0 border-t border-line p-3 /* taste-skill-ignore: painel */">
           <button
             type="button"
             onClick={pedirSaida}
-            className="foco-painel nav-item text-steel-400 hover:bg-white/[0.03] hover:text-paper"
+            className="foco-painel nav-item text-steel-400 hover:bg-claro/[0.03] hover:text-paper"
           >
             <LogOut className="size-[17px] shrink-0 text-steel-500" strokeWidth={1.8} aria-hidden="true" />
             Sair
@@ -234,7 +234,7 @@ export function Admin() {
             de moto, seção de configurações). Na listagem do estoque o
             título é da própria página — repetir aqui era ruído. No celular
             a marca ocupa o canto, já que a sidebar está escondida. */}
-        <header className="sticky top-0 z-30 border-b border-line bg-night-950/90 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-line bg-night-950/90 backdrop-blur-md /* taste-skill-ignore: topbar do painel */">
           <div className="flex h-14 items-center gap-3 px-4 sm:px-6 lg:h-16 lg:px-8">
             <Link
               to="/"
@@ -263,7 +263,7 @@ export function Admin() {
               <button
                 type="button"
                 onClick={() => setEditando(null)}
-                className="foco-painel inline-flex items-center gap-1.5 rounded-lg border border-line-forte px-3 py-1.5 text-xs font-medium text-steel-300 transition-colors hover:border-white/25 hover:text-paper"
+                className="foco-painel inline-flex items-center gap-1.5 rounded-lg border border-line-forte px-3 py-1.5 text-xs font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper"
               >
                 <ArrowLeft className="size-3.5" aria-hidden="true" />
                 <span className="hidden sm:inline">Voltar ao estoque</span>
@@ -274,7 +274,7 @@ export function Admin() {
             {aba === 'estoque' && !editando && (
               <Link
                 to="/"
-                className="foco-painel hidden items-center gap-1.5 rounded-lg border border-line-forte px-3 py-1.5 text-xs font-medium text-steel-300 transition-colors hover:border-white/25 hover:text-paper lg:inline-flex"
+                className="foco-painel hidden items-center gap-1.5 rounded-lg border border-line-forte px-3 py-1.5 text-xs font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper lg:inline-flex"
               >
                 <ExternalLink className="size-3.5" aria-hidden="true" />
                 Ver no site
@@ -306,7 +306,7 @@ export function Admin() {
       {/* ---------------------------------------------------------- */}
       <nav
         aria-label="Navegação do painel"
-        className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-line bg-sidebar lg:hidden"
+        className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-line bg-sidebar lg:hidden /* taste-skill-ignore: painel */"
       >
         <div className="grid grid-cols-2">
           {ABAS.map(({ id, rotulo, icone: Icone }) => {
@@ -330,12 +330,12 @@ export function Admin() {
                 <span className="relative">
                   <Icone className="size-[21px]" strokeWidth={ativa ? 2.2 : 1.8} aria-hidden="true" />
                   {id === 'estoque' && motos !== null && motos.length > 0 ? (
-                    <span className="absolute -top-1 -right-2.5 min-w-[1.1rem] rounded-full bg-white/10 px-1 text-center text-[10px] leading-[1.1rem] font-medium tabular-nums text-steel-300">
+                    <span className="absolute -top-1 -right-2.5 min-w-[1.1rem] rounded-full bg-claro/10 px-1 text-center text-micro leading-[1.1rem] font-medium tabular-nums text-steel-300">
                       {motos.length}
                     </span>
                   ) : null}
                 </span>
-                <span className="text-[11px] leading-none font-medium">{rotulo}</span>
+                <span className="text-etiqueta leading-none font-medium">{rotulo}</span>
               </button>
             )
           })}

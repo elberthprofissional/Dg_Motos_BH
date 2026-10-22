@@ -27,7 +27,7 @@ export function SenhaInput({ rotulo, className, ...props }: SenhaInputProps) {
         onClick={() => setVisivel((v) => !v)}
         aria-label={visivel ? `Ocultar ${rotulo.toLowerCase()}` : `Mostrar ${rotulo.toLowerCase()}`}
         aria-pressed={visivel}
-        className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1.5 text-steel-500 transition-colors hover:text-paper"
+        className="absolute top-1/2 right-2 -translate-y-1/2 p-1.5 text-texto-3 transition-colors hover:text-texto"
       >
         {visivel ? (
           <EyeOff className="size-4" aria-hidden="true" />

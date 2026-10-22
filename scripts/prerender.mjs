@@ -111,7 +111,8 @@ function fotosDe(moto) {
 /** "2021" ou uma data ISO do banco → "2021-03-15" (o que o Google prefere). */
 function dataDePublicacao(moto) {
   if (moto.updated_at) return String(moto.updated_at).slice(0, 10)
-  if (moto.criado_em) return String(moto.criado_em).slice(0, 10)
+  // O PostgREST devolve `created_at` (não `criado_em`).
+  if (moto.created_at) return String(moto.created_at).slice(0, 10)
   return `${moto.ano}-03-15`
 }
 
@@ -141,7 +142,7 @@ function fichaDe(moto, base) {
     conteudo: `<article class="prerender">
   <h1>${escapar(titulo)}</h1>
   <p class="preco">${escapar(preco)}</p>
-  <p class="ano">Ano ${escapar(moto.ano)}${moto.cilindrada ? ` · ${escapar(moto.cilindrada)} cc` : ''}${moto.quilometragem ? ` · ${escapar(moto.quilometragem)} km` : ''}</p>
+  <p class="ano">Ano ${escapar(moto.ano)}${moto.cilindrada ? ` · ${escapar(moto.cilindrada)} cc` : ''}${moto.quilometragem != null ? ` · ${escapar(Number(moto.quilometragem).toLocaleString('pt-BR'))} km` : ''}</p>
   <p class="descricao">${escapar(descricao)}</p>
   ${specs ? `<dl class="especificacoes">${specs}</dl>` : ''}
   <p><a href="/contato">Falar com a loja</a></p>
@@ -177,8 +178,9 @@ async function run() {
 
   motos = publicaveis(motos)
   if (motos.length === 0) {
-    console.warn('AVISO: nenhuma moto disponível — nada a prerenderizar.')
-    return
+    // Sem fichas o sitemap ainda precisa existir (robots.txt o anuncia);
+    // sair aqui deixaria o site apontando para um sitemap 404.
+    console.warn('AVISO: nenhuma moto disponível — gerando sitemap/robots sem fichas.')
   }
 
   const template = await readFile(INDEX_HTML, 'utf8')
@@ -188,17 +190,27 @@ async function run() {
     const ficha = fichaDe(moto, base)
     const titulo = `${escapar(ficha.titulo)} | DG Motos`
     const resumo = escapar(ficha.resumo)
-    const imagem = ficha.fotos[0] ?? absoluta(base, '/hero/showroom-2026-02.webp')
+    const imagem = ficha.fotos[0] ?? absoluta(base, '/hero/showroom-2026-07-hd.webp')
 
     // Mesmo formato do JSON-LD emitido em runtime por src/lib/schema.ts,
     // para o buscador ver exatamente a mesma coisa antes e depois do JS.
+    // O `id` é o mesmo de useJsonLd: o React atualiza este bloco em vez
+    // de acrescentar um segundo.
     const ld = {
       '@context': 'https://schema.org',
       '@type': 'Car',
+      '@id': `${base}/moto/${moto.slug}#veiculo`,
       name: ficha.titulo,
       brand: { '@type': 'Brand', name: moto.marca },
       model: moto.modelo,
       vehicleModelDate: String(moto.ano),
+      mileageFromOdometer:
+        moto.quilometragem != null
+          ? { '@type': 'QuantitativeValue', value: moto.quilometragem, unitCode: 'KMT' }
+          : undefined,
+      vehicleEngine: moto.cilindrada
+        ? { '@type': 'EngineSpecification', engineDisplacement: `${moto.cilindrada} cc` }
+        : undefined,
       image: ficha.fotos,
       description: ficha.descricao,
       offers: {
@@ -210,6 +222,7 @@ async function run() {
             ? 'https://schema.org/InStock'
             : 'https://schema.org/SoldOut',
         itemCondition: 'https://schema.org/UsedCondition',
+        seller: { '@id': `${base}/#loja` },
       },
     }
 
@@ -224,7 +237,7 @@ async function run() {
       // Canonical fixo: sem ele o Google pode tratar a ficha como
       // duplicata da listagem de /estoque.
       .replace('</head>', `<link rel="canonical" href="${ficha.url}" /></head>`)
-      .replace('</head>', `<script type="application/ld+json">${JSON.stringify(ld)}</script></head>`)
+      .replace('</head>', `<script type="application/ld+json" id="dgmotos-jsonld">${JSON.stringify(ld)}</script></head>`)
       // O React reescreve #root ao montar; o crawler já leu o conteúdo.
       .replace('<div id="root"></div>', `<div id="root">${ficha.conteudo}</div>`)
 

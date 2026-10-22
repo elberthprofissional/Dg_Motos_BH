@@ -22,7 +22,7 @@ export function MapaLoja({ rotulo, className = 'h-[300px] sm:h-[400px]' }: MapaL
       loading="lazy"
       allowFullScreen
       referrerPolicy="strict-origin-when-cross-origin"
-      className={`block w-full border-0 ${className}`}
+      className={`block w-full max-w-full border-0 ${className}`}
     />
   )
 }

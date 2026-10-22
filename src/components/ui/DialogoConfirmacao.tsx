@@ -7,7 +7,7 @@ export interface PedidoConfirmacao {
   rotuloConfirmar: string
   onConfirmar: () => void | Promise<void>
   /**
-   * Tom visual. `perigo` (padrão) é o vermelho para ações destrutivas
+   * Tom visual. `perigo` (padrão) é o carimbo para ações destrutivas
    * (excluir). `neutro` é para confirmações inofensivas — sair, descartar
    * rascunho — onde um alerta vermelho daria peso errado à ação.
    */
@@ -24,8 +24,10 @@ export interface PedidoConfirmacao {
  * janela. Para uma concessionária, excluir uma moto é operação comum,
  * então a confirmação precisa ser previsível.
  *
- * O foco entra no botão de cancelar (o padrão seguro), Esc cancela e o
- * Tab fica preso dentro do diálogo enquanto ele estiver aberto.
+ * O diálogo é um `<dialog>` nativo: o foco fica preso dentro dele
+ * enquanto está aberto, Esc cancela e o navegador devolve o foco ao
+ * botão que o abriu. O foco inicial é o botão de cancelar — o padrão
+ * seguro.
  */
 export function DialogoConfirmacao({
   pedido,
@@ -36,113 +38,90 @@ export function DialogoConfirmacao({
   onFechar: () => void
   ocupado?: boolean
 }) {
-  const caixa = useRef<HTMLDivElement>(null)
-  const cancelar = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const cancelarRef = useRef<HTMLButtonElement>(null)
+  // O callback é guardado numa ref para que o listener do `close` não
+  // precise ser re-registrado a cada render.
+  const onFecharRef = useRef(onFechar)
+  useEffect(() => {
+    onFecharRef.current = onFechar
+  }, [onFechar])
 
   useEffect(() => {
-    if (!pedido) return
-    cancelar.current?.focus()
-
-    function aoTeclar(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        event.stopPropagation()
-        onFechar()
-        return
-      }
-      if (event.key !== 'Tab' || !caixa.current) return
-
-      const focaveis = caixa.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      )
-      if (focaveis.length === 0) return
-      const primeiro = focaveis[0]
-      const ultimo = focaveis[focaveis.length - 1]
-
-      if (event.shiftKey && document.activeElement === primeiro) {
-        event.preventDefault()
-        ultimo.focus()
-      } else if (!event.shiftKey && document.activeElement === ultimo) {
-        event.preventDefault()
-        primeiro.focus()
-      }
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (pedido && !dialog.open) {
+      dialog.showModal()
+      cancelarRef.current?.focus()
+    } else if (!pedido && dialog.open) {
+      dialog.close()
     }
+  }, [pedido])
 
-    document.addEventListener('keydown', aoTeclar)
-    return () => document.removeEventListener('keydown', aoTeclar)
-  }, [pedido, onFechar])
+  // Esc e o botão de fechar do próprio diálogo passam por aqui.
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const aoFechar = () => onFecharRef.current()
+    dialog.addEventListener('close', aoFechar)
+    return () => dialog.removeEventListener('close', aoFechar)
+  }, [])
 
-  if (!pedido) return null
-
-  const neutro = pedido.tom === 'neutro'
+  const neutro = pedido?.tom === 'neutro'
   const Icone = neutro ? LogOut : AlertTriangle
 
-/* No celular o diálogo sobe de baixo (alcance do polegar) e o rodapé
-      soma a safe area ao respiro inferior: a barra de navegação do painel
-      foi removida, então só o entalhe do iPhone precisa de folga para os
-      botões de confirmar/cancelar não ficarem atrás do gesto de voltar.
-      `max-h` + scroll interno cobrem a descrição longa da exclusão em
-      telas de 320×568. */
   return (
-    <div className="fixed inset-0 z-60 flex items-end justify-center pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] sm:items-center sm:p-4 sm:pb-4">
-      <button
-        type="button"
-        aria-label="Fechar confirmação"
-        onClick={onFechar}
-        className="absolute inset-0 bg-black/70"
-      />
-      <div
-        ref={caixa}
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="dlg-titulo"
-        aria-describedby="dlg-descricao"
-        className="relative max-h-full w-full max-w-md overflow-y-auto rounded-lg border border-white/10 bg-night-900 p-5 shadow-2xl shadow-black/60 sm:p-6"
-      >
-        <div className="flex items-start gap-3 sm:gap-4">
-          <span
-            aria-hidden="true"
-            className={`grid size-10 shrink-0 place-items-center rounded-lg border ${
-              neutro
-                ? 'border-white/10 bg-white/5 text-steel-400'
-                : 'border-brand-500/40 bg-brand-500/10 text-brand-500'
-            }`}
-          >
-            <Icone className="size-5" />
-          </span>
-          <div className="min-w-0">
-            <h2
-              id="dlg-titulo"
-              className="font-display text-lg font-semibold tracking-wide text-paper uppercase"
+    <dialog
+      ref={dialogRef}
+      className="dialogo"
+      aria-labelledby="dlg-titulo"
+      aria-describedby="dlg-descricao"
+    >
+      {pedido && (
+        <div className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-5 sm:p-6">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <span
+              aria-hidden="true"
+              className={`grid size-10 shrink-0 place-items-center border ${
+                neutro
+                  ? 'border-borda bg-painel-2 text-texto-3'
+                  : 'border-marca/40 bg-marca/10 text-marca-texto'
+              }`}
             >
-              {pedido.titulo}
-            </h2>
-            <p id="dlg-descricao" className="mt-2 text-sm leading-relaxed text-steel-400">
-              {pedido.descricao}
-            </p>
+              <Icone className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 id="dlg-titulo" className="titulo text-lg text-texto">
+                {pedido.titulo}
+              </h2>
+              <p id="dlg-descricao" className="mt-2 text-sm leading-relaxed text-texto-2">
+                {pedido.descricao}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:mt-6 sm:flex-row sm:justify-end">
+            <button
+              ref={cancelarRef}
+              type="button"
+              onClick={onFechar}
+              className="btn btn-secondary h-11 w-full sm:h-auto sm:w-auto"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              disabled={ocupado}
+              onClick={() => void pedido.onConfirmar()}
+              className={`btn h-11 w-full sm:h-auto sm:w-auto ${
+                neutro ? 'btn-primary' : 'btn-danger'
+              }`}
+            >
+              {ocupado ? (pedido.rotuloOcupado ?? 'Processando...') : pedido.rotuloConfirmar}
+            </button>
           </div>
         </div>
-
-        <div className="mt-5 flex flex-col-reverse gap-2 sm:mt-6 sm:flex-row sm:justify-end">
-          <button
-            ref={cancelar}
-            type="button"
-            onClick={onFechar}
-            className="btn btn-secondary h-11 w-full sm:h-auto sm:w-auto"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            disabled={ocupado}
-            onClick={() => void pedido.onConfirmar()}
-            className={`btn h-11 w-full sm:h-auto sm:w-auto ${
-              neutro ? 'btn-primary' : 'btn-danger'
-            }`}
-          >
-            {ocupado ? (pedido.rotuloOcupado ?? 'Processando...') : pedido.rotuloConfirmar}
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </dialog>
   )
 }

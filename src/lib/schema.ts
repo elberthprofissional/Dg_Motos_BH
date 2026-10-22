@@ -15,7 +15,7 @@ export function autoDealerSchema(config?: ConfigLoja): object {
     name: 'DG Motos',
     slogan: SITE.slogan,
     url: SITE_URL,
-    image: `${SITE_URL}/hero/showroom-2026-02.webp`,
+    image: `${SITE_URL}/hero/showroom-2026-07-hd.webp`,
     logo: `${SITE_URL}/favicon.webp`,
     address: {
       '@type': 'PostalAddress',
@@ -43,9 +43,11 @@ export function vehicleSchema(bike: Motorcycle): object {
     brand: { '@type': 'Brand', name: bike.marca },
     model: bike.modelo,
     vehicleModelDate: String(bike.ano),
-    mileageFromOdometer: bike.quilometragem
-      ? { '@type': 'QuantitativeValue', value: bike.quilometragem, unitCode: 'KMT' }
-      : undefined,
+    // `!= null` (e não truthy): moto com 0 km é um dado válido.
+    mileageFromOdometer:
+      bike.quilometragem != null
+        ? { '@type': 'QuantitativeValue', value: bike.quilometragem, unitCode: 'KMT' }
+        : undefined,
     vehicleEngine: bike.cilindrada
       ? { '@type': 'EngineSpecification', engineDisplacement: `${bike.cilindrada} cc` }
       : undefined,

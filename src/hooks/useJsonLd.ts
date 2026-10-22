@@ -12,16 +12,35 @@ import { useEffect } from 'react'
  * A dependência é o JSON serializado: os schemas são objetos novos a
  * cada render, então comparar por referência reescreveria o <head>
  * sem parar. O payload é pequeno (umas centenas de bytes).
+ *
+ * O script é reaproveitado pelo `id`, nunca duplicado: as fichas
+ * prerenderizadas já chegam com o JSON-LD no HTML (mesmo `id`), e o
+ * React atualiza esse bloco em vez de acrescentar um segundo.
  */
+const ID_JSON_LD = 'dgmotos-jsonld'
+
 export function useJsonLd(data: object): void {
   const payload = JSON.stringify(data)
 
   useEffect(() => {
-    const script = document.createElement('script')
-    script.type = 'application/ld+json'
-    script.id = 'dgmotos-jsonld'
+    const existente = document.getElementById(ID_JSON_LD)
+    // Página sem dados estruturados (ex.: ficha não encontrada): não
+    // deixa no <head> o schema da página anterior.
+    if (payload === '{}') {
+      existente?.remove()
+      return
+    }
+
+    const script =
+      existente instanceof HTMLScriptElement ? existente : document.createElement('script')
+
+    if (!existente) {
+      script.type = 'application/ld+json'
+      script.id = ID_JSON_LD
+      document.head.appendChild(script)
+    }
+
     script.textContent = payload
-    document.head.appendChild(script)
     return () => {
       script.remove()
     }

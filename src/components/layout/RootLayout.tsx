@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { Header } from './Header'
 import { Footer } from './Footer'
+import { BotoesFlutuantes } from '../ui/BotoesFlutuantes'
 import { useScrollToTop } from '../../hooks/useScroll'
-import { useRevealOnScroll } from '../../hooks/useReveal'
 import { CatalogoContexto } from '../../hooks/useCatalogo'
 import type { EstadoCatalogo } from '../../hooks/useCatalogo'
 import { buscarCatalogo } from '../../lib/catalog'
@@ -11,22 +11,27 @@ import { supabaseConfigured } from '../../lib/supabase'
 import { motorcycles as catalogoEstatico } from '../../data/motorcycles'
 
 export function RootLayout() {
-  const location = useLocation()
   useScrollToTop()
-  // `key` muda a cada navegação, inclusive quando o pathname se repete
-  // (ex.: ir e voltar para a mesma rota): o observer precisa reagir ao
-  // novo DOM da página.
-  useRevealOnScroll(location.key)
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <main id="conteudo" className="flex-1">
-        <CatalogoProvider>
+    <div className="flex min-h-dvh flex-col bg-fundo">
+      <a href="#conteudo" className="pular-para-conteudo">
+        Pular para o conteúdo
+      </a>
+
+      {/* O provedor abraça o cabeçalho: a barra de cima mostra quantas
+          motos estão no estoque agora, e isso vem do mesmo lugar que o
+          resto da vitrine lá. */}
+      <CatalogoProvider>
+        <Header />
+        <main id="conteudo" tabIndex={-1} className="flex-1 focus:outline-none">
           <Outlet />
-        </CatalogoProvider>
-      </main>
-      <Footer />
+        </main>
+        <Footer />
+        {/* Botões fixos só na vitrine: as rotas de admin ficam fora
+            deste layout e levam a tela limpa, sem CTA de loja. */}
+        <BotoesFlutuantes />
+      </CatalogoProvider>
     </div>
   )
 }

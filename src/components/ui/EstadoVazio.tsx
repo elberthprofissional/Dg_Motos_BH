@@ -18,10 +18,10 @@ import type { ReactNode } from 'react'
  * A versão completa (py-12, ícone 44px) serve para uma página inteira
  * sem resultado — Estoque vazio, filtro sem retorno. Mas dentro de um
  * card do painel ela comia a tela: o card tem pouco mais que um terço
- * da altura do celular, e 96px de padding deixava a seção parecendo um
+ * da altura do celular, e 96px de padding deixava a seção parecer um
  * buraco.
  *
-* `compacto` reduz para py-7 e ícone 36px. O texto continua o mesmo —
+ * `compacto` reduz para py-7 e ícone 36px. O texto continua o mesmo —
  * encurtar a descrição para ganhar espaço esconderia a informação que o
  * dono precisa para decidir o que fazer.
  */
@@ -51,28 +51,28 @@ export function EstadoVazio({
       {icone && (
         <span
           aria-hidden="true"
-          className={`text-steel-600 ${compacto ? 'size-6' : 'size-7'}`}
+          className={`text-texto-3 ${compacto ? 'size-6' : 'size-7'}`}
         >
           {icone}
         </span>
       )}
       <p
-        className={`font-display font-semibold tracking-wide text-steel-400 uppercase ${
-          icone ? 'mt-3.5' : ''
-        } ${compacto ? 'text-sm' : 'text-base'}`}
+        className={`titulo text-texto ${icone ? 'mt-4' : ''} ${
+          compacto ? 'text-lg' : 'text-2xl'
+        }`}
       >
         {titulo}
       </p>
       {descricao && (
         <p
-          className={`mt-1.5 leading-relaxed text-steel-600 ${
-            compacto ? 'max-w-[36ch] text-xs' : 'max-w-sm text-sm'
+          className={`mt-2.5 leading-relaxed text-texto-2 ${
+            compacto ? 'max-w-[36ch] text-xs' : 'max-w-md text-sm'
           }`}
         >
           {descricao}
         </p>
       )}
-      {acao && <div className="mt-4">{acao}</div>}
+      {acao && <div className="mt-6">{acao}</div>}
     </div>
   )
 }

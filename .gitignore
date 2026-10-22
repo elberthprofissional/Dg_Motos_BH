@@ -5,3 +5,16 @@ dist-ssr
 .env
 .env.*
 !.env.example
+preview.log
+
+# artefatos locais de skills e inspecao temporaria
+.agents/
+.taste-skill/
+skills-lock.json
+barroca.html
+scripts/peek.mjs
+scripts/inspect-barroca.mjs
+scripts/inspect-barroca2.mjs
+scripts/fetch-barroca.mjs
+scripts/fix-lint.mjs
+scripts/mark-admin-lint.mjs

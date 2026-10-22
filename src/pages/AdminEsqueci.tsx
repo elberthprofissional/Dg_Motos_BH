@@ -26,7 +26,10 @@ export function AdminEsqueci() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-5 py-10">
+    <div
+      className="flex min-h-dvh flex-col items-center justify-center bg-fundo px-5 py-10"
+      data-tema="painel"
+    >
       <main className="w-full max-w-sm">
         <Link
           to="/"
@@ -42,8 +45,10 @@ export function AdminEsqueci() {
           />
         </Link>
 
+        <h1 className="etiqueta mt-8 text-center text-texto">Recuperar acesso</h1>
+
         {enviado ? (
-          <div className="mt-8 text-center">
+          <div className="mt-5 text-center">
             <p className="text-sm leading-relaxed text-paper">
               Se <strong className="font-semibold">{email}</strong> estiver cadastrado, o link de
               redefinição já foi enviado.
@@ -53,13 +58,13 @@ export function AdminEsqueci() {
             </p>
             <Link
               to="/admin/login"
-              className="mt-6 inline-block text-xs text-steel-400 transition-colors hover:text-paper"
+              className="mt-6 inline-block py-1 text-xs text-steel-400 transition-colors hover:text-paper"
             >
               Voltar para o login
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-3" noValidate>
+          <form onSubmit={handleSubmit} className="mt-5 space-y-3" noValidate>
             <p className="text-center text-xs leading-relaxed text-steel-400">
               Digite o e-mail do painel e enviaremos um link para criar uma senha nova.
             </p>
@@ -91,7 +96,7 @@ className="btn btn-primary mt-2 w-full"
             </button>
 
             <div className="pt-2 text-center">
-              <Link to="/admin/login" className="text-xs text-steel-400 transition-colors hover:text-paper">
+              <Link to="/admin/login" className="inline-block py-1 text-xs text-steel-400 transition-colors hover:text-paper">
                 Voltar para o login
               </Link>
             </div>
@@ -140,7 +145,10 @@ export function AdminRedefinir() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-5 py-10">
+    <div
+      className="flex min-h-dvh flex-col items-center justify-center bg-fundo px-5 py-10"
+      data-tema="painel"
+    >
       <main className="w-full max-w-sm">
         <Link to="/" aria-label="DG Motos — voltar à página inicial" className="mx-auto block w-fit">
           <img
@@ -152,7 +160,9 @@ export function AdminRedefinir() {
           />
         </Link>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-3" noValidate>
+        <h1 className="etiqueta mt-8 text-center text-texto">Criar senha nova</h1>
+
+        <form onSubmit={handleSubmit} className="mt-5 space-y-3" noValidate>
           <p className="text-center text-xs leading-relaxed text-steel-400">
             Crie uma senha nova para o painel.
           </p>

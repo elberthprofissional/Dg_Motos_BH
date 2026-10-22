@@ -16,9 +16,10 @@ import { mkdir, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import sharp from 'sharp'
 
-// A pasta img/ pode conter tanto originais (.jpg/.png) quanto fotos já
-// convertidas para WebP pelo scripts/convert-webp.py — ambas são aceitas.
-const FONTE_VALIDA = /\.(jpe?g|png|webp)$/i
+// A pasta img/ pode conter tanto originais (.jpg/.png/.jfif) quanto
+// fotos já convertidas para WebP pelo scripts/convert-webp.py — todas
+// são aceitas.
+const FONTE_VALIDA = /\.(jpe?g|jfif|png|webp)$/i
 
 const ROOT = process.cwd()
 const IMG_DIR = path.join(ROOT, 'img')
@@ -36,6 +37,20 @@ const CATALOGO = [
 const LARGURA_CATALOGO = 1280
 const LARGURA_HERO = 1920
 const QUALIDADE = 78
+
+// Fontes candidatas da foto do hero, em ordem de preferência: a
+// primeira que existir em img/ vence. Ao chegar foto nova, basta
+// acrescentar a próxima versão no topo da lista. O nome da saída
+// sai da própria fonte (hero-showroom-2026-07.jfif ->
+// public/hero/showroom-2026-07.webp), e a versão no nome serve para
+// furar o cache do navegador e do CDN.
+const HERO_FONTES = ['hero-showroom-2026-07', 'hero-showroom']
+
+// O hero entra na tela inteira, de ponta a ponta: na largura do
+// monitor a foto é ampliada. Duas saídas: a pequena, do tamanho
+// natural da fonte, para os cartões de rede social; e a grande
+// (-hd), reampliada com lanczos, que é a que a página carrega.
+const HERO_SUFIXO_HD = '-hd'
 
 async function run() {
   const arquivos = await readdir(IMG_DIR)
@@ -86,16 +101,37 @@ async function run() {
   }
 
   // ---- Hero (showroom) ----
-  const heroEntrada = arquivos.find((a) => a.startsWith('hero') && FONTE_VALIDA.test(a))
+  const heroEntrada = HERO_FONTES.map((base) =>
+    arquivos.find((a) => a.startsWith(base) && FONTE_VALIDA.test(a)),
+  ).find(Boolean)
+
   if (heroEntrada) {
+    const saidaHero = heroEntrada
+      .replace(/^hero[-_]?/i, '')
+      .replace(/\.[^.]+$/, '.webp')
     await mkdir(path.join(ROOT, 'public', 'hero'), { recursive: true })
+
+    // Versão do tamanho natural da fonte: usada nos cartões de rede
+    // social e no JSON-LD, onde a imagem aparece pequena.
     await toWebp(
       path.join(IMG_DIR, heroEntrada),
-      path.join(ROOT, 'public', 'hero', 'showroom-2026-02.webp'),
+      path.join(ROOT, 'public', 'hero', saidaHero),
       LARGURA_HERO,
     )
     convertidas++
-    console.log(`✔ ${heroEntrada} -> public/hero/showroom-2026-02.webp`)
+
+    // Versão ampliada: é a que a home carrega (imagem de LCP, de
+    // ponta a ponta da tela). Reampliar com lanczos3 deixa a borda
+    // mais limpa do que a ampliação do próprio navegador.
+    const saidaHeroHd = saidaHero.replace(/\.webp$/, `${HERO_SUFIXO_HD}.webp`)
+    await sharp(path.join(IMG_DIR, heroEntrada))
+      .rotate()
+      .resize({ width: LARGURA_HERO, kernel: 'lanczos3' })
+      .webp({ quality: QUALIDADE })
+      .toFile(path.join(ROOT, 'public', 'hero', saidaHeroHd))
+    convertidas++
+
+    console.log(`✔ ${heroEntrada} -> public/hero/${saidaHero} + ${saidaHeroHd}`)
   } else {
     console.warn('AVISO: hero-showroom não encontrado em img/.')
   }

@@ -33,6 +33,7 @@ as dependências na primeira vez e abre o navegador.
 | `npm run lint`          | Oxlint                                                    |
 | `npm run typecheck`     | TypeScript sem emitir arquivos                           |
 | `npm test`              | Vitest (testes de `src/lib`)                             |
+| `npm run auditar`       | Auditoria CDP contra o preview (Chrome na porta 9222)    |
 | `npm run convert-images`| Converte fotos de `img/` para WebP em `public/`          |
 | `npm run marcas`        | Baixa/converte os logos das marcas para `public/marcas/` |
 | `npm run icones-pwa`    | Gera os ícones do app em `public/icons/`                 |
@@ -49,24 +50,32 @@ docs/
 src/
   data/         site.ts (contato/endereço) e motorcycles.ts (fallback)
   lib/          funções puras: catálogo, filtros, formatação, schema.org,
-                config da loja, marcas, supabase
+                config da loja, marcas, maps, supabase
   hooks/        useCatalogo, useAuth, useWhatsappLink, usePageMeta,
-                useScroll, useReveal, useInstalarPwa, contexto de config
+                useJsonLd, useScroll, useInstalarPwa, contexto de config
   components/
     layout/     Header, Footer, RootLayout
     admin/      MotoForm, PhotoUploader, EstoqueTab, ConfiguracoesTab,
                 InstalarApp, useInstalarApp, SeletorMarca
-    motorcycles/ BikeCard, BikeFilters, BikeGallery, MarcaGrid
-    ui/         Button, SmartImage, SectionHeading
+    motorcycles/ BikeCard, BikeFilters, BikeGallery, LinhaEstoque,
+                WhatsAppCTA
+    ui/         Button, Badge, SectionHeading, EstadoVazio, Revelar,
+                BotoesFlutuantes, CampoBusca, DialogoConfirmacao,
+                Esqueleto, IconeWhatsapp, InstagramIcon, MapaLoja,
+                SenhaInput, Toast
   pages/        rotas (uma por página, code-split com React.lazy)
 public/
+  hero/                          banner da home e imagem do login
   manifest.webmanifest + sw.js   PWA (app instalável)
   icons/                         ícones do app
   marcas/                        logos dos fabricantes
+  motos/                         fotos WebP do catálogo
 scripts/
-  prerender.mjs          HTML estático das fichas + sitemap + robots
-  gerar-icones-pwa.mjs   ícones do PWA a partir de public/logo.webp
-  baixar-marcas.mjs      logos das marcas para public/marcas/
+  prerender.mjs           HTML estático das fichas + sitemap + robots
+  auditar-navegador.mjs   auditoria de DOM/responsivo via CDP
+  convert-images.mjs      fotos de img/ para WebP em public/
+  gerar-icones-pwa.mjs    ícones do PWA a partir de public/logo.webp
+  baixar-marcas.mjs       logos das marcas para public/marcas/
 ```
 
 ## Como o catálogo se comporta
@@ -115,14 +124,16 @@ da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
 - **O app instalado abre no login, não na vitrine.** `src/pages/Entrada.tsx`
   checa o `display-mode: standalone`: no PWA instalado, `/` cai em
   `/admin/login`; no navegador, mostra o catálogo.
-- **Fotos nunca são inventadas.** `img/` é a fonte; o script de conversão
-  gera WebP e crops. Faltando foto, entra o placeholder local. O hero tem a
-  versão no nome (`showroom-2026-02.webp`): trocar só o conteúdo mantendo
-  a URL faria o CDN servir a foto velha do cache.
-- **Identidade visual entra por textura, não por número decorativo.**
-  A assinatura é a faixa xadrez no topo do rodapé, os riscos diagonais da
-  CTA final e a etiqueta vermelha enviesada do preço — os três definidos em
-  `src/index.css`. A Home não tem seção de estatísticas decorativas.
+- **Fotos nunca são inventadas.** `img/` guarda só as fontes de hero/logo;
+  as fotos do catálogo já convertidas vivem em `public/motos/`. O script de
+  conversão gera WebP e crops; faltando foto, entra o placeholder local. O
+  hero tem a versão no nome (`showroom-2026-07.webp` e
+  `showroom-2026-07-hd.webp`): trocar só o conteúdo mantendo a URL faria o
+  CDN servir a foto velha do cache.
+- **A identidade visual entra pelo material, não por número decorativo.**
+  A assinatura é a moldura de registro (cantos vermelhos), o quadro de dados
+  com filete de 1 px e o canto reto. A Home não tem seção de estatísticas
+  decorativas nem faixa de texto sobre a foto.
 - **As fotos ficam na tabela `motorcycle_images`.** Excluir uma moto
   apaga as linhas em cascata e remove os arquivos do Storage — sem lixo
   acumulado no bucket.

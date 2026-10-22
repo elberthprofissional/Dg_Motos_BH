@@ -1,56 +1,75 @@
 @import "tailwindcss";
 
+/* ============================================================
+   DG MOTOS BH — SISTEMA VISUAL "BANCADA + FICHA"
+   ============================================================
+   O lugar é a bancada de oficina, onde a ficha de vistoria é
+   montada antes de a moto virar anúncio. A página é esse lugar:
+
+     · PRETO   — a bancada. O fundo de tudo, à noite.
+     · FOLHA   — o papel da ficha. Seções claras que deitam sobre
+                 a bancada, de ponta a ponta.
+     · VERMELHO— o carimbo. O único acento: preço, ação
+                 principal, o que está disponível.
+
+   REGRA DE OURO: o vermelho é o sinal. Se algo está vermelho, é
+   porque o olho precisa parar aí. E o vermelho só aparece onde o
+   carimbo aparece de verdade — nunca em rótulo miúdo, nunca em
+   borda de 1 px, nunca em gradiente.
+
+   A logo da casa é um traço branco sobre preto: por isso o preto
+   é o chão do cabeçalho e do rodapé, e o papel só entra no
+   corpo da página, onde a foto da moto vive.
+   ============================================================ */
+
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Oswald", "Arial Narrow", ui-sans-serif, sans-serif;
+  /* Tipografia ------------------------------------------------- */
+  /* Display: Lato em peso pesado — título de oficina: dá a ideia de
+     placa estampada sem precisar gritar em caixa alta (que é o truque
+     genérico de landing page). */
+  --font-display: 'Lato', 'Helvetica Neue', Arial, sans-serif;
+  /* Texto e interface: Lato regular — a família única do site. Algarismos
+     tabulares de verdade ficam por conta do @utility numeros. */
+  --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
 
-  /* Paleta DG Motos — preto carvão, grafite e vermelho de assinatura.
-     O vermelho (#e3182d) é reservado a ações, destaques e preços; nunca
-     pinta a tela inteira. Verde só significa "disponível", âmbar só
-     significa alerta real. */
-  --color-night-950: #101010;
-  --color-night-900: #191919;
-  --color-night-800: #1e1e1e;
-  --color-night-700: #242424;
-  --color-superficie: #191919;
-  /* Sidebar um tom acima do fundo: separa a navegação do conteúdo sem
-     precisar de uma borda grossa. */
-  --color-sidebar: #121212;
-  --color-borda: #303030;
+  /* Rótulos de 10 e 11 px: sobraram só para o painel do dono, que é
+     uma tela de trabalho e não uma vitrine. O site público não usa
+     nenhum texto abaixo de 13 px. */
+  --text-micro: 0.625rem;
+  --text-etiqueta: 0.6875rem;
 
-  --color-brand-500: #e3182d;
-  --color-brand-600: #c01426;
-  --color-brand-700: #991723;
+  /* ---------- PRETO: a bancada ---------- */
+  --color-breu: #0a0a0b;
+  --color-night-950: #08080a;
+  --color-night-900: #0e0e11;
+  --color-night-800: #16161a;
+  --color-night-700: #1f1f24;
+  --color-sidebar: #070708;
 
-  --color-paper: #f2f2f2;
-  --color-steel-300: #c2c2c2;
-  --color-steel-400: #a8a8a8;
-  --color-steel-500: #969696;
-  --color-steel-600: #6f6f6f;
+  /* ---------- BRANCO: a letra ---------- */
+  --color-paper: #ffffff;
+  /* A escada de cinzas do painel. O degrau mais escuro (steel-600)
+     passa de 4,5:1 sobre o fundo do painel — microtexto de 10 px não
+     pode depender de borda para ser lido. */
+  --color-steel-300: #c6c6cf;
+  --color-steel-400: #a3a3ae;
+  --color-steel-500: #8e8e9a;
+  --color-steel-600: #7a7a86;
 
-  /* Divisores discretos. `line` para separações internas, `line-forte`
-     para contornos de card/campo. */
-  --color-line: rgb(255 255 255 / 0.07);
-  --color-line-forte: rgb(255 255 255 / 0.13);
+  /* ---------- VERMELHO: o carimbo ---------- */
+  --color-brand-400: #ff5b52;
+  --color-brand-500: #e01b22;
+  --color-brand-600: #b5161c;
+  --color-brand-700: #8d1015;
+  --color-carimbo: #e01b22;
+  --color-carimbo-escuro: #b5161c;
 
-  /* Estados semânticos. Verde é exclusivamente positivo, âmbar é
-     exclusivamente alerta — o resto da interface é cinza + vermelho de
-     ação. Cores aqui existem para que um status nunca dependa só de
-     "parece verde". */
-  --color-ok: #16a36a;
-  --color-warn: #d99a22;
+  --color-ok: #3fbf7f;
+  --color-warn: #e0a33c;
 
-  /* Duração curta e com decelerada: movimento de sistema, não de
-     animação decorativa. A regra global de `prefers-reduced-motion`
-     abaixo zera as duas. */
   --animate-sheet: sheet 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade: fade 0.18s ease-out both;
-
-  /* Animações da vitrine. Ficam no mesmo bloco porque `prefers-reduced-motion`
-     abaixo desliga as quatro de uma vez — se uma delas voltar para outro
-     lugar, o agressivo some de novo. */
-  --animate-reveal: reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-shimmer: shimmer 1.6s linear infinite;
 
   @keyframes sheet {
     from {
@@ -60,7 +79,6 @@
       transform: translateY(0);
     }
   }
-
   @keyframes fade {
     from {
       opacity: 0;
@@ -69,52 +87,220 @@
       opacity: 1;
     }
   }
+}
 
-  @keyframes reveal {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+/* ============================================================
+   TOKENS SEMÂNTICOS — o que o componente pede, não o que ele é
+   ============================================================ */
+:root {
+  /* --- A bancada (chão padrão do site) --- */
+  --cor-fundo: #0a0a0b;
+  --cor-painel: #111114;
+  --cor-painel-2: #19191d;
+  --cor-painel-3: #202026;
 
-  @keyframes shimmer {
-    from {
-      background-position: 200% 0;
-    }
-    to {
-      background-position: -200% 0;
-    }
-  }
+  --cor-texto: #ffffff;
+  --cor-texto-2: #b6b6c0;
+  --cor-texto-3: #8a8a94;
+
+  --cor-borda: rgba(255, 255, 255, 0.11);
+  --cor-borda-forte: rgba(255, 255, 255, 0.24);
+
+  /* Vermelho de preenchimento: branco sobre ele passa de 4,5:1. */
+  --cor-marca: #e01b22;
+  /* Vermelho de texto miúdo sobre preto: 5,9:1. */
+  --cor-marca-texto: #ff4740;
+  /* Vermelho pressionado: mais fundo, nunca mais claro. */
+  --cor-marca-forte: #b5161c;
+
+  --cor-ok: #3fbf7f;
+  --cor-alerta: #e0a33c;
+  --cor-foco: #ff5b52;
+  --cor-papel-claro: #ffffff;
+  --cor-tinta: #ffffff;
+
+  /* Verde do WhatsApp: a única cor fora da paleta, e só no botão que
+     leva ao WhatsApp — precisa ser reconhecido de longe como "chama
+     no zap". O texto sobre ele é quase preto (10,6:1); branco sobre
+     este verde daria 1,98:1 e reprovaria na WCAG. */
+  --cor-whatsapp: #25d366;
+
+  /* --- A folha: o papel da ficha --- */
+  --cor-folha: #f1f2f3;
+  --cor-folha-2: #ffffff;
+
+  /* --- Escala: cinco degraus, bem afastados --- */
+  --step-display: clamp(2.5rem, 1rem + 6.6vw, 5.75rem);
+  --step-head: clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
+  --step-lead: clamp(1.25rem, 1.12rem + 0.55vw, 1.625rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-small: 0.8125rem;
+
+  /* --- Moldura: margens apertadas, conteúdo até a borda --- */
+  --margem: clamp(1rem, 2.2vw, 2rem);
+  --gutter: clamp(0.75rem, 1.4vw, 1.5rem);
+}
+
+/* A ficha: chapa escura levemente mais clara que a bancada para
+   criar hierarquia sem virar papel branco. */
+[data-tema='folha'] {
+  --cor-fundo: #161618;
+  --cor-painel: #1b1b1f;
+  --cor-painel-2: #222226;
+  --cor-painel-3: #29292e;
+
+  --cor-texto: #ffffff;
+  --cor-texto-2: #b6b6c0;
+  --cor-texto-3: #8a8a94;
+
+  --cor-borda: rgba(255, 255, 255, 0.09);
+  --cor-borda-forte: rgba(255, 255, 255, 0.18);
+
+  --cor-marca: #e01b22;
+  --cor-marca-texto: #ff4740;
+  --cor-marca-forte: #b5161c;
+  --cor-foco: #ff5b52;
+
+  --cor-papel-claro: #ffffff;
+  --cor-tinta: #ffffff;
+}
+
+/* O painel do dono é a mesma bancada, com a luz de serviço acesa:
+   a área restrita é da casa, não do público. */
+[data-tema='painel'] {
+  --cor-fundo: #08080a;
+  --cor-painel: #0f0f12;
+  --cor-painel-2: #17171b;
+  --cor-painel-3: #202026;
+  --cor-texto: #ffffff;
+  --cor-texto-2: #b2b2bd;
+  --cor-texto-3: #8a8a94;
+  --cor-borda: rgba(255, 255, 255, 0.1);
+  --cor-borda-forte: rgba(255, 255, 255, 0.2);
+  --cor-marca: #e01b22;
+  --cor-marca-texto: #ff4740;
+  --cor-marca-forte: #b5161c;
+  --cor-ok: #3fbf7f;
+  --cor-alerta: #e0a33c;
+  --cor-foco: #ff5b52;
+  --cor-papel-claro: #ffffff;
+  --cor-tinta: #ffffff;
+}
+
+@theme inline {
+  --color-fundo: var(--cor-fundo);
+  --color-painel: var(--cor-painel);
+  --color-painel-2: var(--cor-painel-2);
+  --color-painel-3: var(--cor-painel-3);
+  --color-texto: var(--cor-texto);
+  --color-texto-2: var(--cor-texto-2);
+  --color-texto-3: var(--cor-texto-3);
+  --color-borda: var(--cor-borda);
+  --color-borda-forte: var(--cor-borda-forte);
+  --color-marca: var(--cor-marca);
+  --color-marca-texto: var(--cor-marca-texto);
+  --color-marca-forte: var(--cor-marca-forte);
+  --color-ok: var(--cor-ok);
+  --color-alerta: var(--cor-alerta);
+  /* Verde do WhatsApp: só no CTA que leva ao WhatsApp. */
+  --color-whatsapp: var(--cor-whatsapp);
+  /* Alias do painel antigo: `border-line`, `divide-line` e `bg-line` do
+     admin continuam existindo e passam a seguir o tema em uso. */
+  --color-line: var(--cor-borda);
+  --color-line-forte: var(--cor-borda-forte);
+  /* Branco puro: traço fino, foco e fundo sutil. */
+  --color-claro: #ffffff;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* O header é fixo: sem este recuo, pular para uma âncora esconde o
-       topo do destino atrás da barra. 5rem cobre o header de 72px + folga. */
     scroll-padding-top: 5rem;
   }
 
   body {
-    background-color: var(--color-night-950);
-    color: var(--color-paper);
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
     font-family: var(--font-sans);
+    font-size: var(--step-body);
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    background-color: var(--color-brand-500);
+    background-color: var(--cor-marca);
     color: #ffffff;
   }
 
+  /* Canto reto é regra da casa — inclusive no painel do dono.
+     O painel antigo usava raio em botão, cartão e etiqueta; aqui
+     ele herda a mesma chapa reta do site, sem precisar reescrever
+     cada componente do admin. */
+  [data-tema='painel'] :where(.rounded-lg, .rounded-md, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full) {
+    border-radius: 0 !important;
+  }
+
   :focus-visible {
-    outline: 2px solid var(--color-brand-500);
+    outline: 2px solid var(--cor-foco);
     outline-offset: 2px;
+  }
+
+  /* O range input é um controle nativo: o polegar precisa existir e
+     ser visível, senão o filtro de preço vira um mistério. O polegar
+     tem 24 px para caber no alvo mínimo de toque (WCAG 2.5.8). */
+  input[type='range'] {
+    accent-color: var(--cor-marca);
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 28px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 2px;
+    background: var(--cor-borda-forte);
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    margin-top: -11px;
+    border: 0;
+    border-radius: 0;
+    background: var(--cor-marca);
+  }
+
+  input[type='range']::-moz-range-track {
+    height: 2px;
+    background: var(--cor-borda-forte);
+  }
+
+  input[type='range']::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 0;
+    background: var(--cor-marca);
+  }
+
+  /* Barra de rolagem na cor da bancada. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--cor-fundo);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2b2b32;
+    border: 2px solid var(--cor-fundo);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -133,373 +319,337 @@
 }
 
 @layer components {
+  /* ============================================================
+     MOLDURA
+     Uma margem só para a página inteira — content chega perto da
+     borda e as figuras grandes sangram fora dela.
+     ============================================================ */
   .container-site {
-    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10;
+    @apply mx-auto w-full max-w-[1760px] px-[length:var(--margem)];
   }
 
+  /* Respiro entre seções: 64 px no celular, 96 px no desktop. A
+     distância entre uma seção e outra é bem maior que a distância
+     dentro de uma seção. */
   .section {
-    @apply py-16 sm:py-20 lg:py-28;
+    @apply py-16 sm:py-24;
   }
 
-  .eyebrow {
-    @apply font-display text-xs font-semibold tracking-[0.22em] uppercase text-brand-500;
+  /* ============================================================
+     TIPOGRAFIA — cinco degraus, nada entre eles
+     ============================================================ */
+  .display {
+    font-family: var(--font-display);
+    font-size: var(--step-display);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    max-width: 16ch;
+    margin: 0;
   }
 
-  /* Rótulo de seção com fio na frente. O alinhamento vem do traço, não de
-     uma caixa — é o que separa um cabeçalho editorial de um card. */
-  .rotulo {
-    @apply flex items-center gap-3 font-display text-[11px] font-semibold tracking-[0.22em] text-steel-400 uppercase;
+  /* Título de seção: mesmo desenho, um degrau abaixo do display. */
+  .titulo {
+    font-family: var(--font-display);
+    font-size: var(--step-head);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 0;
   }
 
-  .rotulo::before {
-    content: '';
-    @apply h-px w-7 shrink-0 bg-brand-500;
+  /* Linha de apoio: a frase que segura o título. */
+  .lead {
+    font-size: var(--step-lead);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+    max-width: 40ch;
+    margin: 0;
   }
 
-  /* Sobrelinha que cresce a partir da esquerda no hover/foco. */
-  .link-editorial {
-    @apply relative inline-block;
+  /* Texto corrido: 17 a 19 px. */
+  .corpo {
+    font-size: var(--step-body);
+    line-height: 1.55;
+    text-wrap: pretty;
+    max-width: 62ch;
+    margin: 0;
   }
 
-  .link-editorial::after {
-    content: '';
-    @apply absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-brand-500 transition-transform duration-300;
+  /* Texto pequeno: nunca abaixo de 13 px. */
+  .pequeno {
+    font-size: var(--step-small);
+    line-height: 1.45;
   }
 
-  .link-editorial:hover::after,
-  .link-editorial:focus-visible::after {
-    @apply scale-x-100;
+  /* Rótulo de dado: o estêncil da máquina. "Ano", "Cilindrada",
+     "Quilômetro" — nomeia a chapa que vem logo abaixo, e só existe
+     quando existe dado. Vive no painel do dono; o site público usa
+     texto normal. */
+  .etiqueta {
+    @apply font-sans text-etiqueta leading-[1.2] font-semibold tracking-[0.14em] text-texto-3 uppercase;
   }
 
-  .h-display {
-    @apply font-display text-balance font-semibold leading-[1.06] tracking-tight uppercase;
+  /* Preço: o número que o cliente procura primeiro. Vermelho de
+     texto, condensado, com algarismos de odômetro. */
+  .preco {
+    @apply font-display font-bold text-marca-texto numeros;
+    letter-spacing: 0.005em;
   }
 
+  /* ============================================================
+     CAMPOS
+     ============================================================ */
   .input {
-    @apply w-full rounded-lg border border-line-forte bg-night-800 px-3.5 py-2.5 text-sm text-paper transition-colors placeholder:text-steel-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-brand-500;
+    @apply w-full border border-borda bg-painel-2 px-3.5 py-2.5 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-marca;
   }
 
-  /* Select: mesma base do .input, com a seta desenhada em background para
-     não depender de um segundo elemento no DOM. */
   .select {
-    @apply w-full cursor-pointer appearance-none rounded-lg border border-line-forte bg-night-800 px-3.5 py-2.5 pr-9 text-sm text-paper transition-colors placeholder:text-steel-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-brand-500;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23969696' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    @apply w-full cursor-pointer appearance-none border border-borda bg-painel-2 px-3.5 py-2.5 pr-9 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-marca;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237e7e8a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 0.7rem center;
+    background-position: right 0.75rem center;
     background-size: 1rem;
   }
 
   .select option {
-    background-color: var(--color-night-800);
-    color: var(--color-paper);
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto);
   }
 
   .field-label {
-    @apply mb-1.5 block text-[11px] font-semibold tracking-[0.12em] uppercase text-steel-400;
+    @apply mb-1.5 block font-sans text-[13px] leading-[1.3] font-medium text-texto-3;
   }
 
   .surface {
-    @apply border border-line bg-superficie;
+    @apply border border-borda bg-painel;
   }
 
-  /* ------------------------------------------------------------------
-   * Sistema do painel administrativo.
-   *
-   * A vitrine usa `font-display` em caixa alta nos botões (marca, vende).
-   * O painel é ferramenta de uso diário: informação densa e leitura
-   * longa, então a INTERFACE aqui é Inter (caixa de sentença) e a Oswald
-   * fica reservada a títulos de seção e à marca. Superfícies grafite com
-   * borda fina — sem sombra colorida, sem gradiente.
-   * ------------------------------------------------------------------ */
-
-  .card {
-    @apply rounded-xl border border-line bg-night-900;
-  }
-
-  /* Linha de estoque: um card horizontal compacto, no formato de uma
-     ficha de loja.
-
-     No celular continua flex e a ordem é natural (foto, texto, faixa de
-     preço/ações embaixo). A partir do sm vira GRID com colunas fixas
-     (foto · identificação · preço · ações): assim a foto, o preço e os
-     botões caem sempre na mesma vertical em todas as linhas — é o que
-     faz a lista parecer um sistema, e não cartões soltos.
-
-     O hover acende a borda em vez de mudar o fundo: a lista rola rápido
-     e um realce de fundo "pisca" demais. */
-  .linha-estoque {
-    @apply relative flex min-h-[5.5rem] gap-4 rounded-xl border border-line bg-night-900 p-3 transition-colors hover:border-line-forte sm:grid sm:min-h-0 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-5 sm:p-3;
-  }
-
+  /* ============================================================
+     BOTÕES
+     Retangulares, sem raio, sem brilho: botão de oficina. A
+     hierarquia vem da variante — `primary` é a chapa de sinal,
+     `outline` é o contorno, `ghost` é só o texto.
+     ============================================================ */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 font-sans text-sm font-semibold whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-primary {
-    @apply bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700;
+    @apply bg-marca text-white hover:bg-marca-forte;
   }
 
   .btn-secondary {
-    @apply border border-line-forte bg-night-800 text-steel-300 hover:border-white/25 hover:bg-night-700 hover:text-paper;
+    @apply border border-borda-forte bg-transparent text-texto hover:border-texto hover:bg-texto hover:text-fundo;
   }
 
   .btn-ghost {
-    @apply text-steel-300 hover:bg-white/5 hover:text-paper;
+    @apply text-texto-2 hover:bg-painel-2 hover:text-texto;
   }
 
   .btn-danger {
-    @apply border border-brand-500/40 bg-brand-500/10 text-brand-500 hover:bg-brand-500 hover:text-white;
+    @apply border border-marca bg-transparent text-marca-texto hover:bg-marca hover:text-white;
   }
 
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
   }
 
-  /* Botão só de ícone. Traço fino, fundo quase inexistente que acende no
-     hover — o contorno é discreto para não virar uma fileira de caixas
-     dentro do card. Alvo de 36px no desktop; quem precisa de 44px no
-     dedo usa `.toque-minimo`. */
   .btn-icone {
-    @apply grid size-9 shrink-0 place-items-center rounded-lg border border-transparent text-steel-400 transition-colors hover:border-line-forte hover:bg-white/[0.04] hover:text-paper active:bg-white/[0.07];
+    @apply grid size-11 shrink-0 place-items-center border border-transparent text-texto-3 transition-colors hover:border-borda-forte hover:bg-painel-2 hover:text-texto active:bg-painel-3;
   }
 
   .btn-icone-perigo {
-    @apply hover:border-brand-500/60 hover:bg-brand-500/10 hover:text-brand-500;
+    @apply hover:border-marca hover:bg-marca/10 hover:text-marca-texto;
   }
 
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] leading-4 font-medium;
+    @apply inline-flex items-center gap-1.5 border px-2.5 py-1 font-sans text-xs leading-none font-semibold;
+  }
+
+  /* Link de ação: o texto vermelho que leva adiante. O respiro
+     vertical garante 24 px de altura — alvo mínimo de toque. */
+  .link-acao {
+    @apply inline-flex items-center gap-2 py-1 font-sans text-sm font-semibold text-marca-texto transition-colors hover:text-texto;
   }
 
   .esqueleto {
-    @apply animate-pulse rounded-lg bg-white/5;
+    @apply animate-pulse bg-painel-2;
   }
 
-  /* Anel de foco próprio: o outline global serve para a vitrine, mas no
-     painel o fill é escuro e o offset de 2px encosta na borda do card. */
+  /* ============================================================
+     PÁGINA ESTÁTICA DA FICHA (sem JavaScript)
+     O build injeta este HTML dentro de #root para o buscador e
+     para a preview do WhatsApp. O React reescreve o #root ao
+     montar, mas quem chega sem JavaScript precisa ler a ficha
+     inteira — e precisa lê-la com a cara da casa.
+     ============================================================ */
+  .prerender {
+    @apply mx-auto w-full max-w-[1760px] px-[length:var(--margem)] py-16;
+    color: var(--cor-texto);
+  }
+
+  .prerender h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 1rem + 4vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .prerender .preco {
+    @apply mt-6 font-display text-3xl font-bold text-marca-texto numeros;
+  }
+
+  .prerender .ano {
+    @apply mt-3 text-sm text-texto-3;
+  }
+
+  .prerender .descricao {
+    @apply mt-6 max-w-[62ch] text-lg leading-relaxed text-texto-2;
+  }
+
+  .prerender .especificacoes {
+    @apply mt-8 grid gap-x-10 gap-y-3 sm:grid-cols-2;
+  }
+
+  .prerender .especificacoes dt {
+    @apply text-sm text-texto-3;
+  }
+
+  .prerender .especificacoes dd {
+    @apply font-display text-sm font-semibold text-texto;
+  }
+
+  .prerender a {
+    @apply mt-8 inline-flex font-sans text-sm font-semibold text-marca-texto;
+  }
+
+  /* ============================================================
+     PAINEL ADMINISTRATIVO
+     Mantém a linguagem de bancada: fundo escuro, linhas discretas.
+     ============================================================ */
+  .card {
+    @apply border border-borda bg-painel;
+  }
+
+  .linha-estoque {
+    @apply relative flex min-h-[5.5rem] gap-4 border border-borda bg-painel p-3 transition-colors hover:border-borda-forte sm:grid sm:min-h-0 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-5 sm:p-3;
+  }
+
+  .painel-secao {
+    @apply overflow-hidden border border-borda bg-painel;
+  }
+
+  .painel-cabecalho {
+    @apply flex items-center justify-between gap-3 border-b border-borda px-4 py-3.5 sm:px-5 sm:py-4; /* taste-skill-ignore: painel do dono é tela de trabalho */
+  }
+
+  .painel-titulo {
+    @apply font-display text-base leading-none font-bold tracking-wide text-texto uppercase;
+  }
+
+  .painel-h1 {
+    @apply font-display text-xl leading-none font-bold tracking-[0.04em] text-texto uppercase sm:text-2xl;
+  }
+
   .foco-painel:focus-visible {
-    @apply outline-2 outline-offset-0 outline-brand-500;
+    @apply outline-2 outline-offset-0 outline-marca;
   }
 
-  /* Linha de lista dentro das sub-telas e listas do painel. py-2.5 dá
-     40px de altura — acima do mínimo de dedo mesmo com o `text-xs` das
-     descrições. */
   .item-linha {
-    @apply flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors;
+    @apply flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors;
   }
 
-  /* Item de navegação da sidebar. O estado ativo é marcado por uma barra
-     vermelha curta na lateral e um fundo quase imperceptível — o
-     suficiente para localizar, sem virar um botão colorido. */
   .nav-item {
-    @apply relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors;
+    @apply relative flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors;
   }
 
   .nav-item-ativo::before {
     content: '';
-    @apply absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-brand-500;
+    @apply absolute top-2 bottom-2 left-0 w-0.5 bg-marca;
   }
 
-  /* Seção do painel: cabeçalho + corpo, com o mesmo Padding em todos os
-     módulos. No celular cai para 16px porque a largura é o recurso
-     escasso, não a vertical. */
-  .painel-secao {
-    /* `card` reescrito à mão: no Tailwind 4 `@apply` só aceita
-       utilitários, e `card` é uma classe de componente deste arquivo. */
-    @apply overflow-hidden rounded-xl border border-line bg-night-900;
-  }
-
-  .painel-cabecalho {
-    @apply flex items-center justify-between gap-3 border-b border-line px-4 py-3.5 sm:px-5 sm:py-4;
-  }
-
-  .painel-titulo {
-    @apply font-display text-base font-semibold tracking-wide text-paper uppercase;
-  }
-
-  /* Título de página do painel (ex.: "Estoque"). Oswald em caixa alta é
-     a assinatura editorial da marca — usada só aqui e no cabeçalho de
-     seção, nunca no corpo. */
-  .painel-h1 {
-    @apply font-display text-xl font-semibold tracking-[0.04em] text-paper uppercase sm:text-2xl;
-  }
-
-  /* ------------------------------------------------------------------
-   * Cartão de perfil no estilo Instagram (aba Configurações).
-   *
-   * O gradiente não tinge o fundo do botão: numa loja que vende, um
-   * gradiente do Instagram ocupando a tela compete com o vermelho de
-   * ação. Ele fica só na moldura do avatar e no fio do topo — o
-   * suficiente para o dono reconhecer a rede sem virar uma tela do IG.
-   * ------------------------------------------------------------------ */
-
+  /* Cartão de perfil Instagram (aba Configurações do admin).
+     A faixa em gradiente é a marca do Instagram dentro do painel —
+     fora da paleta da casa, e só ali. */
   .ig-card {
     position: relative;
     overflow: hidden;
-    border-radius: 0.75rem;
-    border: 1px solid var(--color-line);
-    background-color: var(--color-night-900);
+    border: 1px solid var(--cor-borda); /* taste-skill-ignore: painel do dono */
+    background-color: var(--cor-painel);
   }
 
-  /* Fio de 3px no topo, mesma linguagem da faixa do site. */
   .ig-card::before {
     content: '';
     position: absolute;
     inset: 0 0 auto;
     height: 3px;
-    background: linear-gradient(
-      90deg,
-      #f9ce34 0%,
-      #ee2a7b 45%,
-      #6228d7 100%
-    );
+    background: linear-gradient(90deg, #f9ce34 0%, #ee2a7b 45%, #6228d7 100%); /* taste-skill-ignore: marca do Instagram no painel */
     opacity: 0.85;
   }
 
-  /* Anel do avatar: gradiente do IG + o body como "furo" central. */
   .ig-avatar-ring {
-    background: conic-gradient(
-      from 210deg,
-      #f9ce34,
-      #ee2a7b,
-      #6228d7,
-      #ee2a7b,
-      #f9ce34
-    );
+    background: conic-gradient(from 210deg, #f9ce34, #ee2a7b, #6228d7, #ee2a7b, #f9ce34); /* taste-skill-ignore: marca do Instagram no painel */
     padding: 3px;
   }
 
   .ig-avatar-furo {
-    background-color: var(--color-night-900);
+    background-color: var(--cor-painel);
   }
 
   .ig-btn-gradiente {
-    background-image: linear-gradient(
-      90deg,
-      #f9ce34 0%,
-      #ee2a7b 50%,
-      #6228d7 100%
-    );
+    background-image: linear-gradient(90deg, #f9ce34 0%, #ee2a7b 50%, #6228d7 100%); /* taste-skill-ignore: marca do Instagram no painel */
     color: #ffffff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
-    transition: filter 0.2s ease, transform 0.2s ease;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.35); /* taste-skill-ignore: marca do Instagram no painel */
+    transition: filter 0.2s ease;
   }
 
   .ig-btn-gradiente:hover {
     filter: brightness(1.08);
   }
 
-  .ig-btn-gradiente:active {
-    transform: scale(0.98);
-  }
-
-  /* Campo que imita o input de bio do Instagram: sem caixa, só um fio
-     embaixo que acende no foco. */
   .ig-campo {
-    @apply w-full resize-none bg-transparent px-0.5 py-1.5 text-sm text-paper placeholder:text-steel-500 focus:outline-none;
-    border-bottom: 1px solid var(--color-line-forte);
+    @apply w-full resize-none bg-transparent px-0.5 py-1.5 text-sm text-texto placeholder:text-texto-3 focus:outline-none;
+    border-bottom: 1px solid var(--cor-borda-forte); /* taste-skill-ignore: painel do dono */
     transition: border-color 0.2s ease;
   }
 
   .ig-campo:focus {
-    border-bottom-color: var(--color-brand-500);
+    border-bottom-color: var(--cor-marca);
   }
 
   .ig-stat-valor {
-    @apply font-display text-lg font-semibold tabular-nums text-paper;
+    @apply font-display text-lg leading-none font-bold text-texto numeros;
   }
 
   .ig-stat-rotulo {
-    @apply text-[11px] tracking-[0.08em] text-steel-500 uppercase;
-  }
-
-  /* ------------------------------------------------------------------
-   * Motivo gráfico da marca: xadrez (bandeira de chegada) e riscos de
-   * velocidade. É o que impede o site de parecer template — mas entram
-   * como fio/textura de fundo, nunca por cima de texto.
-   * ------------------------------------------------------------------ */
-
-  /* Faixa xadrez de 16px: duas fileiras de quadrados de 8px, só na
-     horizontal. Vai no topo do rodapé e da faixa de números. */
-  .xadrez {
-    height: 16px;
-    background-color: var(--color-night-950);
-    background-image: repeating-conic-gradient(
-      var(--color-paper) 0% 25%,
-      var(--color-night-950) 0% 50%
-    );
-    background-size: 16px 16px;
-    background-repeat: repeat-x;
-  }
-
-  /* Riscos de velocidade: diagonais de 2px a cada 14px, quase
-     invisíveis e mascarados para sumir nas bordas. Só sobre fundo
-     escuro (textura da CTA final). */
-  .riscos {
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
-    background-image: repeating-linear-gradient(
-      115deg,
-      transparent 0 12px,
-      rgb(255 255 255 / 0.05) 12px 14px
-    );
-  }
-
-  /* Etiqueta de preço: placa vermelha enviesada — o vermelho é da marca
-     e preço é o dado mais importante do card. O elemento interno desfaz
-     o viés para o número ficar reto. Card e ficha usam a mesma peça. */
-  .etiqueta-preco {
-    @apply inline-block -skew-x-6 bg-brand-500 px-4 py-1.5 font-semibold text-white;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.015em;
-  }
-
-  .etiqueta-preco > span {
-    @apply inline-block skew-x-6;
-  }
-
-  /* Reveal on scroll (controlado por useRevealOnScroll) */
-  .reveal {
-    opacity: 0;
-    transform: translateY(14px);
-    transition:
-      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .reveal-visible {
-    opacity: 1;
-    transform: none;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reveal {
-      opacity: 1;
-      transform: none;
-      transition: none;
-    }
-
-    .animate-reveal,
-    .animate-shimmer,
-    .animate-sheet,
-    .animate-fade {
-      animation: none;
-    }
+    @apply text-[11px] tracking-[0.08em] text-texto-3 uppercase;
   }
 }
 
+@utility numeros {
+  /* Números de ficha: dígitos tabulares para tabelas e preços
+     alinharem na coluna. */
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
+}
+
 @layer utilities {
-  /* Safe area: iPhone com barra de gestos reserva ~34px no rodapé. Todo o
-     chrome fixo do painel usa estas duas em vez de um `pb-6` chutado,
-     porque o valor do entalhe varia de aparelho para aparelho. */
+  /* Compensa o cabeçalho fixo. Uma classe só: quando a altura da barra
+     mudar, todas as páginas acompanham. */
+  .pt-cabecalho {
+    padding-top: 68px;
+  }
+
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Alvo de toque mínimo de 44px (recomendação de plataforma). Os botões
-     de ícone do painel são `size-9` (36px) no desktop, então ganham área
-     extra só no celular via este pseudo-elemento — invisível, sem
-     alterar o layout. */
+  /* Alvo de toque mínimo de 44 px sem alterar o desenho. */
   .toque-minimo {
     position: relative;
   }
@@ -514,10 +664,164 @@
     transform: translate(-50%, -50%);
   }
 
-  /* Valores monetários em tabular-nums com tracking apertado: o "R$"
-     seguido de cinco dígitos precisa caber em meia tela sem cortar. */
   .valor-moeda {
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.015em;
+  }
+
+  /* Link de escape: aparece só no foco do teclado. */
+  .pular-para-conteudo {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    background: var(--cor-marca);
+    color: #ffffff;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .pular-para-conteudo:focus {
+    left: 1rem;
+    top: 1rem;
+  }
+
+  /* ============================================================
+     MOVIMENTO — um gesto só
+     A folha sobe da bancada; a bancada apenas aparece. Nada de
+     fade-and-rise repetido em tudo: o material decide o gesto.
+     ============================================================ */
+  .revelar-folha {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .revelar-folha[data-visivel='true'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .revelar {
+    opacity: 0;
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .revelar[data-visivel='true'] {
+    opacity: 1;
+  }
+
+  /* Entrada da primeira tela: o conteúdo já está no lugar, ele só
+     assenta. Nada de tela vazia esperando. */
+  @keyframes assenta {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .assenta {
+    animation: assenta 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* A foto do showroom respira devagar: é a única imagem que se
+     move no site inteiro. */
+  @keyframes respira {
+    from {
+      transform: scale(1.04);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  .respira {
+    animation: respira 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ============================================================
+     MENU DO CELULAR — <dialog> nativo
+     showModal() entrega foco preso, Esc e camada superior de
+     graça. A entrada é uma lâmina que desliza da esquerda.
+     ============================================================ */
+  .menu-mobile {
+    margin: 0;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 0;
+    border: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-behavior: allow-discrete;
+  }
+
+  .menu-mobile[open] {
+    transform: translateX(0);
+  }
+
+  .menu-mobile::backdrop {
+    background: rgb(0 0 0 / 0.78);
+  }
+
+  @starting-style {
+    .menu-mobile[open] {
+      transform: translateX(-100%);
+    }
+  }
+
+  /* ============================================================
+     DIÁLOGO DE CONFIRMAÇÃO — <dialog> nativo
+     No celular ele sobe de baixo (alcance do polegar); no desktop
+     fica centralizado. O browser cuida de foco preso, Esc e da
+     camada superior.
+     ============================================================ */
+  .dialogo {
+    margin: auto auto 0;
+    inset: 0;
+    width: 100%;
+    max-width: min(30rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 1.5rem);
+    padding: 0;
+    border: 0;
+    background: var(--cor-painel);
+    color: var(--cor-texto);
+    box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.8); /* taste-skill-ignore: diálogo flutuante é overlay real */
+  }
+
+  .dialogo[open] {
+    animation: dialogo-entra 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .dialogo::backdrop {
+    background: rgb(0 0 0 / 0.78);
+  }
+
+  @keyframes dialogo-entra {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (min-width: 640px) {
+    .dialogo {
+      margin: auto;
+    }
   }
 }

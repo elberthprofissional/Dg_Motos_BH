@@ -1,19 +1,18 @@
 import { MessageCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 
 interface WhatsAppCTAProps {
   message: string
   label?: string
   variant?: 'solid' | 'outline'
+  /** Retângulo verde com o glifo oficial do WhatsApp — o único ponto
+      fora da paleta, porque precisa ser reconhecido de longe como
+      "chama no zap". O texto é quase preto (10,6:1 de contraste): o
+      branco sobre este verde daria 1,98:1. */
+  glifoWhatsapp?: boolean
   className?: string
-}
-
-const styles = {
-  solid:
-    'bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700',
-  outline:
-    'border border-line-forte bg-transparent text-paper hover:border-white/40 hover:bg-white/5',
 }
 
 /**
@@ -24,11 +23,34 @@ export function WhatsAppCTA({
   message,
   label = 'Negociar pelo WhatsApp',
   variant = 'solid',
+  glifoWhatsapp = false,
   className = '',
 }: WhatsAppCTAProps) {
-  const cls = `inline-flex items-center justify-center gap-2 rounded-sm px-5 py-2.5 font-display text-xs font-semibold tracking-[0.18em] uppercase transition-colors duration-200 ${styles[variant]} ${className}`
-
   const href = useWhatsappLink(message)
+
+  if (glifoWhatsapp) {
+    const cls =
+      'inline-flex items-center justify-center gap-2.5 bg-whatsapp text-fundo font-display text-base font-semibold transition-[filter] hover:brightness-95 ' +
+      className
+
+    if (!href) {
+      return (
+        <Link to="/contato" className={cls}>
+          <IconeWhatsapp className="size-5 shrink-0" />
+          Falar com a loja
+        </Link>
+      )
+    }
+
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
+        <IconeWhatsapp className="size-5 shrink-0" />
+        {label}
+      </a>
+    )
+  }
+
+  const cls = `btn ${variant === 'solid' ? 'btn-primary' : 'btn-secondary'} ${className}`
 
   if (!href) {
     return (
