@@ -1,18 +1,16 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
-import { buildMapsRouteUrl } from '../lib/maps'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { Revelar } from '../components/ui/Revelar'
-import { useWhatsappLink } from '../hooks/useWhatsappLink'
-import { buildDefaultMessage } from '../lib/format'
-import trocaImg from '../../img/troca.png'
-import heroImg from '../../img/hero-desktop.png'
+import trocaDesktopImg from '../assets/troca/banner-desktop.webp'
+import trocaMobileImg from '../assets/troca/banner-mobile.webp'
+import heroDesktopImg from '../assets/hero/home-desktop.webp'
 import { MarcasProcuradas } from '../components/home/MarcasProcuradas'
 
 /**
@@ -30,7 +28,6 @@ import { MarcasProcuradas } from '../components/home/MarcasProcuradas'
 export function Home() {
   const { motos } = useCatalogo()
   const { config } = useSiteConfig()
-  const waLink = useWhatsappLink(buildDefaultMessage())
 
   usePageMeta(
     'DG Motos — Seminovas inspecionadas em Belo Horizonte',
@@ -49,119 +46,92 @@ export function Home() {
   const patio = useMemo(() => {
     const comDestaque = disponiveis.filter((m) => m.destaque)
     const semDestaque = disponiveis.filter((m) => !m.destaque)
-    return [...comDestaque, ...semDestaque].slice(0, 6)
-  }, [disponiveis])
-
-  const marcasNoPatio = useMemo(() => {
-    const mapa = new Map<string, number>()
-    for (const moto of disponiveis) {
-      mapa.set(moto.marca, (mapa.get(moto.marca) ?? 0) + 1)
-    }
-    return [...mapa.entries()].sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
+    return [...comDestaque, ...semDestaque].slice(0, 10)
   }, [disponiveis])
 
   return (
     <>
       {/* ============================================================
           1. HERO — a entrada do showroom
-          Texto à esquerda, a foto da loja à direita. A altura é curta
-          de propósito: a vitrine começa logo abaixo.
+          Duas colunas: o texto à esquerda e a foto da loja à direita,
+          cobrindo a metade inteira sem moldura. No celular a foto vem
+          abaixo do texto, como um recorte de showroom.
           ============================================================ */}
-      <section data-hero className="relative isolate overflow-hidden bg-fundo pt-cabecalho">
-        <div data-hero-media className="pointer-events-none absolute inset-0 hidden xl:block" aria-hidden="true">
-          <img
-            data-hero-image
-            src={heroImg}
-            alt=""
-            className="h-full w-full object-cover object-right min-[2000px]:object-contain"
-            fetchPriority="high"
-            decoding="sync"
-            width={1910}
-            height={823}
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#080808_0%,rgba(8,8,8,0.96)_30%,rgba(8,8,8,0.72)_52%,rgba(8,8,8,0.22)_78%,transparent_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0.7)_42%,transparent_100%)]" />
+      <section
+        data-hero
+        className="relative isolate w-full overflow-hidden bg-fundo pt-cabecalho"
+      >
+        {/* ---- MOBILE: só o texto, bem espaçado ---- */}
+        <div data-hero-mobile className="px-5 py-6 lg:hidden">
+          <span className="mb-2 block text-xs font-semibold tracking-wider text-marca-texto uppercase">
+            Seminovas em Belo Horizonte
+          </span>
+
+          <h2 className="mb-4 text-3xl leading-tight font-bold text-texto">
+            Seminovas inspecionadas{' '}
+            <span className="text-marca-texto">com garantia</span>
+          </h2>
+
+          <p className="mb-6 max-w-md text-sm leading-relaxed text-texto-2">
+            Motos revisadas e prontas para rodar. Escolha o seu modelo no pátio
+            da DG Motos.
+          </p>
+
+          <Link
+            to="/estoque"
+            className="inline-flex items-center gap-2 rounded-xl bg-marca px-6 py-3.5 font-bold text-white shadow-lg shadow-[#2c0003]/40 transition-all hover:bg-marca-viva"
+          >
+            Ver estoque
+          </Link>
         </div>
 
-        <div data-hero-content className="container-site relative z-10 flex flex-col justify-center pt-10 pb-14 sm:pt-14 sm:pb-16 xl:min-h-[720px] xl:py-24 2xl:min-h-[780px]">
-          <div className="max-w-[760px] xl:max-w-[840px]">
-            <p className="mb-5 text-[13px] font-semibold tracking-[0.18em] text-texto-2 uppercase">
-              Seminovas de alta qualidade
-            </p>
+        {/* ---- DESKTOP: foto cobrindo tudo + texto sobreposto ---- */}
+        <img
+          data-hero-image
+          src={heroDesktopImg}
+          alt=""
+          className="absolute inset-0 z-0 hidden h-full w-full object-cover object-right lg:block"
+          fetchPriority="high"
+          decoding="sync"
+          width={1920}
+          height={642}
+        />
 
-            <h1 className="font-display text-[clamp(2.35rem,8.4vw,4.25rem)] leading-[0.9] font-bold tracking-[-0.045em] text-texto uppercase xl:text-[clamp(2.75rem,4.6vw,4.5rem)]">
-              <span className="block">Seminovas</span>
-              <span className="block text-marca-texto">Inspecionadas</span>
-              <span className="block">em BH</span>
+        <div
+          data-hero-media
+          className="pointer-events-none absolute inset-0 z-[1] hidden lg:block"
+          aria-hidden="true"
+        >
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#080808_0%,rgba(8,8,8,0.92)_26%,rgba(8,8,8,0.45)_52%,transparent_76%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(0deg,#080808_0%,transparent_100%)]" />
+        </div>
+
+        <div
+          data-hero-content
+          className="container-site relative z-10 hidden lg:block"
+        >
+          <div className="max-w-xl py-16 pl-8 lg:py-24 lg:pl-16">
+            <span className="mb-2 block text-xs font-semibold tracking-wider text-marca-texto uppercase">
+              Seminovas em Belo Horizonte
+            </span>
+
+            <h1 className="mb-4 text-4xl leading-tight font-extrabold text-texto lg:text-5xl">
+              Seminovas inspecionadas{' '}
+              <span className="text-marca-texto">com garantia</span>
             </h1>
 
-            <p className="mt-6 max-w-[46ch] text-base leading-relaxed text-texto-2 sm:text-lg">
-              Inspe??o mec?nica e cicl?stica, laudo cautelar e negocia??o direta.
-              Escolha a sua no p?tio da DG Motos.
+            <p className="mb-8 max-w-md text-sm leading-relaxed text-texto-2 lg:text-base">
+              Motos revisadas e prontas para rodar. Escolha o seu modelo no pátio
+              da DG Motos.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link to="/estoque" className="btn btn-primary h-12 gap-2 px-6 font-bold">
-                Ver motos dispon?veis
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-              {waLink ? (
-                <a
-                  href={waLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-secondary h-12 px-6 font-bold"
-                >
-                  Falar no WhatsApp
-                </a>
-              ) : (
-                <Link to="/contato" className="btn btn-secondary h-12 px-6 font-bold">
-                  Falar no WhatsApp
-                </Link>
-              )}
-            </div>
-
-            <dl className="mt-10 grid max-w-[520px] grid-cols-3 gap-5 sm:gap-8">
-              <div>
-                <dt className="text-[11px] font-medium tracking-[0.14em] text-texto-3 uppercase">
-                  No p?tio
-                </dt>
-                <dd className="numeros mt-1.5 font-display text-3xl leading-none font-bold text-texto">
-                  {disponiveis.length}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[11px] font-medium tracking-[0.14em] text-texto-3 uppercase">
-                  Marcas
-                </dt>
-                <dd className="numeros mt-1.5 font-display text-3xl leading-none font-bold text-texto">
-                  {marcasNoPatio.length}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[11px] font-medium tracking-[0.14em] text-texto-3 uppercase">
-                  Inspe??o
-                </dt>
-                <dd className="mt-1.5 font-display text-sm leading-tight font-bold text-texto">
-                  Mec?nica e cicl?stica
-                </dd>
-              </div>
-            </dl>
+            <Link
+              to="/estoque"
+              className="inline-flex items-center gap-2 rounded-xl bg-marca px-6 py-3.5 font-bold text-white shadow-lg shadow-[#2c0003]/40 transition-all hover:bg-marca-viva"
+            >
+              Ver estoque
+            </Link>
           </div>
-        </div>
-
-        <div data-hero-mobile className="relative xl:hidden">
-          <img
-            data-hero-mobile-image
-            src={heroImg}
-            alt="Moto em destaque no showroom da DG Motos"
-            className="aspect-[4/3] w-full object-cover object-right sm:aspect-[16/9]"
-            fetchPriority="high"
-            decoding="async"
-            width={1910}
-            height={823}
-          />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0.35)_38%,transparent_100%)]" />
         </div>
       </section>
 
@@ -173,10 +143,6 @@ export function Home() {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="titulo text-texto">Motos disponíveis</h2>
-              <p className="corpo mt-3 max-w-[52ch] text-texto-2">
-                Cada unidade do pátio passa por inspeção mecânica e ciclística
-                antes de entrar na vitrine.
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-5">
@@ -195,7 +161,7 @@ export function Home() {
 
           {patio.length > 0 ? (
             <>
-              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {patio.map((bike, i) => (
                   <Revelar key={bike.id} atraso={i * 60}>
                     <BikeCard bike={bike} priority={i < 3} />
@@ -222,81 +188,53 @@ export function Home() {
       {/* ============================================================
           4. FECHAMENTO — troca, showroom e pedido específico
           ============================================================ */}
-      <section className="section bg-fundo">
+      <section className="bg-fundo">
         <Revelar>
-          <div className="banner-troca relative w-full overflow-hidden">
-            <div
-              className="absolute inset-0 bg-[linear-gradient(180deg,#3b0004_0%,#8f0310_9%,#86020c_48%,#6b0108_86%,#2c0003_100%)]"
+          {/* No celular o banner é um cartão vertical: texto centralizado,
+              botão e a moto isolada embaixo. No desktop vira faixa full-bleed
+              com a moto à direita e o texto à esquerda. */}
+          <div className="relative mx-4 my-10 flex flex-col items-center overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center lg:mx-0 lg:my-16 lg:min-h-[380px] lg:flex-row lg:justify-between lg:border-x-0 lg:bg-black lg:px-0 lg:text-left">
+            {/* Fundo (só no desktop): a moto inteira, contida à direita. */}
+            <img
+              src={trocaDesktopImg}
+              alt=""
               aria-hidden="true"
-            />
-            <div
-              className="absolute inset-0 bg-cover bg-[position:88%_center] bg-no-repeat xl:bg-contain xl:bg-right"
-              style={{
-                backgroundImage: `url(${trocaImg})`,
-              }}
-              aria-hidden="true"
-            />
-            <div
-              className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(40,0,2,0.45)_0%,rgba(60,0,4,0.34)_35%,rgba(80,0,6,0.1)_70%,transparent_100%)]"
-              aria-hidden="true"
-            />
-            <div
-              className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(35,0,2,0.5)_0%,rgba(60,0,4,0.38)_55%,rgba(70,0,5,0.22)_100%)] lg:hidden"
-              aria-hidden="true"
-            />
-            <div
-              className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,rgba(40,0,2,0.38)_0%,rgba(40,0,2,0.08)_55%,transparent_100%)] lg:hidden"
-              aria-hidden="true"
+              className="absolute inset-y-0 right-0 z-0 hidden w-1/2 object-contain object-right lg:block"
             />
 
-            <div className="container-site relative z-10 flex min-h-[500px] flex-col justify-center py-16 sm:min-h-[540px] sm:py-20 lg:min-h-[580px] lg:py-24">
-              <div className="max-w-[560px] lg:max-w-[44%]">
-                <h2 className="font-display text-[clamp(2.2rem,5.2vw,4.5rem)] leading-[0.93] font-bold tracking-[-0.04em] text-texto">
-                  <span className="block">Sua moto usada</span>
-                  <span className="block text-marca-texto">entra na troca</span>
+            {/* Máscara (só no desktop): funde a fumaça com o preto. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 z-0 hidden w-full bg-gradient-to-r from-black via-black/60 to-transparent lg:block"
+            />
+
+            <div className="container-site relative z-10 !px-0 lg:!px-[length:var(--margem)] lg:flex lg:items-center">
+              <div className="max-w-lg">
+                <h2 className="mb-3 text-2xl leading-tight font-extrabold text-white sm:text-3xl lg:text-4xl">
+                  Sua moto usada entra na troca
                 </h2>
-                <p className="mt-6 max-w-[44ch] text-base leading-relaxed text-texto-2 sm:text-lg">
-                  Aceitamos sua moto usada como parte do pagamento.
-                  <br />
-                  A avaliação é feita na loja, com a documentação orientada.
+                <p className="mb-6 text-sm leading-relaxed text-neutral-300 lg:max-w-md">
+                  Aceitamos sua moto usada como parte do pagamento, com avaliação
+                  feita na loja e documentação orientada.
                 </p>
-                <Link to="/contato" className="btn btn-primary mt-8 h-12 px-6 font-bold">
+                <Link
+                  to="/contato"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-marca px-6 py-3 font-bold text-white shadow-lg shadow-[#2c0003]/30 transition-all hover:bg-marca-viva"
+                >
                   Falar com a loja
-                  <ArrowUpRight className="size-4" aria-hidden="true" />
                 </Link>
               </div>
             </div>
+
+            {/* Moto isolada, abaixo do botão — só no celular. */}
+            <img
+              src={trocaMobileImg}
+              alt="Moto usada para troca"
+              className="mt-4 h-40 w-full object-contain lg:hidden"
+            />
           </div>
         </Revelar>
 
-        <div className="container-site mt-14 grid gap-10 sm:mt-16 lg:grid-cols-2 lg:gap-20">
-          <div>
-            <h2 className="titulo text-texto">Procurando algo específico?</h2>
-            <p className="corpo mt-4 max-w-[46ch] text-texto-2">
-              Se você não encontrou o modelo que queria, fala com a gente. A gente
-              procura e avisa quando chegar.
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm text-texto-3">Showroom</p>
-            <address className="mt-4 not-italic">
-              <p className="font-display text-3xl leading-tight font-bold text-texto">
-                {config.enderecoRua}
-              </p>
-              <p className="corpo mt-2 text-texto-2">{config.enderecoCidadeUf}</p>
-            </address>
-            <a
-              href={buildMapsRouteUrl(config)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-acao mt-6"
-            >
-              <span>Traçar rota no Google Maps</span>
-              <ArrowUpRight className="size-4" aria-hidden="true" />
-            </a>
-          </div>
-        </div>
       </section>
 
       <MarcasProcuradas />

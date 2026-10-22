@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-import { ArrowUpRight } from 'lucide-react'
 import { logoDaMarca } from '../../lib/marcas'
 
 const MARCAS = [
@@ -36,23 +34,33 @@ export function MarcasProcuradas() {
             <p className="corpo mt-4 max-w-[34ch] text-texto-2">
               Consulte a disponibilidade de cada marca no estoque da loja.
             </p>
-            <Link
-              to="/estoque"
-              className="mt-6 inline-flex items-center gap-2 py-1 text-sm font-semibold text-marca-texto transition-colors hover:text-texto"
-            >
-              Ver estoque
-              <ArrowUpRight className="size-4" aria-hidden="true" />
-            </Link>
           </div>
 
-          <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-8">
+          {/* Celular: carrossel horizontal de rolagem suave. */}
+          <ul className="no-scrollbar flex items-center gap-6 overflow-x-auto py-4 sm:hidden">
             {MARCAS.map((marca) => (
-              <li key={marca} className="flex h-12 w-28 items-center justify-center">
+              <li key={marca} className="flex shrink-0 items-center justify-center">
                 <img
                   data-marca-logo
                   src={logoDaMarca(marca)}
                   alt={`Logo ${marca}`}
-                  className="h-auto max-h-9 w-full max-w-[120px] object-contain brightness-0 invert opacity-70 transition-opacity hover:opacity-100"
+                  className="h-7 w-auto shrink-0 object-contain opacity-80"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop: linha horizontal centralizada. */}
+          <ul className="hidden flex-wrap items-center justify-center gap-8 sm:flex">
+            {MARCAS.map((marca) => (
+              <li key={marca} className="flex items-center justify-center">
+                <img
+                  data-marca-logo
+                  src={logoDaMarca(marca)}
+                  alt={`Logo ${marca}`}
+                  className="h-8 w-auto object-contain opacity-70 transition-opacity hover:opacity-100"
                   loading="lazy"
                   decoding="async"
                 />

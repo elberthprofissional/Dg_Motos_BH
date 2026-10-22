@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react'
+﻿import { Search, X } from 'lucide-react'
 import type { BikeFilterState, Motorcycle } from '../../types'
 import {
   ANO_MAX,
@@ -53,11 +53,11 @@ export function BikeFilters({
   // modelo no onChange do select acima).
   const modelos = modelosDisponiveis(motos, filtros.marca)
 
-  const legenda = 'mb-3 block font-sans text-[13px] leading-none font-semibold text-texto'
+  const legenda = 'mb-2 block font-sans text-xs leading-none font-semibold text-texto'
 
   return (
     <form
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-4"
       onSubmit={(e) => {
         e.preventDefault()
         onAplicar?.()
@@ -70,7 +70,7 @@ export function BikeFilters({
         </label>
         <div className="relative">
           <Search
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-3"
+            className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-texto-3"
             aria-hidden="true"
           />
           <input
@@ -79,16 +79,16 @@ export function BikeFilters({
             value={filtros.busca}
             onChange={(e) => set('busca', e.target.value)}
             placeholder="Marca, modelo ou ano"
-            className="h-11 w-full rounded-xl border border-borda bg-fundo px-3 py-2 pr-10 pl-9 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:ring-1 focus:ring-marca/30 focus:outline-none"
+            className="h-9 w-full rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1.5 pr-9 pl-8 text-[13px] text-neutral-200 transition-colors placeholder:text-texto-3 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600/30 focus:outline-none"
           />
           {filtros.busca ? (
             <button
               type="button"
               onClick={() => set('busca', '')}
               aria-label="Limpar busca"
-              className="absolute top-1/2 right-1.5 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-texto-3 transition-colors hover:bg-painel-2 hover:text-texto"
+              className="absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-md text-texto-3 transition-colors hover:bg-painel-2 hover:text-texto"
             >
-              <X className="size-4" aria-hidden="true" />
+              <X className="size-3.5" aria-hidden="true" />
             </button>
           ) : null}
         </div>
@@ -112,7 +112,7 @@ export function BikeFilters({
                   modelo: '',
                 })
               }}
-              className="select h-11 rounded-xl bg-fundo text-sm"
+              className="select h-9 rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
             >
               <option value="">Todas as marcas</option>
               {marcas.map((m) => (
@@ -132,7 +132,7 @@ export function BikeFilters({
                 id={`${prefix}-modelo`}
                 value={filtros.modelo}
                 onChange={(e) => set('modelo', e.target.value)}
-                className="select h-11 rounded-xl bg-fundo text-sm"
+                className="select h-9 rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
               >
                 <option value="">Todos os modelos</option>
                 {modelos.map((m) => (
@@ -146,7 +146,7 @@ export function BikeFilters({
                 id={`${prefix}-modelo`}
                 disabled
                 aria-disabled="true"
-                className="select h-11 rounded-xl bg-fundo text-sm opacity-60"
+                className="select h-9 rounded-lg border-neutral-800 bg-neutral-900 text-[13px] opacity-60"
               >
                 <option value="">Escolha a marca</option>
               </select>
@@ -159,16 +159,16 @@ export function BikeFilters({
           clássico dos catálogos de veículos. Um não passa do outro. */}
       <fieldset className="min-w-0 border-0 p-0">
         <legend className={legenda}>Faixa de preço</legend>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
             <div className="mb-1 flex items-center justify-between gap-2">
               <label
                 htmlFor={`${prefix}-preco-min`}
-                className="text-xs text-texto-3"
+                className="text-[11px] text-texto-3"
               >
                 Mínimo
               </label>
-              <span className="numeros rounded-md bg-painel-3/60 px-2 py-0.5 text-xs font-semibold text-texto">
+              <span className="numeros rounded bg-neutral-800/70 px-1.5 py-0.5 text-[11px] font-semibold text-neutral-200">
                 {formatPrice(filtros.precoMin)}
               </span>
             </div>
@@ -189,11 +189,11 @@ export function BikeFilters({
             <div className="mb-1 flex items-center justify-between gap-2">
               <label
                 htmlFor={`${prefix}-preco-max`}
-                className="text-xs text-texto-3"
+                className="text-[11px] text-texto-3"
               >
                 Máximo
               </label>
-              <span className="numeros rounded-md bg-painel-3/60 px-2 py-0.5 text-xs font-semibold text-texto">
+              <span className="numeros rounded bg-neutral-800/70 px-1.5 py-0.5 text-[11px] font-semibold text-neutral-200">
                 {formatPrice(filtros.precoMax)}
               </span>
             </div>
@@ -216,10 +216,10 @@ export function BikeFilters({
       <fieldset className="min-w-0 border-0 p-0">
         <legend className={legenda}>Ano</legend>
         <div className="mb-1 flex items-center justify-between gap-2">
-          <label htmlFor={`${prefix}-ano`} className="text-xs text-texto-3">
+          <label htmlFor={`${prefix}-ano`} className="text-[11px] text-texto-3">
             A partir de
           </label>
-          <span className="numeros rounded-md bg-painel-3/60 px-2 py-0.5 text-xs font-semibold text-texto">
+          <span className="numeros rounded bg-neutral-800/70 px-1.5 py-0.5 text-[11px] font-semibold text-neutral-200">
             {filtros.anoMin}
           </span>
         </div>
@@ -240,7 +240,7 @@ export function BikeFilters({
       </fieldset>
 
       <div>
-        <label htmlFor={`${prefix}-ordenacao`} className="mb-2 block text-[13px] font-semibold text-texto">
+        <label htmlFor={`${prefix}-ordenacao`} className="mb-2 block text-xs font-semibold text-texto">
           Ordenação
         </label>
         <select
@@ -249,7 +249,7 @@ export function BikeFilters({
           onChange={(e) =>
             set('ordenacao', e.target.value as BikeFilterState['ordenacao'])
           }
-          className="select h-11 rounded-xl bg-fundo text-sm"
+          className="select h-9 rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
         >
           {ORDENACOES.map((o) => (
             <option key={o.value} value={o.value}>
@@ -261,3 +261,5 @@ export function BikeFilters({
     </form>
   )
 }
+
+

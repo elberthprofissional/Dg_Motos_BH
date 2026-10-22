@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { SearchX, SlidersHorizontal, X } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
-import { useScrolled } from '../hooks/useScroll'
 import {
   ANO_MIN,
   FILTROS_PADRAO,
@@ -10,9 +9,8 @@ import {
   PRECO_MIN,
   categoriasDisponiveis,
   filtrarMotos,
-  marcasDisponiveis,
 } from '../lib/filters'
-import type { BikeFilterState, Motorcycle } from '../types'
+import type { BikeFilterState } from '../types'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { BikeFilters } from '../components/motorcycles/BikeFilters'
@@ -20,76 +18,12 @@ import { EstadoVazio } from '../components/ui/EstadoVazio'
 import { Button } from '../components/ui/Button'
 import { Revelar } from '../components/ui/Revelar'
 import { formatPrice } from '../lib/format'
-import { PLACEHOLDER_CARD } from '../lib/placeholder'
-
-/**
- * Painel lateral das motos recém-chegadas ao pátio.
- *
- * Barato de ler: foto miúda, nome e preço — o cliente que volta toda
- * semana quer saber o que entrou de novo, não olhar o estoque inteiro.
- * `criadoEm` só existe quando a moto vem do banco; no fallback, a
- * chegada é o ano.
- */
-function Recentes({ motos }: { motos: Motorcycle[] }) {
-  const disponiveis = motos.filter((m) => m.status === 'disponivel')
-  if (disponiveis.length < 4) return null
-
-  const recentes = [...disponiveis]
-    .sort((a, b) => {
-      const chegada = (m: typeof a) => m.atualizadoEm ?? m.criadoEm ?? ''
-      return chegada(b).localeCompare(chegada(a)) || b.ano - a.ano
-    })
-    .slice(0, 4)
-
-  return (
-    <section
-      className="rounded-2xl border border-borda bg-painel/80 p-5"
-      aria-labelledby="recentes-titulo"
-    >
-      <h2 id="recentes-titulo" className="text-sm font-semibold text-texto">
-        Recém-chegadas
-      </h2>
-      <ul className="mt-3 flex flex-col">
-        {recentes.map((moto) => {
-          const titulo = `${moto.marca} ${moto.modelo}`
-          return (
-            <li key={moto.id}>
-              <Link
-                to={`/moto/${moto.slug}`}
-                className="group -mx-2 flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-painel-2"
-              >
-                <span className="relative block size-14 shrink-0 overflow-hidden rounded-lg bg-fundo">
-                  <img
-                    src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
-                    alt={moto.imagens[0]?.alt ?? titulo}
-                    loading="lazy"
-                    width={960}
-                    height={1200}
-                    className="absolute inset-0 h-full w-full object-contain p-0.5"
-                  />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-texto transition-colors group-hover:text-marca-texto">
-                    {titulo}
-                  </span>
-                  <span className="numeros block text-[13px] text-marca-texto">
-                    {formatPrice(moto.preco)}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
-    </section>
-  )
-}
 
 /**
  * Estoque — a vitrine completa do pátio.
  *
- * O topo é uma faixa tipográfica curta, para o catálogo começar cedo.
- * Abaixo, filtros na coluna lateral e o resultado em grade de vitrines.
+ * A página começa direto no catálogo: filtros na coluna lateral e o
+ * resultado em grade de vitrines. O título fica só para leitores de tela.
  *
  * A coluna de filtros trabalha com um rascunho: o visitante ajusta os
  * campos e só então aplica. Assim o resultado não muda a cada arrasto
@@ -97,8 +31,8 @@ function Recentes({ motos }: { motos: Motorcycle[] }) {
  * atalhos de categoria continuam aplicando na hora.
  *
  * No celular a coluna vira uma folha de tela cheia (um <dialog>
- * nativo, com foco preso e Esc de graça). O botão flutuante só aparece
- * depois que a faixa de abertura sai da tela.
+ * nativo, com foco preso e Esc de graça). A folha abre pelo botão na
+ * barra de categorias ou pelo botão flutuante, sempre disponível.
  */
 export function Estoque() {
   const { motos } = useCatalogo()
@@ -122,7 +56,6 @@ export function Estoque() {
   const [filtrosAbertos, setFiltrosAbertos] = useState(false)
   const folhaRef = useRef<HTMLDialogElement>(null)
   const gatilhoRef = useRef<HTMLElement | null>(null)
-  const passouBarra = useScrolled(280)
 
   // Sincroniza quando a URL muda (ex.: clique em chip de marca na Home)
   // sem efeito cascata. O modelo é solto porque pode ser de outra marca.
@@ -174,7 +107,6 @@ export function Estoque() {
     () => motos.filter((m) => m.status === 'disponivel'),
     [motos],
   )
-  const marcas = useMemo(() => marcasDisponiveis(disponiveis), [disponiveis])
   const categorias = useMemo(() => categoriasDisponiveis(disponiveis), [disponiveis])
 
   // Atualização imediata (chips e etiquetas): mexe no aplicado e no
@@ -242,96 +174,22 @@ export function Estoque() {
 
   return (
     <div className="pt-cabecalho">
-      {/* Faixa de abertura: título, contagem e trilha em uma altura
-          curta — o catálogo aparece logo abaixo. */}
-      <section className="border-b border-borda bg-painel">
-        <div className="container-site py-8 sm:py-10">
-          <nav
-            aria-label="Trilha de navegação"
-            className="flex items-center gap-2 text-xs text-texto-3"
-          >
-            <Link
-              to="/"
-              className="inline-flex min-h-6 items-center transition-colors hover:text-texto"
-            >
-              Início
-            </Link>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page" className="text-texto-2">
-              Estoque
-            </span>
-          </nav>
+      <h1 className="sr-only">Estoque</h1>
 
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-5">
-            <div className="min-w-0 max-w-2xl">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="display">Estoque</h1>
-                <span
-                  aria-live="polite"
-                  className="numeros inline-flex items-center rounded-full border border-marca/30 bg-marca/10 px-3 py-1 text-sm font-semibold text-marca-texto"
-                >
-                  {resultados.length} {resultados.length === 1 ? 'moto' : 'motos'}
-                </span>
-              </div>
-              <p className="lead mt-4 max-w-[40ch] text-texto-2">
-                Seminovas inspecionadas e prontas para rodar em Belo Horizonte.
-              </p>
-            </div>
-
-            <dl className="hidden shrink-0 grid-cols-3 gap-6 rounded-2xl bg-fundo/70 px-6 py-5 lg:grid">
-              <div>
-                <dt className="text-[12px] font-medium text-texto-3">No pátio</dt>
-                <dd className="numeros mt-1 font-display text-2xl leading-none font-bold text-texto">
-                  {disponiveis.length}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[12px] font-medium text-texto-3">Marcas</dt>
-                <dd className="numeros mt-1 font-display text-2xl leading-none font-bold text-texto">
-                  {marcas.length}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[12px] font-medium text-texto-3">Categorias</dt>
-                <dd className="numeros mt-1 font-display text-2xl leading-none font-bold text-texto">
-                  {categorias.length}
-                </dd>
-              </div>
-            </dl>
-
-            <button
-              type="button"
-              onClick={(e) => abrirFolha(e.currentTarget)}
-              aria-haspopup="dialog"
-              aria-expanded={filtrosAbertos}
-              className="btn btn-secondary h-11 gap-2 rounded-xl px-4 text-xs lg:hidden"
-            >
-              <SlidersHorizontal className="size-4" aria-hidden="true" />
-              Filtros
-              {temAtivos ? (
-                <span className="grid size-5 place-items-center rounded-full bg-marca text-[10px] font-bold text-white">
-                  {ativos.length}
-                </span>
-              ) : null}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-fundo pt-8 pb-20 sm:pt-10 sm:pb-28">
+      <section className="bg-fundo pt-8 pb-16 sm:pt-12 sm:pb-24">
         <div className="container-site flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-8">
           {/* Coluna de filtros — só existe como coluna no desktop. */}
-          <aside className="hidden w-[20rem] shrink-0 flex-col gap-6 lg:sticky lg:top-[5.5rem] lg:flex">
-            <div className="rounded-2xl border border-borda bg-painel/80 p-6">
-              <div className="mb-6 flex items-center justify-between gap-3">
+          <aside className="hidden w-[18rem] shrink-0 flex-col gap-6 lg:sticky lg:top-[5.5rem] lg:flex">
+            <div className="space-y-4 rounded-xl border border-neutral-800/80 bg-neutral-900/60 p-5">
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-lg leading-none font-bold text-texto">
+                  <h2 className="font-display text-base leading-none font-bold text-texto">
                     Filtros
                   </h2>
-                  <p className="mt-1.5 text-xs text-texto-3">Refine o pátio</p>
+                  <p className="mt-1 text-[11px] text-texto-3">Refine o pátio</p>
                 </div>
                 {temAtivos ? (
-                  <span className="numeros grid size-6 place-items-center rounded-full bg-marca/15 text-xs font-bold text-marca-texto">
+                  <span className="numeros grid size-6 place-items-center rounded-full bg-neutral-700/60 text-xs font-bold text-neutral-200">
                     {ativos.length}
                   </span>
                 ) : null}
@@ -345,34 +203,55 @@ export function Estoque() {
                 prefix="filtro"
               />
 
-              <div className="mt-6 space-y-3">
-                <p className="text-center text-xs text-texto-3">
+              <div className="space-y-2.5">
+                <p className="text-center text-[11px] text-texto-3">
                   <span className="numeros font-semibold text-texto">{previa.length}</span>{' '}
                   {previa.length === 1 ? 'moto' : 'motos'} com estes filtros
                 </p>
                 <button
                   type="button"
                   onClick={aplicarFiltros}
-                  className="w-full rounded-xl bg-marca py-2.5 text-sm font-semibold text-white transition-colors hover:bg-marca-viva"
+                  className="w-full rounded-lg bg-white py-2 text-[13px] font-bold text-black transition-colors hover:bg-neutral-200"
                 >
                   Aplicar filtros
                 </button>
                 <button
                   type="button"
                   onClick={limparFiltros}
-                  className="mx-auto flex min-h-6 w-fit items-center text-xs text-texto-3 transition-colors hover:text-texto"
+                  className="mx-auto flex min-h-6 w-fit items-center text-[11px] text-texto-3 transition-colors hover:text-texto"
                 >
                   Limpar filtros
                 </button>
               </div>
             </div>
-
-            <Recentes motos={motos} />
           </aside>
 
           {/* Resultado */}
           <div className="min-w-0 flex-1">
             <h2 className="sr-only">Motos disponíveis no estoque</h2>
+
+            {/* No celular, a folha de filtros abre por aqui: os
+                atalhos de categoria não mostram os demais campos. */}
+            <div className="mb-5 flex items-center gap-3 lg:hidden">
+              <button
+                type="button"
+                onClick={(e) => abrirFolha(e.currentTarget)}
+                aria-haspopup="dialog"
+                aria-expanded={filtrosAbertos}
+                className="btn btn-secondary h-9 shrink-0 gap-2 rounded-lg px-4 text-[13px]"
+              >
+                <SlidersHorizontal className="size-4" aria-hidden="true" />
+                Filtros
+                {temAtivos ? (
+                  <span className="grid size-5 place-items-center rounded-full bg-marca text-[10px] font-bold text-white">
+                    {ativos.length}
+                  </span>
+                ) : null}
+              </button>
+              <p className="numeros truncate text-xs text-texto-3">
+                {resultados.length} {resultados.length === 1 ? 'moto' : 'motos'}
+              </p>
+            </div>
 
             {/* Categorias reais do estoque: um atalho horizontal antes
                 da grade. */}
@@ -405,7 +284,7 @@ export function Estoque() {
             ) : null}
 
             {temAtivos ? (
-              <div className="mb-6 flex flex-wrap items-center gap-2">
+              <div className="mb-5 flex flex-wrap items-center gap-2">
                 {ativos.map((ativo) => (
                   <button
                     key={ativo.chave}
@@ -428,7 +307,7 @@ export function Estoque() {
             ) : null}
 
             {resultados.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {resultados.map((bike, i) => (
                   <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
                     <BikeCard bike={bike} priority={i < 3} />
@@ -452,6 +331,28 @@ export function Estoque() {
                 />
               </div>
             )}
+
+            {/* Troca, em faixa compacta: a mesma oferta da home, sem
+                roubar a cena do catálogo. */}
+            <div className="mt-8 rounded-2xl border border-neutral-800 bg-gradient-to-r from-neutral-900 to-black px-6 py-6 sm:px-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-xl">
+                  <h2 className="text-lg font-bold text-white">
+                    Sua moto usada entra na troca
+                  </h2>
+                  <p className="mt-1 text-sm text-neutral-400">
+                    Aceitamos sua moto usada como parte do pagamento, com avaliação
+                    feita na loja.
+                  </p>
+                </div>
+                <Link
+                  to="/contato"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+                >
+                  Falar com a loja
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -513,7 +414,7 @@ export function Estoque() {
                 <button
                   type="button"
                   onClick={aplicarEFechar}
-                  className="flex-1 rounded-xl bg-marca py-3 text-sm font-semibold text-white transition-colors hover:bg-marca-viva"
+                  className="flex-1 rounded-xl bg-white py-3 text-sm font-bold text-black transition-colors hover:bg-neutral-200"
                 >
                   Aplicar filtros
                 </button>
@@ -523,9 +424,8 @@ export function Estoque() {
         </dialog>
       )}
 
-      {/* Botão flutuante de filtro — só no celular e só depois que a
-          faixa de abertura saiu da tela. Ele é o espelho do WhatsApp no
-          outro canto. */}
+      {/* Botão flutuante de filtro — só no celular. Ele é o espelho do
+          WhatsApp no outro canto. */}
       <button
         type="button"
         onClick={(e) => abrirFolha(e.currentTarget)}
@@ -533,14 +433,8 @@ export function Estoque() {
           temAtivos ? `Abrir filtros, ${ativos.length} ativos` : 'Abrir filtros'
         }
         aria-expanded={filtrosAbertos}
-        aria-hidden={!passouBarra}
-        inert={!passouBarra}
         aria-haspopup="dialog"
-        className={`fixed left-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 grid size-14 place-items-center rounded-2xl border border-borda-forte bg-painel-2 text-texto transition-[opacity,transform,border-color] duration-300 hover:border-marca hover:text-marca-texto lg:hidden ${
-          passouBarra
-            ? 'translate-y-0 opacity-100'
-            : 'pointer-events-none translate-y-3 opacity-0'
-        }`}
+        className="fixed left-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 grid size-14 place-items-center rounded-2xl border border-borda-forte bg-painel-2 text-texto transition-colors hover:border-marca hover:text-marca-texto lg:hidden"
       >
         <SlidersHorizontal className="size-6" aria-hidden="true" />
         {temAtivos ? (

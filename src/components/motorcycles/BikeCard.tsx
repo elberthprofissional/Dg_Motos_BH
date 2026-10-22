@@ -68,20 +68,20 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
       />
 
       {selo ? (
-        <span className="pointer-events-none absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-fundo/90 px-2.5 py-1.5 font-sans text-[10px] leading-none font-bold tracking-[0.14em] text-texto uppercase">
+        <span className="pointer-events-none absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2.5 py-1 font-sans text-[10px] leading-none font-bold tracking-[0.14em] text-neutral-200 uppercase backdrop-blur-md">
           <span aria-hidden="true" className="size-1.5 rounded-full bg-marca" />
           Destaque
         </span>
       ) : null}
 
       {estado ? (
-        <span className="pointer-events-none absolute top-3 right-3 rounded-md bg-fundo/90 px-2.5 py-1.5 font-sans text-xs font-semibold text-texto-2">
+        <span className="pointer-events-none absolute top-3 right-3 rounded-md bg-black/60 px-2.5 py-1 font-sans text-xs font-semibold text-neutral-300 backdrop-blur-md">
           {estado}
         </span>
       ) : null}
 
       {bike.categoria && !estado ? (
-        <span className="pointer-events-none absolute right-3 bottom-3 rounded-md bg-fundo/90 px-2.5 py-1 font-sans text-[11px] font-medium text-texto-2">
+        <span className="pointer-events-none absolute right-3 bottom-3 rounded-md bg-black/60 px-2.5 py-1 font-sans text-[11px] font-medium text-neutral-300 backdrop-blur-md">
           {bike.categoria}
         </span>
       ) : null}
@@ -90,44 +90,47 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
 
   const informacoes = (
     <>
-      <p className="font-sans text-[13px] leading-none font-medium text-texto-3">
+      <p className="font-sans text-xs leading-none font-medium text-neutral-400">
         {bike.marca}
       </p>
 
       <h3
-        className={`mt-2 font-display font-bold leading-tight tracking-[-0.02em] text-white transition-colors group-hover:text-marca-texto ${
-          variante === 'lista' ? 'text-xl sm:text-2xl' : 'text-lg'
+        className={`mt-1.5 font-display font-bold leading-tight tracking-[-0.02em] text-white transition-colors group-hover:text-marca-texto ${
+          variante === 'lista' ? 'text-xl sm:text-2xl' : 'text-sm'
         }`}
       >
         {bike.modelo}
       </h3>
 
-      <div className="mt-3 mb-3 flex flex-wrap items-center gap-1.5">
-        <span className="inline-flex items-center gap-1 rounded-md bg-painel-3/60 px-2.5 py-1 text-xs text-texto-2">
-          <Calendar aria-hidden="true" className="size-3.5 text-texto-3" />
+      <div className="mt-2.5 mb-2.5 flex flex-wrap items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-md border border-neutral-800 bg-neutral-900 px-2 py-0.5 text-[10px] text-neutral-300">
+          <Calendar aria-hidden="true" className="size-3 text-neutral-500" />
           {bike.ano}
         </span>
         <span
-          className={`inline-flex items-center gap-1 rounded-md bg-painel-3/60 px-2.5 py-1 text-xs ${
-            kmConfirmar ? 'text-texto-3' : 'text-texto-2'
+          className={`inline-flex items-center gap-1 rounded-md border border-neutral-800 bg-neutral-900 px-2 py-0.5 text-[10px] ${
+            kmConfirmar ? 'text-neutral-500' : 'text-neutral-300'
           }`}
         >
-          <Gauge aria-hidden="true" className="size-3.5 text-texto-3" />
+          <Gauge aria-hidden="true" className="size-3 text-neutral-500" />
           {kmTexto}
         </span>
         {combustivel ? (
-          <span className="inline-flex items-center gap-1 rounded-md bg-painel-3/60 px-2.5 py-1 text-xs text-texto-2">
-            <Fuel aria-hidden="true" className="size-3.5 text-texto-3" />
+          <span className="inline-flex items-center gap-1 rounded-md border border-neutral-800 bg-neutral-900 px-2 py-0.5 text-[10px] text-neutral-300">
+            <Fuel aria-hidden="true" className="size-3 text-neutral-500" />
             {combustivel}
           </span>
         ) : null}
       </div>
 
-      <p className="preco numeros mt-auto whitespace-nowrap pt-2 text-xl leading-none font-extrabold">
+      <p className="preco numeros mt-auto whitespace-nowrap pt-1.5 text-base leading-none font-extrabold">
         {formatPrice(bike.preco)}
       </p>
     </>
   )
+
+  const ctaClasse =
+    'inline-flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-neutral-800'
 
   const cta =
     bike.status === 'disponivel' ? (
@@ -136,16 +139,13 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-marca px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-marca-viva"
+          className={ctaClasse}
         >
           <IconeWhatsapp className="size-4" />
           Tenho interesse
         </a>
       ) : (
-        <Link
-          to="/contato"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-marca px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-marca-viva"
-        >
+        <Link to="/contato" className={ctaClasse}>
           <IconeWhatsapp className="size-4" />
           Tenho interesse
         </Link>
@@ -153,7 +153,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
     ) : null
 
   const artigo =
-    'card-vitrine group h-full rounded-2xl bg-painel/90 transition-all duration-300 hover:border-marca/50 hover:shadow-xl hover:shadow-marca/10'
+    'card-vitrine group h-full rounded-2xl bg-painel/90 transition-all duration-300 hover:shadow-xl hover:shadow-black/30'
 
   if (variante === 'lista') {
     return (
@@ -168,11 +168,11 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
               {foto}
             </div>
 
-            <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">{informacoes}</div>
+            <div className="flex min-w-0 flex-1 flex-col p-3.5 sm:p-5">{informacoes}</div>
           </div>
         </Link>
 
-        {cta ? <div className="px-4 pb-4 sm:px-5 sm:pb-5">{cta}</div> : null}
+        {cta ? <div className="px-3.5 pb-3.5 sm:px-5 sm:pb-5">{cta}</div> : null}
       </article>
     )
   }
@@ -184,12 +184,12 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
         aria-label={`Ver a ficha de ${titulo} ${bike.ano}`}
         className="flex flex-1 flex-col focus-visible:outline-offset-[-4px]"
       >
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-fundo">{foto}</div>
+        <div className="relative h-44 w-full overflow-hidden rounded-t-xl bg-fundo">{foto}</div>
 
-        <div className="flex flex-1 flex-col p-5">{informacoes}</div>
+        <div className="flex flex-1 flex-col p-3">{informacoes}</div>
       </Link>
 
-      {cta ? <div className="px-5 pb-5">{cta}</div> : null}
+      {cta ? <div className="px-3 pb-3">{cta}</div> : null}
     </article>
   )
 }

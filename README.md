@@ -89,7 +89,7 @@ scripts/
   descrição e, por fim, as motos recomendadas. As especificações viraram um
   grid de cartões (2 colunas no celular, 4 no desktop).
 - **Home** — a seção "Marcas mais procuradas" usa o fundo escuro do site e
-  os logos são normalizados para branco (`brightness-0 invert`).
+  mantém as cores originais dos logos, sem filtro de inversão.
 - **Catálogo e estoque** — os cards de moto são a referência visual das
   demais telas: foto 4:3, superfície arredondada, badges de ano/km e CTA
   "Tenho interesse"; a página de estoque ganhou filtros em rascunho com
@@ -145,14 +145,16 @@ da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
 - **O app instalado abre no login, não na vitrine.** `src/pages/Entrada.tsx`
   checa o `display-mode: standalone`: no PWA instalado, `/` cai em
   `/admin/login`; no navegador, mostra o catálogo.
-- **Fotos nunca são inventadas.** `img/` guarda as fontes do hero
-  (`hero-desktop.png`), do banner de troca (`troca.png`), da entrada do
-  painel (`hero-login-noite.jpg`) e a logo; as fotos do catálogo já
-  convertidas vivem em `public/motos/` e os logos de marca em
-  `public/marcas/`. O script de conversão gera WebP e crops; faltando foto,
-  entra o placeholder local. O hero da home é importado pelo Vite (URL com
-  hash); os arquivos `public/hero/showroom-2026-07*.webp` continuam servindo
-  Open Graph, JSON-LD e o preload do `index.html`.
+- **Fotos nunca são inventadas.** `img/` guarda as fontes originais,
+  organizadas por seção: `img/hero/` (home desktop e mobile, showroom),
+  `img/troca/` (banner desktop e mobile), `img/login/` (entrada do painel) e
+  `img/logo/`. Os assets que a vitrine importa vivem em `src/assets/` já em
+  WebP — `src/assets/hero/`, `src/assets/troca/` — e o Vite os serve com hash.
+  As fotos do catálogo convertidas ficam em `public/motos/` e os logos de
+  marca em `public/marcas/`. O script `convert-images` lê `img/` inteiro
+  (recursivo) e gera WebP/crops; faltando foto, entra o placeholder local. Os
+  arquivos `public/hero/showroom-2026-07*.webp` servem Open Graph, JSON-LD e
+  o preload do `index.html`.
 - **A identidade visual entra pelo material, não por número decorativo.**
   A base é a bancada escura com um único vermelho de sinal. No catálogo, as
   fichas de moto usam foto 4:3, cantos arredondados e CTA de WhatsApp; no

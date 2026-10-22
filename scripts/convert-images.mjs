@@ -16,6 +16,21 @@ import { mkdir, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import sharp from 'sharp'
 
+/** Lista recursivamente os arquivos de img/, preservando o nome base. */
+async function listarRecursivo(dir, prefixo = '') {
+  const entradas = await readdir(dir, { withFileTypes: true })
+  const saida = []
+  for (const entrada of entradas) {
+    const rel = prefixo ? `${prefixo}/${entrada.name}` : entrada.name
+    if (entrada.isDirectory()) {
+      saida.push(...(await listarRecursivo(path.join(dir, entrada.name), rel)))
+    } else {
+      saida.push(rel)
+    }
+  }
+  return saida
+}
+
 // A pasta img/ pode conter tanto originais (.jpg/.png/.jfif) quanto
 // fotos já convertidas para WebP pelo scripts/convert-webp.py — todas
 // são aceitas.
@@ -44,7 +59,7 @@ const QUALIDADE = 78
 // sai da própria fonte (hero-showroom-2026-07.jfif ->
 // public/hero/showroom-2026-07.webp), e a versão no nome serve para
 // furar o cache do navegador e do CDN.
-const HERO_FONTES = ['hero-showroom-2026-07', 'hero-showroom']
+const HERO_FONTES = ['showroom-2026-07', 'showroom']
 
 // O hero entra na tela inteira, de ponta a ponta: na largura do
 // monitor a foto é ampliada. Duas saídas: a pequena, do tamanho
@@ -53,7 +68,7 @@ const HERO_FONTES = ['hero-showroom-2026-07', 'hero-showroom']
 const HERO_SUFIXO_HD = '-hd'
 
 async function run() {
-  const arquivos = await readdir(IMG_DIR)
+  const arquivos = await listarRecursivo(IMG_DIR)
   let convertidas = 0
 
   /** Converte um arquivo para WebP com largura máxima. */
@@ -66,8 +81,12 @@ async function run() {
   }
 
   // ---- Catálogo (fotos das motos) ----
+  const nomeBase = (rel) => path.basename(rel)
+
   for (const item of CATALOGO) {
-    const entrada = arquivos.find((a) => a.startsWith(item.base) && FONTE_VALIDA.test(a))
+    const entrada = arquivos.find(
+      (a) => nomeBase(a).startsWith(item.base) && FONTE_VALIDA.test(a),
+    )
     if (!entrada) {
       console.warn(`AVISO: foto "${item.base}" não encontrada em img/ — usando placeholder.`)
       continue
@@ -102,11 +121,11 @@ async function run() {
 
   // ---- Hero (showroom) ----
   const heroEntrada = HERO_FONTES.map((base) =>
-    arquivos.find((a) => a.startsWith(base) && FONTE_VALIDA.test(a)),
+    arquivos.find((a) => nomeBase(a).startsWith(base) && FONTE_VALIDA.test(a)),
   ).find(Boolean)
 
   if (heroEntrada) {
-    const saidaHero = heroEntrada
+    const saidaHero = nomeBase(heroEntrada)
       .replace(/^hero[-_]?/i, '')
       .replace(/\.[^.]+$/, '.webp')
     await mkdir(path.join(ROOT, 'public', 'hero'), { recursive: true })

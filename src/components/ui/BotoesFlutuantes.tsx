@@ -47,7 +47,7 @@ export function BotoesFlutuantes() {
   }
 
   return (
-    <div className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 flex flex-col-reverse items-end gap-2.5 sm:right-5">
+    <div className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 hidden flex-col-reverse items-end gap-2.5 sm:right-5 md:flex">
       {wa ? (
         <a
           href={wa}

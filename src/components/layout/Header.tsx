@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { MessageCircle, X } from 'lucide-react'
+import { Menu, MessageCircle, X } from 'lucide-react'
 import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { InstagramIcon } from '../ui/InstagramIcon'
@@ -85,34 +85,34 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 bg-fundo">
-        <div className="container-site flex h-[4.25rem] items-center justify-between gap-6">
+      <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-neutral-800/80 bg-neutral-950/90 backdrop-blur-md">
+        <div className="container-site flex h-20 items-center justify-between gap-6 !px-8 sm:h-[4.25rem]">
           <Link
             to="/"
             aria-label="DG Motos — Página inicial"
-            className="flex items-center gap-3"
+            className="group flex items-center gap-3"
           >
             <img
               src="/logo.webp"
               alt=""
               width={40}
               height={40}
-              className="size-9 object-contain sm:size-10"
+              className="size-9 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.15)] transition-[filter] duration-300 group-hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.3)] sm:size-10"
             />
-            <span className="font-display text-xl font-semibold leading-none tracking-[-0.01em] text-texto sm:text-2xl">
+            <span className="font-display text-base font-bold leading-none tracking-wider text-white sm:text-lg">
               DG Motos
             </span>
           </Link>
 
-          <nav aria-label="Navegação principal" className="hidden items-center gap-9 lg:flex">
+          <nav aria-label="Navegação principal" className="hidden items-center gap-8 lg:flex">
             {NAV.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.to === '/'}
                 className={({ isActive }) =>
-                  `py-2 font-sans text-sm font-medium transition-colors duration-150 ${
-                    isActive ? 'text-texto' : 'text-texto-2 hover:text-texto'
+                  `inline-flex items-center py-3 font-sans text-sm font-medium transition-colors ${
+                    isActive ? 'text-white' : 'text-neutral-300 hover:text-white'
                   }`
                 }
               >
@@ -127,13 +127,18 @@ export function Header() {
                 href={wa}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary hidden h-10 px-5 text-sm lg:inline-flex"
+                className="hidden items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-red-500 lg:inline-flex"
               >
-                Conversar no WhatsApp
+                <MessageCircle className="size-4" aria-hidden="true" />
+                WhatsApp
               </a>
             ) : (
-              <Link to="/contato" className="btn btn-primary hidden h-10 px-5 text-sm lg:inline-flex">
-                Conversar no WhatsApp
+              <Link
+                to="/contato"
+                className="hidden items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-red-500 lg:inline-flex"
+              >
+                <MessageCircle className="size-4" aria-hidden="true" />
+                Fale conosco
               </Link>
             )}
 
@@ -142,9 +147,10 @@ export function Header() {
               type="button"
               onClick={() => setAberto(true)}
               aria-haspopup="dialog"
-              className="flex min-h-11 items-center px-1 font-sans text-sm font-semibold text-texto transition-colors hover:text-marca-texto lg:hidden"
+              aria-label="Abrir menu"
+              className="grid size-11 place-items-center text-texto transition-colors hover:text-marca-texto lg:hidden"
             >
-              Menu
+              <Menu className="size-6" aria-hidden="true" />
             </button>
           </div>
         </div>

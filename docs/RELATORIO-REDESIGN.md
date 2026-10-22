@@ -289,8 +289,8 @@ Supabase, autenticação e catálogo não mudou.
 - A seção deixou o fundo claro e passou a usar `bg-fundo` com
   `border-t border-borda`.
 - Título em `text-texto`; link em vermelho da casa.
-- Logos em flexbox centralizada com `gap-8`, normalizadas por
-  `brightness-0 invert opacity-70` e `hover:opacity-100`.
+- Logos em flexbox centralizada com `gap-8` e cores originais, sem filtro
+  de inversão (`brightness-0 invert`).
 
 ### 7.4 Catálogo, estoque e acessibilidade
 
