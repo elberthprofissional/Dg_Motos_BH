@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Menu, MessageCircle, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { InstagramIcon } from '../ui/InstagramIcon'
+import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
 
 const NAV = [
@@ -19,15 +20,10 @@ const WA_TEXTO: Record<string, string> = {
 }
 
 /**
- * Cabeçalho — a placa de identificação da loja.
+ * Cabeçalho — faixa sólida de grafite sobre o fundo preto da loja.
  *
- * Fundo preto porque a logo da casa é um traço branco: ela só
- * funciona sobre preto, então preto é o chão da barra e do rodapé.
- *
- * A barra é uma linha só, sem moldura, sem sombra e sem fio de
- * vermelho: a marca fica à esquerda, três links no meio e uma única
- * ação à direita, no mesmo tamanho de texto do resto. Nada de pílula
- * flutuante nem de barra com fundo.
+ * Sem borda, sombra ou vidro: a separação vem do tom. A marca fica à
+ * esquerda, três links no centro e uma única ação à direita.
  *
  * No celular sobra a marca e o botão "Menu", que abre uma folha de
  * tela cheia — o <dialog> nativo entrega foco preso, Esc e retorno de
@@ -85,21 +81,21 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-neutral-800/80 bg-neutral-950/90 backdrop-blur-md">
-        <div className="container-site flex h-20 items-center justify-between gap-6 !px-8 sm:h-[4.25rem]">
+      <header className="fixed inset-x-0 top-0 z-50 w-full bg-painel">
+        <div className="container-site flex h-20 items-center justify-between gap-6 sm:h-[4.25rem]">
           <Link
             to="/"
             aria-label="DG Motos — Página inicial"
-            className="group flex items-center gap-3"
+            className="flex items-center gap-3"
           >
             <img
               src="/logo.webp"
               alt=""
               width={40}
               height={40}
-              className="size-9 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.15)] transition-[filter] duration-300 group-hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.3)] sm:size-10"
+              className="size-9 object-contain sm:size-10"
             />
-            <span className="font-display text-base font-bold leading-none tracking-wider text-white sm:text-lg">
+            <span className="font-display text-base leading-none font-bold tracking-[0.04em] text-white sm:text-lg">
               DG Motos
             </span>
           </Link>
@@ -127,17 +123,17 @@ export function Header() {
                 href={wa}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-red-500 lg:inline-flex"
+                className="btn btn-primary hidden h-10 gap-2 px-4 text-[13px] lg:inline-flex"
               >
-                <MessageCircle className="size-4" aria-hidden="true" />
+                <IconeWhatsapp className="size-4" />
                 WhatsApp
               </a>
             ) : (
               <Link
                 to="/contato"
-                className="hidden items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-red-500 lg:inline-flex"
+                className="btn btn-primary hidden h-10 gap-2 px-4 text-[13px] lg:inline-flex"
               >
-                <MessageCircle className="size-4" aria-hidden="true" />
+                <IconeWhatsapp className="size-4" />
                 Fale conosco
               </Link>
             )}
@@ -208,7 +204,7 @@ export function Header() {
                 onClick={() => setAberto(false)}
                 className="btn btn-primary h-12 w-full"
               >
-                <MessageCircle className="size-4" aria-hidden="true" />
+                <IconeWhatsapp className="size-4" />
                 <span>Chamar no WhatsApp</span>
               </a>
             ) : (
@@ -217,7 +213,7 @@ export function Header() {
                 onClick={() => setAberto(false)}
                 className="btn btn-primary h-12 w-full"
               >
-                <MessageCircle className="size-4" aria-hidden="true" />
+                <IconeWhatsapp className="size-4" />
                 <span>Falar com a equipe</span>
               </Link>
             )}

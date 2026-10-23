@@ -1,27 +1,25 @@
-import { useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
-import { CATEGORIAS } from '../../lib/filters'
+import { useState } from 'react'
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import {
   excluirFotosRemovidas,
-  modelosDisponiveis,
   montarSlug,
   salvarMoto,
 } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
-import type { Motorcycle, MotorcycleCategory, MotorcycleSpec, MotorcycleStatus } from '../../types'
+import type { Motorcycle, MotorcycleSpec, MotorcycleStatus } from '../../types'
 import { PhotoUploader } from './PhotoUploader'
 import { SeletorMarca } from './SeletorMarca'
 import { campoLinha, selectLinha } from './campoLinha'
 
 /**
  * ============================================================
- * FORMULÁRIO DE MOTO — wizard no celular, tudo à vista no desktop
+ * FORMULÁRIO DE MOTO — página única vertical
  * ============================================================
- * Cadastrar moto envolve muitos campos; em uma tela longa o celular
- * vira um rolinho interminável e o dono perde a noção do que falta.
- * A partir do breakpoint `sm` tudo fica visível em cartões; no
- * celular o formulário vira 4 passos que deslizam horizontalmente
- * (com swipe no Android/iOS e botões avançar/voltar).
+ * Muitos campos seriam um rolinho interminável; o antigo wizard de
+ * passos resolvia isso ao custo de esconder o resto do formulário.
+ * Agora: todas as seções empilhadas numa página só, com scroll
+ * natural e títulos discretos — e a ação de salvar fixa no rodapé,
+ * no celular (fixed) e no desktop (sticky).
  */
 
 const VAZIO: MotoParaSalvar = {
@@ -39,13 +37,6 @@ const VAZIO: MotoParaSalvar = {
   destaque: false,
   status: 'disponivel',
 }
-
-const PASSOS = [
-  { titulo: 'Identificação' },
-  { titulo: 'Preço' },
-  { titulo: 'Ficha técnica' },
-  { titulo: 'Anúncio e fotos' },
-] as const
 
 /** Converte "32.500" ou "32500" em número; texto solto vira null. */
 function numeroOuNulo(texto: string): number | null {
@@ -69,65 +60,22 @@ function Secao({
 }) {
   return (
     <section
-      className={`overflow-hidden rounded-lg border border-claro/10 bg-night-900 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent ${className} /* taste-skill-ignore: painel */`}
+      className={`rounded-2xl border border-neutral-800/70 bg-neutral-900/50 p-6 shadow-2xl shadow-black/40 backdrop-blur-md transition-all lg:p-8 ${className}`}
     >
-      <div
-        className="flex items-center gap-3 border-b border-claro/10 bg-night-950/40 px-4 py-3 sm:px-5 max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:pb-2" /* taste-skill-ignore: painel */
-      >
+      <header className="flex items-center gap-3 border-b border-neutral-800/80 pb-3 mb-6">
+        {/* Número da seção em pílula suave, em vez de quadrado rígido. */}
         <span
           aria-hidden="true"
-          className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-500/15 font-display text-xs font-bold text-brand-500"
+          className="inline-flex h-7 min-w-[1.75rem] shrink-0 items-center justify-center rounded-full bg-red-600/15 px-2 text-xs font-bold text-red-400"
         >
           {numero}
         </span>
-        <h2 className="font-display text-sm font-semibold tracking-[0.14em] text-paper uppercase">
+        <h2 className="font-display text-sm font-bold tracking-[0.14em] text-white uppercase">
           {titulo}
         </h2>
-      </div>
-      <div className="space-y-4 p-4 sm:p-5 max-sm:px-0 max-sm:pt-1">{children}</div>
+      </header>
+      <div className="space-y-4">{children}</div>
     </section>
-  )
-}
-
-/** Passo atual + total. No celular é a régua visual do progresso. */
-function Progresso({
-  passo,
-  total,
-  onIr,
-}: {
-  passo: number
-  total: number
-  onIr: (n: number) => void
-}) {
-  return (
-    <div className="sm:hidden">
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-display text-xs font-semibold tracking-[0.18em] text-steel-300 uppercase">
-          Passo {passo + 1} de {total}
-          <span className="ml-2 normal-case tracking-normal text-steel-500">
-            {PASSOS[passo].titulo}
-          </span>
-        </p>
-        <p className="text-etiqueta text-steel-600">deslize ↔</p>
-      </div>
-      {/* Trilha: segmentos preenchidos = passos concluídos; o atual pulsa
-          levemente (via cor), os futuros ficam apagados. */}
-      <div className="mt-2 flex gap-1.5" role="tablist" aria-label="Passos do cadastro">
-        {Array.from({ length: total }, (_, i) => (
-          <button
-            key={i}
-            type="button"
-            role="tab"
-            aria-selected={i === passo}
-            aria-label={`Ir para o passo ${i + 1} — ${PASSOS[i].titulo}`}
-            onClick={() => onIr(i)}
-            className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-              i === passo ? 'bg-brand-500' : i < passo ? 'bg-brand-500/40' : 'bg-claro/10'
-            }`}
-          />
-        ))}
-      </div>
-    </div>
   )
 }
 
@@ -142,67 +90,13 @@ export function MotoForm({
   id?: string
   onSalvo: () => void
   onCancelar: () => void
-  /** Estoque atual — alimenta os chips de modelo já cadastrado. */
+  /** Estoque atual — alimenta o seletor rápido de marcas. */
   estoque?: Motorcycle[]
 }) {
   const [form, setForm] = useState<MotoParaSalvar>(inicial ?? VAZIO)
-  // Modelos já no estoque, para completar com um toque. Exclui a própria
-  // moto em edição para o chip não preencher com o que já está no campo.
-  const sugestoesModelo = useMemo(
-    () => modelosDisponiveis(estoque).filter((m) => m.modelo !== inicial?.modelo),
-    [estoque, inicial?.modelo],
-  )
   const [slugManual, setSlugManual] = useState(Boolean(inicial))
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const [passo, setPasso] = useState(0)
-  const ultimoPasso = PASSOS.length - 1
-
-  // Swipe: o track translateX pelo índice passos; o gesto move um offset
-  // em px durante o arrasto (feedback imediato) e solta no passo mais
-  // próximo — menos 50% de largura do cartão marca troca de passo.
-  const trackRef = useRef<HTMLDivElement>(null)
-  const swipe = useRef({ inicio: 0, offset: 0, ativo: false })
-
-  function irPara(n: number) {
-    setPasso(Math.max(0, Math.min(PASSOS.length - 1, n)))
-  }
-
-  function onPointerDown(e: React.PointerEvent) {
-    // Só no touch: mouse tem botões; arrastar com mouse atrapalha a
-    // seleção de texto dos inputs.
-    if (e.pointerType !== 'touch') return
-    swipe.current = { inicio: e.clientX, offset: 0, ativo: true }
-  }
-
-  function onPointerMove(e: React.PointerEvent) {
-    if (!swipe.current.ativo || e.pointerType !== 'touch') return
-    const dx = e.clientX - swipe.current.inicio
-    // Resistência nas pontas: não arrasta além do primeiro/último.
-    const naBorda = (passo === 0 && dx > 0) || (passo === ultimoPasso && dx < 0)
-    swipe.current.offset = naBorda ? dx * 0.25 : dx
-    const track = trackRef.current
-    if (track) {
-      track.style.transition = 'none'
-      track.style.transform = `translateX(calc(${-passo * 100}% + ${swipe.current.offset}px))`
-    }
-  }
-
-  function onPointerUp(e: React.PointerEvent) {
-    if (!swipe.current.ativo || e.pointerType !== 'touch') return
-    swipe.current.ativo = false
-    const track = trackRef.current
-    if (track) {
-      track.style.transition = 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)'
-      track.style.transform = ''
-    }
-    const largura = trackRef.current?.parentElement?.clientWidth ?? 1
-    const proporcao = Math.abs(swipe.current.offset) / largura
-    if (proporcao > 0.2) {
-      irPara(passo + (swipe.current.offset < 0 ? 1 : -1))
-    }
-    swipe.current.offset = 0
-  }
 
   // Ao trocar de moto, o pai passa uma `key` diferente e o React remonta
   // este componente: os campos já nascem com os valores da nova moto, sem
@@ -225,12 +119,10 @@ export function MotoForm({
 
     if (!form.marca.trim() || !form.modelo.trim()) {
       setErro('Marca e modelo são obrigatórios.')
-      irPara(0)
       return
     }
     if (!form.slug.trim()) {
       setErro('O slug ficou vazio. Confira marca, modelo e ano.')
-      irPara(0)
       return
     }
 
@@ -260,48 +152,12 @@ export function MotoForm({
       <div>
         <label htmlFor="f-modelo" className="field-label">Modelo *</label>
         <input id="f-modelo" className={campoLinha} value={form.modelo} onChange={(e) => set('modelo', e.target.value)} placeholder="XRE 300" />
-        {/* Sugestões de modelos já cadastrados: um toque completa o
-            campo. O texto livre continua valendo — o chip não
-            obriga, só oferece atalho. */}
-        {sugestoesModelo.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {sugestoesModelo.map((m) => (
-              <button
-                key={m.modelo}
-                type="button"
-                onClick={() => {
-                  set('marca', m.marca)
-                  set('modelo', m.modelo)
-                  set('categoria', m.categoria)
-                }}
-                aria-label={`Preencher com ${m.marca} ${m.modelo}`}
-                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-claro/12 bg-claro/5 px-3 text-xs font-medium text-steel-300 transition-colors hover:border-brand-500/50 hover:text-paper" /* taste-skill-ignore: painel */
-              >
-                <span
-                  aria-hidden="true"
-                  className="grid size-5 place-items-center rounded-full bg-brand-500/15 text-micro font-bold text-brand-500"
-                >
-                  {m.marca.slice(0, 2).toUpperCase()}
-                </span>
-                {m.modelo}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="f-ano" className="field-label">Ano *</label>
           <input id="f-ano" type="number" min={1980} max={2100} className={campoLinha} value={form.ano} onChange={(e) => set('ano', Number(e.target.value))} />
-        </div>
-        <div>
-          <label htmlFor="f-categoria" className="field-label">Categoria</label>
-          <select id="f-categoria" className={selectLinha} value={form.categoria} onChange={(e) => set('categoria', e.target.value as MotorcycleCategory)}>
-            {CATEGORIAS.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -333,7 +189,7 @@ export function MotoForm({
     </Secao>,
 
     /* ------------------------------------------------ 2. Comercial */
-    <Secao key="s2" numero="2" titulo="Preço e disponibilidade">
+    <Secao key="s2" numero="2" titulo="Preço & Stock">
       <div>
         <label htmlFor="f-preco" className="field-label">Preço de venda (R$) *</label>
         <input id="f-preco" type="number" min={0} step={100} className={campoLinha} value={form.preco} onChange={(e) => set('preco', Number(e.target.value))} />
@@ -373,7 +229,7 @@ export function MotoForm({
     </Secao>,
 
     /* ------------------------------------------------ 3. Ficha técnica */
-    <Secao key="s3" numero="3" titulo="Ficha técnica">
+    <Secao key="s3" numero="3" titulo="Ficha Técnica">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="f-cc" className="field-label">Cilindrada (cc)</label>
@@ -416,7 +272,7 @@ export function MotoForm({
                  linha única de três colunas. */
               <li key={i} className="grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_1.4fr_auto]">
                 <input
-                  className="input col-span-2 sm:col-span-1"
+                  className={`${campoLinha} col-span-2 sm:col-span-1`}
                   value={spec.label}
                   placeholder="Motor"
                   aria-label="Nome da especificação"
@@ -461,13 +317,13 @@ export function MotoForm({
     </Secao>,
 
     /* ------------------------------------------------ 4. Anúncio */
-    <Secao key="s4" numero="4" titulo="Anúncio e fotos">
+    <Secao key="s4" numero="4" titulo="Fotos">
       <div>
         <label htmlFor="f-desc" className="field-label">Texto do anúncio</label>
         <textarea
           id="f-desc"
           rows={5}
-          className="input leading-relaxed"
+          className={`${campoLinha} leading-relaxed`}
           value={form.descricao}
           onChange={(e) => set('descricao', e.target.value)}
           placeholder="Condição, revisões, o que acompanha a moto. Esse texto aparece na ficha e no Google."
@@ -477,82 +333,91 @@ export function MotoForm({
     </Secao>,
   ]
 
-  const barraAcoes = (
-    <div className="flex flex-wrap gap-3">
-      <button type="submit" disabled={salvando} className="btn btn-primary h-11 px-6">
-        {salvando ? 'Salvando...' : id ? 'Salvar alterações' : 'Adicionar moto'}
-      </button>
-      <button type="button" onClick={onCancelar} className="btn btn-secondary h-11 px-6">
-        Cancelar
-      </button>
-    </div>
-  )
+  // Cor da pílula de status acompanha o estado comercial escolhido.
+  const corStatus: Record<MotorcycleStatus, string> = {
+    disponivel: 'border-green-600/40 bg-green-500/10 text-green-400',
+    indisponivel: 'border-amber-600/40 bg-amber-500/10 text-amber-400',
+    vendida: 'border-red-600/40 bg-red-500/10 text-red-400',
+  }
+  const rotuloStatus: Record<MotorcycleStatus, string> = {
+    disponivel: 'Disponível',
+    indisponivel: 'Indisponível',
+    vendida: 'Vendida',
+  }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mx-auto max-w-4xl space-y-4">
-      <Progresso passo={passo} total={PASSOS.length} onIr={irPara} />
+    <form onSubmit={handleSubmit} noValidate className="mx-auto max-w-4xl space-y-5">
+      {/* ================= Cabeçalho do formulário =========================
+          Volta rápida, o nome em tempo real (o que o owner digitar é o
+          que aparece) e a pílula do status comercial. Duplicar o "voltar"
+          é intencional: na topbar ele some com o rolar da página; aqui
+          ele fica sempre à mão no início da edição. */}
+      <div className="mb-8 flex flex-col justify-between gap-4 border-b border-neutral-800/80 pb-6 md:flex-row md:items-center">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={onCancelar}
+            aria-label="Voltar ao estoque"
+            className="foco-painel grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl border border-neutral-800 bg-black/60 text-neutral-400 transition-all hover:border-neutral-700 hover:text-white"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-bold text-white">
+              {form.modelo.trim() || 'Nova Moto'}
+            </h1>
+            <p className="text-xs text-neutral-400">
+              {id ? 'Editando moto do estoque' : 'Nova moto para o estoque'}
+            </p>
+          </div>
+        </div>
+        <span
+          className={`inline-flex w-fit shrink-0 items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${corStatus[form.status]}`}
+        >
+          <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+          {rotuloStatus[form.status]}
+        </span>
+      </div>
 
       {erro && (
-        <p role="alert" className="rounded border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs text-steel-300"> /* taste-skill-ignore: painel */
+        <p role="alert" className="rounded-xl border border-red-600/40 bg-red-950/20 px-3 py-2 text-xs text-red-400">
           {erro}
         </p>
       )}
 
-      {/* ================= CELULAR: 1 cartão por vez, desliza ================= */}
-      <div
-        className="overflow-hidden sm:hidden"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        style={{ touchAction: 'pan-y' }}
-      >
-        <div
-          ref={trackRef}
-          className="flex transition-transform duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{ transform: `translateX(-${passo * 100}%)` }}
-        >
-          {conteudo.map((secao, i) => (
-            <div key={i} className="w-full shrink-0 px-0.5">
-              {secao}
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => irPara(passo - 1)}
-                  disabled={passo === 0}
-                  className="btn btn-secondary h-11 flex-1"
-                >
-                  <ChevronLeft className="size-4" aria-hidden="true" />
-                  Voltar
-                </button>
-                {passo < ultimoPasso ? (
-                  <button
-                    type="button"
-                    onClick={() => irPara(passo + 1)}
-                    className="btn btn-primary h-11 flex-1"
-                  >
-                    Continuar
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={salvando}
-                    className="btn btn-primary h-11 flex-1"
-                  >
-                    {salvando ? 'Salvando...' : 'Finalizar'}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Todas as seções empilhadas, uma página só, com scroll natural —
+          no celular e no desktop. */}
+      <div className="space-y-8">{conteudo}</div>
+
+      {/* Espaço para a barra flutuante não cobrir o fim da página. */}
+      <div className="h-24" aria-hidden="true" />
+
+      {/* ================= Barra flutuante de salvar =========================
+          Cápsula fixa, centrada, com blur — estilo SaaS. Esquerda: o
+          aviso de rascunho; direita: Cancelar + Salvar. Aparece igual no
+          celular e no desktop; o Admin já esconde sua navegação
+          inferior quando o formulário abre. */}
+      <div className="fixed bottom-6 left-1/2 z-50 flex w-[90%] max-w-4xl -translate-x-1/2 items-center justify-between gap-3 rounded-2xl border border-neutral-700/60 bg-neutral-900/90 p-4 shadow-2xl shadow-black/80 backdrop-blur-xl">
+        <p className="hidden min-w-0 truncate text-xs font-medium text-neutral-400 sm:block">
+          Alterações não salvas
+        </p>
+        <div className="flex flex-1 items-center justify-end gap-2 sm:flex-none sm:gap-3">
+          <button
+            type="button"
+            onClick={onCancelar}
+            className="foco-painel inline-flex h-10 cursor-pointer items-center rounded-xl px-4 text-sm font-medium text-neutral-400 transition-colors hover:text-white"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={salvando}
+            className="foco-painel inline-flex h-10 cursor-pointer items-center rounded-xl bg-red-600 px-6 text-sm font-bold text-white shadow-lg shadow-red-950/60 transition-all hover:scale-[1.02] hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-8 sm:py-2.5"
+          >
+            {salvando ? 'Salvando...' : id ? 'Salvar Moto' : 'Adicionar Moto'}
+          </button>
         </div>
       </div>
-
-      {/* ================= DESKTOP: tudo visível, um cartão por seção ======== */}
-      <div className="hidden space-y-5 sm:block">{conteudo}</div>
-
-      <div className="hidden border-t border-claro/10 pt-5 sm:block">{barraAcoes}</div> /* taste-skill-ignore: painel */
     </form>
   )
 }

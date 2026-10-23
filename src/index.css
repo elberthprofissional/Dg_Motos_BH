@@ -436,55 +436,6 @@
     @apply border border-borda bg-painel;
   }
 
-  /* ============================================================
-     VITRINE DO PÁTIO
-     A ficha da moto como chapa de exposição: superfície própria,
-     borda discreta, elevação curta e zoom contido na foto. O
-     vermelho fica para o selo, o preço e o contato.
-     ============================================================ */
-  .card-vitrine {
-    @apply relative flex flex-col overflow-hidden border border-borda bg-painel;
-    transition:
-      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 0.32s ease,
-      background-color 0.32s ease;
-  }
-
-  .card-vitrine:hover {
-    border-color: var(--cor-borda-forte);
-    background-color: #141414;
-  }
-
-  .card-vitrine:focus-within {
-    border-color: var(--cor-borda-forte);
-  }
-
-  .card-vitrine img {
-    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .card-vitrine:hover {
-      transform: translateY(-4px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .card-vitrine,
-    .card-vitrine img {
-      transition: none;
-    }
-
-    .card-vitrine:hover {
-      transform: none;
-    }
-  }
-
-  /* Contorno do card: a ação secundária da vitrine. */
-  .btn-vitrine {
-    @apply bg-marca text-white hover:bg-marca-forte;
-  }
-
   /* Chip de filtro: pílula, com o estado ativo preenchido. */
   .chip-filtro {
     @apply inline-flex min-h-8 shrink-0 items-center gap-2 rounded-full border border-borda bg-painel-2 px-3 font-sans text-[13px] font-medium text-texto-2 transition-colors hover:border-borda-forte hover:text-texto;
@@ -603,8 +554,627 @@
     @apply border border-borda bg-painel;
   }
 
-  .linha-estoque {
-    @apply relative flex min-h-[5.5rem] gap-4 border border-borda bg-painel p-3 transition-colors hover:border-borda-forte sm:grid sm:min-h-0 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-5 sm:p-3;
+  /* ============================================================
+     ESTOQUE — inventário, não dashboard
+     A página é uma ficha de pátio: título curto, faixa de resumo
+     tipográfica, filtros discretos e uma tabela que se lê de cima
+     para baixo. Sem cards de KPI, sem caixa em volta de cada moto.
+     ============================================================ */
+  .estoque-pagina {
+    @apply flex flex-col;
+    gap: 20px;
+  }
+
+  .estoque-cabecalho-pagina {
+    @apply flex flex-col;
+    gap: 10px;
+  }
+
+  .estoque-titulo-linha {
+    @apply flex flex-wrap items-center justify-between;
+    gap: 12px 16px;
+  }
+
+  .estoque-h1 {
+    margin: 0;
+    color: var(--cor-texto);
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  @media (min-width: 640px) {
+    .estoque-h1 {
+      font-size: 26px;
+    }
+  }
+
+  .estoque-btn-primario {
+    @apply inline-flex shrink-0 items-center justify-center gap-2 font-semibold text-white;
+    height: 36px;
+    font-size: 13px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 2px;
+    background-color: var(--cor-marca);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .estoque-btn-primario:hover {
+    background-color: var(--cor-marca-forte);
+  }
+
+  .estoque-btn-primario:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+
+  /* Faixa de resumo: números pequenos, separados por barra. O valor
+     é a única informação empurrada para a direita. */
+  .estoque-resumo {
+    @apply flex flex-wrap items-baseline;
+    gap: 1px 0;
+    color: var(--cor-texto-3);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .estoque-resumo-total {
+    color: var(--cor-texto);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .estoque-resumo-item {
+    display: inline-flex;
+    align-items: baseline;
+    color: var(--cor-texto-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .estoque-resumo-item::before {
+    content: '/';
+    margin: 0 8px;
+    color: var(--cor-texto-3);
+    opacity: 0.45;
+  }
+
+  .estoque-resumo-valor {
+    margin-left: auto;
+    color: var(--cor-texto-2);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .estoque-resumo-valor span {
+    color: var(--cor-texto-3);
+    font-weight: 400;
+  }
+
+  /* Barra de operação: a busca manda; status e ordenação são
+     controles de apoio, com a mesma altura da busca. */
+  .estoque-operacoes {
+    @apply flex flex-wrap items-center;
+    gap: 10px 20px;
+  }
+
+  .estoque-busca-primaria {
+    flex: 1 1 260px;
+    max-width: 420px;
+  }
+
+  .estoque-busca-primaria .input {
+    height: 36px !important;
+    padding: 0 28px 0 24px !important;
+    border: 0;
+    border-bottom: 1px solid var(--cor-borda-forte);
+    border-radius: 0;
+    background-color: transparent;
+    color: var(--cor-texto);
+    font-size: 13px;
+    transition: border-color 0.15s ease;
+  }
+
+  .estoque-busca-primaria .input::placeholder {
+    color: var(--cor-texto-3);
+  }
+
+  .estoque-busca-primaria .input:focus {
+    border-bottom-color: var(--cor-marca);
+    outline: none;
+    box-shadow: none;
+  }
+
+  .estoque-busca-primaria > svg {
+    left: 0 !important;
+    width: 15px !important;
+    height: 15px !important;
+    color: var(--cor-texto-3);
+  }
+
+  .estoque-busca-primaria > button {
+    right: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    color: var(--cor-texto-3);
+    border-radius: 2px;
+  }
+
+  .estoque-operacoes-direita {
+    @apply flex flex-wrap items-center;
+    gap: 8px 14px;
+    margin-left: auto;
+  }
+
+  .estoque-select {
+    height: 36px;
+    padding: 0 20px 0 0;
+    border: 0;
+    border-bottom: 1px solid var(--cor-borda);
+    border-radius: 0;
+    background-color: transparent;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23929292' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+    background-size: 12px;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    appearance: none;
+    color-scheme: dark;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .estoque-select:hover {
+    border-bottom-color: var(--cor-borda-forte);
+    color: var(--cor-texto);
+  }
+
+  .estoque-select:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+
+  .estoque-select-ativo {
+    border-bottom-color: var(--cor-borda-forte);
+    color: var(--cor-texto);
+  }
+
+  .estoque-select option {
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto);
+  }
+
+  .estoque-contagem {
+    @apply flex items-center;
+    gap: 8px;
+    min-height: 36px;
+    color: var(--cor-texto-3);
+    font-size: 13px;
+  }
+
+  .estoque-contagem-texto {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .estoque-limpar {
+    height: 36px;
+    padding: 0 2px;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .estoque-limpar:hover {
+    color: var(--cor-texto);
+  }
+
+  /* Inventário: cabeçalho e linhas na mesma grade, sem moldura
+     externa. A única separação é a linha fina entre veículos. */
+  .estoque-inventario {
+    position: relative;
+  }
+
+  .estoque-cabecalho,
+  .estoque-linha {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px 132px 156px;
+    gap: 16px;
+  }
+
+  .estoque-cabecalho {
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--cor-borda-forte);
+    color: var(--cor-texto-3);
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 500;
+  }
+
+  .estoque-col-valor {
+    text-align: right;
+  }
+
+  .estoque-col-acoes {
+    text-align: right;
+  }
+
+  .estoque-linha {
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--cor-borda);
+    transition: background-color 0.15s ease;
+  }
+
+  .estoque-linha:last-child {
+    border-bottom: 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .estoque-linha:hover {
+      background-color: rgba(255, 255, 255, 0.022);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .estoque-cabecalho {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background-color: var(--cor-fundo);
+    }
+  }
+
+  .estoque-celula-veiculo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .estoque-foto,
+  .estoque-thumb {
+    width: 60px;
+    aspect-ratio: 4 / 5;
+    flex: none;
+    overflow: hidden;
+    border: 1px solid var(--cor-borda);
+    border-radius: 2px;
+    background-color: var(--cor-painel-2);
+  }
+
+  .estoque-thumb {
+    border: 0;
+  }
+
+  .estoque-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .estoque-veiculo-texto {
+    min-width: 0;
+  }
+
+  .estoque-nome {
+    margin: 0;
+    overflow: hidden;
+    color: var(--cor-texto);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .estoque-ficha {
+    margin: 3px 0 0;
+    overflow: hidden;
+    color: var(--cor-texto-3);
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .estoque-ficha-sep {
+    color: var(--cor-texto-3);
+    opacity: 0.55;
+  }
+
+  .estoque-celula-situacao {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .estoque-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .estoque-status-ponto {
+    width: 5px;
+    height: 5px;
+    flex: none;
+    border-radius: 50%;
+    background-color: var(--cor-texto-3);
+  }
+
+  .estoque-status-disponivel .estoque-status-ponto {
+    background-color: var(--cor-ok);
+  }
+
+  .estoque-status-indisponivel .estoque-status-ponto {
+    background-color: var(--cor-alerta);
+  }
+
+  .estoque-status-vendida {
+    color: var(--cor-texto-3);
+  }
+
+  .estoque-destaque {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cor-marca-texto);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .estoque-destaque::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+
+  .estoque-celula-valor {
+    min-width: 0;
+    text-align: right;
+  }
+
+  .estoque-preco {
+    color: var(--cor-texto);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .estoque-celula-acoes {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .estoque-acoes {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+  }
+
+  .estoque-acao {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 2px;
+    background-color: transparent;
+    color: var(--cor-texto-3);
+    cursor: pointer;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .estoque-acao:hover {
+    color: var(--cor-texto);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .estoque-acao:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 1px;
+  }
+
+  .estoque-acao-perigo:hover {
+    color: var(--cor-marca-texto);
+    background-color: rgba(229, 22, 29, 0.1);
+  }
+
+  /* Estados: erro, vazio e carregamento falam na mesma grade. */
+  .estoque-estado {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .estoque-estado-celula {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .estoque-estado-texto {
+    min-width: 0;
+  }
+
+  .estoque-estado-titulo {
+    margin: 0;
+    color: var(--cor-texto);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .estoque-estado-descricao {
+    max-width: 56ch;
+    margin: 4px 0 0;
+    color: var(--cor-texto-3);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .estoque-estado-acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cor-marca-texto);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .estoque-estado-acao:hover {
+    color: var(--cor-texto);
+  }
+
+  @media (max-width: 767px) {
+    .estoque-pagina {
+      gap: 16px;
+    }
+
+    .estoque-cabecalho-pagina {
+      gap: 8px;
+    }
+
+    .estoque-resumo {
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .estoque-resumo-valor {
+      flex-basis: 100%;
+      margin-left: 0;
+      margin-top: 2px;
+    }
+
+    .estoque-operacoes {
+      gap: 12px;
+    }
+
+    .estoque-busca-primaria {
+      flex: 1 1 100%;
+      max-width: none;
+    }
+
+    .estoque-operacoes-direita {
+      width: 100%;
+      margin-left: 0;
+      gap: 8px 12px;
+    }
+
+    .estoque-select {
+      max-width: 190px;
+    }
+
+    .estoque-contagem {
+      margin-left: auto;
+    }
+
+    .estoque-cabecalho {
+      display: none;
+    }
+
+    .estoque-linha {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'veiculo acoes'
+        'situacao acoes'
+        'valor acoes';
+      align-items: start;
+      gap: 2px 12px;
+      padding: 12px 0;
+    }
+
+    .estoque-celula-veiculo {
+      grid-area: veiculo;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .estoque-foto,
+    .estoque-thumb {
+      width: 56px;
+    }
+
+    .estoque-celula-situacao {
+      grid-area: situacao;
+      margin-top: 4px;
+      margin-left: 68px;
+    }
+
+    .estoque-celula-valor {
+      grid-area: valor;
+      margin-left: 68px;
+      text-align: left;
+    }
+
+    .estoque-celula-acoes {
+      grid-area: acoes;
+      align-self: center;
+    }
+
+    .estoque-acoes {
+      display: grid;
+      grid-template-columns: repeat(2, 40px);
+      gap: 2px;
+    }
+
+    .estoque-acao {
+      width: 40px;
+      height: 40px;
+    }
+
+    .estoque-nome {
+      font-size: 16px;
+    }
+
+    .estoque-ficha {
+      white-space: normal;
+      text-overflow: clip;
+    }
+
+    .estoque-preco {
+      font-size: 16px;
+    }
+
+    .estoque-estado-celula {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+    }
   }
 
   .painel-secao {

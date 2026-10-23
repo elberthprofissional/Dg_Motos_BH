@@ -122,8 +122,10 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
           setArrastando(false)
           void enviar(e.dataTransfer.files)
         }}
-        className={`rounded-lg border border-dashed p-6 text-center transition-colors sm:p-8 ${
-          arrastando ? 'border-brand-500 bg-brand-500/5' : 'border-claro/15 bg-night-950/40' /* taste-skill-ignore: painel */
+        className={`rounded-2xl border-2 border-dashed bg-black/40 p-6 text-center transition-all hover:border-red-600/70 hover:bg-red-950/10 sm:p-8 ${
+          arrastando
+            ? 'border-red-600 bg-red-950/20'
+            : 'border-neutral-800'
         }`}
       >
         <input
@@ -135,7 +137,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
           className="sr-only"
           id="admin-fotos"
         />
-        <div className="mx-auto grid size-12 place-items-center rounded-full bg-brand-500/10 text-brand-500">
+        <div className="mx-auto grid size-12 place-items-center rounded-full bg-red-600/10 text-red-500">
           {enviando ? (
             <Loader2 className="size-6 animate-spin" aria-hidden="true" />
           ) : (
@@ -160,7 +162,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
       </div>
 
       {erro && (
-        <p role="alert" className="mt-2 text-xs text-brand-500">
+        <p role="alert" className="mt-2 text-xs text-red-400">
           {erro}
         </p>
       )}
@@ -172,10 +174,10 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
               <img
                 src={foto.src}
                 alt={foto.alt || `Foto ${i + 1}`}
-                className="aspect-[4/3] w-full rounded border border-claro/10 object-cover" /* taste-skill-ignore: painel */
+                className="aspect-[4/3] w-full rounded-lg border border-neutral-800 object-cover"
               />
               {i === 0 && (
-                <span className="absolute top-1 left-1 rounded bg-brand-500 px-1.5 py-0.5 text-micro font-semibold tracking-wide text-white uppercase">
+                <span className="absolute top-1 left-1 rounded-md bg-red-600 px-1.5 py-0.5 text-micro font-semibold tracking-wide text-white uppercase">
                   Capa
                 </span>
               )}
@@ -183,7 +185,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
                 type="button"
                 onClick={() => remover(i)}
                 aria-label={`Remover foto ${i + 1}`}
-                className="absolute right-1 bottom-1 grid size-9 place-items-center rounded bg-night-950/90 text-steel-300 transition-colors hover:text-brand-500 sm:size-7"
+                className="absolute right-1 bottom-1 grid size-9 place-items-center rounded-lg bg-black/80 text-neutral-300 backdrop-blur transition-colors hover:text-red-500 sm:size-7"
               >
                 <Trash2 className="size-3.5" aria-hidden="true" />
               </button>
@@ -194,7 +196,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
                   onChange(fotos.map((f, j) => (j === i ? { ...f, alt: e.target.value } : f)))
                 }
                 placeholder="Descreva a foto"
-                className="mt-1 w-full rounded border border-claro/10 bg-night-950 px-2 py-1 text-etiqueta text-steel-300 placeholder:text-steel-600" /* taste-skill-ignore: painel */
+                className="mt-1 w-full rounded-lg border border-neutral-800 bg-black/60 px-2 py-1 text-etiqueta text-neutral-300 placeholder:text-neutral-600 transition-colors focus:border-red-600/60 focus:outline-none"
               />
             </li>
           ))}

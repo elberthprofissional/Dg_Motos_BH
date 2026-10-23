@@ -2,122 +2,100 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArchiveRestore,
-  BadgeCheck,
-  ChevronDown,
+  CircleDollarSign,
   Eye,
   Pencil,
   Plus,
-  SlidersHorizontal,
-  Star,
+  RotateCw,
   Trash2,
 } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
 import { motoParaFormulario } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
-import { filtrarEstoque } from '../../lib/painel'
+import { filtrarEstoque, resumirEstoque } from '../../lib/painel'
 import type { FiltroEstoque } from '../../lib/painel'
 import { formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
-import { Badge } from '../ui/Badge'
-import type { VarianteBadge } from '../ui/Badge'
 import { CampoBusca } from '../ui/CampoBusca'
-import { EstadoVazio } from '../ui/EstadoVazio'
-import { EsqueletoLinha } from '../ui/Esqueleto'
+import { Esqueleto } from '../ui/Esqueleto'
 import { MotoForm } from './MotoForm'
 
-/**
- * Status da moto no estoque.
- *
- * `disponivel` é o único estado positivo. `indisponivel` é um estado
- * temporário (âmbar, alerta leve): a moto existe mas não pode ser vendida
- * agora. `vendida` é histórica: some do site e continua no painel para o
- * dono consultar ou reativar.
- */
-const STATUS: Record<MotorcycleStatus, { rotulo: string; variante: VarianteBadge; margem: string }> = {
-  disponivel: { rotulo: 'Disponível', variante: 'ok', margem: 'bg-ok' },
-  indisponivel: { rotulo: 'Indisponível', variante: 'atencao', margem: 'bg-warn' },
-  vendida: { rotulo: 'Vendida', variante: 'apagado', margem: 'bg-claro/20' },
-}
-
 const FILTROS: { valor: FiltroEstoque['status']; rotulo: string }[] = [
-  { valor: 'todas', rotulo: 'Todos os status' },
+  { valor: 'todas', rotulo: 'Todas as situações' },
   { valor: 'disponivel', rotulo: 'Disponíveis' },
   { valor: 'indisponivel', rotulo: 'Indisponíveis' },
   { valor: 'vendida', rotulo: 'Vendidas' },
 ]
 
-/**
- * ============================================================
- * FILTROS: área compacta no celular
- * ============================================================
- * A busca fica sempre visível — é o filtro que o dono usa 90% das vezes
- * e precisa estar a um toque. O select de status vai para dentro de um
- * painel expansível: ele é usado com menos frequência, e aberto por
- * padrão ocupava uma linha inteira da tela de 320px.
- *
- * O botão mostra o status ativo dentro do rótulo, então um filtro aplicado
- * continua visível mesmo com o painel fechado — o que a versão anterior
- * não garantia.
- */
-function PainelFiltros({
-  status,
-  onStatus,
-}: {
-  status: FiltroEstoque['status']
-  onStatus: (v: FiltroEstoque['status']) => void
-}) {
-  const [aberto, setAberto] = useState(false)
-  const rotulo = FILTROS.find((f) => f.valor === status)?.rotulo ?? 'Todos os status'
-  const filtrando = status !== 'todas'
+type OrdemEstoque = 'padrao' | 'preco-desc' | 'preco-asc' | 'ano-desc'
 
+const ORDENS: { valor: OrdemEstoque; rotulo: string }[] = [
+  { valor: 'padrao', rotulo: 'Ordem padrão' },
+  { valor: 'preco-desc', rotulo: 'Maior preço' },
+  { valor: 'preco-asc', rotulo: 'Menor preço' },
+  { valor: 'ano-desc', rotulo: 'Mais novo' },
+]
+
+const STATUS_ROTULO: Record<MotorcycleStatus, string> = {
+  disponivel: 'Disponível',
+  indisponivel: 'Indisponível',
+  vendida: 'Vendida',
+}
+
+function doisDigitos(valor: number): string {
+  return String(valor).padStart(2, '0')
+}
+
+function ordenarEstoque(motos: Motorcycle[], ordem: OrdemEstoque): Motorcycle[] {
+  if (ordem === 'preco-desc') return [...motos].sort((a, b) => b.preco - a.preco)
+  if (ordem === 'preco-asc') return [...motos].sort((a, b) => a.preco - b.preco)
+  if (ordem === 'ano-desc') return [...motos].sort((a, b) => b.ano - a.ano)
+  return [...motos].sort(
+    (a, b) =>
+      Number(b.destaque) - Number(a.destaque) ||
+      b.ano - a.ano ||
+      a.modelo.localeCompare(b.modelo, 'pt-BR'),
+  )
+}
+
+function fichaTecnica(moto: Motorcycle): string[] {
+  const itens = [String(moto.ano), moto.categoria]
+  if (moto.cilindrada != null) itens.push(`${moto.cilindrada} cc`)
+  if (moto.quilometragem != null) itens.push(formatKm(moto.quilometragem))
+  return itens
+}
+
+function EsqueletoEstoque() {
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setAberto((v) => !v)}
-        aria-expanded={aberto}
-        aria-controls="estoque-filtros"
-        className={`foco-painel flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 text-sm transition-colors ${
-          filtrando
-            ? 'border-brand-500/40 bg-brand-500/5 text-brand-500'
-            : 'border-line-forte bg-night-800 text-steel-300' /* taste-skill-ignore: painel */
-        }`}
-      >
-        <span className="flex min-w-0 items-center gap-2">
-          <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
-          <span className="truncate">{filtrando ? rotulo : 'Filtrar por status'}</span>
-        </span>
-        <ChevronDown
-          aria-hidden="true"
-          className={`size-4 shrink-0 transition-transform ${aberto ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      {aberto && (
-        <div id="estoque-filtros" className="animate-fade mt-2">
-          <select
-            value={status}
-            onChange={(e) => {
-              onStatus(e.target.value as FiltroEstoque['status'])
-              setAberto(false)
-            }}
-            aria-label="Filtrar por status"
-            className="select h-11"
-          >
-            {FILTROS.map((f) => (
-              <option key={f.valor} value={f.valor}>
-                {f.rotulo}
-              </option>
-            ))}
-          </select>
+    <>
+      {Array.from({ length: 4 }, (_, i) => (
+        <div key={i} className="estoque-linha" role="row" aria-busy="true">
+          <span className="sr-only">Carregando veículo</span>
+          <div className="estoque-celula-veiculo" role="cell">
+            <Esqueleto className="estoque-thumb" />
+            <div className="min-w-0 flex-1">
+              <Esqueleto className="h-3.5 w-2/5" />
+              <Esqueleto className="mt-2 h-3 w-3/5" />
+            </div>
+          </div>
+          <div className="estoque-celula-situacao" role="cell">
+            <Esqueleto className="h-3 w-20" />
+          </div>
+          <div className="estoque-celula-valor" role="cell">
+            <Esqueleto className="h-3.5 w-24" />
+          </div>
+          <div className="estoque-celula-acoes" role="cell">
+            <Esqueleto className="h-8 w-32" />
+          </div>
         </div>
-      )}
-    </div>
+      ))}
+    </>
   )
 }
 
 export function EstoqueTab({
   motos,
+  erro,
   busca,
   onBusca,
   editando,
@@ -125,26 +103,45 @@ export function EstoqueTab({
   onPedirExclusao,
   onAlterarStatus,
   onSalva,
+  onRecarregar,
 }: {
   motos: Motorcycle[] | null
+  erro: string | null
   busca: string
   onBusca: (valor: string) => void
   editando: { id?: string; dados?: MotoParaSalvar } | null
   onEditando: (v: { id?: string; dados?: MotoParaSalvar } | null) => void
   onPedirExclusao: (moto: Motorcycle) => void
   onAlterarStatus: (moto: Motorcycle, status: MotorcycleStatus) => void
-  /** Chamado após o formulário salvar: fecha a edição e recarrega a lista. */
   onSalva: () => void
+  onRecarregar: () => void
 }) {
   const [status, setStatus] = useState<FiltroEstoque['status']>('todas')
+  const [ordem, setOrdem] = useState<OrdemEstoque>('padrao')
 
-  const visiveis = useMemo(
-    () => (motos === null ? [] : filtrarEstoque(motos, { busca, status })),
-    [motos, busca, status],
-  )
+  const visiveis = useMemo(() => {
+    if (motos === null) return []
+    return ordenarEstoque(filtrarEstoque(motos, { busca, status }), ordem)
+  }, [motos, busca, status, ordem])
+
   const filtrando = busca.trim() !== '' || status !== 'todas'
+  const ajustado = filtrando || ordem !== 'padrao'
+  const erroAtivo = erro !== null
 
-  /* ---------------------------- Formulário ---------------------------- */
+  const resumo = useMemo(
+    () => (motos === null || erroAtivo ? null : resumirEstoque(motos)),
+    [motos, erroAtivo],
+  )
+  const emDestaque = useMemo(
+    () => (motos === null ? 0 : motos.filter((m) => m.destaque && m.status === 'disponivel').length),
+    [motos],
+  )
+
+  function limpar() {
+    onBusca('')
+    setStatus('todas')
+    setOrdem('padrao')
+  }
 
   if (editando) {
     return (
@@ -159,43 +156,67 @@ export function EstoqueTab({
     )
   }
 
-  /* ----------------------------- Listagem ----------------------------- */
-
-  const contagem =
-    motos === null
-      ? 'Carregando…'
-      : filtrando
-        ? `${visiveis.length} de ${motos.length} ${motos.length === 1 ? 'moto' : 'motos'}`
-        : `${motos.length} ${motos.length === 1 ? 'moto cadastrada' : 'motos cadastradas'}`
+  const total = motos === null ? 0 : motos.length
+  const vistos = visiveis.length
+  const contagem = erroAtivo || motos === null ? '' : filtrando ? `${doisDigitos(vistos)} de ${doisDigitos(total)}` : doisDigitos(total)
+  const unidadeContagem = filtrando ? (vistos === 1 ? 'veículo' : 'veículos') : total === 1 ? 'veículo' : 'veículos'
 
   return (
-    <div className="space-y-5">
-      {/* Cabeçalho: título e contagem à esquerda, controles à direita.
-          Uma barra só, o título aparece aqui — a topbar não repete. */}
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="min-w-0">
-          <h2 className="painel-h1">Estoque</h2>
-          <p className="mt-1.5 text-sm text-steel-500" aria-live="polite">
-            {contagem}
-          </p>
+    <div className="estoque-pagina">
+      <header className="estoque-cabecalho-pagina">
+        <div className="estoque-titulo-linha">
+          <h1 className="estoque-h1">Estoque de motocicletas</h1>
+          <button type="button" onClick={() => onEditando({})} className="estoque-btn-primario">
+            <Plus className="size-4" strokeWidth={2.2} aria-hidden="true" />
+            Cadastrar moto
+          </button>
         </div>
 
-        {/* Controles. No celular empilham (busca, filtro expansível,
-            botão); do sm em diante ficam em linha, com o botão fechando
-            à direita como ação primária. */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <CampoBusca
-            value={busca}
-            onChange={onBusca}
-            placeholder="Buscar por marca, modelo ou ano"
-            rotulo="Buscar no estoque"
-            className="h-10 sm:w-72"
-          />
+        <div className="estoque-resumo" aria-live="polite">
+          {erroAtivo ? (
+            <span className="estoque-resumo-total">Estoque indisponível</span>
+          ) : motos === null ? (
+            <span className="estoque-resumo-total">Carregando inventário…</span>
+          ) : resumo ? (
+            <>
+              <span className="estoque-resumo-total">
+                {doisDigitos(total)} {total === 1 ? 'veículo no inventário' : 'veículos no inventário'}
+              </span>
+              <span className="estoque-resumo-item">
+                {doisDigitos(resumo.disponiveis)} {resumo.disponiveis === 1 ? 'disponível' : 'disponíveis'}
+              </span>
+              <span className="estoque-resumo-item">
+                {doisDigitos(emDestaque)} em destaque
+              </span>
+              <span className="estoque-resumo-item">
+                {doisDigitos(resumo.indisponiveis)} {resumo.indisponiveis === 1 ? 'indisponível' : 'indisponíveis'}
+              </span>
+              <span className="estoque-resumo-item">
+                {doisDigitos(resumo.vendidas)} {resumo.vendidas === 1 ? 'vendido' : 'vendidos'}
+              </span>
+              <span className="estoque-resumo-valor">
+                {formatPrice(resumo.valorEmEstoque)} <span>em estoque</span>
+              </span>
+            </>
+          ) : null}
+        </div>
+      </header>
+
+      <div className="estoque-operacoes">
+        <CampoBusca
+          value={busca}
+          onChange={onBusca}
+          placeholder="Buscar por marca, modelo ou ano"
+          rotulo="Buscar no estoque"
+          className="estoque-busca-primaria"
+        />
+
+        <div className="estoque-operacoes-direita">
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as FiltroEstoque['status'])}
-            aria-label="Filtrar por status"
-            className="select hidden h-10 sm:block sm:w-40"
+            aria-label="Filtrar por situação"
+            className={`estoque-select ${status !== 'todas' ? 'estoque-select-ativo' : ''}`}
           >
             {FILTROS.map((f) => (
               <option key={f.valor} value={f.valor}>
@@ -203,235 +224,203 @@ export function EstoqueTab({
               </option>
             ))}
           </select>
-          {/* No celular o filtro de status vira um painel expansível, para
-              não tomar uma linha inteira num campo pouco usado. */}
-          <div className="sm:hidden">
-            <PainelFiltros status={status} onStatus={setStatus} />
-          </div>
-          <button
-            type="button"
-            onClick={() => onEditando({})}
-            className="btn btn-primary h-10 max-sm:w-full"
+
+          <select
+            value={ordem}
+            onChange={(e) => setOrdem(e.target.value as OrdemEstoque)}
+            aria-label="Ordenar inventário"
+            className={`estoque-select ${ordem !== 'padrao' ? 'estoque-select-ativo' : ''}`}
           >
-            <Plus className="size-4" aria-hidden="true" />
-            Nova moto
-          </button>
-        </div>
-      </header>
+            {ORDENS.map((o) => (
+              <option key={o.valor} value={o.valor}>
+                {o.rotulo}
+              </option>
+            ))}
+          </select>
 
-      {motos === null ? (
-        <EsqueletoLinha />
-      ) : visiveis.length === 0 ? (
-        filtrando ? (
-          <EstadoVazio
-            compacto
-            titulo="Nenhuma moto encontrada"
-            descricao="Nenhum cadastro bate com a busca ou o status selecionado. Ajuste os filtros para ver o restante do estoque."
-            acao={
-              <button
-                type="button"
-                onClick={() => {
-                  onBusca('')
-                  setStatus('todas')
-                }}
-                className="btn btn-secondary btn-sm"
-              >
-                Limpar filtros
+          <div className="estoque-contagem" aria-live="polite">
+            {contagem ? (
+              <span className="estoque-contagem-texto">
+                {contagem} {unidadeContagem}
+              </span>
+            ) : null}
+            {ajustado ? (
+              <button type="button" onClick={limpar} className="estoque-limpar">
+                Limpar
               </button>
-            }
-          />
-        ) : (
-          <div className="flex min-h-[45vh] items-center justify-center">
-            <EstadoVazio compacto titulo="Nenhuma moto no estoque" />
+            ) : null}
           </div>
-        )
-      ) : (
-        /* ============================================================
-         * Lista de estoque — uma linha por moto
-         * ============================================================
-         * Desktop: miniatura · identificação · preço · ações, tudo na
-         * mesma linha; o preço fica numa coluna larga o bastante para
-         * alinhar valores de 4 e 5 dígitos.
-         *
-         * Celular: a identificação fica em cima e o preço desce para uma
-         * faixa própria junto das ações, com alvo de toque de 44px — o de
-         * excluir é irreversível e não pode dividir espaço com o preço.
-         * ============================================================ */
-        <ul className="space-y-2.5 sm:space-y-2">
-          {visiveis.map((moto) => {
-            const selo = STATUS[moto.status]
+        </div>
+      </div>
+
+      <div
+        className="estoque-inventario"
+        role="table"
+        aria-label="Inventário de motocicletas"
+        aria-busy={motos === null}
+      >
+        <div className="estoque-cabecalho" role="row">
+          <span role="columnheader">Veículo</span>
+          <span role="columnheader" className="estoque-col-situacao">
+            Situação
+          </span>
+          <span role="columnheader" className="estoque-col-valor">
+            Valor
+          </span>
+          <span role="columnheader" className="estoque-col-acoes">
+            Ações
+          </span>
+        </div>
+
+        {erroAtivo ? (
+          <div className="estoque-estado" role="row">
+            <div className="estoque-estado-celula" role="cell">
+              <div className="estoque-estado-texto">
+                <p className="estoque-estado-titulo">Não foi possível carregar o estoque</p>
+                <p className="estoque-estado-descricao">{erro}</p>
+              </div>
+              <button type="button" onClick={onRecarregar} className="estoque-estado-acao">
+                <RotateCw className="size-3.5" aria-hidden="true" />
+                Tentar novamente
+              </button>
+            </div>
+          </div>
+        ) : motos === null ? (
+          <EsqueletoEstoque />
+        ) : visiveis.length === 0 ? (
+          <div className="estoque-estado" role="row">
+            <div className="estoque-estado-celula" role="cell">
+              <div className="estoque-estado-texto">
+                <p className="estoque-estado-titulo">
+                  {filtrando ? 'Nenhuma moto encontrada' : 'Nenhum veículo no inventário'}
+                </p>
+                <p className="estoque-estado-descricao">
+                  {filtrando
+                    ? 'A busca e a situação selecionada não retornaram nenhum veículo.'
+                    : 'Cadastre a primeira moto para iniciar o inventário da loja.'}
+                </p>
+              </div>
+              {filtrando ? (
+                <button type="button" onClick={limpar} className="estoque-estado-acao">
+                  Limpar filtros
+                </button>
+              ) : (
+                <button type="button" onClick={() => onEditando({})} className="estoque-estado-acao">
+                  <Plus className="size-3.5" aria-hidden="true" />
+                  Cadastrar moto
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          visiveis.map((moto) => {
+            const ficha = fichaTecnica(moto)
+            const vendida = moto.status === 'vendida'
             return (
-              <li key={moto.id} className="linha-estoque">
-                {/* Indicador de status: um fio de cor na borda esquerda,
-                    redundante com o badge — nunca só cor. */}
-                <span
-                  aria-hidden="true"
-                  className={`absolute top-3 bottom-3 left-0 w-[3px] rounded-full ${selo.margem}`}
-                />
-
-                {/* Miniatura. Não é link: o botão "ver" ao lado é o único
-                    alvo para abrir a ficha (dois alvos para a mesma ação
-                    confundem a ordem de tabulação). Moldura em grafite
-                    (um anel interno escuro) em vez de borda clara — a
-                    foto parece encaixada, não emoldurada. */}
-                <img
-                  src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
-                  alt=""
-                  loading="lazy"
-                  className="h-[4.5rem] w-24 shrink-0 rounded-lg object-cover ring-1 ring-inset ring-claro/[0.06] sm:h-[5.25rem] sm:w-full"
-                />
-
-                <div className="flex min-w-0 flex-1 flex-col sm:flex-none">
-                  <h3 className="truncate text-sm font-semibold tracking-[-0.01em] text-paper">
-                    {moto.marca} {moto.modelo}
-                  </h3>
-
-                  {/* Linha técnica: ano primeiro, em tabular-nums, seguido
-                      dos dados — todos num só tom secundário. O ano fica
-                      aqui (não na linha do nome) porque é detalhe, não
-                      título: assim o nome carrega sozinho a hierarquia. */}
-                  <p className="mt-1 truncate text-xs text-steel-500">
-                    <span className="tabular-nums">{moto.ano}</span>
-                    {' · '}
-                    {moto.categoria}
-                    {moto.cilindrada ? ` · ${moto.cilindrada} cc` : ''} · {formatKm(moto.quilometragem)}
-                  </p>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    <Badge variante={selo.variante} ponto>
-                      {selo.rotulo}
-                    </Badge>
-                    {moto.destaque && (
-                      <Badge variante="marca">
-                        <Star className="size-3" aria-hidden="true" />
-                        Destaque
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Celular: preço e ações numa faixa própria, separada
-                      por um fio. O preço ganha destaque; as ações ficam
-                      à direita. */}
-                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 sm:hidden"> /* taste-skill-ignore: painel */
-                    <p className="valor-moeda text-lg font-semibold text-paper">
-                      {formatPrice(moto.preco)}
-                    </p>
-                    <AcoesMoto
-                      moto={moto}
-                      onPedirExclusao={onPedirExclusao}
-                      onEditando={onEditando}
-                      onAlterarStatus={onAlterarStatus}
+              <div key={moto.id} className="estoque-linha" role="row">
+                <div className="estoque-celula-veiculo" role="cell">
+                  <div className="estoque-foto">
+                    <img
+                      src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null
+                        e.currentTarget.src = PLACEHOLDER_CARD
+                      }}
                     />
                   </div>
+                  <div className="estoque-veiculo-texto">
+                    <p className="estoque-nome" title={`${moto.marca} ${moto.modelo}`}>
+                      {moto.marca} {moto.modelo}
+                    </p>
+                    <p className="estoque-ficha">
+                      {ficha.map((item, i) => (
+                        <span key={i}>
+                          {item}
+                          {i < ficha.length - 1 ? (
+                            <>
+                              {' '}
+                              <span className="estoque-ficha-sep" aria-hidden="true">
+                                ·
+                              </span>{' '}
+                            </>
+                          ) : null}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Desktop: preço como coluna alinhada à direita, e as
-                    ações numa fileira à parte, separadas por um fio
-                    vertical — três zonas, sem virar três caixas. Largura
-                    fixa no preço para os valores caírem todos na mesma
-                    vertical, com o "R$" alinhado. */}
-                <div className="hidden shrink-0 items-center gap-4 sm:flex">
-                  <p className="valor-moeda w-28 text-right text-base font-semibold text-paper">
-                    {formatPrice(moto.preco)}
-                  </p>
-                  <span aria-hidden="true" className="h-9 w-px bg-line" /> /* taste-skill-ignore: painel */
-                  <AcoesMoto
-                    moto={moto}
-                    onPedirExclusao={onPedirExclusao}
-                    onEditando={onEditando}
-                    onAlterarStatus={onAlterarStatus}
-                  />
+                <div className="estoque-celula-situacao" role="cell">
+                  <span className={`estoque-status estoque-status-${moto.status}`}>
+                    <span className="estoque-status-ponto" aria-hidden="true" />
+                    {STATUS_ROTULO[moto.status]}
+                  </span>
+                  {moto.destaque && moto.status === 'disponivel' ? (
+                    <span className="estoque-destaque">Destaque</span>
+                  ) : null}
                 </div>
-              </li>
+
+                <div className="estoque-celula-valor" role="cell">
+                  <span className="estoque-preco">{formatPrice(moto.preco)}</span>
+                </div>
+
+                <div className="estoque-celula-acoes" role="cell">
+                  <div className="estoque-acoes">
+                    <button
+                      type="button"
+                      onClick={() => onAlterarStatus(moto, vendida ? 'disponivel' : 'vendida')}
+                      className="estoque-acao"
+                      aria-label={
+                        vendida
+                          ? `Reativar ${moto.marca} ${moto.modelo}`
+                          : `Marcar ${moto.marca} ${moto.modelo} como vendida`
+                      }
+                      title={vendida ? 'Reativar' : 'Marcar como vendida'}
+                    >
+                      {vendida ? (
+                        <ArchiveRestore className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                      ) : (
+                        <CircleDollarSign className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                      )}
+                    </button>
+                    <Link
+                      to={`/moto/${moto.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="estoque-acao"
+                      aria-label={`Ver ${moto.marca} ${moto.modelo} no site`}
+                      title="Ver no site"
+                    >
+                      <Eye className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => onEditando({ id: moto.id, dados: motoParaFormulario(moto) })}
+                      className="estoque-acao"
+                      aria-label={`Editar ${moto.marca} ${moto.modelo}`}
+                      title="Editar"
+                    >
+                      <Pencil className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onPedirExclusao(moto)}
+                      className="estoque-acao estoque-acao-perigo"
+                      aria-label={`Excluir ${moto.marca} ${moto.modelo}`}
+                      title="Excluir"
+                    >
+                      <Trash2 className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             )
-          })}
-        </ul>
-      )}
-
-      {motos !== null && visiveis.length > 0 && (
-        <p className="text-xs text-steel-600">
-          Exibindo {visiveis.length} de {motos.length} {motos.length === 1 ? 'moto' : 'motos'}.{' '}
-          <span className="hidden sm:inline">
-            Use o filtro de status para incluir as vendidas no resultado.
-          </span>
-        </p>
-      )}
-    </div>
-  )
-}
-
-/**
- * Ver / editar / excluir.
- *
- * Extraído do mapa porque o mesmo conjunto aparece em dois lugares do
- * card (rodapé no celular, coluna à direita no desktop) e são exatamente
- * as ações que o Criterio de aceitação proíbe remover.
- *
- * No celular os botões são `size-10` (40px) + `toque-minimo`, chegando
- * aos 44px de alvo. No desktop voltam a `size-9` (36px), que é a
- * densidade certa para uso com mouse. Cada um traz `title` e
- * `aria-label` — o ícone sozinho não basta para o dono saber a função.
- */
-function AcoesMoto({
-  moto,
-  onPedirExclusao,
-  onEditando,
-  onAlterarStatus,
-}: {
-  moto: Motorcycle
-  onPedirExclusao: (moto: Motorcycle) => void
-  onEditando: (v: { id?: string; dados?: MotoParaSalvar }) => void
-  onAlterarStatus: (moto: Motorcycle, status: MotorcycleStatus) => void
-}) {
-  const tamanho = 'size-10 toque-minimo sm:size-9'
-  // Vender/reativar alterna entre os dois estados comerciais. Um botão só,
-  // com rótulo explícito, para não empilhar ação demais no card.
-  const vendida = moto.status === 'vendida'
-  return (
-    <div className="flex shrink-0 items-center gap-1.5">
-      <button
-        type="button"
-        onClick={() => onAlterarStatus(moto, vendida ? 'disponivel' : 'vendida')}
-        className={`foco-painel btn btn-icone ${tamanho}`}
-        aria-label={
-          vendida
-            ? `Reativar ${moto.modelo} (disponível para venda)`
-            : `Marcar ${moto.modelo} como vendida`
-        }
-        title={vendida ? 'Reativar' : 'Marcar como vendida'}
-      >
-        {vendida ? (
-          <ArchiveRestore className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
-        ) : (
-          <BadgeCheck className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
+          })
         )}
-      </button>
-      <Link
-        to={`/moto/${moto.slug}`}
-        className={`foco-painel btn btn-icone ${tamanho}`}
-        aria-label={`Ver ${moto.modelo} no site`}
-        title="Ver no site"
-      >
-        <Eye className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
-      </Link>
-      <button
-        type="button"
-        onClick={() => onEditando({ id: moto.id, dados: motoParaFormulario(moto) })}
-        className={`foco-painel btn btn-icone ${tamanho}`}
-        aria-label={`Editar ${moto.modelo}`}
-        title="Editar"
-      >
-        <Pencil className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        onClick={() => onPedirExclusao(moto)}
-        className={`foco-painel btn btn-icone btn-icone-perigo ${tamanho}`}
-        aria-label={`Excluir ${moto.modelo}`}
-        title="Excluir"
-      >
-        <Trash2 className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
-      </button>
+      </div>
     </div>
   )
 }

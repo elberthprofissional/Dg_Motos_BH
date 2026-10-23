@@ -5,6 +5,7 @@ import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { buildMapsRouteUrl } from '../../lib/maps'
 import { InstagramIcon } from '../ui/InstagramIcon'
+import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 
 const NAV = [
   { to: '/', label: 'Página inicial' },
@@ -20,69 +21,96 @@ export function Footer() {
   const ano = ANO_ATUAL
 
   return (
-    <footer className="border-t border-borda bg-painel">
-      <div className="container-site py-10">
-        <div className="flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-10">
-            <nav aria-label="Navegação do rodapé" className="flex flex-col gap-2">
-              {NAV.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className="inline-flex min-h-6 items-center text-sm text-texto-2 transition-colors hover:text-texto"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+    <footer className="bg-painel">
+      <div className="container-site py-12">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+          <div className="sm:col-span-2 lg:col-span-5">
+            <Link
+              to="/"
+              aria-label="DG Motos — Página inicial"
+              className="inline-flex items-center gap-3"
+            >
+              <img
+                src="/logo.webp"
+                alt=""
+                width={36}
+                height={36}
+                className="size-9 object-contain"
+              />
+              <span className="font-display text-lg leading-none font-bold tracking-[0.04em] text-texto">
+                DG Motos
+              </span>
+            </Link>
 
-            <div className="flex flex-col gap-2">
-              {wa ? (
-                <a
-                  href={wa}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-6 items-center gap-1.5 text-sm text-texto-2 transition-colors hover:text-texto"
-                >
-                  <span>WhatsApp</span>
-                  <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                </a>
-              ) : null}
+            <address className="mt-5 text-sm leading-relaxed text-texto-2 not-italic">
+              <p className="text-texto">{config.enderecoRua}</p>
+              <p className="mt-1">{config.enderecoCidadeUf}</p>
+            </address>
+          </div>
+
+          <nav
+            aria-label="Navegação do rodapé"
+            className="flex flex-col items-start gap-1 lg:col-span-3"
+          >
+            {NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="inline-flex min-h-8 items-center text-sm text-texto-2 transition-colors hover:text-texto"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex flex-col items-start gap-1 lg:col-span-4">
+            {wa ? (
               <a
-                href={buildMapsRouteUrl(config)}
+                href={wa}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-6 items-center gap-1.5 text-sm text-texto-2 transition-colors hover:text-texto"
+                className="inline-flex min-h-8 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto"
               >
-                <span>Traçar rota</span>
-                <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                <IconeWhatsapp className="size-4 shrink-0" />
+                <span>WhatsApp</span>
+                <ArrowUpRight className="size-3.5 text-texto-3" aria-hidden="true" />
               </a>
-              {config.instagramUrl ? (
-                <a
-                  href={config.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-6 items-center gap-1.5 text-sm text-texto-2 transition-colors hover:text-texto"
-                >
-                  <InstagramIcon className="size-4" aria-hidden="true" />
-                  <span>{config.instagramHandle}</span>
-                  <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                </a>
-              ) : null}
-            </div>
+            ) : null}
 
-            <address className="not-italic">
-              <p className="text-sm text-texto">{config.enderecoRua}</p>
-              <p className="mt-1 text-sm text-texto-2">{config.enderecoCidadeUf}</p>
-            </address>
+            <a
+              href={buildMapsRouteUrl(config)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-8 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto"
+            >
+              <span>Traçar rota</span>
+              <ArrowUpRight className="size-3.5 text-texto-3" aria-hidden="true" />
+            </a>
+
+            {config.instagramUrl ? (
+              <a
+                href={config.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-8 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto"
+              >
+                <InstagramIcon className="size-4 shrink-0" aria-hidden="true" />
+                <span>{config.instagramHandle}</span>
+                <ArrowUpRight className="size-3.5 text-texto-3" aria-hidden="true" />
+              </a>
+            ) : null}
+          </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-start justify-between gap-3 border-t border-borda pt-6 text-texto-3 sm:flex-row sm:items-center">
-          <p className="text-xs">© {ano} DG Motos — Belo Horizonte, MG.</p>
+        <div className="mt-12 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <p className="text-[13px] text-texto-3">
+            © {ano} DG Motos — Belo Horizonte, MG.
+          </p>
           <Link
             to="/admin"
-            className="inline-flex min-h-6 items-center gap-1.5 text-xs transition-colors hover:text-texto-2"
+            className="inline-flex min-h-6 items-center gap-1.5 text-[13px] text-texto-3 transition-colors hover:text-texto-2"
           >
-            <Lock className="size-3" aria-hidden="true" />
+            <Lock className="size-3.5" aria-hidden="true" />
             <span>Acesso restrito</span>
           </Link>
         </div>

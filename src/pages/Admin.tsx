@@ -2,13 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
-  ExternalLink,
   Settings,
   LogOut,
   Package,
 } from 'lucide-react'
 import { atualizarStatus, buscarCatalogo, excluirMoto } from '../lib/catalog'
-import type { MotoParaSalvar } from '../lib/catalog'
+import type { MotoParaSalvar, ResultadoCatalogo } from '../lib/catalog'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
 import { EstoqueTab } from '../components/admin/EstoqueTab'
@@ -44,6 +43,7 @@ export function Admin() {
   const [aba, setAba] = useState<Aba>('estoque')
   const [busca, setBusca] = useState('')
   const [motos, setMotos] = useState<Motorcycle[] | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
   const [editando, setEditando] = useState<{ id?: string; dados?: MotoParaSalvar } | null>(null)
   const [confirmacao, setConfirmacao] = useState<PedidoConfirmacao | null>(null)
   const [excluindo, setExcluindo] = useState(false)
@@ -51,20 +51,29 @@ export function Admin() {
 
   usePageMeta('Painel | DG Motos', 'Área restrita do proprietário.')
 
-  const recarregar = useCallback(async () => {
-    const r = await buscarCatalogo()
+  const aplicarResultado = useCallback((r: ResultadoCatalogo) => {
+    if (!r.doBanco) {
+      setErro(r.erro ?? 'Não foi possível carregar o estoque.')
+      setMotos(null)
+      return
+    }
+    setErro(null)
     setMotos(r.motos)
   }, [])
+
+  const recarregar = useCallback(async () => {
+    aplicarResultado(await buscarCatalogo())
+  }, [aplicarResultado])
 
   useEffect(() => {
     let vivo = true
     void buscarCatalogo().then((r) => {
-      if (vivo) setMotos(r.motos)
+      if (vivo) aplicarResultado(r)
     })
     return () => {
       vivo = false
     }
-  }, [])
+  }, [aplicarResultado])
 
   function avisar(novo: Feedback) {
     setFeedback(novo)
@@ -138,6 +147,14 @@ export function Admin() {
   }
 
   const rotuloAba = ABAS.find((a) => a.id === aba)?.rotulo ?? 'Painel'
+  const tituloTopbar = editando
+    ? editando.id
+      ? 'Editar moto'
+      : 'Nova moto'
+    : aba === 'configuracoes'
+      ? rotuloAba
+      : ''
+  const topbarSemContexto = aba === 'estoque' && !editando
 
   return (
     <div className="flex min-h-dvh bg-fundo" data-tema="painel">
@@ -146,12 +163,12 @@ export function Admin() {
       {/* inferior fixa (mais abaixo).                                  */}
       {/* ---------------------------------------------------------- */}
       <aside
-        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-sidebar lg:flex /* taste-skill-ignore: painel */"
+        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-sidebar lg:flex"
         aria-label="Menu do painel"
       >
-        {/* Marca: logo + wordmark. O fio vermelho é curto e sólido — a
-            assinatura da casa, não um gradiente decorativo. */}
-        <div className="flex h-[4.5rem] shrink-0 items-center gap-3 border-b border-line px-5 /* taste-skill-ignore: painel */">
+        {/* Marca: logo + wordmark, sem ornamento — o vermelho do painel
+            fica para os itens ativos e para o que é ação. */}
+        <div className="flex h-[4.5rem] shrink-0 items-center gap-3 border-b border-line px-5">
           <Link
             to="/"
             aria-label="DG Motos — ver o site"
@@ -160,16 +177,8 @@ export function Admin() {
             <span className="relative grid size-9 shrink-0 place-items-center">
               <img src="/logo.webp" alt="" width={36} height={36} className="size-9 object-contain" />
             </span>
-            <span className="min-w-0">
-              <span className="block font-display text-sm font-semibold tracking-[0.14em] text-paper uppercase">
-                DG Motos
-              </span>
-              <span className="mt-0.5 flex items-center gap-1.5">
-                <span aria-hidden="true" className="h-px w-4 bg-brand-500 /* taste-skill-ignore: painel */" />
-                <span className="text-micro font-medium tracking-[0.18em] text-steel-500 uppercase">
-                  Painel
-                </span>
-              </span>
+            <span className="font-display text-sm font-semibold tracking-[0.14em] text-paper uppercase">
+              DG Motos
             </span>
           </Link>
         </div>
@@ -214,7 +223,7 @@ export function Admin() {
           </div>
         </nav>
 
-        <div className="shrink-0 border-t border-line p-3 /* taste-skill-ignore: painel */">
+        <div className="shrink-0 border-t border-line p-3">
           <button
             type="button"
             onClick={pedirSaida}
@@ -234,7 +243,11 @@ export function Admin() {
             de moto, seção de configurações). Na listagem do estoque o
             título é da própria página — repetir aqui era ruído. No celular
             a marca ocupa o canto, já que a sidebar está escondida. */}
-        <header className="sticky top-0 z-30 border-b border-line bg-night-950/90 backdrop-blur-md /* taste-skill-ignore: topbar do painel */">
+        <header
+          className={`sticky top-0 z-30 border-b border-line bg-night-950/90 backdrop-blur-md ${
+            topbarSemContexto ? 'lg:hidden' : ''
+          }`}
+        >
           <div className="flex h-14 items-center gap-3 px-4 sm:px-6 lg:h-16 lg:px-8">
             <Link
               to="/"
@@ -247,15 +260,13 @@ export function Admin() {
               </span>
             </Link>
 
-            <h1 className="min-w-0 flex-1 truncate text-center text-sm font-medium text-steel-500 lg:text-left">
-              {editando
-                ? editando.id
-                  ? 'Editar moto'
-                  : 'Nova moto'
-                : aba === 'configuracoes'
-                  ? rotuloAba
-                  : ''}
-            </h1>
+            {tituloTopbar ? (
+              <h1 className="min-w-0 flex-1 truncate text-center text-sm font-medium text-steel-500 lg:text-left">
+                {tituloTopbar}
+              </h1>
+            ) : (
+              <div className="flex-1" />
+            )}
 
             {/* Com o formulário aberto, o "voltar" sobe para a topbar:
                 fecha a edição e volta à lista, fora do rolar do form. */}
@@ -271,22 +282,14 @@ export function Admin() {
               </button>
             )}
 
-            {aba === 'estoque' && !editando && (
-              <Link
-                to="/"
-                className="foco-painel hidden items-center gap-1.5 rounded-lg border border-line-forte px-3 py-1.5 text-xs font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper lg:inline-flex"
-              >
-                <ExternalLink className="size-3.5" aria-hidden="true" />
-                Ver no site
-              </Link>
-            )}
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[80rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="mx-auto w-full max-w-[105rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {aba === 'estoque' ? (
             <EstoqueTab
               motos={motos}
+              erro={erro}
               busca={busca}
               onBusca={setBusca}
               editando={editando}
@@ -294,6 +297,7 @@ export function Admin() {
               onPedirExclusao={pedirExclusao}
               onAlterarStatus={alterarStatus}
               onSalva={aoSalvarMoto}
+              onRecarregar={recarregar}
             />
           ) : (
             <ConfiguracoesTab />
@@ -306,7 +310,14 @@ export function Admin() {
       {/* ---------------------------------------------------------- */}
       <nav
         aria-label="Navegação do painel"
-        className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-line bg-sidebar lg:hidden /* taste-skill-ignore: painel */"
+        // Com o formulário aberto, a barra de salvar/artefato do
+        // formulário ocupa o rodapé — a navegação sai de cena para
+        // as duas faixas não brigarem pelo mesmo espaço.
+        className={
+          editando
+            ? 'hidden'
+            : 'safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-line bg-sidebar lg:hidden'
+        }
       >
         <div className="grid grid-cols-2">
           {ABAS.map(({ id, rotulo, icone: Icone }) => {

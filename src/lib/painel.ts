@@ -8,6 +8,8 @@ export interface ResumoEstoque {
   vendidas: number
   /** Soma do que está à venda agora — o número que interessa à operação. */
   valorDisponivel: number
+  /** Soma do que está fisicamente no estoque (disponíveis + indisponíveis). */
+  valorEmEstoque: number
   /** Soma de todas as motos, vendidas incluídas. */
   valorTotal: number
 }
@@ -26,6 +28,7 @@ export function resumirEstoque(motos: Motorcycle[]): ResumoEstoque {
     indisponiveis: indisponiveis.length,
     vendidas: vendidas.length,
     valorDisponivel: soma(disponiveis),
+    valorEmEstoque: soma([...disponiveis, ...indisponiveis]),
     valorTotal: soma(motos),
   }
 }

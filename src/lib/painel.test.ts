@@ -70,9 +70,11 @@ describe('resumirEstoque', () => {
       indisponiveis: 1,
       vendidas: 1,
       valorDisponivel: 30000,
+      valorEmEstoque: 70000,
       valorTotal: 100000,
     })
     expect(contarPorStatus(r, 'vendida')).toBe(1)
+    expect(r.valorEmEstoque).toBe(r.valorDisponivel + 40000)
   })
 })
 

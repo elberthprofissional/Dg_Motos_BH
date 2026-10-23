@@ -130,7 +130,7 @@ function AcoesSecao({
   onRestaurar: () => void
 }) {
   return (
-    <div className="flex flex-wrap gap-3 border-t border-line pt-5"> /* taste-skill-ignore: painel */
+    <div className="flex flex-wrap gap-3 border-t border-line pt-5">
       <button type="button" onClick={onSalvar} className="btn btn-primary h-11 sm:h-auto">
         Salvar
       </button>
@@ -367,7 +367,7 @@ export function ConfiguracoesTab() {
   /* ==================================================================== */
   const desktop = (
     <div className="hidden lg:block">
-      <header className="border-b border-line pb-5"> /* taste-skill-ignore: painel */
+      <header className="border-b border-line pb-5">
         <h2 className="painel-h1">Configurações</h2>
         <p className="mt-1.5 max-w-2xl text-sm text-steel-500">
           Ajuste o que aparece nos botões e no rodapé do site, além do
@@ -388,7 +388,7 @@ export function ConfiguracoesTab() {
                   <p className="px-3 pb-1.5 font-display text-micro font-semibold tracking-[0.18em] text-steel-600 uppercase">
                     {grupo.titulo}
                   </p>
-                  <div className="space-y-0.5 border-l border-line"> /* taste-skill-ignore: painel */
+                  <div className="space-y-0.5 border-l border-line">
                     {itens.map((s) => {
                       const selecionada = ativaDesktop.id === s.id
                       const Icone = s.icone
@@ -488,7 +488,7 @@ export function ConfiguracoesTab() {
           </p>
         </header>
 
-        <div className="mt-5 divide-y divide-line border-y border-line"> /* taste-skill-ignore: painel */
+        <div className="mt-5 divide-y divide-line border-y border-line">
           {SECOES.filter((s) => s.id !== 'app').map((s) => {
             const Icone = s.icone
             return (
@@ -500,7 +500,7 @@ export function ConfiguracoesTab() {
               >
                 <span
                   aria-hidden="true"
-                  className="grid size-9 shrink-0 place-items-center rounded-md border border-line bg-night-800 text-steel-300 transition-colors group-hover:border-brand-500/50 group-hover:text-brand-500" /* taste-skill-ignore: painel */
+                  className="grid size-9 shrink-0 place-items-center rounded-md border border-line bg-night-800 text-steel-300 transition-colors group-hover:border-brand-500/50 group-hover:text-brand-500"
                 >
                   <Icone className="size-4" />
                 </span>

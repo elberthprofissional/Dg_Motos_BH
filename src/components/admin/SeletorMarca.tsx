@@ -1,16 +1,14 @@
-import { useState } from 'react'
-import { iniciaisDaMarca, logoDaMarca } from '../../lib/marcas'
-
 /**
  * ============================================================
- * SELETOR DE MARCA — círculos, estilo concessionária
+ * SELETOR DE MARCA — grid de pílulas interativas
  * ============================================================
  * Lista fixa das marcas de moto mais comuns no Brasil + as que já
- * existem no estoque (sem repetir).Um toque preenche o campo; digitar
- * à mão continua valendo para marca rara ou nova.
+ * existem no estoque (sem repetir). Um toque preenche o campo; digitar
+ * à mão continua valendo para marca rara ou nova (o campo de texto
+ * segue no formulário, logo abaixo do grid).
  *
- * Visual: mesmo disco do grid da vitrine (iniciais no placeholder),
- * redondo, vermelho quando é a marca escolhida.
+ * Visual: pílulas compactas em grid; a escolhida acende em vermelho
+ * com brilho sutil — o mesmo vocabulário do resto do painel.
  */
 
 const MARCAS_COMUNS = [
@@ -50,73 +48,27 @@ export function SeletorMarca({
     <div
       role="group"
       aria-label="Marcas rápidas"
-      className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-6"
+      className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6"
     >
       {lista.map((marca) => {
         const ativa = marca === marcaAtiva
         return (
-          <DiscoMarcaAdmin key={marca} marca={marca} ativa={ativa} onEscolher={onEscolher} />
+          <button
+            key={marca}
+            type="button"
+            onClick={() => onEscolher(ativa ? '' : marca)}
+            aria-pressed={ativa}
+            className={`foco-painel inline-flex min-h-11 cursor-pointer items-center justify-center truncate rounded-xl border px-3 py-2 text-sm font-medium transition-all ${
+              ativa
+                ? /* taste-skill-ignore: micro-animacao de seletor */
+                  'border-red-600 bg-red-950/20 text-white shadow-lg shadow-red-950/30 scale-[1.02]'
+                : 'border-neutral-800 bg-black/40 text-neutral-400 hover:border-neutral-700 hover:text-white'
+            }`}
+          >
+            {marca}
+          </button>
         )
       })}
     </div>
-  )
-}
-
-/** Mesmo disco da vitrine, menor. Logo com fallback para as iniciais. */
-function DiscoMarcaAdmin({
-  marca,
-  ativa,
-  onEscolher,
-}: {
-  marca: string
-  ativa: boolean
-  onEscolher: (marca: string) => void
-}) {
-  const [semLogo, setSemLogo] = useState(false)
-
-  return (
-    <button
-      type="button"
-      onClick={() => onEscolher(ativa ? '' : marca)}
-      aria-pressed={ativa}
-      aria-label={marca}
-      className="group flex flex-col items-center gap-1.5 focus-visible:outline-none"
-    >
-      <span
-        className={`relative grid size-12 place-items-center overflow-hidden rounded-full border-2 transition-all duration-200 /* taste-skill-ignore: micro-animacao de seletor */ ${
-          ativa
-            ? 'border-brand-500'
-            : 'border-claro/15 group-hover:border-claro/40 group-active:scale-95' /* taste-skill-ignore: painel */
-        }`}
-      >
-        <span className="absolute inset-0 grid place-items-center bg-[#1d1d1d] transition-colors group-hover:bg-[#242424]">
-          {semLogo ? (
-            <span
-              className={`font-display text-etiqueta font-bold tracking-[0.06em] transition-colors ${
-                ativa ? 'text-brand-500' : 'text-[#8c8c8c] group-hover:text-[#d9d9d9]'
-              }`}
-            >
-              {iniciaisDaMarca(marca)}
-            </span>
-          ) : (
-            <img
-              src={logoDaMarca(marca)}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              onError={() => setSemLogo(true)}
-              className="size-full object-contain p-2"
-            />
-          )}
-        </span>
-      </span>
-      <span
-        className={`max-w-full truncate text-micro font-medium transition-colors ${
-          ativa ? 'text-brand-500' : 'text-steel-500 group-hover:text-paper'
-        }`}
-      >
-        {marca}
-      </span>
-    </button>
   )
 }

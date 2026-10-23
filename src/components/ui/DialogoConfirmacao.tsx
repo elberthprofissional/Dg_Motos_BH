@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { AlertTriangle, LogOut } from 'lucide-react'
 
 export interface PedidoConfirmacao {
   titulo: string
@@ -67,9 +66,6 @@ export function DialogoConfirmacao({
     return () => dialog.removeEventListener('close', aoFechar)
   }, [])
 
-  const neutro = pedido?.tom === 'neutro'
-  const Icone = neutro ? LogOut : AlertTriangle
-
   return (
     <dialog
       ref={dialogRef}
@@ -78,34 +74,23 @@ export function DialogoConfirmacao({
       aria-describedby="dlg-descricao"
     >
       {pedido && (
-        <div className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-5 sm:p-6">
-          <div className="flex items-start gap-3 sm:gap-4">
-            <span
-              aria-hidden="true"
-              className={`grid size-10 shrink-0 place-items-center border ${
-                neutro
-                  ? 'border-borda bg-painel-2 text-texto-3'
-                  : 'border-marca/40 bg-marca/10 text-marca-texto'
-              }`}
-            >
-              <Icone className="size-5" />
-            </span>
-            <div className="min-w-0">
-              <h2 id="dlg-titulo" className="titulo text-lg text-texto">
-                {pedido.titulo}
-              </h2>
-              <p id="dlg-descricao" className="mt-2 text-sm leading-relaxed text-texto-2">
-                {pedido.descricao}
-              </p>
-            </div>
-          </div>
+        <div className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-6 sm:p-7">
+          {/* Minimalista: título em uma linha, texto curto, dois botões.
+              Sem ícone em quadro — a cor do botão de confirmar carrega o
+              peso da ação (vermelho sólido para confirmar). */}
+          <h2 id="dlg-titulo" className="text-base font-semibold text-white">
+            {pedido.titulo}
+          </h2>
+          <p id="dlg-descricao" className="mt-2 text-sm leading-relaxed text-neutral-400">
+            {pedido.descricao}
+          </p>
 
-          <div className="mt-5 flex flex-col-reverse gap-2 sm:mt-6 sm:flex-row sm:justify-end">
+          <div className="mt-6 flex items-center justify-end gap-3">
             <button
               ref={cancelarRef}
               type="button"
               onClick={onFechar}
-              className="btn btn-secondary h-11 w-full sm:h-auto sm:w-auto"
+              className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-medium text-neutral-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
             >
               Cancelar
             </button>
@@ -113,9 +98,7 @@ export function DialogoConfirmacao({
               type="button"
               disabled={ocupado}
               onClick={() => void pedido.onConfirmar()}
-              className={`btn h-11 w-full sm:h-auto sm:w-auto ${
-                neutro ? 'btn-primary' : 'btn-danger'
-              }`}
+              className="inline-flex h-10 cursor-pointer items-center rounded-xl bg-red-600 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/50 transition-all hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {ocupado ? (pedido.rotuloOcupado ?? 'Processando...') : pedido.rotuloConfirmar}
             </button>

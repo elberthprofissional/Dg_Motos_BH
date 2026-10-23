@@ -55,7 +55,7 @@ export function Toast({
     const { caixa, icone: Icone } = ESTILOS[tipo]
     return (
       <div
-        className={`pointer-events-auto flex max-w-sm items-start gap-3 border px-4 py-3 shadow-lg shadow-black/30 ${caixa} /* taste-skill-ignore: overlay de notificacao */`}
+        className={`pointer-events-auto flex max-w-sm items-start gap-3 border px-4 py-3 shadow-lg shadow-black/30 ${caixa}`}
       >
         <Icone className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <p className="min-w-0 flex-1 text-sm leading-relaxed text-texto-2">{feedback?.texto}</p>

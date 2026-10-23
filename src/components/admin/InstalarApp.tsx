@@ -43,7 +43,7 @@ export function LinhaInstalarApp() {
         </span>
         <span
           aria-hidden="true"
-          className="shrink-0 rounded-full border border-claro/10 px-2 py-0.5 text-micro tracking-[0.1em] text-steel-500 uppercase" /* taste-skill-ignore: painel */
+          className="shrink-0 rounded-full border border-claro/10 px-2 py-0.5 text-micro tracking-[0.1em] text-steel-500 uppercase"
         >
           {app.instalado ? 'Ativo' : 'Novo'}
         </span>
@@ -80,7 +80,7 @@ export function PainelInstalarApp() {
         </ul>
 
         {app.instalado ? (
-          <p className="flex items-center gap-2 rounded-lg border border-ok/30 bg-ok/10 px-4 py-3 text-sm text-steel-300"> /* taste-skill-ignore: painel */
+          <p className="flex items-center gap-2 rounded-lg border border-ok/30 bg-ok/10 px-4 py-3 text-sm text-steel-300">
             <Check className="size-4 text-ok" aria-hidden="true" />
             O app já está instalado neste aparelho.
           </p>
@@ -90,7 +90,7 @@ export function PainelInstalarApp() {
             Instalar aplicativo
           </button>
         ) : (
-          <div className="flex items-start gap-3 rounded-lg border border-line bg-night-800 px-4 py-3"> /* taste-skill-ignore: painel */
+          <div className="flex items-start gap-3 rounded-lg border border-line bg-night-800 px-4 py-3">
             <Smartphone className="mt-0.5 size-4 shrink-0 text-steel-400" aria-hidden="true" />
             <p className="text-xs leading-relaxed text-steel-400">
               Abra este site no Chrome do Android (ou Safari no iPhone) para
@@ -143,7 +143,7 @@ export function ModalInstalar({ app }: { app: EstadoInstalarApp }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="app-titulo"
-        className="relative max-h-full w-full max-w-md overflow-y-auto rounded-xl border border-line bg-night-900 p-6 shadow-2xl shadow-black/60 /* taste-skill-ignore: overlay do painel */"
+        className="relative max-h-full w-full max-w-md overflow-y-auto rounded-xl border border-line bg-night-900 p-6 shadow-2xl shadow-black/60"
       >
         <button
           ref={fecharBotao}
@@ -159,7 +159,7 @@ export function ModalInstalar({ app }: { app: EstadoInstalarApp }) {
             que ele terá na tela inicial do celular. */}
         <span
           aria-hidden="true"
-          className="mx-auto grid size-20 place-items-center rounded-[22%] border border-line bg-night-800" /* taste-skill-ignore: painel */
+          className="mx-auto grid size-20 place-items-center rounded-[22%] border border-line bg-night-800"
         >
           <img src="/logo.webp" alt="" width={80} height={80} className="size-[72%] object-contain" />
         </span>
@@ -194,7 +194,7 @@ export function ModalInstalar({ app }: { app: EstadoInstalarApp }) {
         </ul>
 
         {app.instalado ? (
-          <p className="mt-6 flex items-center justify-center gap-2 rounded-lg border border-ok/30 bg-ok/10 px-4 py-3 text-sm text-steel-300"> /* taste-skill-ignore: painel */
+          <p className="mt-6 flex items-center justify-center gap-2 rounded-lg border border-ok/30 bg-ok/10 px-4 py-3 text-sm text-steel-300">
             <Check className="size-4 text-ok" aria-hidden="true" />
             O app já está instalado neste aparelho.
           </p>
@@ -210,7 +210,7 @@ export function ModalInstalar({ app }: { app: EstadoInstalarApp }) {
             Instalar agora
           </button>
         ) : (
-          <div className="mt-6 flex items-start gap-3 rounded-lg border border-line bg-night-800 px-4 py-3"> /* taste-skill-ignore: painel */
+          <div className="mt-6 flex items-start gap-3 rounded-lg border border-line bg-night-800 px-4 py-3">
             <Smartphone className="mt-0.5 size-4 shrink-0 text-steel-400" aria-hidden="true" />
             <p className="text-xs leading-relaxed text-steel-400">
               Abra este site no Chrome do Android (ou Safari no iPhone) para
@@ -227,7 +227,7 @@ export function ModalInstalar({ app }: { app: EstadoInstalarApp }) {
 /** Passo a passo do iOS, onde não existe prompt automático. */
 function InstrucoesIos() {
   return (
-    <ol className="mt-6 space-y-3 rounded-lg border border-line bg-night-800 p-4"> /* taste-skill-ignore: painel */
+    <ol className="mt-6 space-y-3 rounded-lg border border-line bg-night-800 p-4">
       <li className="flex items-start gap-3 text-sm text-steel-300">
         <span className="grid size-6 shrink-0 place-items-center rounded-full bg-claro/5 font-display text-xs font-bold text-steel-300">
           1

@@ -5,12 +5,12 @@ import { SenhaInput } from '../components/ui/SenhaInput'
 import { useAuth } from '../hooks/authContexto'
 
 /**
- * Tela de acesso do dono.
+ * Tela de acesso do dono — split screen.
  *
- * No celular continua sendo a entrada direta de sempre: logo, dois
- * campos e o botão, sem cartão em volta. No desktop a tela vira uma
- * porta de showroom — a foto do pátio ocupa a metade esquerda e o
- * formulário flutua num cartão de vidro sobre a metade direita.
+ * No desktop a tela divide em duas colunas: a foto do pátio cobre a
+ * metade esquerda inteira e o formulário vive direto no painel escuro
+ * da direita, sem cartão flutuante. No celular a entrada segue direta
+ * de sempre: logo, dois campos e o botão.
  *
  * Sem link no Header/Footer de propósito: a área restrita não deve ser
  * anunciada; o dono acessa digitando /admin.
@@ -44,11 +44,10 @@ export function AdminLogin() {
   if (!carregando && sessao) return <Navigate to="/admin" replace />
 
   return (
-    <div className="flex min-h-dvh bg-fundo lg:grid lg:grid-cols-2">
-      {/* Desktop: a metade do showroom. A foto cobre a coluna inteira e
-          os gradientes fundem a borda direita com o formulário e
-          protegem a leitura do texto no canto inferior. */}
-      <aside className="relative hidden overflow-hidden lg:block">
+    <div className="grid min-h-screen grid-cols-1 bg-neutral-950 lg:grid-cols-2">
+      {/* Esquerda: a metade do showroom. A foto cobre a coluna inteira e
+          o overlay escuro suave protege a leitura do texto no rodapé. */}
+      <aside className="relative hidden h-full w-full overflow-hidden lg:block">
         {/* Foto: Unsplash (licença livre), origem em img/hero-login-noite.jpg */}
         <img
           src="/hero/entrada-painel.webp"
@@ -57,11 +56,7 @@ export function AdminLogin() {
           className="absolute inset-0 size-full object-cover object-center"
         />
         <div
-          className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.42)_0%,rgba(0,0,0,0.08)_52%,rgba(0,0,0,0.94)_100%)]"
-          aria-hidden="true"
-        />
-        <div
-          className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.24)_46%,transparent_72%)]"
+          className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.22)_46%,transparent_72%)]"
           aria-hidden="true"
         />
 
@@ -81,49 +76,42 @@ export function AdminLogin() {
         </div>
       </aside>
 
-      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-5 py-10 lg:px-10 lg:py-16">
-        <div
-          className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_70%_18%,rgba(229,22,29,0.12),transparent_48%)] lg:block"
-          aria-hidden="true"
-        />
-
-        <div className="w-full max-w-sm lg:relative lg:max-w-md lg:rounded-3xl lg:border lg:border-borda lg:bg-painel/70 lg:p-10 lg:shadow-2xl lg:backdrop-blur-xl">
+      {/* Direita: painel cinza chumbo com o formulário integrado, sem
+          cartão em volta. */}
+      <main className="flex w-full flex-col items-center justify-center px-6 py-12 lg:px-12 lg:py-0 xl:px-16">
+        <div className="w-full max-w-sm">
           {/* Logo da loja — clique volta ao site */}
           <Link
             to="/"
             aria-label="DG Motos — voltar à página inicial"
-            className="mx-auto block w-fit lg:mx-0"
+            className="mx-auto mb-8 block w-fit"
           >
             <img
               src="/logo.webp"
               alt="DG Motos"
-              width={96}
-              height={96}
-              className="size-24 object-contain lg:size-28"
+              width={48}
+              height={48}
+              className="h-12 w-auto object-contain"
             />
           </Link>
 
-          <h1 className="etiqueta mt-8 text-center text-texto lg:mt-8 lg:text-left lg:font-display lg:text-xl lg:font-bold lg:tracking-[-0.02em] lg:normal-case lg:text-white">
-            Acesso Restrito
-          </h1>
-          <p className="mt-2 hidden text-xs text-texto-3 lg:block">
-            Insira suas credenciais para gerenciar o pátio
-          </p>
+          <div className="text-center">
+            <h1 className="text-base font-medium text-white">Acesso Restrito</h1>
+            <p className="mt-1 text-xs text-neutral-400">
+              Insira suas credenciais para gerenciar o pátio
+            </p>
+          </div>
 
           {!disponivel ? (
-            <p className="mt-5 border border-brand-500/40 bg-brand-500/10 px-3 py-2.5 text-center text-xs leading-relaxed text-steel-300 lg:rounded-xl">
+            <p className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2.5 text-center text-xs leading-relaxed text-neutral-300">
               Supabase não configurado neste deploy. Copie <code>.env.example</code> para{' '}
               <code>.env</code> e veja <code>docs/SUPABASE.md</code>.
             </p>
           ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="mt-5 space-y-3 lg:mt-8 lg:space-y-4"
-              noValidate
-            >
+            <form onSubmit={handleSubmit} className="mt-8 space-y-3" noValidate>
               <div className="relative">
                 <Mail
-                  className="pointer-events-none absolute top-1/2 left-4 hidden size-4 -translate-y-1/2 text-texto-3 lg:block"
+                  className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-neutral-500"
                   aria-hidden="true"
                 />
                 <input
@@ -137,13 +125,13 @@ export function AdminLogin() {
                   aria-label="E-mail"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input lg:h-12 lg:rounded-xl lg:bg-fundo/80 lg:pl-11 lg:text-sm"
+                  className="w-full rounded-xl border border-neutral-800 bg-neutral-900 py-3.5 pr-11 pl-11 text-sm text-white transition-colors placeholder:text-neutral-500 focus:border-red-600 focus:ring-1 focus:ring-red-600/30 focus:outline-none"
                 />
               </div>
 
               <div className="relative">
                 <LockKeyhole
-                  className="pointer-events-none absolute top-1/2 left-4 z-10 hidden size-4 -translate-y-1/2 text-texto-3 lg:block"
+                  className="pointer-events-none absolute top-1/2 left-4 z-10 size-4 -translate-y-1/2 text-neutral-500"
                   aria-hidden="true"
                 />
                 <SenhaInput
@@ -154,12 +142,12 @@ export function AdminLogin() {
                   rotulo="Senha"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
-                  className="lg:h-12 lg:rounded-xl lg:bg-fundo/80 lg:pl-11 lg:text-sm"
+                  className="w-full rounded-xl border border-neutral-800 bg-neutral-900 py-3.5 pr-10 pl-11 text-sm text-white transition-colors placeholder:text-neutral-500 focus:border-red-600 focus:ring-1 focus:ring-red-600/30 focus:outline-none"
                 />
               </div>
 
               {erro && (
-                <p role="alert" className="pt-1 text-center text-xs leading-relaxed text-brand-500">
+                <p role="alert" className="pt-1 text-center text-xs leading-relaxed text-red-500">
                   {erro}
                 </p>
               )}
@@ -167,15 +155,15 @@ export function AdminLogin() {
               <button
                 type="submit"
                 disabled={enviando || carregando || !email || !senha}
-                className="btn btn-primary mt-2 w-full cursor-pointer lg:mt-6 lg:h-12 lg:rounded-xl lg:text-sm lg:font-bold lg:shadow-lg lg:shadow-marca/20 lg:hover:shadow-marca/30"
+                className="mt-2 w-full cursor-pointer rounded-xl bg-red-600 py-3.5 font-bold text-sm text-white transition-all hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {enviando ? 'Entrando...' : 'Entrar'}
               </button>
 
-              <div className="pt-2 text-center lg:pt-4">
+              <div className="mt-3 text-center">
                 <Link
                   to="/admin/esqueci"
-                  className="inline-block py-1 text-xs text-steel-400 transition-colors hover:text-marca-texto"
+                  className="inline-block py-1 text-xs text-neutral-500 transition-colors hover:text-white"
                 >
                   Esqueceu a senha?
                 </Link>
