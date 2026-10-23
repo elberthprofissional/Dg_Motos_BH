@@ -36,14 +36,32 @@ export function MarcasProcuradas() {
             </p>
           </div>
 
-          {/* Celular: carrossel horizontal de rolagem suave. */}
-          <ul className="no-scrollbar flex items-center gap-6 overflow-x-auto py-4 sm:hidden">
+          {/* Celular: esteira — as marcas passam sozinhas, como esteira de
+              loja. A lista se duplica uma vez e a animação `.esteira` desloca
+              a banda em loop contínuo; a segunda passagem é decorativa. */}
+          <ul className="esteira flex w-max max-w-full items-center gap-6 overflow-hidden py-4 sm:hidden">
             {MARCAS.map((marca) => (
-              <li key={marca} className="flex shrink-0 items-center justify-center">
+              <li key={`a-${marca}`} className="flex shrink-0 items-center justify-center">
                 <img
                   data-marca-logo
                   src={logoDaMarca(marca)}
                   alt={`Logo ${marca}`}
+                  className="h-7 w-auto shrink-0 object-contain opacity-80"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </li>
+            ))}
+            {MARCAS.map((marca) => (
+              <li
+                key={`b-${marca}`}
+                aria-hidden="true"
+                className="marcas-clonagem flex shrink-0 items-center justify-center"
+              >
+                <img
+                  data-marca-logo
+                  src={logoDaMarca(marca)}
+                  alt=""
                   className="h-7 w-auto shrink-0 object-contain opacity-80"
                   loading="lazy"
                   decoding="async"

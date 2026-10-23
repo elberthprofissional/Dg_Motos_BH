@@ -1399,6 +1399,34 @@
     animation: respira 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
+  /* A esteira de marcas: o logos passa como esteira de loja — a banda
+     roda sozinha. A lista se duplica uma vez; o deslocamento de 100% (a
+     largura total do track) fecha o loop sem pular. */
+  @keyframes esteira {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .esteira {
+      animation: esteira 40s linear infinite;
+    }
+  }
+
+  .esteira:hover {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marcas-clonagem {
+      display: none;
+    }
+  }
+
   /* ============================================================
      MENU DO CELULAR — <dialog> nativo
      showModal() entrega foco preso, Esc e camada superior de
