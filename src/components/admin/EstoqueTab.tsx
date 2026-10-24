@@ -151,13 +151,13 @@ export function EstoqueTab({
   const total = motos === null ? 0 : motos.length
   const vistos = visiveis.length
   const contagem = erroAtivo || motos === null ? '' : filtrando ? `${vistos} de ${total}` : `${total}`
-  const unidadeContagem = filtrando ? (vistos === 1 ? 'moto vista' : 'motos vistas') : total === 1 ? 'moto' : 'motos'
+  const unidadeContagem = filtrando ? (vistos === 1 ? 'moto na tela' : 'motos na tela') : total === 1 ? 'moto' : 'motos'
 
   return (
     <div className="estoque-pagina">
       <header className="estoque-cabecalho-pagina">
         <div className="estoque-titulo-linha">
-          <h1 className="estoque-h1">Estoque de motocicletas</h1>
+          <h1 className="estoque-h1">Estoque</h1>
           <button type="button" onClick={() => onEditando({})} className="estoque-btn-primario">
             <Plus className="size-4" strokeWidth={2.2} aria-hidden="true" />
             Cadastrar moto
@@ -168,21 +168,20 @@ export function EstoqueTab({
           {erroAtivo ? (
             <span className="estoque-resumo-total">Estoque indisponível</span>
           ) : motos === null ? (
-            <span className="estoque-resumo-total">Carregando estoque…</span>
+            <span className="estoque-resumo-total">Abrir o pátio…</span>
           ) : resumo ? (
             <>
               <span className="estoque-resumo-total">
-                {total} {total === 1 ? 'moto no estoque' : 'motos no estoque'}
+                {total} {total === 1 ? 'moto no pátio' : 'motos no pátio'}
                 {/* Os disponíveis só se justificam na frase quando são
-                    menos que o total: "4 motos, 4 disponíveis" é eco. */}
-                {resumo.disponiveis < total &&
-                  `, ${resumo.disponiveis} ${resumo.disponiveis === 1 ? 'disponível' : 'disponíveis'}`}
+                    menos que o total: "4 no pátio, 4 à venda" é eco. */}
+                {resumo.disponiveis < total && `, ${resumo.disponiveis} à venda`}
               </span>
-              {/* Diferente do zero não vira contador: só aparece quando
-                  existe — uma linha sem "00” gastos à toa. */}
+              {/* Contador zero não aparece: só quando existe de verdade —
+                  a linha nunca tem "00” de enfeite. */}
               {resumo.indisponiveis > 0 && (
                 <span className="estoque-resumo-item">
-                  {resumo.indisponiveis} {resumo.indisponiveis === 1 ? 'indisponível' : 'indisponíveis'}
+                  {resumo.indisponiveis} {resumo.indisponiveis === 1 ? 'parada' : 'paradas'}
                 </span>
               )}
               {resumo.vendidas > 0 && (
@@ -191,7 +190,7 @@ export function EstoqueTab({
                 </span>
               )}
               <span className="estoque-resumo-valor">
-                {formatPrice(resumo.valorEmEstoque)} <span>em estoque</span>
+                {formatPrice(resumo.valorEmEstoque)} <span>somados</span>
               </span>
             </>
           ) : null}
@@ -272,7 +271,7 @@ export function EstoqueTab({
           <div className="estoque-estado" role="row">
             <div className="estoque-estado-celula" role="cell">
               <div className="estoque-estado-texto">
-                <p className="estoque-estado-titulo">Não foi possível carregar o estoque</p>
+                <p className="estoque-estado-titulo">Não deu pra abrir o estoque agora</p>
                 <p className="estoque-estado-descricao">{erro}</p>
               </div>
               <button type="button" onClick={onRecarregar} className="estoque-estado-acao">
@@ -288,12 +287,12 @@ export function EstoqueTab({
             <div className="estoque-estado-celula" role="cell">
               <div className="estoque-estado-texto">
                 <p className="estoque-estado-titulo">
-                  {filtrando ? 'Nenhuma moto encontrada' : 'Nenhuma moto no estoque'}
+                  {filtrando ? 'Nada com esses filtros' : 'O pátio está vazio'}
                 </p>
                 <p className="estoque-estado-descricao">
                   {filtrando
-                    ? 'A busca e a situação selecionada não retornaram nenhuma moto.'
-                    : 'Cadastre a primeira moto para começar.'}
+                    ? 'Nenhuma moto caiu nessa busca. Limpe os filtros ou tente outro termo.'
+                    : 'Cadastre a primeira moto para começar — rápido, chega em dois minutos.'}
                 </p>
               </div>
               {filtrando ? (

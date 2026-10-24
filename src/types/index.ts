@@ -51,6 +51,12 @@ export interface Motorcycle {
   imagens: MotorcycleImage[]
   status: MotorcycleStatus
   /**
+   * Quanto a loja pagou na moto (dado do painel, nunca aparece no
+   * site). Alimenta o cálculo de lucro na aba Vendas. Opcional:
+   * sem custo, a moto não entra na conta de lucro — só no faturamento.
+   */
+  custoCompra?: number | null
+  /**
    * ISO do primeiro cadastro, preenchido só quando a moto vem do banco.
    * O fallback de `src/data/motorcycles.ts` não tem created_at — por isso
    * opcional, e por isso o painel nunca deve assumir que existe.
@@ -61,6 +67,53 @@ export interface Motorcycle {
 }
 
 export type BikeSort = 'relevancia' | 'preco-asc' | 'preco-desc' | 'ano-desc'
+
+/**
+ * Formas de pagamento aceitas no registro da venda. 'outra' é o
+ * retranco para "corpo a corpo": a loja cobra como quiser, o painel
+ * só precisa saber rótulo.
+ */
+export type FormaPagamento = 'pix' | 'dinheiro' | 'financiamento' | 'cartao' | 'outra'
+
+export const ROTULO_PAGAMENTO: Record<FormaPagamento, string> = {
+  pix: 'Pix',
+  dinheiro: 'Dinheiro',
+  financiamento: 'Financiado',
+  cartao: 'Cartão',
+  outra: 'Outra',
+}
+
+/**
+ * Venda registrada no painel. Os dados da moto são FOTO (gravados no
+ * dia): se a moto for excluída depois, o histórico fica íntegro.
+ */
+export interface Venda {
+  id: string
+  motoId: string | null
+  marca: string
+  modelo: string
+  ano: number
+  valor: number
+  formaPagamento: FormaPagamento
+  comprador: string | null
+  telefone: string | null
+  /** Custo de compra na data da venda; null = sem custo conhecido. */
+  custo: number | null
+  /** ISO da data em que a venda foi registrada. */
+  vendidaEm: string
+}
+
+export interface VendaParaSalvar {
+  motoId: string | null
+  marca: string
+  modelo: string
+  ano: number
+  valor: number
+  formaPagamento: FormaPagamento
+  comprador: string | null
+  telefone: string | null
+  custo: number | null
+}
 
 export interface BikeFilterState {
   busca: string

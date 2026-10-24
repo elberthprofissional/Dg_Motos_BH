@@ -86,7 +86,7 @@ export function Home() {
 
             <Link
               to="/estoque"
-              className="inline-flex items-center gap-2 rounded-xl bg-marca px-6 py-3.5 font-bold text-white shadow-lg shadow-[#2c0003]/40 transition-all hover:bg-marca-viva"
+              className="inline-flex items-center gap-2 rounded-xl bg-marca px-6 py-3.5 font-bold text-white transition-colors hover:bg-marca-viva"
             >
               Ver estoque
             </Link>
@@ -140,21 +140,29 @@ export function Home() {
 
           {patio.length > 0 ? (
             <>
-              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {/* Celular: lista emfileirada, uma moto atrás da outra — o
+                  pátio inteiro cabe no scroll do polegar. */}
+              <ul className="mt-4 divide-y divide-borda border-y border-borda sm:hidden">
+                {patio.map((bike) => (
+                  <BikeCard key={bike.id} bike={bike} variante="lista" />
+                ))}
+              </ul>
+
+              {/* Do tablet em diante: grade de vitrines. */}
+              <div className="mt-8 hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {patio.map((bike, i) => (
                   <Revelar key={bike.id} atraso={i * 60}>
                     <BikeCard bike={bike} priority={i < 3} />
                   </Revelar>
                 ))}
               </div>
-
             </>
           ) : (
             <div className="mt-12">
-              <p className="titulo text-2xl text-texto">Estoque em atualização</p>
+              <p className="titulo text-2xl text-texto">Motos no caminho</p>
               <p className="corpo mt-3 text-texto-2">
-                Estamos preparando as próximas unidades. Enquanto isso, fale com a
-                equipe para saber o que está chegando.
+                O pátio está em virada de estoque. Chama a gente que a gente
+                conta o que está chegando.
               </p>
               <Link to="/contato" className="btn btn-primary mt-6 h-11 px-5">
                 Falar com a loja
@@ -171,7 +179,7 @@ export function Home() {
           ============================================================ */}
       <section className="bg-fundo">
         <Revelar>
-          <div className="relative my-6 flex flex-col overflow-hidden lg:mx-0 lg:my-16 lg:min-h-[380px] lg:flex-row lg:items-center lg:justify-between lg:border-x-0 lg:bg-black">
+          <div className="relative my-6 flex flex-col overflow-hidden lg:mx-0 lg:my-16 lg:min-h-[380px] lg:flex-row lg:items-center lg:justify-between lg:border-x-0 lg:bg-fundo">
             {/* Fundo (só no desktop): a moto inteira, contida à direita. */}
             <img
               src={trocaDesktopImg}
@@ -183,7 +191,7 @@ export function Home() {
             {/* Máscara (só no desktop): funde a fumaça com o preto. */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-0 hidden w-full bg-gradient-to-r from-black via-black/60 to-transparent lg:block"
+              className="pointer-events-none absolute inset-0 z-0 hidden w-full bg-gradient-to-r from-fundo via-fundo/60 to-transparent lg:block"
             />
 
             <div className="container-site relative z-10 hidden w-full !px-0 lg:!px-[length:var(--margem)] lg:flex lg:items-center">
@@ -197,7 +205,7 @@ export function Home() {
                 </p>
                 <Link
                   to="/contato"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-marca px-6 py-3 font-bold text-white shadow-lg shadow-[#2c0003]/30 transition-all hover:bg-marca-viva"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-marca px-6 py-3 font-bold text-white transition-colors hover:bg-marca-viva"
                 >
                   Falar com a loja
                 </Link>

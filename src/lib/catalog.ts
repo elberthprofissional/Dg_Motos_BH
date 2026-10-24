@@ -39,6 +39,8 @@ interface LinhaCatalogo {
   /** Colunas da promoção; só existem depois da migração 0005 aplicar. */
   em_promocao?: boolean | number | null
   preco_antes?: number | string | null
+  /** Dado do painel; só existe depois da migração 0006 aplicar. */
+  custo_compra?: number | string | null
   quilometragem: number | null
   cilindrada: number | null
   categoria: string
@@ -82,6 +84,8 @@ export function linhaParaMotos(linha: LinhaCatalogo): Motorcycle {
     ano: Number(linha.ano),
     preco: Number(linha.preco),
     precoAntes: linha.preco_antes == null ? null : Number(linha.preco_antes),
+    custoCompra:
+      linha.custo_compra == null || linha.custo_compra === '' ? null : Number(linha.custo_compra),
     quilometragem: linha.quilometragem == null ? null : Number(linha.quilometragem),
     cilindrada: linha.cilindrada == null ? null : Number(linha.cilindrada),
     categoria: linha.categoria as MotorcycleCategory,
@@ -152,6 +156,8 @@ export interface MotoParaSalvar {
   emPromocao: boolean
   precoAntes: number | null
   status: MotorcycleStatus
+  /** Quanto a loja pagou; null = não informado (não entra no lucro). */
+  custoCompra?: number | null
 }
 
 /**
@@ -241,6 +247,7 @@ export async function salvarMoto(
     especificacoes: dados.especificacoes,
     em_promocao: dados.emPromocao,
     preco_antes: dados.precoAntes,
+    custo_compra: dados.custoCompra,
     status: dados.status,
   }
 
@@ -346,6 +353,7 @@ export function motoParaFormulario(m: Motorcycle): MotoParaSalvar {
     imagens: m.imagens,
     emPromocao: m.emPromocao,
     precoAntes: m.precoAntes,
+    custoCompra: m.custoCompra ?? null,
     status: m.status,
   }
 }

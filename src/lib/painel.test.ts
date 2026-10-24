@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { motorcycles } from '../data/motorcycles'
-import { contarPorStatus, filtrarEstoque, resumirEstoque, tempoRelativo } from './painel'
-import type { Motorcycle } from '../types'
+import {
+  contarPorStatus,
+  filtrarEstoque,
+  filtrarVendas,
+  lucroPorMes,
+  resumirEstoque,
+  resumirVendas,
+  tempoRelativo,
+  rotuloMes,
+} from './painel'
+import type { Motorcycle, Venda } from '../types'
 
 const base = (patch: Partial<Motorcycle>): Motorcycle => ({
   id: patch.slug ?? 'id',
@@ -76,6 +85,80 @@ describe('resumirEstoque', () => {
     })
     expect(contarPorStatus(r, 'vendida')).toBe(1)
     expect(r.valorEmEstoque).toBe(r.valorDisponivel + 40000)
+  })
+})
+
+const venda = (patch: Partial<Venda>): Venda => ({
+  id: patch.valor?.toString() ?? 'v',
+  motoId: null,
+  marca: 'Honda',
+  modelo: 'CG 160',
+  ano: 2022,
+  valor: 15000,
+  formaPagamento: 'pix',
+  comprador: null,
+  telefone: null,
+  custo: 12000,
+  vendidaEm: '2026-01-05T12:00:00Z',
+  ...patch,
+})
+
+describe('resumirVendas', () => {
+  it('soma faturamento e lucro, ignorando venda sem custo no lucro', () => {
+    const r = resumirVendas([
+      venda({ id: 'a', valor: 16000, custo: 12000 }),
+      venda({ id: 'b', valor: 10000, custo: 8000 }),
+      venda({ id: 'c', valor: 9000, custo: null }),
+    ])
+    expect(r.quantidade).toBe(3)
+    expect(r.faturamento).toBe(35000)
+    expect(r.lucro).toBe(6000)
+    expect(r.comCusto).toBe(2)
+    expect(r.ticketMedio).toBe(Math.round(35000 / 3))
+  })
+
+  it('lista vazia devolve zeros e ticket médio 0', () => {
+    expect(resumirVendas([])).toEqual({
+      quantidade: 0,
+      faturamento: 0,
+      lucro: 0,
+      comCusto: 0,
+      ticketMedio: 0,
+    })
+  })
+})
+
+describe('lucroPorMes', () => {
+  it('agrupa por mês na ordem cronológica e soma faturamento', () => {
+    const r = lucroPorMes([
+      venda({ id: 'a', valor: 16000, custo: 12000, vendidaEm: '2026-02-01T00:00:00Z' }),
+      venda({ id: 'b', valor: 10000, custo: 8000, vendidaEm: '2026-01-01T00:00:00Z' }),
+      venda({ id: 'c', valor: 5000, custo: null, vendidaEm: '2026-01-20T00:00:00Z' }),
+    ])
+    expect(r).toEqual([
+      { mes: '2026-01', lucro: 2000, faturamento: 15000 },
+      { mes: '2026-02', lucro: 4000, faturamento: 16000 },
+    ])
+  })
+})
+
+describe('filtrarVendas', () => {
+  const lista = [
+    venda({ id: 'a', modelo: 'CG 160', vendidaEm: '2026-01-05T00:00:00Z' }),
+    venda({ id: 'b', modelo: 'XRE 300', vendidaEm: '2026-02-05T00:00:00Z' }),
+  ]
+
+  it('filtra por mês e por busca de comprador', () => {
+    expect(filtrarVendas(lista, { busca: '', mes: '2026-02' }).map((v) => v.id)).toEqual(['b'])
+    expect(filtrarVendas([{ ...lista[0], comprador: 'João' }], { busca: 'joao', mes: 'todas' })).toHaveLength(1)
+  })
+})
+
+describe('rotuloMes', () => {
+  it('formata yyyy-MM em jan/2026 e devolve o original se inacabado', () => {
+    expect(rotuloMes('2026-01')).toBe('jan/2026')
+    expect(rotuloMes('2026-12')).toBe('dez/2026')
+    expect(rotuloMes('x')).toBe('x')
   })
 })
 

@@ -24,7 +24,7 @@ from PIL import Image, ImageOps
 
 # ----------------------------------------------------------------
 # O mapa: (fonte, qualidade) -> lista de (saída, largura máxima).
-# A fonte pode ser .png, .jpg ou .jpeg. A largura controla só o
+# A fonte pode ser .png, .jpg, .jpeg ou .webp. A largura controla só o
 # teto de redimensionamento (nunca amplia): a proporção original
 # da foto é respeitada — o CSS do site cuida do recorte visual.
 # ----------------------------------------------------------------
@@ -41,13 +41,16 @@ MAPA = [
         ],
     },
     {
-        "fonte": "img/troca/banner-desktop.png",
+        # img/troca guarda os WebP convertidos (convert-webp.py apagou
+        # os PNG): a fonte agora é o próprio .webp, re-trabalhado só
+        # no tamanho que cada versão do site usa.
+        "fonte": "img/troca/banner-desktop.webp",
         "saidas": [
             ("src/assets/troca/banner-desktop.webp", 1760),
         ],
     },
     {
-        "fonte": "img/troca/banner-mobile.png",
+        "fonte": "img/troca/banner-mobile.webp",
         "saidas": [
             ("src/assets/troca/banner-mobile.webp", 1280),
         ],

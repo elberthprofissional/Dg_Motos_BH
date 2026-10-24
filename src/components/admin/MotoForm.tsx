@@ -132,18 +132,18 @@ export function MotoForm({
     setErro(null)
 
     if (!form.marca.trim() || !form.modelo.trim()) {
-      setErro('Marca e modelo são obrigatórios.')
+      setErro('Faltou marca ou modelo.')
       return
     }
     if (!form.slug.trim()) {
-      setErro('O slug ficou vazio. Confira marca, modelo e ano.')
+      setErro('Faltou o endereço da moto (o slug). Confere marca, modelo e ano.')
       return
     }
     // O banco também barreira isso (check da promoção), mas o erro viria
-    // cru do Postgres: validates aqui dá mensagem humana ao dono.
+    // cru do Postgres: valida aqui dá mensagem humana ao dono.
     if (form.emPromocao && (form.precoAntes == null || form.precoAntes <= form.preco)) {
       setErro(
-        'Em promoção, o preço de referência ("de") precisa ser informado e maior que o preço de venda.',
+        'Pra anunciar em promoção, o preço "de" precisa estar preenchido e ser maior que o "por".',
       )
       return
     }
@@ -155,7 +155,7 @@ export function MotoForm({
     if (!r.ok) {
       setErro(
         r.erro?.includes('duplicate')
-          ? 'Já existe uma moto com esse slug. Ajuste o modelo ou o ano.'
+          ? 'Já tem uma moto nesse endereço — mexe no modelo ou no ano pra desempatar.'
           : (r.erro ?? 'Erro ao salvar.'),
       )
       return

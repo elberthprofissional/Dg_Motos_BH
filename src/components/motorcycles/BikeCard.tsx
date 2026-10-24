@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Calendar, Gauge } from 'lucide-react'
+import { Calendar, ChevronRight, Gauge } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
 import { buildBikeMessage, descontoPercentual, formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
@@ -9,7 +9,8 @@ import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 interface BikeCardProps {
   bike: Motorcycle
   priority?: boolean
-  /** 'lista' (horizontal) não é mais usado, mas continua atendendo. */
+  /** 'lista' mostra a moto emfileirada — uma abaixo da outra, no
+   *  catálogo do celular (Estoque e Home). 'grade' é a vitrine. */
   variante?: 'grade' | 'lista'
 }
 
@@ -172,20 +173,67 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
     'group flex h-full flex-col overflow-hidden bg-painel transition-colors duration-300 hover:bg-painel-2'
 
   if (variante === 'lista') {
+    /* Linha de catálogo compacta: foto miúda, ficha de uma linha e
+       preço à direita. A linha inteira é um único toque pro detalhe
+       — os botões de ação moram na ficha, não aqui. */
     return (
-      <article className={artigo}>
+      <li className="transition-colors hover:bg-painel-2">
         <Link
           to={`/moto/${bike.slug}`}
           aria-label={`Ver a ficha de ${titulo} ${bike.ano}`}
-          className="flex flex-1 sm:flex-row"
+          className={`flex items-center gap-3 px-2 py-2.5 ${disponivel ? '' : 'opacity-55'}`}
         >
-          <div className="w-full shrink-0 sm:w-48">{foto}</div>
-          <div className="flex min-w-0 flex-1 flex-col justify-center p-4 sm:p-5">
-            {informacoes}
+          <div className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden bg-painel">
+            <img
+              src={capa?.src ?? PLACEHOLDER_CARD}
+              alt={capa?.alt ?? titulo}
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
+              decoding="async"
+              className="size-full object-cover object-center"
+            />
+            {desconto != null ? (
+              <span className="absolute top-1 left-1 rounded bg-marca px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
+                <span className="sr-only">Promoção: </span>
+                -{desconto}%
+              </span>
+            ) : null}
           </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-[15px] font-semibold text-texto">{titulo}</h3>
+            <p className="mt-0.5 text-xs text-texto-3">
+              <span className="numeros">{bike.ano}</span>
+              {bike.quilometragem != null && (
+                <>
+                  {' · '}
+                  <span className="numeros">{formatKm(bike.quilometragem)}</span>
+                </>
+              )}
+              {estado ? ` · ${estado}` : ''}
+            </p>
+          </div>
+
+          <div className="shrink-0 text-right">
+            {desconto != null ? (
+              <>
+                <p className="numeros text-[11px] leading-none text-texto-3 line-through">
+                  {formatPrice(bike.precoAntes ?? bike.preco)}
+                </p>
+                <p className="numeros mt-1 text-base leading-none font-semibold text-marca-texto">
+                  {formatPrice(bike.preco)}
+                </p>
+              </>
+            ) : (
+              <p className="numeros text-base leading-none font-semibold text-texto">
+                {formatPrice(bike.preco)}
+              </p>
+            )}
+          </div>
+
+          <ChevronRight className="size-4 shrink-0 text-texto-3" aria-hidden="true" />
         </Link>
-        {acoesMobile}
-      </article>
+      </li>
     )
   }
 

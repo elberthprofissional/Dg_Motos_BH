@@ -1,4 +1,4 @@
-import type { Motorcycle, MotorcycleStatus } from '../types'
+import type { Motorcycle, MotorcycleStatus, Venda } from '../types'
 import { slugificar } from './catalog'
 
 export interface ResumoEstoque {
@@ -62,6 +62,82 @@ export function tempoRelativo(iso: string, agora = new Date()): string {
   // A partir de 360 dias o dono quer ler "ano", nunca "12 meses".
   const anos = Math.max(1, Math.floor(dias / 365))
   return `há ${anos} ${anos === 1 ? 'ano' : 'anos'}`
+}
+
+// ── Vendas ─────────────────────────────────────────────────────────────
+// As abas trabalham com a lista já em ordem de registro (a mais nova
+// primeiro). Estas funções só fazem conta: nada de acesso ao banco aqui,
+// para poder testar sem rede.
+
+export interface ResumoVendas {
+  quantidade: number
+  /** Soma do que as motos venderam. */
+  faturamento: number
+  /** Soma de (valor - custo); ignorando vendas sem custo conhecido. */
+  lucro: number
+  /** Quantas vendas têm custo informado — base real do lucro. */
+  comCusto: number
+  ticketMedio: number
+}
+
+export function resumirVendas(vendas: Venda[]): ResumoVendas {
+  const faturamento = vendas.reduce((total, v) => total + v.valor, 0)
+  const comCusto = vendas.filter((v) => v.custo != null)
+  const lucro = comCusto.reduce((total, v) => total + (v.valor - (v.custo ?? 0)), 0)
+
+  return {
+    quantidade: vendas.length,
+    faturamento,
+    lucro,
+    comCusto: comCusto.length,
+    ticketMedio: vendas.length === 0 ? 0 : Math.round(faturamento / vendas.length),
+  }
+}
+
+/**
+ * Lucro por mês, para o gráfico de barras da aba. O mês é etiquetado
+ * como 'yyyy-MM' (a ordenação é textual e estável) e o rótulo bonito
+ * ('jan/26') fica por conta do componente.
+ */
+export function lucroPorMes(vendas: Venda[]): { mes: string; lucro: number; faturamento: number }[] {
+  const mapa = new Map<string, { lucro: number; faturamento: number }>()
+  for (const v of vendas) {
+    const mes = v.vendidaEm.slice(0, 7)
+    const atual = mapa.get(mes) ?? { lucro: 0, faturamento: 0 }
+    atual.faturamento += v.valor
+    if (v.custo != null) atual.lucro += v.valor - v.custo
+    mapa.set(mes, atual)
+  }
+  return [...mapa.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([mes, dados]) => ({ mes, ...dados }))
+}
+
+export interface FiltroVendas {
+  busca: string
+  /** 'todas' ou um mês 'yyyy-MM'. */
+  mes: string
+}
+
+export function filtrarVendas(vendas: Venda[], filtro: FiltroVendas): Venda[] {
+  const termo = slugificar(filtro.busca)
+  return vendas.filter((v) => {
+    if (filtro.mes !== 'todas' && v.vendidaEm.slice(0, 7) !== filtro.mes) return false
+    if (!termo) return true
+    const alvo = slugificar(
+      `${v.marca} ${v.modelo} ${v.ano} ${v.comprador ?? ''} ${v.telefone ?? ''}`,
+    )
+    return alvo.includes(termo)
+  })
+}
+
+/** Rótulo do mês '2026-01' em 'jan/2026', para cabeçalho e gráfico. */
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+export function rotuloMes(yyyyMm: string): string {
+  const [ano, mes] = yyyyMm.split('-').map(Number)
+  if (!ano || !mes || mes < 1 || mes > 12) return yyyyMm
+  return `${MESES[mes - 1]}/${ano}`
 }
 
 export interface FiltroEstoque {

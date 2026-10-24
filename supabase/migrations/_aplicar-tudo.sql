@@ -390,3 +390,52 @@ create index if not exists idx_motos_promocao on public.motorcycles (em_promocao
 
 alter table public.motorcycles drop column if exists destaque;
 drop index if exists public.idx_motos_destaque;
+
+-- ============================================================
+-- 0006: vendas — histórico de vendas + custo de compra (ver arquivo
+--   dedicado 20260101000006_vendas.sql). Quando o dono marca uma
+--   moto como vendida, o painel registra quem comprou, como pagou
+--   e por quanto; a aba "Vendas" lista e soma o lucro.
+-- ============================================================
+
+alter table public.motorcycles
+  add column if not exists custo_compra numeric(12,2)
+  check (custo_compra is null or custo_compra >= 0);
+
+create table if not exists public.sales (
+  id             uuid primary key default gen_random_uuid(),
+  motorcycle_id  uuid references public.motorcycles(id) on delete set null,
+  marca          text not null,
+  modelo         text not null,
+  ano            integer not null,
+  valor          numeric(12,2) not null check (valor >= 0),
+  forma_pagamento text not null default 'outra',
+  comprador      text,
+  telefone       text,
+  custo          numeric(12,2) check (custo is null or custo >= 0),
+  vendida_em     timestamptz not null default now(),
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists idx_sales_vendida_em
+  on public.sales (vendida_em desc);
+
+alter table public.sales enable row level security;
+
+drop policy if exists "sales_dono_le" on public.sales;
+create policy "sales_dono_le"
+  on public.sales for select
+  to authenticated
+  using (true);
+
+drop policy if exists "sales_dono_insere" on public.sales;
+create policy "sales_dono_insere"
+  on public.sales for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "sales_dono_remove" on public.sales;
+create policy "sales_dono_remove"
+  on public.sales for delete
+  to authenticated
+  using (true);

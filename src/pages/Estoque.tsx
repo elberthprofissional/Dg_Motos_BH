@@ -384,13 +384,25 @@ export function Estoque() {
             ) : null}
 
             {resultados.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {resultados.map((bike, i) => (
-                  <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
-                    <BikeCard bike={bike} priority={i < 3} />
-                  </Revelar>
-                ))}
-              </div>
+              <>
+                {/* Celular: lista emfileirada — uma moto atrás da outra,
+                    mais juntinha que os cards: comparar fica rápido e o
+                    toque leva direto à ficha. */}
+                <ul className="divide-y divide-borda border-y border-borda sm:hidden">
+                  {resultados.map((bike) => (
+                    <BikeCard key={bike.id} bike={bike} variante="lista" />
+                  ))}
+                </ul>
+
+                {/* Do tablet em diante: grade de vitrines. */}
+                <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {resultados.map((bike, i) => (
+                    <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
+                      <BikeCard bike={bike} priority={i < 3} />
+                    </Revelar>
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="rounded-2xl border border-borda bg-painel/80">
                 <EstadoVazio
