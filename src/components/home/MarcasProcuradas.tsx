@@ -1,89 +1,64 @@
+import { Link } from 'react-router-dom'
 import { logoDaMarca } from '../../lib/marcas'
 
-/** Curadoria curta: uma linha só de logos, como na referência — 15
-    marcas voltavam a linha e viravam tapete. */
-const MARCAS = [
-  'Honda',
-  'Yamaha',
-  'Suzuki',
-  'Kawasaki',
+const MARCAS_COM_LOGO = new Set([
+  'BMW',
+  'Dafra',
   'Ducati',
   'Harley-Davidson',
-  'BMW',
+  'Honda',
+  'Kawasaki',
   'KTM',
   'Royal Enfield',
   'Shineray',
-] as const
+  'Suzuki',
+  'Yamaha',
+])
 
-export function MarcasProcuradas() {
+interface MarcasProcuradasProps {
+  marcas: string[]
+}
+
+export function MarcasNoPatio({ marcas }: MarcasProcuradasProps) {
+  if (marcas.length === 0) return null
+
   return (
     <section
-      data-marcas
       aria-labelledby="marcas-titulo"
-      className="border-t border-borda bg-fundo"
+      className="border-y border-borda bg-painel"
     >
-      <div className="container-site py-12 sm:py-14">
-        <div className="grid gap-8 sm:gap-10 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center lg:gap-12">
-          {/* Título modesto com filete vertical à direita (só no
-              desktop), como a referência — sem texto de apoio. */}
-          <h2
-            id="marcas-titulo"
-            className="text-lg leading-snug font-semibold text-texto max-lg:max-w-64 lg:border-r lg:border-borda lg:pr-12"
-          >
-            Marcas mais procuradas
-          </h2>
-
-          {/* Celular: esteira — as marcas passam sozinhas, como esteira de
-              loja. A lista se duplica uma vez e a animação `.esteira` desloca
-              a banda em loop contínuo; a segunda passagem é decorativa. */}
-          <ul className="esteira flex w-max max-w-full items-center gap-6 overflow-hidden py-2 sm:hidden">
-            {MARCAS.map((marca) => (
-              <li key={`a-${marca}`} className="flex shrink-0 items-center justify-center">
-                <img
-                  data-marca-logo
-                  src={logoDaMarca(marca)}
-                  alt={`Logo ${marca}`}
-                  className="h-7 w-auto shrink-0 object-contain opacity-80"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </li>
-            ))}
-            {MARCAS.map((marca) => (
-              <li
-                key={`b-${marca}`}
-                aria-hidden="true"
-                className="marcas-clonagem flex shrink-0 items-center justify-center"
+      <div className="container-site grid gap-6 py-8 sm:py-9 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-center lg:gap-10">
+        <h2
+          id="marcas-titulo"
+          className="font-display text-lg font-semibold text-texto"
+        >
+          Marcas no pátio
+        </h2>
+        <ul className="flex flex-wrap items-center gap-x-7 gap-y-5 sm:gap-x-10">
+          {marcas.map((marca) => (
+            <li key={marca}>
+              <Link
+                to={`/estoque?marca=${encodeURIComponent(marca)}`}
+                aria-label={`Ver motos ${marca} no estoque`}
+                className="inline-flex min-h-11 min-w-16 items-center justify-center opacity-80 transition-opacity hover:opacity-100 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foco"
               >
-                <img
-                  data-marca-logo
-                  src={logoDaMarca(marca)}
-                  alt=""
-                  className="h-7 w-auto shrink-0 object-contain opacity-80"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </li>
-            ))}
-          </ul>
-
-          {/* Desktop: linha única, logos centrais com respiro — a seção
-              inteira conversa pouco e mostra as marcas. */}
-          <ul className="hidden flex-wrap items-center justify-center gap-x-10 gap-y-4 sm:flex">
-            {MARCAS.map((marca) => (
-              <li key={marca} className="flex items-center justify-center">
-                <img
-                  data-marca-logo
-                  src={logoDaMarca(marca)}
-                  alt={`Logo ${marca}`}
-                  className="h-8 w-auto object-contain opacity-70 transition-opacity hover:opacity-100"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
+                {MARCAS_COM_LOGO.has(marca) ? (
+                  <img
+                    src={logoDaMarca(marca)}
+                    alt={marca}
+                    className="h-7 max-w-28 object-contain sm:h-8"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <span className="font-display text-sm font-semibold tracking-[0.06em] text-texto-2">
+                    {marca}
+                  </span>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )

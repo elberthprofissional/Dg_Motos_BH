@@ -1,6 +1,7 @@
 import { SITE, SITE_URL } from '../data/site'
 import type { ConfigLoja } from './configLoja'
 import type { Motorcycle } from '../types'
+import { bikeModelName, bikeTitle, precoRequerConfirmacao } from './format'
 
 /** Schema da loja (AutoDealer) — injetado na home. Usa a config do painel. */
 export function autoDealerSchema(config?: ConfigLoja): object {
@@ -39,9 +40,9 @@ export function vehicleSchema(bike: Motorcycle): object {
     '@context': 'https://schema.org',
     '@type': 'Car',
     '@id': `${SITE_URL}/moto/${bike.slug}#veiculo`,
-    name: `${bike.marca} ${bike.modelo} ${bike.ano}`,
+    name: `${bikeTitle(bike)} ${bike.ano}`,
     brand: { '@type': 'Brand', name: bike.marca },
-    model: bike.modelo,
+    model: bikeModelName(bike),
     vehicleModelDate: String(bike.ano),
     // `!= null` (e não truthy): moto com 0 km é um dado válido.
     mileageFromOdometer:
@@ -57,7 +58,7 @@ export function vehicleSchema(bike: Motorcycle): object {
     description: bike.descricao,
     offers: {
       '@type': 'Offer',
-      price: bike.preco,
+      price: precoRequerConfirmacao(bike.preco) ? undefined : bike.preco,
       priceCurrency: 'BRL',
       availability:
         bike.status === 'disponivel'

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Calendar, ChevronRight, Gauge } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
-import { bikeTitle, buildBikeMessage, descontoPercentual, formatKm, formatPrice } from '../../lib/format'
+import { bikeTitle, buildBikeMessage, descontoPercentual, formatKm, formatPrice, precoRequerConfirmacao } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 
@@ -20,7 +20,8 @@ const ESTADO: Partial<Record<MotorcycleStatus, string>> = {
 
 export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCardProps) {
   const titulo = bikeTitle(bike)
-  const capa = bike.imagens[0] ?? bike.imagens[1]
+  const lateral = bike.imagens.find((imagem) => /vista lateral/i.test(imagem.alt))
+  const capa = lateral ?? bike.imagens[0]
   const estado = ESTADO[bike.status]
   const waLink = useWhatsappLink(buildBikeMessage(bike.marca, bike.modelo, bike.ano))
   const desconto = descontoPercentual(bike)
@@ -37,7 +38,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           decoding={priority ? 'sync' : 'async'}
           width={1200}
           height={1600}
-          className="size-full object-contain p-3 transition-transform duration-300 motion-safe:group-hover:scale-[1.02] sm:p-4"
+          className={`size-full transition-transform duration-300 motion-safe:group-hover:scale-[1.02] ${lateral ? 'object-cover' : 'object-contain p-3 sm:p-4'}`}
         />
       ) : (
         <p className="px-5 text-center text-sm text-texto-2">Foto ainda não disponível</p>
@@ -54,7 +55,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   // Dados e preço ficam em linhas próprias para modelos longos não
   // comprimirem o valor em telas menores.
   const preco = (
-    <div className="mt-4">
+      <div className="mt-4">
       {desconto != null ? (
         <>
           <p className="numeros text-[11px] leading-none text-texto-3">
@@ -69,6 +70,11 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           {formatPrice(bike.preco)}
         </p>
       )}
+      {precoRequerConfirmacao(bike.preco) ? (
+        <p className="mt-2 text-xs leading-relaxed text-texto-2">
+          Valor cadastrado. Confirme com a loja antes de negociar.
+        </p>
+      ) : null}
     </div>
   )
 
@@ -202,6 +208,11 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
                 {formatPrice(bike.preco)}
               </p>
             )}
+            {precoRequerConfirmacao(bike.preco) ? (
+              <p className="mt-2 max-w-36 text-left text-[11px] leading-snug text-texto-2">
+                Valor cadastrado. Confirme com a loja.
+              </p>
+            ) : null}
           </div>
 
           <ChevronRight className="size-4 shrink-0 text-texto-3" aria-hidden="true" />

@@ -28,6 +28,17 @@ export function bikeTitle(bike: Motorcycle): string {
   return nomeExibicao(bike.marca, bike.modelo)
 }
 
+export function bikeModelName(bike: Motorcycle): string {
+  const marca = bike.marca.trim()
+  const titulo = nomeExibicao(bike.marca, bike.modelo)
+  return marca ? titulo.slice(marca.length).trim() : titulo
+}
+
+/** Valores muito acima de R$ 1 milhão são preservados, mas pedem confirmação antes da negociação. */
+export function precoRequerConfirmacao(preco: number): boolean {
+  return preco >= 1_000_000
+}
+
 function nomeExibicao(marcaInformada: string, modeloInformado: string): string {
   const marca = marcaInformada.trim()
   let modelo = modeloInformado.trim()

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bikeTitle, buildBikeMessage, buildDefaultMessage, formatKm, formatPrice } from './format'
+import { bikeTitle, buildBikeMessage, buildDefaultMessage, formatKm, formatPrice, precoRequerConfirmacao } from './format'
 import { autoDealerSchema, vehicleSchema } from './schema'
 import { motorcycles } from '../data/motorcycles'
 
@@ -16,6 +16,12 @@ describe('formatPrice', () => {
     expect(formatPrice(0)).toBe('R$ 0,00')
   })
   it('formata preços altos com separadores e centavos brasileiros', () => {
+    expect(formatPrice(15000000)).toContain('15.000.000,00')
+  })
+
+  it('sinaliza valores fora da faixa para confirmação sem alterar o preço', () => {
+    expect(precoRequerConfirmacao(15000000)).toBe(true)
+    expect(precoRequerConfirmacao(31900)).toBe(false)
     expect(formatPrice(15000000)).toContain('15.000.000,00')
   })
 })
@@ -82,6 +88,18 @@ describe('vehicleSchema', () => {
     expect(schema.name).toContain(bike.marca)
     expect(offer.price).toBe(bike.preco)
     expect(offer.priceCurrency).toBe('BRL')
+  })
+
+  it('não duplica a marca no nome estruturado se o modelo já a inclui', () => {
+    const schema = vehicleSchema({ ...bike, modelo: 'HondaHonda CG 160 Start' }) as Record<string, unknown>
+    expect(schema.name).toBe(`Honda CG 160 Start ${bike.ano}`)
+    expect(schema.model).toBe('CG 160 Start')
+  })
+
+  it('não publica preço fora da faixa como oferta estruturada até confirmação', () => {
+    const schema = vehicleSchema({ ...bike, preco: 15000000 }) as Record<string, unknown>
+    const offer = schema.offers as Record<string, unknown>
+    expect(offer.price).toBeUndefined()
   })
 
   it('marca motos seminovas como usadas', () => {

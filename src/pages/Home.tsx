@@ -8,10 +8,10 @@ import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { Revelar } from '../components/ui/Revelar'
-import { MarcasProcuradas } from '../components/home/MarcasProcuradas'
+import { MarcasNoPatio } from '../components/home/MarcasProcuradas'
 import { entregasRealizadas } from '../data/entregas'
 import { SonhosRealizados } from '../components/home/SonhosRealizados'
-import { bikeTitle, formatPrice } from '../lib/format'
+import { bikeTitle, formatPrice, precoRequerConfirmacao } from '../lib/format'
 
 /**
  * Página inicial — a bancada da loja.
@@ -51,70 +51,86 @@ export function Home() {
   }, [disponiveis])
   const destaque = patio[0]
   const demaisMotos = patio.slice(1)
+  const fotoDestaque = destaque?.imagens.find((imagem) => /vista lateral/i.test(imagem.alt)) ?? destaque?.imagens[0]
+  const marcasNoPatio = useMemo(
+    () => [...new Set(disponiveis.map((moto) => moto.marca.trim()).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b, 'pt-BR'),
+    ),
+    [disponiveis],
+  )
 
   return (
     <>
-      <section data-hero className="bg-fundo pt-cabecalho">
-        <div className="container-site py-8 sm:py-12 lg:py-16">
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(17rem,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
-            <div className="max-w-xl">
-              <h1 className="display text-4xl text-texto sm:text-5xl lg:text-6xl">
-                Motos seminovas em Belo Horizonte
-              </h1>
-              <p className="corpo mt-5 text-texto-2">
-                Compare os modelos disponíveis, veja ano e preço e escolha com
-                calma a próxima moto para a sua estrada.
-              </p>
-              <Link to="/estoque" className="btn btn-primary mt-7 min-h-12 px-6">
-                Explorar estoque
+      <section data-hero className="overflow-hidden bg-fundo pt-cabecalho">
+        <div className="container-site grid gap-9 py-8 sm:gap-12 sm:py-12 lg:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)] lg:items-center lg:gap-14 lg:py-14">
+          <div className="relative z-10 max-w-xl lg:py-8">
+            <p className="mb-5 flex items-center gap-3 text-xs font-semibold tracking-[0.12em] text-texto-2 uppercase">
+              <span className="h-px w-8 bg-marca" aria-hidden="true" />
+              Seminovas · Belo Horizonte
+            </p>
+            <h1 className="display text-4xl text-texto sm:text-5xl lg:text-[4.5rem]">
+              Motos para seguir em frente.
+            </h1>
+            <p className="corpo mt-5 max-w-[38ch] text-texto-2">
+              Veja o estoque real da DG Motos, compare cada unidade e encontre a próxima moto no seu ritmo.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <Link to="/estoque" className="btn btn-primary min-h-12 px-6">
+                Ver motos no estoque
               </Link>
+              <span className="text-sm text-texto-3">
+                {disponiveis.length} {disponiveis.length === 1 ? 'moto disponível' : 'motos disponíveis'}
+              </span>
             </div>
+          </div>
 
-            {destaque ? (
+          {destaque ? (
+            <article className="group min-w-0 lg:-mr-[max(0px,calc((100vw-1760px)/2))]">
               <Link
                 to={`/moto/${destaque.slug}`}
                 aria-label={`Ver ${bikeTitle(destaque)}, ${destaque.ano}, por ${formatPrice(destaque.preco)}`}
-                className="group block min-w-0 bg-painel focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foco"
+                className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foco"
               >
-                <div className="grid min-h-72 grid-cols-1 sm:min-h-96 sm:grid-cols-[minmax(0,1fr)_13rem]">
-                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-painel-2 sm:aspect-auto">
-                    {destaque.imagens[0] ? (
-                      <img
-                        src={destaque.imagens[0].src}
-                        alt={destaque.imagens[0].alt || bikeTitle(destaque)}
-                        width={1200}
-                        height={1600}
-                        fetchPriority="high"
-                        decoding="async"
-                        className="size-full object-contain p-4 transition-transform duration-300 motion-safe:group-hover:scale-[1.02] sm:p-7"
-                      />
-                    ) : (
-                      <p className="px-6 text-center text-sm text-texto-2">
-                        Foto ainda não disponível
-                      </p>
-                    )}
+                <div className="relative aspect-[4/3] overflow-hidden bg-painel-2 sm:aspect-[16/10] lg:aspect-[4/3]">
+                  {fotoDestaque ? (
+                    <img
+                      src={fotoDestaque.src}
+                      alt={fotoDestaque.alt || bikeTitle(destaque)}
+                      width={1280}
+                      height={960}
+                      fetchPriority="high"
+                      decoding="async"
+                      className="size-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.015]"
+                    />
+                  ) : (
+                    <p className="grid size-full place-items-center px-6 text-sm text-texto-2">
+                      Foto ainda não disponível
+                    </p>
+                  )}
+                </div>
+                <div className="grid gap-3 border-b border-borda-forte py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6 sm:py-5">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <h2 className="font-display text-xl font-semibold tracking-[-0.02em] text-texto sm:text-2xl">
+                      {bikeTitle(destaque)}
+                    </h2>
+                    <span className="numeros text-sm text-texto-3">{destaque.ano}</span>
                   </div>
-                  <div className="flex flex-col justify-between gap-5 p-5 sm:p-7">
-                    <div>
-                      <p className="text-sm font-medium text-texto-2">No pátio</p>
-                      <h2 className="titulo mt-2 text-2xl text-texto sm:text-3xl">
-                        {bikeTitle(destaque)}
-                      </h2>
-                      <p className="mt-2 text-sm text-texto-2">Ano {destaque.ano}</p>
-                    </div>
-                    <p className="preco text-2xl sm:text-3xl">{formatPrice(destaque.preco)}</p>
+                  <div className="sm:text-right">
+                    <p className="preco text-xl sm:text-2xl">{formatPrice(destaque.preco)}</p>
+                    {precoRequerConfirmacao(destaque.preco) ? (
+                      <p className="mt-1 text-xs text-texto-2">Valor cadastrado; confirme com a loja.</p>
+                    ) : null}
                   </div>
                 </div>
               </Link>
-            ) : (
-              <div className="flex min-h-64 items-end bg-painel p-6 sm:min-h-80 sm:p-8">
-                <p className="corpo max-w-md text-texto-2">
-                  Não há motos anunciadas no momento. Fale com a equipe para
-                  consultar o que está chegando.
-                </p>
-              </div>
-            )}
-          </div>
+            </article>
+          ) : (
+            <div className="flex min-h-64 items-end bg-painel p-6 sm:min-h-80 sm:p-8">
+              <p className="corpo max-w-md text-texto-2">
+                Não há motos anunciadas no momento. Fale com a equipe para consultar as próximas entradas.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -165,6 +181,10 @@ export function Home() {
         </div>
       </section>
 
+      <MarcasNoPatio
+        marcas={marcasNoPatio}
+      />
+
       <SonhosRealizados entregas={entregasRealizadas} />
 
       <section className="section bg-painel">
@@ -182,7 +202,6 @@ export function Home() {
         </div>
       </section>
 
-      <MarcasProcuradas />
     </>
   )
 }

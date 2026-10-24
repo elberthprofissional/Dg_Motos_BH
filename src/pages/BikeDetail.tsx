@@ -4,7 +4,7 @@ import { useCatalogo } from '../hooks/useCatalogo'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { useWhatsappLink } from '../hooks/useWhatsappLink'
 import { vehicleSchema } from '../lib/schema'
-import { buildBikeMessage, descontoPercentual, formatKm, formatPrice } from '../lib/format'
+import { bikeTitle, buildBikeMessage, descontoPercentual, formatKm, formatPrice, precoRequerConfirmacao } from '../lib/format'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { BikeGallery } from '../components/motorcycles/BikeGallery'
@@ -57,10 +57,10 @@ export function BikeDetail() {
 
   usePageMeta(
     bike
-      ? `${bike.marca} ${bike.modelo} ${bike.ano} | DG Motos`
+      ? `${bikeTitle(bike)} ${bike.ano} | DG Motos`
       : 'Motocicleta não encontrada | DG Motos',
     bike
-      ? `${bike.marca} ${bike.modelo} ${bike.ano} seminova na DG Motos, Belo Horizonte. ${formatPrice(bike.preco)}.`
+      ? `${bikeTitle(bike)} ${bike.ano} seminova na DG Motos, Belo Horizonte. ${formatPrice(bike.preco)}.`
       : 'Esta motocicleta não está mais no catálogo da DG Motos.',
   )
 
@@ -102,11 +102,10 @@ export function BikeDetail() {
     )
   }
 
-  const titulo = `${bike.marca} ${bike.modelo}`
+  const titulo = bikeTitle(bike)
   const disponivel = bike.status === 'disponivel'
   const temDescricao = bike.descricao.trim().length > 0
   const desconto = descontoPercentual(bike)
-  const precoValor = bike.preco.toLocaleString('pt-BR')
   const resumo = `Motocicleta ${bike.categoria.toLocaleLowerCase('pt-BR')} ${bike.ano}${
     bike.cilindrada ? `, ${bike.cilindrada} cc` : ''
   }, em ${config.enderecoCidadeUf}.`
@@ -138,7 +137,7 @@ export function BikeDetail() {
           </Link>
           <ChevronRight className="size-3" aria-hidden="true" />
           <span className="text-texto-2">
-            {bike.modelo} {bike.ano}
+            {titulo} {bike.ano}
           </span>
         </nav>
 
@@ -154,7 +153,7 @@ export function BikeDetail() {
           <div className="contents md:sticky md:top-[5.75rem] md:col-start-2 md:row-start-1 md:flex md:flex-col md:gap-8">
             <div className="order-1 md:order-none">
               <h1 className="text-balance font-display text-[2.5rem] leading-[1.02] font-semibold tracking-[-0.03em] text-texto lg:text-[3.25rem] xl:text-[3.5rem]">
-                {bike.marca} {bike.modelo}
+                {titulo}
               </h1>
               <p className="mt-3 max-w-[38ch] text-lg leading-relaxed text-texto-2">
                 {resumo}
@@ -170,12 +169,7 @@ export function BikeDetail() {
                     </p>
                   ) : null}
                   <p className="flex flex-wrap items-center gap-3 font-display text-[2.5rem] leading-none font-semibold tracking-[-0.035em] text-texto lg:text-[2.75rem]">
-                    <span>
-                      <span className="text-[0.44em] font-semibold tracking-normal text-marca-texto">
-                        R$
-                      </span>
-                      <span className="numeros">{precoValor}</span>
-                    </span>
+                    <span className="numeros">{formatPrice(bike.preco)}</span>
                     {desconto != null ? (
                       <span className="numeros rounded-full bg-marca px-2.5 py-1 font-sans text-sm font-bold text-white">
                         -{desconto}%
@@ -192,6 +186,11 @@ export function BikeDetail() {
                   <span>{disponivel ? 'Disponível no pátio' : 'Indisponível no momento'}</span>
                 </p>
               </div>
+              {precoRequerConfirmacao(bike.preco) ? (
+                <p className="mt-3 max-w-sm text-sm leading-relaxed text-texto-2">
+                  Valor cadastrado. Confirme o preço com a loja antes de negociar.
+                </p>
+              ) : null}
             </div>
 
             <div className="order-3 md:order-none">

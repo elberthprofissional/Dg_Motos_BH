@@ -111,20 +111,35 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
             ) : null}
           </>
         ) : (
-          <div className="grid gap-6 bg-fundo p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-10 sm:p-8 lg:p-10">
-            <div>
-              <h3 className="titulo max-w-[16ch] text-2xl text-texto sm:text-3xl">
-                Registros reais, publicados com autorização
-              </h3>
-              <p className="corpo mt-4 max-w-2xl text-texto-2">
-                Ainda não há fotos de entrega autorizadas para exibir nesta seção.
-                Quando houver, cada registro será apresentado aqui com o contexto correto.
-              </p>
+          <div className="grid overflow-hidden bg-fundo sm:grid-cols-[minmax(12rem,0.68fr)_minmax(0,1.32fr)]">
+            <div className="relative flex min-h-52 items-center justify-center bg-painel-2 p-8 sm:min-h-72">
+              <span className="absolute inset-y-8 left-0 w-1 bg-marca" aria-hidden="true" />
+              <img
+                src="/logo.webp"
+                alt=""
+                aria-hidden="true"
+                width={160}
+                height={160}
+                className="w-28 object-contain opacity-90 sm:w-36"
+              />
             </div>
-            <Link to="/estoque" className="btn btn-primary min-h-12 w-fit gap-2 px-5">
-              Ver motos disponíveis
-              <ArrowUpRight className="size-4" aria-hidden="true" />
-            </Link>
+            <div className="flex flex-col items-start justify-between gap-8 p-6 sm:p-9 lg:p-12">
+              <div>
+                <p className="text-xs font-semibold tracking-[0.12em] text-marca-texto uppercase">
+                  Arquivo de entregas
+                </p>
+                <h3 className="titulo mt-4 max-w-[17ch] text-2xl text-texto sm:text-3xl">
+                  Momentos reais, registrados com autorização.
+                </h3>
+                <p className="corpo mt-4 max-w-2xl text-texto-2">
+                  Ainda não há fotos de entrega autorizadas para exibir. Quando houver, cada momento será publicado com o contexto confirmado.
+                </p>
+              </div>
+              <Link to="/estoque" className="btn btn-secondary min-h-12 w-fit gap-2 px-5">
+                Ver motos disponíveis
+                <ArrowUpRight className="size-4" aria-hidden="true" />
+              </Link>
+            </div>
           </div>
         )}
       </div>
