@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Calendar, ChevronRight, Gauge } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
-import { buildBikeMessage, descontoPercentual, formatKm, formatPrice } from '../../lib/format'
-import { PLACEHOLDER_CARD } from '../../lib/placeholder'
+import { bikeTitle, buildBikeMessage, descontoPercentual, formatKm, formatPrice } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 
@@ -20,7 +19,7 @@ const ESTADO: Partial<Record<MotorcycleStatus, string>> = {
 }
 
 export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCardProps) {
-  const titulo = `${bike.marca} ${bike.modelo}`
+  const titulo = bikeTitle(bike)
   const capa = bike.imagens[0] ?? bike.imagens[1]
   const estado = ESTADO[bike.status]
   const waLink = useWhatsappLink(buildBikeMessage(bike.marca, bike.modelo, bike.ano))
@@ -28,64 +27,34 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   const disponivel = bike.status === 'disponivel'
 
   const foto = (
-    <div className="relative aspect-[4/3] w-full overflow-hidden bg-fundo">
-      <img
-        src={capa?.src ?? PLACEHOLDER_CARD}
-        alt={capa?.alt ?? titulo}
-        loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'auto'}
-        decoding={priority ? 'sync' : 'async'}
-        className="size-full object-cover object-center transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
-      />
-      {/* Selo circular da promoção: percentual de desconto. Fora da
-          promoção o card não desenha nada aqui. */}
+    <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-painel-2">
+      {capa ? (
+        <img
+          src={capa.src}
+          alt={capa.alt || titulo}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
+          decoding={priority ? 'sync' : 'async'}
+          width={1200}
+          height={1600}
+          className="size-full object-contain p-3 transition-transform duration-300 motion-safe:group-hover:scale-[1.02] sm:p-4"
+        />
+      ) : (
+        <p className="px-5 text-center text-sm text-texto-2">Foto ainda não disponível</p>
+      )}
       {desconto != null ? (
-        <span className="absolute top-3 left-3 grid size-12 place-items-center rounded-full bg-marca font-display text-[13px] leading-none font-bold text-white shadow-lg shadow-black/40 ring-1 ring-white/25">
+        <span className="absolute top-3 left-3 grid min-h-8 place-items-center bg-marca px-2.5 font-sans text-xs font-bold text-white">
           <span className="sr-only">Promoção: </span>
           -{desconto}%
         </span>
       ) : null}
-
-      {/* Desktop: os botões moram DENTRO da foto e só aparecem quando o
-          mouse entra no card — em repouso a vitrine é limpa, só imagem.
-          O teclado também revela (focus-within). Mobile não desenha. */}
-      <div
-        className="absolute inset-x-0 bottom-0 hidden translate-y-2 gap-2 bg-gradient-to-t from-neutral-950/90 via-neutral-950/50 to-transparent p-3 pt-12 opacity-0 transition-all duration-300 focus-within:translate-y-0 focus-within:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 lg:flex"
-      >
-        <Link
-          to={`/moto/${bike.slug}`}
-          className={`grid place-items-center rounded-xl bg-white py-2.5 font-sans text-[13px] font-bold text-black transition-colors hover:bg-neutral-200 ${disponivel ? 'flex-1' : 'w-full'}`}
-        >
-          Ver detalhes
-        </Link>
-        {disponivel && waLink ? (
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-40 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-neutral-500/70 bg-black/30 py-2.5 font-sans text-[13px] font-semibold text-neutral-100 transition-colors backdrop-blur-sm hover:border-white/70 hover:text-white"
-          >
-            <IconeWhatsapp className="size-4 shrink-0" />
-            WhatsApp
-          </a>
-        ) : null}
-        {disponivel && !waLink ? (
-          <Link
-            to="/contato"
-            className="inline-flex w-40 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-neutral-500/70 bg-black/30 py-2.5 font-sans text-[13px] font-semibold text-neutral-100 transition-colors backdrop-blur-sm hover:border-white/70 hover:text-white"
-          >
-            <IconeWhatsapp className="size-4 shrink-0" />
-            Falar com a loja
-          </Link>
-        ) : null}
-      </div>
     </div>
   )
 
-  // Título e preço na mesma linha: o preço é a segunda informação que o
-  // visitante busca (foto → moto → preço) e não pode morar no fim do card.
+  // Dados e preço ficam em linhas próprias para modelos longos não
+  // comprimirem o valor em telas menores.
   const preco = (
-    <div className="shrink-0 text-right">
+    <div className="mt-4">
       {desconto != null ? (
         <>
           <p className="numeros text-[11px] leading-none text-texto-3">
@@ -105,12 +74,9 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
 
   const informacoes = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="font-display text-[17px] leading-tight font-semibold tracking-[-0.02em] text-texto">
-          {titulo}
-        </h3>
-        {preco}
-      </div>
+      <h3 className="font-display text-lg leading-tight font-semibold tracking-[-0.02em] text-texto">
+        {titulo}
+      </h3>
 
       {/* Meta compacta com ícone: lê em um relance, como na referência. */}
       <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] leading-none text-texto-3">
@@ -124,21 +90,22 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
             <span className="numeros">{formatKm(bike.quilometragem)}</span>
           </span>
         ) : null}
+        <span>{bike.categoria}</span>
         {estado ? <span>{estado}</span> : null}
       </p>
+      {preco}
     </>
   )
 
-  // Mobile: os botões ficam no rodapé do card, sempre visíveis — touch
-  // não tem hover, então o overlay do desktop não serve aqui.
+  // Ações permanecem visíveis em qualquer tela; nenhuma depende de hover.
   const acoesMobile = (
     <div
-      className={`grid gap-2 px-4 pt-3 pb-4 sm:px-5 lg:hidden ${disponivel ? 'grid-cols-2' : 'grid-cols-1'}`}
+      className={`grid gap-2 px-4 pt-2 pb-4 sm:px-5 ${disponivel ? 'grid-cols-2' : 'grid-cols-1'}`}
     >
       <Link
         to={`/moto/${bike.slug}`}
         aria-label={`Ver os detalhes de ${titulo} ${bike.ano}`}
-        className={`grid min-h-10 place-items-center rounded-xl bg-white py-2.5 font-sans text-[13px] font-bold text-black transition-colors hover:bg-neutral-200 ${
+        className={`grid min-h-11 place-items-center bg-white py-2.5 font-sans text-[13px] font-bold text-black transition-colors hover:bg-neutral-200 ${
           disponivel ? '' : 'col-span-2'
         }`}
       >
@@ -150,7 +117,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-borda-forte py-2.5 font-sans text-[13px] font-semibold text-texto-2 transition-colors hover:border-marca hover:text-marca-texto"
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-borda-forte py-2.5 font-sans text-[13px] font-semibold text-texto-2 transition-colors hover:border-marca hover:text-marca-texto"
         >
           <IconeWhatsapp className="size-4 shrink-0" />
           WhatsApp
@@ -160,7 +127,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
       {disponivel && !waLink ? (
         <Link
           to="/contato"
-          className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-borda-forte py-2.5 font-sans text-[13px] font-semibold text-texto-2 transition-colors hover:border-marca hover:text-marca-texto"
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-borda-forte py-2.5 font-sans text-[13px] font-semibold text-texto-2 transition-colors hover:border-marca hover:text-marca-texto"
         >
           <IconeWhatsapp className="size-4 shrink-0" />
           Falar com a loja
@@ -170,7 +137,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   )
 
   const artigo =
-    'group flex h-full flex-col overflow-hidden bg-painel transition-colors duration-300 hover:bg-painel-2'
+    'group flex h-full flex-col overflow-hidden bg-painel transition-colors duration-200 hover:bg-painel-2'
 
   if (variante === 'lista') {
     /* Linha de catálogo compacta: foto miúda, ficha de uma linha e
@@ -184,16 +151,22 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           className={`flex items-center gap-3 px-2 py-2.5 ${disponivel ? '' : 'opacity-55'}`}
         >
           <div className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden bg-painel">
-            <img
-              src={capa?.src ?? PLACEHOLDER_CARD}
-              alt={capa?.alt ?? titulo}
-              loading={priority ? 'eager' : 'lazy'}
-              fetchPriority={priority ? 'high' : 'auto'}
-              decoding="async"
-              className="size-full object-cover object-center"
-            />
+            {capa ? (
+              <img
+                src={capa.src}
+                alt={capa.alt || titulo}
+                loading={priority ? 'eager' : 'lazy'}
+                fetchPriority={priority ? 'high' : 'auto'}
+                decoding="async"
+                width={1200}
+                height={1600}
+                className="size-full object-contain p-1"
+              />
+            ) : (
+              <span className="sr-only">Foto ainda não disponível</span>
+            )}
             {desconto != null ? (
-              <span className="absolute top-1 left-1 rounded bg-marca px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
+              <span className="absolute top-1 left-1 bg-marca px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
                 <span className="sr-only">Promoção: </span>
                 -{desconto}%
               </span>

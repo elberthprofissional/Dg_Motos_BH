@@ -7,11 +7,11 @@ import {
   ANO_MIN,
   FILTROS_PADRAO,
   ORDENACOES,
-  PRECO_MAX,
   PRECO_MIN,
   filtrarMotos,
   marcasDisponiveis,
   modelosDisponiveis,
+  tetoPrecoDisponivel,
 } from '../lib/filters'
 import type { BikeFilterState } from '../types'
 import { usePageMeta } from '../hooks/usePageMeta'
@@ -38,9 +38,10 @@ import { formatPrice } from '../lib/format'
  * pelo botão flutuante, sempre disponível.
  */
 export function Estoque() {
-  const { motos } = useCatalogo()
+  const { motos, carregando } = useCatalogo()
   const [searchParams] = useSearchParams()
   const marcaUrl = searchParams.get('marca') ?? ''
+  const precoMaximo = useMemo(() => tetoPrecoDisponivel(motos), [motos])
 
   usePageMeta(
     'Estoque | DG Motos — Motocicletas seminovas em BH',
@@ -50,15 +51,27 @@ export function Estoque() {
   const [marcaParamAnterior, setMarcaParamAnterior] = useState(marcaUrl)
   const [filtros, setFiltros] = useState<BikeFilterState>(() => ({
     ...FILTROS_PADRAO,
+    precoMax: precoMaximo,
     marca: marcaUrl,
   }))
   const [rascunho, setRascunho] = useState<BikeFilterState>(() => ({
     ...FILTROS_PADRAO,
+    precoMax: precoMaximo,
     marca: marcaUrl,
   }))
+  const [tetoPrecoAplicadoAlterado, setTetoPrecoAplicadoAlterado] = useState(false)
+  const [tetoPrecoRascunhoAlterado, setTetoPrecoRascunhoAlterado] = useState(false)
   const [filtrosAbertos, setFiltrosAbertos] = useState(false)
   const folhaRef = useRef<HTMLDialogElement>(null)
   const gatilhoRef = useRef<HTMLElement | null>(null)
+  const filtrosAtuais = useMemo(
+    () => ({ ...filtros, precoMax: tetoPrecoAplicadoAlterado ? filtros.precoMax : precoMaximo }),
+    [filtros, precoMaximo, tetoPrecoAplicadoAlterado],
+  )
+  const rascunhoAtual = useMemo(
+    () => ({ ...rascunho, precoMax: tetoPrecoRascunhoAlterado ? rascunho.precoMax : precoMaximo }),
+    [rascunho, precoMaximo, tetoPrecoRascunhoAlterado],
+  )
 
   // Sincroniza quando a URL muda (ex.: clique em chip de marca na Home)
   // sem efeito cascata. O modelo é solto porque pode ser de outra marca.
@@ -82,7 +95,8 @@ export function Estoque() {
     gatilhoRef.current = gatilho
     // Cada abertura parte do que está aplicado: um rascunho abandonado
     // não volta para a folha na próxima visita.
-    setRascunho(filtros)
+    setRascunho(filtrosAtuais)
+    setTetoPrecoRascunhoAlterado(tetoPrecoAplicadoAlterado)
     setFiltrosAbertos(true)
   }
 
@@ -92,28 +106,46 @@ export function Estoque() {
   }
 
   const cancelarFolha = () => {
-    setRascunho(filtros)
+    setRascunho(filtrosAtuais)
+    setTetoPrecoRascunhoAlterado(tetoPrecoAplicadoAlterado)
     fecharFolha()
   }
 
   const aplicarEFechar = () => {
-    setFiltros(rascunho)
+    setFiltros(rascunhoAtual)
+    setTetoPrecoAplicadoAlterado(tetoPrecoRascunhoAlterado)
     fecharFolha()
   }
 
-  const resultados = useMemo(() => filtrarMotos(motos, filtros), [motos, filtros])
+  const resultados = useMemo(
+    () => filtrarMotos(motos, filtrosAtuais, precoMaximo),
+    [motos, filtrosAtuais, precoMaximo],
+  )
 
   // Atualização imediata (chips e etiquetas): mexe no aplicado e no
   // rascunho ao mesmo tempo para os dois nunca divergirem.
   const atualizar = (patch: Partial<BikeFilterState>) => {
     setFiltros((prev) => ({ ...prev, ...patch }))
     setRascunho((prev) => ({ ...prev, ...patch }))
+    if (patch.precoMax !== undefined) {
+      setTetoPrecoAplicadoAlterado(true)
+      setTetoPrecoRascunhoAlterado(true)
+    }
   }
 
   const limparFiltros = () => {
     const limpo = { ...FILTROS_PADRAO, ordenacao: filtros.ordenacao }
     setFiltros(limpo)
     setRascunho(limpo)
+    setTetoPrecoAplicadoAlterado(false)
+    setTetoPrecoRascunhoAlterado(false)
+  }
+
+  const limparFaixaPreco = () => {
+    setTetoPrecoAplicadoAlterado(false)
+    setTetoPrecoRascunhoAlterado(false)
+    setFiltros((prev) => ({ ...prev, precoMin: PRECO_MIN }))
+    setRascunho((prev) => ({ ...prev, precoMin: PRECO_MIN }))
   }
 
   // Resumo removível dos filtros ativos: cada etiqueta sabe desfazer
@@ -142,11 +174,11 @@ export function Estoque() {
       limpar: () => atualizar({ modelo: '' }),
     })
   }
-  if (filtros.precoMin > PRECO_MIN || filtros.precoMax < PRECO_MAX) {
+  if (filtrosAtuais.precoMin > PRECO_MIN || filtrosAtuais.precoMax < precoMaximo) {
     ativos.push({
       chave: 'preco',
-      rotulo: `${formatPrice(filtros.precoMin)} – ${formatPrice(filtros.precoMax)}`,
-      limpar: () => atualizar({ precoMin: PRECO_MIN, precoMax: PRECO_MAX }),
+      rotulo: `${formatPrice(filtrosAtuais.precoMin)} – ${formatPrice(filtrosAtuais.precoMax)}`,
+      limpar: limparFaixaPreco,
     })
   }
   if (filtros.anoMin > ANO_MIN) {
@@ -165,16 +197,29 @@ export function Estoque() {
   }
 
   const temAtivos = ativos.length > 0
+  const totalDisponiveis = motos.filter((moto) => moto.status === 'disponivel').length
 
   return (
     <div className="pt-cabecalho">
-      <h1 className="sr-only">Estoque</h1>
-
       <section className="bg-fundo pt-8 pb-16 sm:pt-12 sm:pb-24">
         <div className="container-site">
+          <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end sm:gap-8">
+            <div>
+              <h1 className="titulo text-4xl text-texto sm:text-5xl">Estoque</h1>
+              <p className="corpo mt-3 text-texto-2">
+                Encontre uma moto por marca, modelo, ano ou faixa de preço.
+              </p>
+            </div>
+            <p className="text-sm text-texto-2" role="status" aria-live="polite">
+              {carregando
+                ? 'Atualizando disponibilidade…'
+                : `${resultados.length} ${resultados.length === 1 ? 'moto encontrada' : 'motos encontradas'}`}
+            </p>
+          </header>
+
           {/* Resultado */}
           <div className="min-w-0 flex-1">
-            <h2 className="sr-only">Motos disponíveis no estoque</h2>
+            <h2 className="sr-only">Resultados do estoque</h2>
 
             {/* Barra de filtros do desktop: uma linha acima do grid, à la
                 catálogo simples — sem coluna lateral. Aplica na hora (o
@@ -183,7 +228,7 @@ export function Estoque() {
             <form
               onSubmit={(e) => e.preventDefault()}
               aria-label="Filtros do estoque"
-              className="mb-6 hidden items-start gap-3 rounded-xl border border-neutral-800/80 bg-neutral-900/60 p-4 lg:flex"
+              className="mb-6 hidden flex-wrap items-end gap-3 bg-painel p-4 lg:flex"
             >
               <div className="min-w-44 flex-1">
                 <label htmlFor="barra-busca" className="field-label">
@@ -304,7 +349,7 @@ export function Estoque() {
                     Preço até
                   </label>
                   <span className="numeros text-[11px] leading-none font-semibold text-neutral-200">
-                    {formatPrice(filtros.precoMax)}
+                    {formatPrice(filtrosAtuais.precoMax)}
                   </span>
                 </div>
                 <div className="flex h-10 items-center">
@@ -313,12 +358,12 @@ export function Estoque() {
                     type="range"
                     aria-label="Preço até"
                     min={PRECO_MIN}
-                    max={PRECO_MAX}
+                    max={precoMaximo}
                     step={1000}
-                    value={filtros.precoMax}
+                    value={filtrosAtuais.precoMax}
                     onChange={(e) =>
                       atualizar({
-                        precoMax: Math.max(Number(e.target.value), filtros.precoMin + 1000),
+                        precoMax: Math.max(Number(e.target.value), filtrosAtuais.precoMin + 1000),
                       })
                     }
                     className="w-full"
@@ -385,14 +430,13 @@ export function Estoque() {
 
             {resultados.length > 0 ? (
               <>
-                {/* Celular: lista emfileirada — uma moto atrás da outra,
-                    mais juntinha que os cards: comparar fica rápido e o
-                    toque leva direto à ficha. */}
-                <ul className="divide-y divide-borda border-y border-borda sm:hidden">
+                {/* No celular, os cards usam toda a largura para manter
+                    preço, detalhes e ações fáceis de ler e tocar. */}
+                <div className="grid grid-cols-1 gap-4 sm:hidden">
                   {resultados.map((bike) => (
-                    <BikeCard key={bike.id} bike={bike} variante="lista" />
+                    <BikeCard key={bike.id} bike={bike} />
                   ))}
-                </ul>
+                </div>
 
                 {/* Do tablet em diante: grade de vitrines. */}
                 <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -404,16 +448,22 @@ export function Estoque() {
                 </div>
               </>
             ) : (
-              <div className="rounded-2xl border border-borda bg-painel/80">
+              <div className="bg-painel px-4 py-2 sm:px-8">
                 <EstadoVazio
                   icone={<SearchX className="size-7" aria-hidden="true" />}
-                  titulo="Nenhuma moto encontrada com esses filtros"
-                  descricao="Ajuste a faixa de preço, o ano ou a categoria. A moto que você procura pode estar chegando ao pátio — fale com a gente para avisar."
+                  titulo={totalDisponiveis === 0 ? 'Sem motos anunciadas agora' : 'Nenhuma moto encontrada com esses filtros'}
+                  descricao={
+                    totalDisponiveis === 0
+                      ? 'Fale com a loja para consultar as próximas entradas.'
+                      : 'Ajuste a faixa de preço, o ano ou a categoria, ou limpe os filtros para ver todo o estoque.'
+                  }
                   acao={
                     <div className="flex flex-wrap justify-center gap-3">
-                      <Button variant="outline" onClick={limparFiltros}>
-                        Limpar filtros
-                      </Button>
+                      {totalDisponiveis > 0 ? (
+                        <Button variant="outline" onClick={limparFiltros}>
+                          Limpar filtros
+                        </Button>
+                      ) : null}
                       <Button to="/contato">Falar com a loja</Button>
                     </div>
                   }
@@ -459,9 +509,15 @@ export function Estoque() {
 
             <div className="flex-1 overflow-y-auto overscroll-contain p-5">
               <BikeFilters
-                filtros={rascunho}
+                filtros={rascunhoAtual}
                 motos={motos}
-                onChange={setRascunho}
+                precoMaximo={precoMaximo}
+                onChange={(proximo) => {
+                  setRascunho(proximo)
+                  if (proximo.precoMax !== rascunhoAtual.precoMax) {
+                    setTetoPrecoRascunhoAlterado(true)
+                  }
+                }}
                 onAplicar={aplicarEFechar}
                 prefix="filtro-m"
               />

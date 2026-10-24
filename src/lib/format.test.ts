@@ -1,15 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { buildBikeMessage, buildDefaultMessage, formatKm, formatPrice } from './format'
+import { bikeTitle, buildBikeMessage, buildDefaultMessage, formatKm, formatPrice } from './format'
 import { autoDealerSchema, vehicleSchema } from './schema'
 import { motorcycles } from '../data/motorcycles'
 
 describe('formatPrice', () => {
   it('formata em reais sem centavos', () => {
-    expect(formatPrice(31900)).toContain('31.900')
+    expect(formatPrice(31900)).toContain('31.900,00')
+  })
+
+  it('preserva casas decimais cadastradas no preço', () => {
+    expect(formatPrice(31900.5)).toContain('31.900,50')
   })
 
   it('formata zero corretamente', () => {
-    expect(formatPrice(0)).toBe('R$ 0')
+    expect(formatPrice(0)).toBe('R$ 0,00')
+  })
+  it('formata preços altos com separadores e centavos brasileiros', () => {
+    expect(formatPrice(15000000)).toContain('15.000.000,00')
   })
 })
 
@@ -37,6 +44,11 @@ describe('mensagens de WhatsApp', () => {
 
   it('a mensagem geral menciona a loja', () => {
     expect(buildDefaultMessage()).toContain('DG Motos')
+  })
+  it('não repete a marca quando o modelo já começa com ela', () => {
+    const bike = { ...motorcycles[3], modelo: 'HondaHonda CG 160 Start' }
+    expect(bikeTitle(bike)).toBe('Honda CG 160 Start')
+    expect(buildBikeMessage('Honda', bike.modelo, bike.ano)).toContain('Honda CG 160 Start')
   })
 })
 

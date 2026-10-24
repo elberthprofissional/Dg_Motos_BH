@@ -8,10 +8,10 @@ import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { Revelar } from '../components/ui/Revelar'
-import heroDesktopImg from '../assets/hero/home-desktop.webp'
-import trocaDesktopImg from '../assets/troca/banner-desktop.webp'
-import trocaMobileImg from '../assets/troca/banner-mobile.webp'
 import { MarcasProcuradas } from '../components/home/MarcasProcuradas'
+import { entregasRealizadas } from '../data/entregas'
+import { SonhosRealizados } from '../components/home/SonhosRealizados'
+import { bikeTitle, formatPrice } from '../lib/format'
 
 /**
  * Página inicial — a bancada da loja.
@@ -30,8 +30,8 @@ export function Home() {
   const { config } = useSiteConfig()
 
   usePageMeta(
-    'DG Motos — Seminovas inspecionadas em Belo Horizonte',
-    'Loja de motocicletas seminovas em Belo Horizonte, MG. Inspeção mecânica e ciclística, laudo cautelar aprovado e negociação direta pelo WhatsApp.',
+    'DG Motos — Motos seminovas em Belo Horizonte',
+    'Veja as motocicletas seminovas disponíveis no estoque da DG Motos, em Belo Horizonte, MG.',
   )
   useJsonLd(autoDealerSchema(config))
 
@@ -49,68 +49,72 @@ export function Home() {
     const foraDaPromo = disponiveis.filter((m) => !m.emPromocao)
     return [...emPromocao, ...foraDaPromo].slice(0, 10)
   }, [disponiveis])
+  const destaque = patio[0]
+  const demaisMotos = patio.slice(1)
 
   return (
     <>
-      {/* ==========================================================      {/* ============================================================
-          1. HERO — a entrada do showroom
-          No celular fica só o texto, bem espaçado sobre o fundo.
-          Do tablet pra cima a foto da loja cobre a metade inteira
-          sem moldura e o texto pousa sobre ela, à esquerda.
-          ============================================================ */}
-      <section
-        data-hero
-        className="relative isolate w-full overflow-hidden bg-fundo pt-cabecalho"
-      >
-        {/* Texto único, escrito mobile-first: no celular ele mora
-            sozinho sobre o fundo; do tablet pra cima a foto entra
-            como camada ao fundo e o texto pousa sobre ela. */}
-        <div
-          data-hero-content
-          className="relative z-10 lg:mx-auto lg:w-full lg:max-w-[1760px] lg:px-[length:var(--margem)]"
-        >
-          <div className="max-w-xl px-5 py-6 lg:py-24 lg:pl-16 lg:pr-0">
-            <span className="mb-2 block text-xs font-semibold tracking-wider text-marca-texto uppercase">
-              Seminovas em Belo Horizonte
-            </span>
+      <section data-hero className="bg-fundo pt-cabecalho">
+        <div className="container-site py-8 sm:py-12 lg:py-16">
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(17rem,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+            <div className="max-w-xl">
+              <h1 className="display text-4xl text-texto sm:text-5xl lg:text-6xl">
+                Motos seminovas em Belo Horizonte
+              </h1>
+              <p className="corpo mt-5 text-texto-2">
+                Compare os modelos disponíveis, veja ano e preço e escolha com
+                calma a próxima moto para a sua estrada.
+              </p>
+              <Link to="/estoque" className="btn btn-primary mt-7 min-h-12 px-6">
+                Explorar estoque
+              </Link>
+            </div>
 
-            <h1 className="mb-4 text-3xl leading-tight font-bold text-texto lg:text-5xl lg:font-extrabold">
-              Seminovas inspecionadas{' '}
-              <span className="text-marca-texto">com garantia</span>
-            </h1>
-
-            <p className="mb-6 max-w-md text-sm leading-relaxed text-texto-2 lg:mb-8 lg:text-base">
-              Motos revisadas e prontas para rodar. Escolha o seu modelo no pátio
-              da DG Motos.
-            </p>
-
-            <Link
-              to="/estoque"
-              className="inline-flex items-center gap-2 rounded-xl bg-marca px-6 py-3.5 font-bold text-white transition-colors hover:bg-marca-viva"
-            >
-              Ver estoque
-            </Link>
+            {destaque ? (
+              <Link
+                to={`/moto/${destaque.slug}`}
+                aria-label={`Ver ${bikeTitle(destaque)}, ${destaque.ano}, por ${formatPrice(destaque.preco)}`}
+                className="group block min-w-0 bg-painel focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foco"
+              >
+                <div className="grid min-h-72 grid-cols-1 sm:min-h-96 sm:grid-cols-[minmax(0,1fr)_13rem]">
+                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-painel-2 sm:aspect-auto">
+                    {destaque.imagens[0] ? (
+                      <img
+                        src={destaque.imagens[0].src}
+                        alt={destaque.imagens[0].alt || bikeTitle(destaque)}
+                        width={1200}
+                        height={1600}
+                        fetchPriority="high"
+                        decoding="async"
+                        className="size-full object-contain p-4 transition-transform duration-300 motion-safe:group-hover:scale-[1.02] sm:p-7"
+                      />
+                    ) : (
+                      <p className="px-6 text-center text-sm text-texto-2">
+                        Foto ainda não disponível
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col justify-between gap-5 p-5 sm:p-7">
+                    <div>
+                      <p className="text-sm font-medium text-texto-2">No pátio</p>
+                      <h2 className="titulo mt-2 text-2xl text-texto sm:text-3xl">
+                        {bikeTitle(destaque)}
+                      </h2>
+                      <p className="mt-2 text-sm text-texto-2">Ano {destaque.ano}</p>
+                    </div>
+                    <p className="preco text-2xl sm:text-3xl">{formatPrice(destaque.preco)}</p>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex min-h-64 items-end bg-painel p-6 sm:min-h-80 sm:p-8">
+                <p className="corpo max-w-md text-texto-2">
+                  Não há motos anunciadas no momento. Fale com a equipe para
+                  consultar o que está chegando.
+                </p>
+              </div>
+            )}
           </div>
-        </div>
-
-        <img
-          data-hero-image
-          src={heroDesktopImg}
-          alt=""
-          className="absolute inset-0 z-0 hidden h-full w-full object-cover object-right lg:block"
-          fetchPriority="high"
-          decoding="sync"
-          width={1920}
-          height={642}
-        />
-
-        <div
-          data-hero-media
-          className="pointer-events-none absolute inset-0 z-[1] hidden lg:block"
-          aria-hidden="true"
-        >
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#0f0e0c_0%,rgba(15,14,12,0.92)_26%,rgba(15,14,12,0.45)_52%,transparent_76%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(0deg,#0f0e0c_0%,transparent_100%)]" />
         </div>
       </section>
 
@@ -138,26 +142,15 @@ export function Home() {
             </div>
           </div>
 
-          {patio.length > 0 ? (
-            <>
-              {/* Celular: lista emfileirada, uma moto atrás da outra — o
-                  pátio inteiro cabe no scroll do polegar. */}
-              <ul className="mt-4 divide-y divide-borda border-y border-borda sm:hidden">
-                {patio.map((bike) => (
-                  <BikeCard key={bike.id} bike={bike} variante="lista" />
-                ))}
-              </ul>
-
-              {/* Do tablet em diante: grade de vitrines. */}
-              <div className="mt-8 hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {patio.map((bike, i) => (
-                  <Revelar key={bike.id} atraso={i * 60}>
-                    <BikeCard bike={bike} priority={i < 3} />
-                  </Revelar>
-                ))}
-              </div>
-            </>
-          ) : (
+          {demaisMotos.length > 0 ? (
+            <div className="mt-8 grid grid-cols-1 gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {demaisMotos.map((bike, i) => (
+                <Revelar key={bike.id} atraso={i * 45}>
+                  <BikeCard bike={bike} priority={i < 2} />
+                </Revelar>
+              ))}
+            </div>
+          ) : patio.length === 0 ? (
             <div className="mt-12">
               <p className="titulo text-2xl text-texto">Motos no caminho</p>
               <p className="corpo mt-3 text-texto-2">
@@ -168,59 +161,25 @@ export function Home() {
                 Falar com a loja
               </Link>
             </div>
-          )}
+          ) : null}
         </div>
       </section>
 
-      {/* ============================================================
-          3. FECHAMENTO — troca: a oferta fica no fim da página,
-          como o beija-mão da bancada. No celular é a foto protagonista,
-          sem moldura; no desktop o texto pousa por cima da moto.
-          ============================================================ */}
-      <section className="bg-fundo">
-        <Revelar>
-          <div className="relative my-6 flex flex-col overflow-hidden lg:mx-0 lg:my-16 lg:min-h-[380px] lg:flex-row lg:items-center lg:justify-between lg:border-x-0 lg:bg-fundo">
-            {/* Fundo (só no desktop): a moto inteira, contida à direita. */}
-            <img
-              src={trocaDesktopImg}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-y-0 right-0 z-0 hidden w-1/2 object-contain object-right lg:block"
-            />
+      <SonhosRealizados entregas={entregasRealizadas} />
 
-            {/* Máscara (só no desktop): funde a fumaça com o preto. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-0 hidden w-full bg-gradient-to-r from-fundo via-fundo/60 to-transparent lg:block"
-            />
-
-            <div className="container-site relative z-10 hidden w-full !px-0 lg:!px-[length:var(--margem)] lg:flex lg:items-center">
-              <div className="mx-4 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center lg:mx-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:text-left">
-                <h2 className="mb-3 text-2xl leading-tight font-extrabold text-white sm:text-3xl lg:text-4xl">
-                  Sua moto usada entra na troca
-                </h2>
-                <p className="mb-6 text-sm leading-relaxed text-neutral-300 lg:max-w-md">
-                  Aceitamos sua moto usada como parte do pagamento, com avaliação
-                  feita na loja e documentação orientada.
-                </p>
-                <Link
-                  to="/contato"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-marca px-6 py-3 font-bold text-white transition-colors hover:bg-marca-viva"
-                >
-                  Falar com a loja
-                </Link>
-              </div>
-            </div>
-
-            {/* Mobile: a foto na proporção real, sem esticar. */}
-            <img
-              src={trocaMobileImg}
-              alt="Moto usada avaliada para troca na DG Motos"
-              className="block h-auto w-full object-cover lg:hidden"
-              loading="lazy"
-            />
+      <section className="section bg-painel">
+        <div className="container-site grid gap-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-10">
+          <div>
+            <h2 className="titulo text-3xl text-texto sm:text-4xl">Vai trocar de moto?</h2>
+            <p className="corpo mt-4 max-w-2xl text-texto-2">
+              Aceitamos sua moto usada como parte do pagamento. Converse com a
+              equipe sobre avaliação e documentação.
+            </p>
           </div>
-        </Revelar>
+          <Link to="/contato" className="btn btn-primary min-h-12 px-6">
+            Falar sobre uma troca
+          </Link>
+        </div>
       </section>
 
       <MarcasProcuradas />

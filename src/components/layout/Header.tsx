@@ -95,8 +95,11 @@ export function Header() {
               height={40}
               className="size-9 object-contain sm:size-10"
             />
-            <span className="font-display text-base leading-none font-bold tracking-[0.04em] text-white sm:text-lg">
-              DG Motos
+            <span className="flex flex-col gap-1">
+              <span className="font-display text-base leading-none font-bold tracking-[0.04em] text-white sm:text-lg">
+                DG Motos
+              </span>
+              <span className="text-xs leading-none text-texto-3">Seminovas em Belo Horizonte</span>
             </span>
           </Link>
 
@@ -115,6 +118,12 @@ export function Header() {
                 {item.label}
               </NavLink>
             ))}
+            <a
+              href="/#sonhos"
+              className="inline-flex min-h-11 items-center py-3 font-sans text-sm font-medium text-neutral-300 transition-colors hover:text-white"
+            >
+              Entregas
+            </a>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -192,6 +201,13 @@ export function Header() {
                   <span>{item.label}</span>
                 </NavLink>
               ))}
+              <a
+                href="/#sonhos"
+                onClick={() => setAberto(false)}
+                className="display py-5 text-4xl text-texto transition-colors hover:text-marca-texto"
+              >
+                Entregas
+              </a>
             </nav>
           </div>
 

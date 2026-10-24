@@ -28,6 +28,8 @@ interface BikeFiltersProps {
    * do desktop focaria o input invisível do celular.
    */
   prefix?: string
+  /** Limite superior real do catálogo, usado como teto inicial do filtro. */
+  precoMaximo?: number
 }
 
 /**
@@ -44,6 +46,7 @@ export function BikeFilters({
   onChange,
   onAplicar,
   prefix = 'filtro',
+  precoMaximo = PRECO_MAX,
 }: BikeFiltersProps) {
   const set = <K extends keyof BikeFilterState>(key: K, value: BikeFilterState[K]) =>
     onChange({ ...filtros, [key]: value })
@@ -176,7 +179,7 @@ export function BikeFilters({
               id={`${prefix}-preco-min`}
               type="range"
               min={PRECO_MIN}
-              max={PRECO_MAX}
+              max={precoMaximo}
               step={1000}
               value={filtros.precoMin}
               onChange={(e) =>
@@ -201,7 +204,7 @@ export function BikeFilters({
               id={`${prefix}-preco-max`}
               type="range"
               min={PRECO_MIN}
-              max={PRECO_MAX}
+              max={precoMaximo}
               step={1000}
               value={filtros.precoMax}
               onChange={(e) =>

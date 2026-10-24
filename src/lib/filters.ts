@@ -34,6 +34,14 @@ export const FILTROS_PADRAO: BikeFilterState = {
   ordenacao: 'relevancia',
 }
 
+/** O limite público acompanha o maior preço realmente disponível no catálogo. */
+export function tetoPrecoDisponivel(motos: Motorcycle[]): number {
+  return Math.max(
+    PRECO_MAX,
+    ...motos.filter((moto) => moto.status === 'disponivel').map((moto) => moto.preco),
+  )
+}
+
 /**
  * Marcas presentes no estoque, para popular o filtro sem exigir uma lista
  * fixa em código (a loja pode receber qualquer marca).
@@ -78,6 +86,7 @@ export function modelosDisponiveis(motos: Motorcycle[], marca: string): string[]
 export function filtrarMotos(
   motos: Motorcycle[],
   f: BikeFilterState,
+  precoMaximo = PRECO_MAX,
 ): Motorcycle[] {
   const busca = f.busca.trim().toLowerCase()
 
@@ -87,7 +96,7 @@ export function filtrarMotos(
     if (f.marca && m.marca !== f.marca) return false
     if (f.modelo && m.modelo.trim() !== f.modelo) return false
     if (f.precoMin > PRECO_MIN && m.preco < f.precoMin) return false
-    if (f.precoMax < PRECO_MAX && m.preco > f.precoMax) return false
+    if (f.precoMax < precoMaximo && m.preco > f.precoMax) return false
     if (f.anoMin > ANO_MIN && m.ano < f.anoMin) return false
     if (f.categoria !== 'todas' && m.categoria !== f.categoria) return false
     if (busca) {
@@ -114,13 +123,13 @@ export function filtrarMotos(
   }
 }
 
-export function temFiltroAtivo(f: BikeFilterState): boolean {
+export function temFiltroAtivo(f: BikeFilterState, precoMaximo = PRECO_MAX): boolean {
   return (
     f.busca.trim() !== '' ||
     f.marca !== '' ||
     f.modelo !== '' ||
     f.precoMin > PRECO_MIN ||
-    f.precoMax < PRECO_MAX ||
+    f.precoMax < precoMaximo ||
     f.anoMin > ANO_MIN ||
     f.categoria !== 'todas' ||
     f.ordenacao !== 'relevancia'

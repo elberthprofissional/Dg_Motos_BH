@@ -7,6 +7,7 @@ import {
   PRECO_MIN,
   filtrarMotos,
   modelosDisponiveis,
+  tetoPrecoDisponivel,
   temFiltroAtivo,
 } from './filters'
 import type { BikeFilterState } from '../types'
@@ -92,6 +93,15 @@ describe('filtrarMotos', () => {
     expect(filtrarMotos(motorcycles, com({ precoMax: 60000 }))).toHaveLength(
       motorcycles.length,
     )
+  })
+
+  it('mantém valores acima de 60 mil no padrão e permite filtrar até o maior preço', () => {
+    const motoPremium = { ...motorcycles[0], id: 'premium', slug: 'premium', preco: 150000 }
+    const catalogo = [...motorcycles, motoPremium]
+    const teto = tetoPrecoDisponivel(catalogo)
+
+    expect(filtrarMotos(catalogo, COM_TODAS)).toContainEqual(motoPremium)
+    expect(filtrarMotos(catalogo, com({ precoMax: 100000 }), teto)).not.toContainEqual(motoPremium)
   })
 
   it('ordena por preço crescente', () => {

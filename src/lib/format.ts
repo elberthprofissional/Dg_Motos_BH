@@ -4,7 +4,8 @@ export function formatPrice(value: number): string {
   return value.toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   })
 }
 
@@ -15,7 +16,7 @@ export function formatKm(km: number | null): string {
 
 /** Mensagem para interesse em uma moto específica (spec do projeto). */
 export function buildBikeMessage(marca: string, modelo: string, ano: number): string {
-  return `Olá! Tenho interesse na ${marca} ${modelo} ${ano} anunciada no site da DG Motos. Gostaria de receber mais informações.`
+  return `Olá! Tenho interesse na ${nomeExibicao(marca, modelo)} ${ano} anunciada no site da DG Motos. Gostaria de receber mais informações.`
 }
 
 /** CTA geral de negociação. */
@@ -24,7 +25,20 @@ export function buildDefaultMessage(): string {
 }
 
 export function bikeTitle(bike: Motorcycle): string {
-  return `${bike.marca} ${bike.modelo}`
+  return nomeExibicao(bike.marca, bike.modelo)
+}
+
+function nomeExibicao(marcaInformada: string, modeloInformado: string): string {
+  const marca = marcaInformada.trim()
+  let modelo = modeloInformado.trim()
+
+  // O banco pode guardar o nome completo no campo de modelo. Remova
+  // repetições iniciais apenas na apresentação, sem regravar o cadastro.
+  while (marca && modelo.toLocaleLowerCase('pt-BR').startsWith(marca.toLocaleLowerCase('pt-BR'))) {
+    modelo = modelo.slice(marca.length).trim()
+  }
+
+  return [marca, modelo].filter(Boolean).join(' ')
 }
 
 /**
