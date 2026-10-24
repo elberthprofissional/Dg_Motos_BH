@@ -1,10 +1,10 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowUpRight, ChevronRight, MapPin } from 'lucide-react'
+import { ChevronRight, MapPin } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { useWhatsappLink } from '../hooks/useWhatsappLink'
 import { vehicleSchema } from '../lib/schema'
-import { buildBikeMessage, formatKm, formatPrice } from '../lib/format'
+import { buildBikeMessage, descontoPercentual, formatKm, formatPrice } from '../lib/format'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { BikeGallery } from '../components/motorcycles/BikeGallery'
@@ -105,33 +105,17 @@ export function BikeDetail() {
   const titulo = `${bike.marca} ${bike.modelo}`
   const disponivel = bike.status === 'disponivel'
   const temDescricao = bike.descricao.trim().length > 0
+  const desconto = descontoPercentual(bike)
   const precoValor = bike.preco.toLocaleString('pt-BR')
   const resumo = `Motocicleta ${bike.categoria.toLocaleLowerCase('pt-BR')} ${bike.ano}${
     bike.cilindrada ? `, ${bike.cilindrada} cc` : ''
   }, em ${config.enderecoCidadeUf}.`
 
-  const identificacao: LinhaFicha[] = [
-    { label: 'Marca', value: bike.marca },
-    { label: 'Modelo', value: bike.modelo },
-    { label: 'Ano', value: String(bike.ano) },
-    { label: 'Categoria', value: bike.categoria },
-    bike.cilindrada
-      ? { label: 'Cilindrada', value: `${bike.cilindrada} cc` }
-      : null,
-    { label: 'Quilometragem', value: formatKm(bike.quilometragem) },
-  ].filter((spec): spec is LinhaFicha => Boolean(spec))
-
   const mecanica = bike.especificacoes ?? []
+  const temFicha = mecanica.length > 0 || temDescricao
   const recomendadas = motos
     .filter((m) => m.id !== bike.id && m.status === 'disponivel')
     .slice(0, 3)
-  const gradeRecomendadas =
-    recomendadas.length >= 3
-      ? 'lg:grid-cols-3'
-      : recomendadas.length === 2
-        ? 'lg:grid-cols-2'
-        : ''
-
   return (
     <div className="pt-cabecalho">
       <div className="container-site pt-7 pb-12 lg:pt-10 lg:pb-16">
@@ -177,12 +161,28 @@ export function BikeDetail() {
               </p>
 
               <div className="mt-7 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-                <p className="flex items-baseline gap-2 font-display text-[2.5rem] leading-none font-semibold tracking-[-0.035em] text-texto lg:text-[2.75rem]">
-                  <span className="text-[0.44em] font-semibold tracking-normal text-marca-texto">
-                    R$
-                  </span>
-                  <span className="numeros">{precoValor}</span>
-                </p>
+                <div>
+                  {/* Em promoção: o "de" riscado por cima e o selo de
+                      desconto ao lado do "por" — a oferta lê de longe. */}
+                  {desconto != null ? (
+                    <p className="numeros mb-1.5 text-base font-medium text-texto-3">
+                      <span className="line-through">de {formatPrice(bike.precoAntes ?? bike.preco)}</span>
+                    </p>
+                  ) : null}
+                  <p className="flex flex-wrap items-center gap-3 font-display text-[2.5rem] leading-none font-semibold tracking-[-0.035em] text-texto lg:text-[2.75rem]">
+                    <span>
+                      <span className="text-[0.44em] font-semibold tracking-normal text-marca-texto">
+                        R$
+                      </span>
+                      <span className="numeros">{precoValor}</span>
+                    </span>
+                    {desconto != null ? (
+                      <span className="numeros rounded-full bg-marca px-2.5 py-1 font-sans text-sm font-bold text-white">
+                        -{desconto}%
+                      </span>
+                    ) : null}
+                  </p>
+                </div>
 
                 <p className="inline-flex items-center gap-2 pb-1 text-sm text-texto-2">
                   <span
@@ -195,11 +195,19 @@ export function BikeDetail() {
             </div>
 
             <div className="order-3 md:order-none">
-              <dl className="grid grid-cols-3 gap-4">
+              {/* Os dados da moto sobem pra cá, em blocos — a tabela lá em
+                  baixo não repetia marca/ano/categoria à toa. */}
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
                 <div>
                   <dt className="text-[13px] leading-none text-texto-3">Ano</dt>
                   <dd className="numeros mt-1.5 text-[15px] leading-none font-medium text-texto">
                     {bike.ano}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[13px] leading-none text-texto-3">Quilometragem</dt>
+                  <dd className="numeros mt-1.5 text-[15px] leading-none font-medium text-texto">
+                    {formatKm(bike.quilometragem)}
                   </dd>
                 </div>
                 <div>
@@ -208,14 +216,12 @@ export function BikeDetail() {
                     {bike.categoria}
                   </dd>
                 </div>
-                {bike.cilindrada ? (
-                  <div>
-                    <dt className="text-[13px] leading-none text-texto-3">Cilindrada</dt>
-                    <dd className="numeros mt-1.5 text-[15px] leading-none font-medium text-texto">
-                      {bike.cilindrada} cc
-                    </dd>
-                  </div>
-                ) : null}
+                <div>
+                  <dt className="text-[13px] leading-none text-texto-3">Cilindrada</dt>
+                  <dd className="numeros mt-1.5 text-[15px] leading-none font-medium text-texto">
+                    {bike.cilindrada ? `${bike.cilindrada} cc` : 'A confirmar'}
+                  </dd>
+                </div>
               </dl>
 
               {waHref ? (
@@ -258,46 +264,64 @@ export function BikeDetail() {
         <div className="container-site">
           <Revelar className="max-w-[44ch]">
             <h2 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.02em] text-texto">
-              Informações da moto
+              Ficha da moto
             </h2>
             <p className="mt-3 text-base leading-relaxed text-texto-2">
-              Ficha da unidade e observações da loja sobre esta moto.
+              Detalhes técnicos e observações da loja sobre esta unidade.
             </p>
           </Revelar>
 
-          <div
-            className={`mt-8 grid gap-10 sm:mt-10 ${
-              temDescricao
-                ? 'lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.8fr)] lg:gap-16'
-                : ''
-            }`}
-          >
+          {temFicha ? (
             <div
-              className={`grid gap-x-10 gap-y-8 ${
-                mecanica.length > 0 ? 'sm:grid-cols-2' : ''
+              className={`mt-8 grid gap-10 sm:mt-10 ${
+                temDescricao && mecanica.length > 0
+                  ? 'lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.8fr)] lg:gap-16'
+                  : ''
               }`}
             >
-              <Revelar>
-                <TabelaFicha titulo="Identificação" itens={identificacao} />
-              </Revelar>
               {mecanica.length > 0 ? (
-                <Revelar atraso={80}>
+                <Revelar>
                   <TabelaFicha titulo="Conjunto" itens={mecanica} />
                 </Revelar>
               ) : null}
-            </div>
 
-            {temDescricao ? (
-              <Revelar className="max-w-[52ch]" atraso={140}>
-                <h3 className="font-display text-lg leading-tight font-semibold text-texto">
-                  Sobre esta moto
-                </h3>
-                <p className="mt-3 text-base leading-[1.65] text-texto-2">
-                  {bike.descricao}
+              {temDescricao ? (
+                <Revelar className="max-w-[52ch]" atraso={mecanica.length > 0 ? 140 : 0}>
+                  <h3 className="font-display text-lg leading-tight font-semibold text-texto">
+                    Sobre esta moto
+                  </h3>
+                  <p className="mt-3 text-base leading-[1.65] text-texto-2">
+                    {bike.descricao}
+                  </p>
+                </Revelar>
+              ) : null}
+            </div>
+          ) : (
+            <Revelar className="mt-10">
+              <div className="max-w-xl rounded-2xl border border-borda bg-fundo/60 p-6">
+                <p className="text-sm leading-relaxed text-texto-2">
+                  A ficha detalhada dessa unidade ainda não foi publicada.
+                  Chama a loja que a gente conta tudo: estado do motor,
+                  documentação e histórico.
                 </p>
-              </Revelar>
-            ) : null}
-          </div>
+                {waHref ? (
+                  <a
+                    href={waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary mt-4 h-10 gap-2 px-5 text-sm"
+                  >
+                    <IconeWhatsapp className="size-4 shrink-0" />
+                    Perguntar no WhatsApp
+                  </a>
+                ) : (
+                  <Link to="/contato" className="btn btn-primary mt-4 h-10 px-5 text-sm">
+                    Perguntar à loja
+                  </Link>
+                )}
+              </div>
+            </Revelar>
+          )}
         </div>
       </section>
 
@@ -315,13 +339,12 @@ export function BikeDetail() {
               </div>
               <Link to="/estoque" className="link-acao shrink-0">
                 <span>Ver todo o estoque</span>
-                <ArrowUpRight className="size-4" aria-hidden="true" />
               </Link>
             </Revelar>
 
-            <div
-              className={`mt-8 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 ${gradeRecomendadas}`}
-            >
+            {/* 3 colunas fixas no desktop: card menor, sem o gigantão
+                que sobrava quando só 2 motos estavam disponíveis. */}
+            <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
               {recomendadas.map((m, i) => (
                 <Revelar key={m.id} className="h-full" atraso={i * 70}>
                   <BikeCard bike={m} />

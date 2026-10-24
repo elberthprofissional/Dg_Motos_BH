@@ -16,7 +16,8 @@ const base = (patch: Partial<Motorcycle>): Motorcycle => ({
   descricao: '',
   especificacoes: [],
   imagens: [],
-  destaque: false,
+  emPromocao: false,
+  precoAntes: null,
   status: 'disponivel',
   ...patch,
 })

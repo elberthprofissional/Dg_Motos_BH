@@ -5,11 +5,11 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 **não pode ser inventado**.
 
 > **Onde editar contato/Instagram/endereço/horários:** o padrão de fábrica
-> vive em `src/data/site.ts` (itens 1–3 e 6 abaixo). O dono também pode
-> editar tudo isso na aba **Configurações** do `/admin`, que salva no
-> navegador e vale na hora — mas só naquele aparelho. Para valer para todos
-> os visitantes, ou o valor entra em `src/data/site.ts` (exige build) ou a
-> config migra para o Supabase (ver `docs/SUPABASE.md`).
+> vive em `src/data/site.ts` (itens 1–3 e 6 abaixo). O dono edita tudo isso
+> na aba **Configurações** do `/admin`: no projeto com Supabase, o valor é
+> salvo na tabela `site_settings` e vale para todos os visitantes na hora
+> (sem rebuild) — o `localStorage` fica só como cache/fallback.
+> Ver `docs/SUPABASE.md` e `supabase/migrations/20260101000004_site_settings.sql`.
 
 ## 1. WhatsApp oficial (crítico)
 

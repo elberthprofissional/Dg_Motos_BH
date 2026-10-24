@@ -26,3 +26,15 @@ export function buildDefaultMessage(): string {
 export function bikeTitle(bike: Motorcycle): string {
   return `${bike.marca} ${bike.modelo}`
 }
+
+/**
+ * Desconto da promoção, em % inteiro — é o que aparece no selo circular
+ * ("-15%") no card e na ficha. Fora da promoção, sem "de" informado ou
+ * com "de" maior que o "por" (desconto negativo), volta null e o card
+ * desenha o preço comum sem selo.
+ */
+export function descontoPercentual(bike: Motorcycle): number | null {
+  if (!bike.emPromocao || bike.precoAntes == null) return null
+  if (bike.precoAntes <= bike.preco) return null
+  return Math.round((1 - bike.preco / bike.precoAntes) * 100)
+}

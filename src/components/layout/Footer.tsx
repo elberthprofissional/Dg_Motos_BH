@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, Lock } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
 import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
-import { buildMapsRouteUrl } from '../../lib/maps'
 import { InstagramIcon } from '../ui/InstagramIcon'
 import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 
@@ -73,19 +72,8 @@ export function Footer() {
               >
                 <IconeWhatsapp className="size-4 shrink-0" />
                 <span>WhatsApp</span>
-                <ArrowUpRight className="size-3.5 text-texto-3" aria-hidden="true" />
               </a>
             ) : null}
-
-            <a
-              href={buildMapsRouteUrl(config)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-8 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto"
-            >
-              <span>Traçar rota</span>
-              <ArrowUpRight className="size-3.5 text-texto-3" aria-hidden="true" />
-            </a>
 
             {config.instagramUrl ? (
               <a
@@ -96,7 +84,6 @@ export function Footer() {
               >
                 <InstagramIcon className="size-4 shrink-0" aria-hidden="true" />
                 <span>{config.instagramHandle}</span>
-                <ArrowUpRight className="size-3.5 text-texto-3" aria-hidden="true" />
               </a>
             ) : null}
           </div>

@@ -124,9 +124,11 @@ gerenciar.
 
 Sem isso, o Google receberia a ficha `/moto/*` vazia.
 
-Como o site é estático, **salvar no painel não publica**. Faça o deploy
-pelo painel do host (a Vercel reconstrói a cada push). Os dados comerciais
-da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
+Como o site é estático, **salvar no painel não publica os HTMLs
+estáticos** — faça o deploy pelo painel do host (a Vercel reconstrói a
+cada push). Exceção: WhatsApp, Instagram, endereço e horários ficam
+no banco (`site_settings`) e valem para todos os visitantes na hora,
+sem build.
 
 ## Decisões que valem saber
 
@@ -137,11 +139,12 @@ da loja vivem em `src/data/site.ts` — alterá-los exige novo build.
   `useWhatsappLink()` (`src/hooks/useWhatsappLink.ts`) devolve `null`
   enquanto `WHATSAPP_NUMBER` for `null`, e os componentes degradam
   sozinhos.
-- **A config da loja tem dois níveis.** O padrão de fábrica vive em
-  `src/data/site.ts`; o que o dono salva em `/admin` vai para o
-  `localStorage` (`src/lib/configLoja.ts`) e a vitrine lê na hora via
-  `useSiteConfig` — sem esperar um novo build. A config salva vale só no
-  navegador onde foi gravada; os visitantes veem o padrão.
+- **A config da loja tem três níveis.** Banco (tabela
+  `site_settings`, editável em `/admin` → Configurações) vale para
+todos os visitantes na hora; `localStorage` é cache local; o padrão
+de fábrica vive em `src/data/site.ts`). A vitrine lê nessa ordem via
+`useSiteConfig` (`src/hooks/siteConfigContexto.ts`) — sem esperar um
+novo build.
 - **O app instalado abre no login, não na vitrine.** `src/pages/Entrada.tsx`
   checa o `display-mode: standalone`: no PWA instalado, `/` cai em
   `/admin/login`; no navegador, mostra o catálogo.

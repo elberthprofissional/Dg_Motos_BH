@@ -109,9 +109,9 @@ describe('filtrarMotos', () => {
     expect(anos).toEqual([...anos].sort((a, b) => b - a))
   })
 
-  it('relevância põe destaques na frente', () => {
+  it('relevância põe as motos em promoção na frente', () => {
     const primeiro = filtrarMotos(motorcycles, com({ ordenacao: 'relevancia' }))[0]
-    expect(primeiro.destaque).toBe(true)
+    expect(primeiro.emPromocao).toBe(true)
   })
 
   it('não muta o array original', () => {

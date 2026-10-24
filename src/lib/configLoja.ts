@@ -1,4 +1,5 @@
 import { SITE, SITE_URL, WHATSAPP_NUMBER } from '../data/site'
+import { getSupabase } from './supabase'
 
 /**
  * ============================================================
@@ -6,21 +7,16 @@ import { SITE, SITE_URL, WHATSAPP_NUMBER } from '../data/site'
  * ============================================================
  *
  * Os dados comerciais da loja (WhatsApp, Instagram, endereço, horários)
- * têm dois níveis:
+ * têm três níveis, nesta ordem de prioridade:
  *
- *  1. O valor de FÁBRICA, versionado em src/data/site.ts. É o fallback
- *     quando não há nada salvo — mudar aqui passa por review e build.
- *  2. O valor SALVO no painel do dono (/admin), que vive no
- *     `localStorage` deste navegador. O painel edita, a vitrine lê.
+ *  1. Banco de dados (site_settings) — fonte global, editável pelo dono
+ *     sem rebuild. É o que vale pra todos os visitantes.
+ *  2. localStorage — compatibilidade com versões antigas e quando o banco
+ *     não estiver configurado. Vale só neste navegador.
+ *  3. src/data/site.ts — valores de fábrica, versionados.
  *
- * Por que localStorage e não já no banco: a mudança vale na hora, sem
- * round-trip, e o contrato de `ConfigLoja` não muda quando a fonte
- * virar a tabela do Supabase — só `lerConfig`/`gravarConfig` trocam de
- * tripas. Limitação conhecida e aceita: a config salva vale só para o
- * navegador onde foi gravada; os visitantes veem o padrão de fábrica.
- *
- * Um `localStorage` vazio ou corrompido degrada para o padrão, então o
- * site nunca fica sem contato.
+ * O painel edita o banco (quando disponível) e também sincroniza com
+ * localStorage para leitura imediata.
  */
 
 export interface ConfigLoja {
@@ -56,12 +52,71 @@ export function whatsappUrlCom(
   return `https://wa.me/${config.whatsapp}${text}`
 }
 
+/** Mescla config com valores de fábrica para garantir campos obrigatórios. */
+function normalizarConfig(salvo: Partial<ConfigLoja> | null | undefined): ConfigLoja {
+  return { ...configPadrao(), ...(salvo ?? {}) }
+}
+
+/** Busca configuração salva no banco. */
+export async function lerConfigDoBanco(): Promise<ConfigLoja | null> {
+  const supabase = getSupabase()
+  if (!supabase) return null
+  try {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'loja')
+      .maybeSingle()
+
+    if (error || !data?.value) return null
+    const value = data.value as Partial<ConfigLoja>
+    return normalizarConfig(value)
+  } catch {
+    return null
+  }
+}
+
+/** Salva configuração no banco. */
+export async function gravarConfigNoBanco(config: ConfigLoja): Promise<boolean> {
+  const supabase = getSupabase()
+  if (!supabase) return false
+  try {
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert(
+        { key: 'loja', value: config, updated_at: new Date().toISOString() },
+        { onConflict: 'key' },
+      )
+
+    return !error
+  } catch {
+    return false
+  }
+}
+
+/** Restaura configuração no banco para os valores de fábrica. */
+export async function limparConfigNoBanco(): Promise<boolean> {
+  const supabase = getSupabase()
+  if (!supabase) return false
+  try {
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert(
+        { key: 'loja', value: configPadrao(), updated_at: new Date().toISOString() },
+        { onConflict: 'key' },
+      )
+
+    return !error
+  } catch {
+    return false
+  }
+}
+
 const CHAVE = 'dg-motos:config-loja'
 
 /**
  * Evento emitido a cada gravação/limpeza. A vitrine (useSiteConfig)
- * escuta e re-renderiza na hora; sem ele, uma edição no painel só
- * apareceria depois de recarregar a página.
+ * escuta e re-renderiza na hora.
  */
 export const EVENTO_CONFIG = 'dg-motos:config-mudou'
 
@@ -73,42 +128,52 @@ function avisarMudanca(): void {
   }
 }
 
-/** O valor salvo no painel ou, sem ele, o de fábrica. */
-export function lerConfig(): ConfigLoja {
-  try {
-    const bruto = localStorage.getItem(CHAVE)
-    if (!bruto) return configPadrao()
-    const salvo = JSON.parse(bruto) as Partial<ConfigLoja>
-    // Merge por campo: um schema antigo com campo faltando não derruba
-    // a config inteira — o campo ausente volta ao valor de fábrica.
-    return { ...configPadrao(), ...salvo }
-  } catch {
-    // JSON inválido ou storage bloqueado: comportamento de fábrica.
-    return configPadrao()
-  }
-}
-
-/** Salva a config editada no painel. */
-export function gravarConfig(config: ConfigLoja): void {
+/** Salva cópia local no localStorage (cache/compatibilidade). */
+export function salvarConfigLocal(config: ConfigLoja): void {
   try {
     localStorage.setItem(CHAVE, JSON.stringify(config))
   } catch {
-    // Storage cheio ou bloqueado (modos privados): a edição ainda vale
-    // nesta sessão porque o state do React a mantém — só não sobrevive
-    // a um refresh. Sem exceção estourando na cara do dono.
+    // Storage cheio ou bloqueado
   }
-  avisarMudanca()
 }
 
-/** Restaura os valores de fábrica (src/data/site.ts). */
-export function limparConfig(): void {
+/** Lê cópia local do localStorage. */
+export function lerConfigLocal(): ConfigLoja | null {
+  try {
+    const bruto = localStorage.getItem(CHAVE)
+    if (!bruto) return null
+    const salvo = JSON.parse(bruto) as Partial<ConfigLoja>
+    return normalizarConfig(salvo)
+  } catch {
+    return null
+  }
+}
+
+/** Limpa cópia local do localStorage. */
+export function limparConfigLocal(): void {
   try {
     localStorage.removeItem(CHAVE)
   } catch {
     // Sem storage não há nada a limpar.
   }
+}
+
+/** O valor salvo no painel ou, sem ele, o de fábrica. */
+export function lerConfig(): ConfigLoja {
+  const local = lerConfigLocal()
+  if (local) return local
+  return configPadrao()
+}
+
+/** Salva a config editada no painel (localStorage + evento). */
+export function gravarConfig(config: ConfigLoja): void {
+  salvarConfigLocal(config)
   avisarMudanca()
 }
 
-/** URL base do site (para schema.org e links absolutos). */
+/** Restaura os valores de fábrica (src/data/site.ts). */
+export function limparConfig(): void {
+  limparConfigLocal()
+  avisarMudanca()
+}
 export { SITE_URL }

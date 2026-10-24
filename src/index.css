@@ -40,30 +40,30 @@
   --text-etiqueta: 0.6875rem;
 
   /* ---------- PRETO: a bancada ---------- */
-  --color-breu: #0a0a0b;
-  --color-night-950: #08080a;
-  --color-night-900: #0e0e11;
-  --color-night-800: #16161a;
-  --color-night-700: #1f1f24;
-  --color-sidebar: #070708;
+  --color-breu: #100f0d;
+  --color-night-950: #0d0c0a;
+  --color-night-900: #141311;
+  --color-night-800: #1e1c19;
+  --color-night-700: #282521;
+  --color-sidebar: #0c0b09;
 
   /* ---------- BRANCO: a letra ---------- */
   --color-paper: #ffffff;
   /* A escada de cinzas do painel. O degrau mais escuro (steel-600)
      passa de 4,5:1 sobre o fundo do painel — microtexto de 10 px não
      pode depender de borda para ser lido. */
-  --color-steel-300: #c6c6cf;
-  --color-steel-400: #a3a3ae;
-  --color-steel-500: #8e8e9a;
-  --color-steel-600: #7a7a86;
+  --color-steel-300: #cfc8bd;
+  --color-steel-400: #ada59a;
+  --color-steel-500: #948c82;
+  --color-steel-600: #7d756b;
 
   /* ---------- VERMELHO: o carimbo ---------- */
-  --color-brand-400: #ff5b52;
-  --color-brand-500: #e01b22;
-  --color-brand-600: #b5161c;
-  --color-brand-700: #8d1015;
-  --color-carimbo: #e01b22;
-  --color-carimbo-escuro: #b5161c;
+  --color-brand-400: #f26d62;
+  --color-brand-500: #d91f26;
+  --color-brand-600: #b3131a;
+  --color-brand-700: #8d0f14;
+  --color-carimbo: #d91f26;
+  --color-carimbo-escuro: #b3131a;
 
   --color-ok: #3fbf7f;
   --color-warn: #e0a33c;
@@ -94,32 +94,32 @@
    ============================================================ */
 :root {
   /* --- A bancada (chão padrão do site) --- */
-  --cor-fundo: #080808;
-  --cor-painel: #111111;
-  --cor-painel-2: #171717;
-  --cor-painel-3: #1f1f1f;
+  --cor-fundo: #0f0e0c;
+  --cor-painel: #161513;
+  --cor-painel-2: #1d1b18;
+  --cor-painel-3: #252320;
 
-  --cor-texto: #f5f5f5;
-  --cor-texto-2: #a6a6a6;
-  --cor-texto-3: #929292;
+  --cor-texto: #ece7de;
+  --cor-texto-2: #a8a198;
+  --cor-texto-3: #8e887e;
 
-  --cor-borda: rgba(245, 245, 245, 0.09);
-  --cor-borda-forte: rgba(245, 245, 245, 0.18);
+  --cor-borda: rgba(236, 231, 222, 0.09);
+  --cor-borda-forte: rgba(236, 231, 222, 0.18);
 
-  /* Vermelho de preenchimento: branco sobre ele passa de 4,5:1.
-     O tom puro (#f01820) fica no realce (.preco), onde o corpo grande
+  /* Vermelho de preenchimento: branco sobra ele passa de 4,5:1.
+     O tom puro (#ef302f) fica no realce (.preco), onde o corpo grande
      ja sustenta o contraste. */
-  --cor-marca: #e5161d;
-  --cor-marca-viva: #f01820;
+  --cor-marca: #d91f26;
+  --cor-marca-viva: #ef302f;
   /* Vermelho de texto sobre preto: o tom puro fica no limite do
      contraste em corpo pequeno; este sobe o suficiente para ler. */
-  --cor-marca-texto: #ff4348;
+  --cor-marca-texto: #f26d62;
   /* Vermelho pressionado: mais fundo, nunca mais claro. */
-  --cor-marca-forte: #c00f16;
+  --cor-marca-forte: #b3131a;
 
   --cor-ok: #3fbf7f;
   --cor-alerta: #e0a33c;
-  --cor-foco: #ff5b52;
+  --cor-foco: #f0554b;
   --cor-papel-claro: #ffffff;
   --cor-tinta: #ffffff;
 
@@ -148,23 +148,23 @@
 /* A ficha: chapa escura levemente mais clara que a bancada para
    criar hierarquia sem virar papel branco. */
 [data-tema='folha'] {
-  --cor-fundo: #111111;
-  --cor-painel: #171717;
-  --cor-painel-2: #1d1d1d;
-  --cor-painel-3: #242424;
+  --cor-fundo: #161513;
+  --cor-painel: #1d1b18;
+  --cor-painel-2: #242220;
+  --cor-painel-3: #2c2a26;
 
-  --cor-texto: #f5f5f5;
-  --cor-texto-2: #a6a6a6;
-  --cor-texto-3: #929292;
+  --cor-texto: #ece7de;
+  --cor-texto-2: #a8a198;
+  --cor-texto-3: #8e887e;
 
-  --cor-borda: rgba(245, 245, 245, 0.09);
-  --cor-borda-forte: rgba(245, 245, 245, 0.18);
+  --cor-borda: rgba(236, 231, 222, 0.09);
+  --cor-borda-forte: rgba(236, 231, 222, 0.18);
 
-  --cor-marca: #e5161d;
-  --cor-marca-viva: #f01820;
-  --cor-marca-texto: #ff4348;
-  --cor-marca-forte: #c00f16;
-  --cor-foco: #ff4b50;
+  --cor-marca: #d91f26;
+  --cor-marca-viva: #ef302f;
+  --cor-marca-texto: #f26d62;
+  --cor-marca-forte: #b3131a;
+  --cor-foco: #f0554b;
 
   --cor-papel-claro: #ffffff;
   --cor-tinta: #ffffff;
@@ -173,22 +173,22 @@
 /* O painel do dono é a mesma bancada, com a luz de serviço acesa:
    a área restrita é da casa, não do público. */
 [data-tema='painel'] {
-  --cor-fundo: #080808;
-  --cor-painel: #111111;
-  --cor-painel-2: #171717;
-  --cor-painel-3: #1f1f1f;
-  --cor-texto: #f5f5f5;
-  --cor-texto-2: #a6a6a6;
-  --cor-texto-3: #929292;
-  --cor-borda: rgba(245, 245, 245, 0.09);
-  --cor-borda-forte: rgba(245, 245, 245, 0.18);
-  --cor-marca: #e5161d;
-  --cor-marca-viva: #f01820;
-  --cor-marca-texto: #ff4348;
-  --cor-marca-forte: #c00f16;
+  --cor-fundo: #0f0e0c;
+  --cor-painel: #161513;
+  --cor-painel-2: #1d1b18;
+  --cor-painel-3: #252320;
+  --cor-texto: #ece7de;
+  --cor-texto-2: #a8a198;
+  --cor-texto-3: #8e887e;
+  --cor-borda: rgba(236, 231, 222, 0.09);
+  --cor-borda-forte: rgba(236, 231, 222, 0.18);
+  --cor-marca: #d91f26;
+  --cor-marca-viva: #ef302f;
+  --cor-marca-texto: #f26d62;
+  --cor-marca-forte: #b3131a;
   --cor-ok: #3fbf7f;
   --cor-alerta: #e0a33c;
-  --cor-foco: #ff4b50;
+  --cor-foco: #f0554b;
   --cor-papel-claro: #ffffff;
   --cor-tinta: #ffffff;
 }
@@ -217,6 +217,23 @@
   --color-line-forte: var(--cor-borda-forte);
   /* Branco puro: traço fino, foco e fundo sutil. */
   --color-claro: #ffffff;
+
+  /* A escala `neutral` do Tailwind tem subtom azulado — o cinza frio
+     de ferramenta de design. Sobre a bancada quente ela destoa, então
+     aqui ela toma o mesmo subtom quente (borracha/ossio) com as
+     mesmas luzes de cada degrau. Nenhum componente muda; todo
+     `neutral-*` usado nos filtros, cartões e overlays esquenta igual. */
+  --color-neutral-50: #f8f6f2;
+  --color-neutral-100: #f2efe9;
+  --color-neutral-200: #e6e1d8;
+  --color-neutral-300: #d5cfc5;
+  --color-neutral-400: #a59d92;
+  --color-neutral-500: #746e64;
+  --color-neutral-600: #534e46;
+  --color-neutral-700: #413d36;
+  --color-neutral-800: #292720;
+  --color-neutral-900: #1a1815;
+  --color-neutral-950: #0d0c0a;
 }
 
 @layer base {
@@ -257,7 +274,7 @@
      ser visível, senão o filtro de preço vira um mistério. O polegar
      tem 24 px para caber no alvo mínimo de toque (WCAG 2.5.8). */
   input[type='range'] {
-    accent-color: #a1a1aa;
+    accent-color: #ada59a;
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
@@ -279,7 +296,7 @@
     margin-top: -11px;
     border: 0;
     border-radius: 9999px;
-    background: #d4d4d8;
+    background: #cfc8bd;
   }
 
   input[type='range']::-moz-range-track {
@@ -292,7 +309,7 @@
     height: 24px;
     border: 0;
     border-radius: 9999px;
-    background: #d4d4d8;
+    background: #cfc8bd;
   }
 
   /* Barra de rolagem na cor da bancada. */
@@ -306,7 +323,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #2b2b32;
+    background: #302c26;
     border: 2px solid var(--cor-fundo);
   }
 
@@ -562,12 +579,12 @@
      ============================================================ */
   .estoque-pagina {
     @apply flex flex-col;
-    gap: 20px;
+    gap: 16px;
   }
 
   .estoque-cabecalho-pagina {
     @apply flex flex-col;
-    gap: 10px;
+    gap: 8px;
   }
 
   .estoque-titulo-linha {
@@ -613,14 +630,14 @@
     outline-offset: 2px;
   }
 
-  /* Faixa de resumo: números pequenos, separados por barra. O valor
-     é a única informação empurrada para a direita. */
+  /* Faixa de resumo: frase de texto natural, separada por ponto médio.
+     O valor é a única informação empurrada para a direita. */
   .estoque-resumo {
     @apply flex flex-wrap items-baseline;
     gap: 1px 0;
     color: var(--cor-texto-3);
-    font-size: 13px;
-    line-height: 1.7;
+    font-size: 12px;
+    line-height: 1.6;
   }
 
   .estoque-resumo-total {
@@ -637,14 +654,16 @@
   }
 
   .estoque-resumo-item::before {
-    content: '/';
+    content: '·';
     margin: 0 8px;
     color: var(--cor-texto-3);
     opacity: 0.45;
   }
 
   .estoque-resumo-valor {
-    margin-left: auto;
+    flex-basis: 100%;
+    margin-left: 0;
+    margin-top: 2px;
     color: var(--cor-texto-2);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
@@ -659,12 +678,12 @@
      controles de apoio, com a mesma altura da busca. */
   .estoque-operacoes {
     @apply flex flex-wrap items-center;
-    gap: 10px 20px;
+    gap: 12px;
   }
 
   .estoque-busca-primaria {
-    flex: 1 1 260px;
-    max-width: 420px;
+    flex: 1 1 100%;
+    max-width: none;
   }
 
   .estoque-busca-primaria .input {
@@ -706,11 +725,12 @@
 
   .estoque-operacoes-direita {
     @apply flex flex-wrap items-center;
-    gap: 8px 14px;
-    margin-left: auto;
+    gap: 8px 12px;
+    width: 100%;
   }
 
   .estoque-select {
+    max-width: 190px;
     height: 36px;
     padding: 0 20px 0 0;
     border: 0;
@@ -756,6 +776,7 @@
     @apply flex items-center;
     gap: 8px;
     min-height: 36px;
+    margin-left: auto;
     color: var(--cor-texto-3);
     font-size: 13px;
   }
@@ -780,26 +801,37 @@
     color: var(--cor-texto);
   }
 
+  
   /* Inventário: cabeçalho e linhas na mesma grade, sem moldura
-     externa. A única separação é a linha fina entre veículos. */
+     externa. A única separação é a linha fina entre veículos.
+     No celular não há cabeçalho de colunas — o cabeçalho só
+     aparece na mesa; a ficha vira tabela a partir de 768px. */
   .estoque-inventario {
     position: relative;
   }
 
-  .estoque-cabecalho,
-  .estoque-linha {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 140px 132px 156px;
-    gap: 16px;
-  }
-
   .estoque-cabecalho {
+    display: none;
     padding: 0 0 10px;
     border-bottom: 1px solid var(--cor-borda-forte);
     color: var(--cor-texto-3);
     font-size: 12px;
     line-height: 1.2;
     font-weight: 500;
+  }
+
+  .estoque-linha {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'veiculo acoes'
+      'situacao acoes'
+      'valor acoes';
+    align-items: start;
+    gap: 2px 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--cor-borda);
+    transition: background-color 0.15s ease;
   }
 
   .estoque-col-valor {
@@ -810,42 +842,17 @@
     text-align: right;
   }
 
-  .estoque-linha {
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--cor-borda);
-    transition: background-color 0.15s ease;
-  }
-
-  .estoque-linha:last-child {
-    border-bottom: 0;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .estoque-linha:hover {
-      background-color: rgba(255, 255, 255, 0.022);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .estoque-cabecalho {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      background-color: var(--cor-fundo);
-    }
-  }
-
   .estoque-celula-veiculo {
     display: flex;
-    align-items: center;
-    gap: 14px;
+    align-items: flex-start;
+    gap: 12px;
     min-width: 0;
+    grid-area: veiculo;
   }
 
   .estoque-foto,
   .estoque-thumb {
-    width: 60px;
+    width: 56px;
     aspect-ratio: 4 / 5;
     flex: none;
     overflow: hidden;
@@ -887,8 +894,8 @@
     color: var(--cor-texto-3);
     font-size: 13px;
     line-height: 1.35;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    white-space: normal;
+    text-overflow: clip;
   }
 
   .estoque-ficha-sep {
@@ -902,6 +909,9 @@
     align-items: flex-start;
     gap: 4px;
     min-width: 0;
+    grid-area: situacao;
+    margin-top: 4px;
+    margin-left: 68px;
   }
 
   .estoque-status {
@@ -953,7 +963,9 @@
 
   .estoque-celula-valor {
     min-width: 0;
-    text-align: right;
+    grid-area: valor;
+    margin-left: 68px;
+    text-align: left;
   }
 
   .estoque-preco {
@@ -968,21 +980,25 @@
 
   .estoque-celula-acoes {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
+    gap: 2px;
+    grid-area: acoes;
   }
 
   .estoque-acoes {
-    display: flex;
+    display: grid;
     align-items: center;
     justify-content: flex-end;
+    grid-template-columns: repeat(2, 40px);
     gap: 2px;
   }
 
   .estoque-acao {
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border: 0;
     border-radius: 2px;
     background-color: transparent;
@@ -1016,10 +1032,10 @@
 
   .estoque-estado-celula {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 12px;
+    flex-direction: column;
   }
 
   .estoque-estado-texto {
@@ -1060,120 +1076,124 @@
     color: var(--cor-texto);
   }
 
-  @media (max-width: 767px) {
+  .estoque-linha:last-child {
+    border-bottom: 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .estoque-linha:hover {
+      background-color: rgba(255, 255, 255, 0.022);
+    }
+  }
+
+  /* Do tablet pra cima a ficha vira tabela de colunas: cabeçalho
+     reaparece e a grade volta a 4 colunas, na ordem do documento. */
+  @media (min-width: 768px) {
     .estoque-pagina {
-      gap: 16px;
+      gap: 20px;
     }
 
     .estoque-cabecalho-pagina {
-      gap: 8px;
+      gap: 10px;
     }
 
     .estoque-resumo {
-      font-size: 12px;
-      line-height: 1.6;
+      font-size: 13px;
+      line-height: 1.7;
     }
 
     .estoque-resumo-valor {
-      flex-basis: 100%;
-      margin-left: 0;
-      margin-top: 2px;
+      flex-basis: auto;
+      margin-left: auto;
+      margin-top: 0;
     }
 
     .estoque-operacoes {
-      gap: 12px;
+      gap: 10px 20px;
     }
 
     .estoque-busca-primaria {
-      flex: 1 1 100%;
-      max-width: none;
+      flex: 1 1 260px;
+      max-width: 420px;
     }
 
     .estoque-operacoes-direita {
-      width: 100%;
-      margin-left: 0;
-      gap: 8px 12px;
-    }
-
-    .estoque-select {
-      max-width: 190px;
-    }
-
-    .estoque-contagem {
+      width: auto;
+      gap: 8px 14px;
       margin-left: auto;
     }
 
+    .estoque-select {
+      max-width: none;
+    }
+
+    .estoque-contagem {
+      margin-left: 0;
+    }
+
     .estoque-cabecalho {
-      display: none;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 140px 132px 156px;
+      gap: 16px;
     }
 
     .estoque-linha {
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas:
-        'veiculo acoes'
-        'situacao acoes'
-        'valor acoes';
-      align-items: start;
-      gap: 2px 12px;
-      padding: 12px 0;
+      grid-template-columns: minmax(0, 1fr) 140px 132px 156px;
+      grid-template-areas: 'veiculo situacao valor acoes';
+      align-items: center;
+      gap: 16px;
     }
 
     .estoque-celula-veiculo {
-      grid-area: veiculo;
-      align-items: flex-start;
-      gap: 12px;
+      align-items: center;
+      gap: 14px;
     }
 
     .estoque-foto,
     .estoque-thumb {
-      width: 56px;
+      width: 60px;
     }
 
     .estoque-celula-situacao {
-      grid-area: situacao;
-      margin-top: 4px;
-      margin-left: 68px;
+      margin-top: 0;
+      margin-left: 0;
     }
 
     .estoque-celula-valor {
-      grid-area: valor;
-      margin-left: 68px;
-      text-align: left;
-    }
-
-    .estoque-celula-acoes {
-      grid-area: acoes;
-      align-self: center;
+      margin-left: 0;
+      text-align: right;
     }
 
     .estoque-acoes {
-      display: grid;
-      grid-template-columns: repeat(2, 40px);
-      gap: 2px;
+      display: flex;
+      grid-template-columns: none;
     }
 
     .estoque-acao {
-      width: 40px;
-      height: 40px;
-    }
-
-    .estoque-nome {
-      font-size: 16px;
+      width: 32px;
+      height: 32px;
     }
 
     .estoque-ficha {
-      white-space: normal;
-      text-overflow: clip;
-    }
-
-    .estoque-preco {
-      font-size: 16px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .estoque-estado-celula {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 12px;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .estoque-cabecalho {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background-color: var(--cor-fundo);
     }
   }
 
@@ -1412,8 +1432,10 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    /* 70s: em 40s a esteira corria rápido demais no celular — em 70s a
+       volta inteira fica legível, e o hover continua pausando. */
     .esteira {
-      animation: esteira 40s linear infinite;
+      animation: esteira 70s linear infinite;
     }
   }
 

@@ -36,12 +36,14 @@ interface LinhaCatalogo {
   modelo: string
   ano: number
   preco: number | string
+  /** Colunas da promoção; só existem depois da migração 0005 aplicar. */
+  em_promocao?: boolean | number | null
+  preco_antes?: number | string | null
   quilometragem: number | null
   cilindrada: number | null
   categoria: string
   descricao: string
   especificacoes: unknown
-  destaque: boolean
   status: string
   created_at?: string | null
   updated_at?: string | null
@@ -79,6 +81,7 @@ export function linhaParaMotos(linha: LinhaCatalogo): Motorcycle {
     modelo: linha.modelo,
     ano: Number(linha.ano),
     preco: Number(linha.preco),
+    precoAntes: linha.preco_antes == null ? null : Number(linha.preco_antes),
     quilometragem: linha.quilometragem == null ? null : Number(linha.quilometragem),
     cilindrada: linha.cilindrada == null ? null : Number(linha.cilindrada),
     categoria: linha.categoria as MotorcycleCategory,
@@ -87,7 +90,7 @@ export function linhaParaMotos(linha: LinhaCatalogo): Motorcycle {
       (s): s is MotorcycleSpec => typeof s?.label === 'string' && typeof s?.value === 'string',
     ),
     imagens: lerImagens(linha.motorcycle_images, nomeCompleto),
-    destaque: Boolean(linha.destaque),
+    emPromocao: Boolean(linha.em_promocao),
     status: linha.status as MotorcycleStatus,
     criadoEm: linha.created_at ?? undefined,
     atualizadoEm: linha.updated_at ?? undefined,
@@ -146,7 +149,8 @@ export interface MotoParaSalvar {
   descricao: string
   especificacoes: MotorcycleSpec[]
   imagens: { src: string; alt: string }[]
-  destaque: boolean
+  emPromocao: boolean
+  precoAntes: number | null
   status: MotorcycleStatus
 }
 
@@ -235,7 +239,8 @@ export async function salvarMoto(
     categoria: dados.categoria,
     descricao: dados.descricao,
     especificacoes: dados.especificacoes,
-    destaque: dados.destaque,
+    em_promocao: dados.emPromocao,
+    preco_antes: dados.precoAntes,
     status: dados.status,
   }
 
@@ -339,7 +344,8 @@ export function motoParaFormulario(m: Motorcycle): MotoParaSalvar {
     descricao: m.descricao,
     especificacoes: m.especificacoes,
     imagens: m.imagens,
-    destaque: m.destaque,
+    emPromocao: m.emPromocao,
+    precoAntes: m.precoAntes,
     status: m.status,
   }
 }

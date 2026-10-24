@@ -8,9 +8,9 @@ import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { Revelar } from '../components/ui/Revelar'
+import heroDesktopImg from '../assets/hero/home-desktop.webp'
 import trocaDesktopImg from '../assets/troca/banner-desktop.webp'
 import trocaMobileImg from '../assets/troca/banner-mobile.webp'
-import heroDesktopImg from '../assets/hero/home-desktop.webp'
 import { MarcasProcuradas } from '../components/home/MarcasProcuradas'
 
 /**
@@ -40,52 +40,59 @@ export function Home() {
     [motos],
   )
 
-  // A vitrine mostra o patio inteiro: a moto marcada como destaque
-  // primeiro, depois as demais. Sem mais que isso — a página mostra
-  // o que existe, e o estoque completo tem a lista.
+  // A vitrine mostra o patio inteiro: as motos EM PROMOCAO primeiro
+  // (é a oferta do dia — o selo circular e o "de → por" ficam visíveis),
+  // depois as demais. Sem mais que isso — a página mostra o que existe,
+  // e o estoque completo tem a lista.
   const patio = useMemo(() => {
-    const comDestaque = disponiveis.filter((m) => m.destaque)
-    const semDestaque = disponiveis.filter((m) => !m.destaque)
-    return [...comDestaque, ...semDestaque].slice(0, 10)
+    const emPromocao = disponiveis.filter((m) => m.emPromocao)
+    const foraDaPromo = disponiveis.filter((m) => !m.emPromocao)
+    return [...emPromocao, ...foraDaPromo].slice(0, 10)
   }, [disponiveis])
 
   return (
     <>
-      {/* ============================================================
+      {/* ==========================================================      {/* ============================================================
           1. HERO — a entrada do showroom
-          Duas colunas: o texto à esquerda e a foto da loja à direita,
-          cobrindo a metade inteira sem moldura. No celular a foto vem
-          abaixo do texto, como um recorte de showroom.
+          No celular fica só o texto, bem espaçado sobre o fundo.
+          Do tablet pra cima a foto da loja cobre a metade inteira
+          sem moldura e o texto pousa sobre ela, à esquerda.
           ============================================================ */}
       <section
         data-hero
         className="relative isolate w-full overflow-hidden bg-fundo pt-cabecalho"
       >
-        {/* ---- MOBILE: só o texto, bem espaçado ---- */}
-        <div data-hero-mobile className="px-5 py-6 lg:hidden">
-          <span className="mb-2 block text-xs font-semibold tracking-wider text-marca-texto uppercase">
-            Seminovas em Belo Horizonte
-          </span>
+        {/* Texto único, escrito mobile-first: no celular ele mora
+            sozinho sobre o fundo; do tablet pra cima a foto entra
+            como camada ao fundo e o texto pousa sobre ela. */}
+        <div
+          data-hero-content
+          className="relative z-10 lg:mx-auto lg:w-full lg:max-w-[1760px] lg:px-[length:var(--margem)]"
+        >
+          <div className="max-w-xl px-5 py-6 lg:py-24 lg:pl-16 lg:pr-0">
+            <span className="mb-2 block text-xs font-semibold tracking-wider text-marca-texto uppercase">
+              Seminovas em Belo Horizonte
+            </span>
 
-          <h2 className="mb-4 text-3xl leading-tight font-bold text-texto">
-            Seminovas inspecionadas{' '}
-            <span className="text-marca-texto">com garantia</span>
-          </h2>
+            <h1 className="mb-4 text-3xl leading-tight font-bold text-texto lg:text-5xl lg:font-extrabold">
+              Seminovas inspecionadas{' '}
+              <span className="text-marca-texto">com garantia</span>
+            </h1>
 
-          <p className="mb-6 max-w-md text-sm leading-relaxed text-texto-2">
-            Motos revisadas e prontas para rodar. Escolha o seu modelo no pátio
-            da DG Motos.
-          </p>
+            <p className="mb-6 max-w-md text-sm leading-relaxed text-texto-2 lg:mb-8 lg:text-base">
+              Motos revisadas e prontas para rodar. Escolha o seu modelo no pátio
+              da DG Motos.
+            </p>
 
-          <Link
-            to="/estoque"
-            className="inline-flex items-center gap-2 rounded-xl bg-marca px-6 py-3.5 font-bold text-white shadow-lg shadow-[#2c0003]/40 transition-all hover:bg-marca-viva"
-          >
-            Ver estoque
-          </Link>
+            <Link
+              to="/estoque"
+              className="inline-flex items-center gap-2 rounded-xl bg-marca px-6 py-3.5 font-bold text-white shadow-lg shadow-[#2c0003]/40 transition-all hover:bg-marca-viva"
+            >
+              Ver estoque
+            </Link>
+          </div>
         </div>
 
-        {/* ---- DESKTOP: foto cobrindo tudo + texto sobreposto ---- */}
         <img
           data-hero-image
           src={heroDesktopImg}
@@ -102,36 +109,8 @@ export function Home() {
           className="pointer-events-none absolute inset-0 z-[1] hidden lg:block"
           aria-hidden="true"
         >
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#080808_0%,rgba(8,8,8,0.92)_26%,rgba(8,8,8,0.45)_52%,transparent_76%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(0deg,#080808_0%,transparent_100%)]" />
-        </div>
-
-        <div
-          data-hero-content
-          className="container-site relative z-10 hidden lg:block"
-        >
-          <div className="max-w-xl py-16 pl-8 lg:py-24 lg:pl-16">
-            <span className="mb-2 block text-xs font-semibold tracking-wider text-marca-texto uppercase">
-              Seminovas em Belo Horizonte
-            </span>
-
-            <h1 className="mb-4 text-4xl leading-tight font-extrabold text-texto lg:text-5xl">
-              Seminovas inspecionadas{' '}
-              <span className="text-marca-texto">com garantia</span>
-            </h1>
-
-            <p className="mb-8 max-w-md text-sm leading-relaxed text-texto-2 lg:text-base">
-              Motos revisadas e prontas para rodar. Escolha o seu modelo no pátio
-              da DG Motos.
-            </p>
-
-            <Link
-              to="/estoque"
-              className="inline-flex items-center gap-2 rounded-xl bg-marca px-6 py-3.5 font-bold text-white shadow-lg shadow-[#2c0003]/40 transition-all hover:bg-marca-viva"
-            >
-              Ver estoque
-            </Link>
-          </div>
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#0f0e0c_0%,rgba(15,14,12,0.92)_26%,rgba(15,14,12,0.45)_52%,transparent_76%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(0deg,#0f0e0c_0%,transparent_100%)]" />
         </div>
       </section>
 
@@ -161,7 +140,7 @@ export function Home() {
 
           {patio.length > 0 ? (
             <>
-              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {patio.map((bike, i) => (
                   <Revelar key={bike.id} atraso={i * 60}>
                     <BikeCard bike={bike} priority={i < 3} />
@@ -186,14 +165,13 @@ export function Home() {
       </section>
 
       {/* ============================================================
-          4. FECHAMENTO — troca, showroom e pedido específico
+          3. FECHAMENTO — troca: a oferta fica no fim da página,
+          como o beija-mão da bancada. No celular é a foto protagonista,
+          sem moldura; no desktop o texto pousa por cima da moto.
           ============================================================ */}
       <section className="bg-fundo">
         <Revelar>
-          {/* No celular o banner é um cartão vertical: texto centralizado,
-              botão e a moto isolada embaixo. No desktop vira faixa full-bleed
-              com a moto à direita e o texto à esquerda. */}
-          <div className="relative mx-4 my-10 flex flex-col items-center overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center lg:mx-0 lg:my-16 lg:min-h-[380px] lg:flex-row lg:justify-between lg:border-x-0 lg:bg-black lg:px-0 lg:text-left">
+          <div className="relative my-6 flex flex-col overflow-hidden lg:mx-0 lg:my-16 lg:min-h-[380px] lg:flex-row lg:items-center lg:justify-between lg:border-x-0 lg:bg-black">
             {/* Fundo (só no desktop): a moto inteira, contida à direita. */}
             <img
               src={trocaDesktopImg}
@@ -208,8 +186,8 @@ export function Home() {
               className="pointer-events-none absolute inset-0 z-0 hidden w-full bg-gradient-to-r from-black via-black/60 to-transparent lg:block"
             />
 
-            <div className="container-site relative z-10 !px-0 lg:!px-[length:var(--margem)] lg:flex lg:items-center">
-              <div className="max-w-lg">
+            <div className="container-site relative z-10 hidden w-full !px-0 lg:!px-[length:var(--margem)] lg:flex lg:items-center">
+              <div className="mx-4 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center lg:mx-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:text-left">
                 <h2 className="mb-3 text-2xl leading-tight font-extrabold text-white sm:text-3xl lg:text-4xl">
                   Sua moto usada entra na troca
                 </h2>
@@ -226,15 +204,15 @@ export function Home() {
               </div>
             </div>
 
-            {/* Moto isolada, abaixo do botão — só no celular. */}
+            {/* Mobile: a foto na proporção real, sem esticar. */}
             <img
               src={trocaMobileImg}
-              alt="Moto usada para troca"
-              className="mt-4 h-40 w-full object-contain lg:hidden"
+              alt="Moto usada avaliada para troca na DG Motos"
+              className="block h-auto w-full object-cover lg:hidden"
+              loading="lazy"
             />
           </div>
         </Revelar>
-
       </section>
 
       <MarcasProcuradas />

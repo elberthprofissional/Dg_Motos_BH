@@ -1,16 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { ComponentType, ReactNode } from 'react'
 import {
   ArrowLeft,
   ChevronRight,
   Clock,
+  Globe,
   MapPin,
   MessageCircle,
   RotateCcw,
   Smartphone,
   Trash2,
 } from 'lucide-react'
-import { configPadrao, gravarConfig, lerConfig, limparConfig } from '../../lib/configLoja'
+import {
+  configPadrao,
+  gravarConfig,
+  gravarConfigNoBanco,
+  lerConfig,
+  lerConfigDoBanco,
+  limparConfig,
+  limparConfigLocal,
+  limparConfigNoBanco,
+} from '../../lib/configLoja'
 import type { ConfigLoja } from '../../lib/configLoja'
 import { buildMapsRouteUrl } from '../../lib/maps'
 import { InstagramIcon } from '../ui/InstagramIcon'
@@ -34,7 +44,7 @@ import type { Feedback } from '../ui/Toast'
  * no topo — os dois layouts leem dos mesmos dados e do mesmo `conteudo`.
  */
 
-type Secao = 'contato' | 'instagram' | 'endereco' | 'horarios' | 'app'
+type Secao = 'contato' | 'instagram' | 'endereco' | 'horarios' | 'app' | 'publicacao'
 
 interface DescricaoSecao {
   id: Secao
@@ -89,6 +99,14 @@ const SECOES: DescricaoSecao[] = [
     descricao: 'Acesse o painel como um app, em tela cheia, direto do celular.',
     resumo: () => 'App instalável neste aparelho',
     icone: Smartphone,
+    grupo: 'app',
+  },
+  {
+    id: 'publicacao',
+    rotulo: 'Publicação & SEO',
+    descricao: 'Entenda como o site se publica e por que o SEO depende do build.',
+    resumo: () => 'Prerender estático',
+    icone: Globe,
     grupo: 'app',
   },
 ]
@@ -154,22 +172,59 @@ export function ConfiguracoesTab() {
   const [salvo, setSalvo] = useState<ConfigLoja>(config)
   const temAlteracoes = JSON.stringify(config) !== JSON.stringify(salvo)
 
+  // O valor inicial vem do localStorage; o banco é buscado em seguida e
+  // adotado desde que o dono não tenha editado nada neste mount — assim
+  // valores salvos por outro aparelho aparecem corretamente e o selo de
+  // "alterações não salvas" não mente.
+  const editando = useRef(false)
+  useEffect(() => {
+    let ativo = true
+    void lerConfigDoBanco().then((doBanco) => {
+      if (!ativo || !doBanco) return
+      if (editando.current) return
+      setConfig(doBanco)
+      setSalvo(doBanco)
+    })
+    return () => {
+      ativo = false
+    }
+  }, [])
+
   function set<K extends keyof ConfigLoja>(chave: K, valor: ConfigLoja[K]) {
+    editando.current = true
     setConfig((c) => ({ ...c, [chave]: valor }))
   }
 
   function salvar() {
-    gravarConfig(config)
+    editando.current = false
+    gravarConfig(config) // localStorage + evento (a vitrine re-renderiza na hora)
+    void gravarConfigNoBanco(config).then((ok) => {
+      if (ok) {
+        setFeedback({ tipo: 'ok', texto: 'Configurações salvas. O site já usa os novos valores.' })
+      } else {
+        setFeedback({
+          tipo: 'erro',
+          texto: 'Salvo localmente. Não foi possível salvar no banco (verifique conexão/permissões).',
+        })
+      }
+    })
     setSalvo(config)
-    setFeedback({ tipo: 'ok', texto: 'Configurações salvas. O site já usa os novos valores.' })
   }
 
   function restaurar() {
     limparConfig()
-    const padrao = configPadrao()
-    setConfig(padrao)
-    setSalvo(padrao)
-    setFeedback({ tipo: 'ok', texto: 'Valores de fábrica restaurados (src/data/site.ts).' })
+    limparConfigLocal()
+    void limparConfigNoBanco().then((ok) => {
+      const padrao = configPadrao()
+      setConfig(padrao)
+      setSalvo(padrao)
+      setFeedback({
+        tipo: ok ? 'ok' : 'erro',
+        texto: ok
+          ? 'Valores de fábrica restaurados no banco e no site.'
+          : 'Valores restaurados localmente. Não foi possível restaurar no banco.',
+      })
+    })
   }
 
   /**
@@ -353,6 +408,29 @@ export function ConfiguracoesTab() {
       )
     }
 
+    if (id === 'publicacao') {
+      return (
+        <fieldset className="space-y-4">
+          <legend className="sr-only">Publicação & SEO</legend>
+          <div className="rounded-lg border border-line bg-night-900/40 p-4">
+            <h4 className="text-sm font-semibold text-paper">Como funciona</h4>
+            <ul className="mt-2 space-y-2 text-sm text-steel-400">
+              <li>• O site é estático. Salvar no painel atualiza a vitrine na hora, mas as páginas <code>/moto/&lt;slug&gt;</code> geradas para o Google só são atualizadas com <strong>novo build/deploy</strong>.</li>
+              <li>• Ao rodar <code>npm run build</code>, o <code>postbuild</code> executa <code>prerender.mjs</code> e gera HTML estático + sitemap + robots com as motos <strong>disponíveis</strong> no momento do build.</li>
+              <li>• Se você adicionar/editar uma moto pelo painel sem fazer deploy, ela aparece na vitrine (cliente-side), mas o Google pode ver a versão antiga ou vazia da ficha até o próximo deploy.</li>
+              <li>• As configurações de contato (WhatsApp/Instagram/endereço) já ficam salvas no banco e aparecem pra todos sem rebuild.</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border border-line bg-night-900/40 p-4">
+            <h4 className="text-sm font-semibold text-paper">Dica prática</h4>
+            <p className="mt-2 text-sm text-steel-400">
+              Sempre que alterar fotos, descrição, preço ou adicionar uma moto nova, faça o deploy (push) para atualizar o SEO e o sitemap.
+            </p>
+          </div>
+        </fieldset>
+      )
+    }
+
     return <PainelInstalarApp />
   }
 
@@ -381,7 +459,7 @@ export function ConfiguracoesTab() {
         <nav aria-label="Seções de configuração" className="w-60 shrink-0">
           <div className="space-y-6">
             {GRUPOS.map((grupo) => {
-              const itens = SECOES.filter((s) => s.grupo === grupo.id)
+              const itens = SECOES.filter((s) => s.grupo === grupo.id && s.id !== 'publicacao')
               if (itens.length === 0) return null
               return (
                 <div key={grupo.id}>
@@ -489,7 +567,7 @@ export function ConfiguracoesTab() {
         </header>
 
         <div className="mt-5 divide-y divide-line border-y border-line">
-          {SECOES.filter((s) => s.id !== 'app').map((s) => {
+          {SECOES.filter((s) => s.id === 'publicacao').map((s) => {
             const Icone = s.icone
             return (
               <button

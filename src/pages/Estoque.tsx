@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { SearchX, SlidersHorizontal, X } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { Search, SearchX, SlidersHorizontal, X } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import {
+  ANO_MAX,
   ANO_MIN,
   FILTROS_PADRAO,
+  ORDENACOES,
   PRECO_MAX,
   PRECO_MIN,
-  categoriasDisponiveis,
   filtrarMotos,
+  marcasDisponiveis,
+  modelosDisponiveis,
 } from '../lib/filters'
 import type { BikeFilterState } from '../types'
 import { usePageMeta } from '../hooks/usePageMeta'
@@ -32,7 +35,7 @@ import { formatPrice } from '../lib/format'
  *
  * No celular a coluna vira uma folha de tela cheia (um <dialog>
  * nativo, com foco preso e Esc de graça). A folha abre pelo botão na
- * barra de categorias ou pelo botão flutuante, sempre disponível.
+ * pelo botão flutuante, sempre disponível.
  */
 export function Estoque() {
   const { motos } = useCatalogo()
@@ -93,21 +96,12 @@ export function Estoque() {
     fecharFolha()
   }
 
-  const aplicarFiltros = () => setFiltros(rascunho)
-
   const aplicarEFechar = () => {
     setFiltros(rascunho)
     fecharFolha()
   }
 
   const resultados = useMemo(() => filtrarMotos(motos, filtros), [motos, filtros])
-  const previa = useMemo(() => filtrarMotos(motos, rascunho), [motos, rascunho])
-
-  const disponiveis = useMemo(
-    () => motos.filter((m) => m.status === 'disponivel'),
-    [motos],
-  )
-  const categorias = useMemo(() => categoriasDisponiveis(disponiveis), [disponiveis])
 
   // Atualização imediata (chips e etiquetas): mexe no aplicado e no
   // rascunho ao mesmo tempo para os dois nunca divergirem.
@@ -177,58 +171,171 @@ export function Estoque() {
       <h1 className="sr-only">Estoque</h1>
 
       <section className="bg-fundo pt-8 pb-16 sm:pt-12 sm:pb-24">
-        <div className="container-site flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-8">
-          {/* Coluna de filtros — só existe como coluna no desktop. */}
-          <aside className="hidden w-[18rem] shrink-0 flex-col gap-6 lg:sticky lg:top-[5.5rem] lg:flex">
-            <div className="space-y-4 rounded-xl border border-neutral-800/80 bg-neutral-900/60 p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-base leading-none font-bold text-texto">
-                    Filtros
-                  </h2>
-                  <p className="mt-1 text-[11px] text-texto-3">Refine o pátio</p>
-                </div>
-                {temAtivos ? (
-                  <span className="numeros grid size-6 place-items-center rounded-full bg-neutral-700/60 text-xs font-bold text-neutral-200">
-                    {ativos.length}
-                  </span>
-                ) : null}
-              </div>
-
-              <BikeFilters
-                filtros={rascunho}
-                motos={motos}
-                onChange={setRascunho}
-                onAplicar={aplicarFiltros}
-                prefix="filtro"
-              />
-
-              <div className="space-y-2.5">
-                <p className="text-center text-[11px] text-texto-3">
-                  <span className="numeros font-semibold text-texto">{previa.length}</span>{' '}
-                  {previa.length === 1 ? 'moto' : 'motos'} com estes filtros
-                </p>
-                <button
-                  type="button"
-                  onClick={aplicarFiltros}
-                  className="w-full rounded-lg bg-white py-2 text-[13px] font-bold text-black transition-colors hover:bg-neutral-200"
-                >
-                  Aplicar filtros
-                </button>
-                <button
-                  type="button"
-                  onClick={limparFiltros}
-                  className="mx-auto flex min-h-6 w-fit items-center text-[11px] text-texto-3 transition-colors hover:text-texto"
-                >
-                  Limpar filtros
-                </button>
-              </div>
-            </div>
-          </aside>
-
+        <div className="container-site">
           {/* Resultado */}
           <div className="min-w-0 flex-1">
             <h2 className="sr-only">Motos disponíveis no estoque</h2>
+
+            {/* Barra de filtros do desktop: uma linha acima do grid, à la
+                catálogo simples — sem coluna lateral. Aplica na hora (o
+                mesmo caminho dos chips); o botão de aplicar ficou pro
+                celular, que continua com a folha de rascunho intacta. */}
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              aria-label="Filtros do estoque"
+              className="mb-6 hidden items-start gap-3 rounded-xl border border-neutral-800/80 bg-neutral-900/60 p-4 lg:flex"
+            >
+              <div className="min-w-44 flex-1">
+                <label htmlFor="barra-busca" className="field-label">
+                  Buscar
+                </label>
+                <div className="relative">
+                  <Search
+                    className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-texto-3"
+                    aria-hidden="true"
+                  />
+                  <input
+                    id="barra-busca"
+                    type="search"
+                    value={filtros.busca}
+                    onChange={(e) => atualizar({ busca: e.target.value })}
+                    placeholder="Marca, modelo ou ano"
+                    className="h-10 w-full rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1.5 pr-8 pl-8 text-[13px] text-neutral-200 transition-colors placeholder:text-texto-3 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600/30 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="w-40">
+                <label htmlFor="barra-marca" className="field-label">
+                  Marca
+                </label>
+                <select
+                  id="barra-marca"
+                  value={filtros.marca}
+                  onChange={(e) => atualizar({ marca: e.target.value, modelo: '' })}
+                  className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
+                >
+                  <option value="">Todas as marcas</option>
+                  {marcasDisponiveis(motos).map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="w-40">
+                <label htmlFor="barra-modelo" className="field-label">
+                  Modelo
+                </label>
+                {filtros.marca ? (
+                  <select
+                    id="barra-modelo"
+                    value={filtros.modelo}
+                    onChange={(e) => atualizar({ modelo: e.target.value })}
+                    className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
+                  >
+                    <option value="">Todos os modelos</option>
+                    {modelosDisponiveis(motos, filtros.marca).map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <select
+                    id="barra-modelo"
+                    disabled
+                    aria-disabled="true"
+                    className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px] opacity-60"
+                  >
+                    <option value="">Escolha a marca</option>
+                  </select>
+                )}
+              </div>
+
+              <div className="w-36">
+                <label htmlFor="barra-ano" className="field-label">
+                  Ano
+                </label>
+                <select
+                  id="barra-ano"
+                  value={filtros.anoMin}
+                  onChange={(e) => atualizar({ anoMin: Number(e.target.value) })}
+                  className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
+                >
+                  <option value={ANO_MIN}>Ano: todos</option>
+                  {Array.from({ length: ANO_MAX - ANO_MIN }, (_, i) => ANO_MAX - i).map(
+                    (ano) => (
+                      <option key={ano} value={ano}>
+                        A partir de {ano}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+
+              <div className="w-36">
+                <label htmlFor="barra-ordenacao" className="field-label">
+                  Ordenar
+                </label>
+                <select
+                  id="barra-ordenacao"
+                  value={filtros.ordenacao}
+                  onChange={(e) =>
+                    atualizar({ ordenacao: e.target.value as BikeFilterState['ordenacao'] })
+                  }
+                  className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
+                >
+                  {ORDENACOES.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Preço: um puxador só, "até tal" — a versão limpa da
+                  referência. O mínimo fica no padrão (a folha do celular
+                  continua com os dois, intocada). */}
+              <div className="w-44">
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="barra-preco-max" className="field-label !mb-0">
+                    Preço até
+                  </label>
+                  <span className="numeros text-[11px] leading-none font-semibold text-neutral-200">
+                    {formatPrice(filtros.precoMax)}
+                  </span>
+                </div>
+                <div className="flex h-10 items-center">
+                  <input
+                    id="barra-preco-max"
+                    type="range"
+                    aria-label="Preço até"
+                    min={PRECO_MIN}
+                    max={PRECO_MAX}
+                    step={1000}
+                    value={filtros.precoMax}
+                    onChange={(e) =>
+                      atualizar({
+                        precoMax: Math.max(Number(e.target.value), filtros.precoMin + 1000),
+                      })
+                    }
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {temAtivos ? (
+                <button
+                  type="button"
+                  onClick={limparFiltros}
+                  className="self-center shrink-0 text-[13px] text-texto-3 transition-colors hover:text-texto"
+                >
+                  Limpar filtros
+                </button>
+              ) : null}
+            </form>
 
             {/* No celular, a folha de filtros abre por aqui: os
                 atalhos de categoria não mostram os demais campos. */}
@@ -252,36 +359,6 @@ export function Estoque() {
                 {resultados.length} {resultados.length === 1 ? 'moto' : 'motos'}
               </p>
             </div>
-
-            {/* Categorias reais do estoque: um atalho horizontal antes
-                da grade. */}
-            {categorias.length >= 2 ? (
-              <div
-                role="group"
-                aria-label="Filtrar por categoria"
-                className="mb-5 flex items-center gap-2 overflow-x-auto pb-1"
-              >
-                <button
-                  type="button"
-                  aria-pressed={filtros.categoria === 'todas'}
-                  onClick={() => atualizar({ categoria: 'todas' })}
-                  className="chip-filtro"
-                >
-                  Todas
-                </button>
-                {categorias.map((categoria) => (
-                  <button
-                    key={categoria}
-                    type="button"
-                    aria-pressed={filtros.categoria === categoria}
-                    onClick={() => atualizar({ categoria })}
-                    className="chip-filtro"
-                  >
-                    {categoria}
-                  </button>
-                ))}
-              </div>
-            ) : null}
 
             {temAtivos ? (
               <div className="mb-5 flex flex-wrap items-center gap-2">
@@ -307,7 +384,7 @@ export function Estoque() {
             ) : null}
 
             {resultados.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {resultados.map((bike, i) => (
                   <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
                     <BikeCard bike={bike} priority={i < 3} />
@@ -332,27 +409,6 @@ export function Estoque() {
               </div>
             )}
 
-            {/* Troca, em faixa compacta: a mesma oferta da home, sem
-                roubar a cena do catálogo. */}
-            <div className="mt-8 rounded-2xl border border-neutral-800 bg-gradient-to-r from-neutral-900 to-black px-6 py-6 sm:px-8">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="max-w-xl">
-                  <h2 className="text-lg font-bold text-white">
-                    Sua moto usada entra na troca
-                  </h2>
-                  <p className="mt-1 text-sm text-neutral-400">
-                    Aceitamos sua moto usada como parte do pagamento, com avaliação
-                    feita na loja.
-                  </p>
-                </div>
-                <Link
-                  to="/contato"
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
-                >
-                  Falar com a loja
-                </Link>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -378,9 +434,6 @@ export function Estoque() {
                 <h2 className="font-display text-lg leading-none font-bold text-texto">
                   Filtrar
                 </h2>
-                <p className="mt-1 text-xs text-texto-3">
-                  {previa.length} {previa.length === 1 ? 'moto' : 'motos'} com estes filtros
-                </p>
               </div>
               <button
                 type="button"

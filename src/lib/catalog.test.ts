@@ -24,7 +24,8 @@ const linhaBase = {
   descricao: 'Trail versátil.',
   especificacoes: [{ label: 'Motor', value: 'Mono OHc' }],
   motorcycle_images: [{ src: '/motos/honda-xre-300-2021/01.webp', alt: 'frontal', posicao: 0 }],
-  destaque: false,
+  em_promocao: false,
+  preco_antes: null,
   status: 'disponivel',
 }
 
@@ -91,9 +92,21 @@ describe('linhaParaMotos', () => {
     expect(moto.especificacoes).toEqual([{ label: 'Motor', value: 'Mono' }])
   })
 
-  it('normaliza destaque vindo como 0/1 do Postgres', () => {
-    expect(linhaParaMotos({ ...linhaBase, destaque: 1 as unknown as boolean }).destaque).toBe(true)
-    expect(linhaParaMotos({ ...linhaBase, destaque: 0 as unknown as boolean }).destaque).toBe(false)
+  it('normaliza em_promocao vindo como 0/1 do Postgres', () => {
+    const verdadeira = linhaParaMotos({ ...linhaBase, em_promocao: 1 as unknown as boolean })
+    expect(verdadeira.emPromocao).toBe(true)
+    const falsa = linhaParaMotos({ ...linhaBase, em_promocao: 0 as unknown as boolean })
+    expect(falsa.emPromocao).toBe(false)
+  })
+
+  it('promoção: numeric "preco_antes" chega como string do PostgREST', () => {
+    const moto = linhaParaMotos({
+      ...linhaBase,
+      em_promocao: true,
+      preco_antes: '34900.00' as unknown as number,
+    })
+    expect(moto.precoAntes).toBe(34900)
+    expect(moto.emPromocao).toBe(true)
   })
 })
 

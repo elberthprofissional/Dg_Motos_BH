@@ -97,8 +97,10 @@ export function filtrarMotos(
     return true
   })
 
+  // Promoção manda: a moto com preço de "por" sai na frente e o restante
+  // fica na ordem de chegada do ano — relevância para quem está vendendo.
   const porRelevancia = (a: Motorcycle, b: Motorcycle) =>
-    Number(b.destaque) - Number(a.destaque) || b.ano - a.ano
+    Number(b.emPromocao) - Number(a.emPromocao) || b.ano - a.ano
 
   switch (f.ordenacao) {
     case 'preco-asc':

@@ -26,13 +26,11 @@ function IconeWhatsapp({ className }: { className?: string }) {
  * Botões flutuantes no canto inferior direito: contato sempre à mão e a
  * seta para voltar ao topo depois que a página já rolou.
  *
- * Chapa reta, como o resto da casa: o contato é um bloco vermelho
- * (vermelho é sinal, não enfeite) e a seta é uma placa de painel.
- * Nada arredondado aqui — e nada de sombra: sombra é enfeite de
- * interface, e este site não usa.
- *
- * Sem número configurado, o botão cai para /contato — mesma régua
- * dos demais CTAs de WhatsApp do site (ver WhatsAppCTA.tsx).
+ * O contato segue o padrão universal do WhatsApp: bolinha verde com o
+ * glifo branco — é o formato que o visitante já reconhece de longe.
+ * A seta continua uma placa de painel, reta. Com número não configurado,
+ * o botão cai para /contato — mesma régua dos demais CTAs de WhatsApp
+ * do site (ver WhatsAppCTA.tsx).
  */
 export function BotoesFlutuantes() {
   const wa = useWhatsappLink(buildDefaultMessage())
@@ -47,14 +45,14 @@ export function BotoesFlutuantes() {
   }
 
   return (
-    <div className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 hidden flex-col-reverse items-end gap-2.5 sm:right-5 md:flex">
+    <div className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 hidden flex-col items-end gap-2.5 sm:right-5 md:flex">
       {wa ? (
         <a
           href={wa}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Conversar no WhatsApp"
-          className="grid size-14 place-items-center bg-whatsapp text-fundo transition-[filter] hover:brightness-95"
+          className="grid size-14 place-items-center rounded-full bg-whatsapp text-white shadow-lg shadow-black/25 transition-[filter] hover:brightness-95"
         >
           <IconeWhatsapp className="size-7" />
         </a>
@@ -62,7 +60,7 @@ export function BotoesFlutuantes() {
         <Link
           to="/contato"
           aria-label="Falar com a loja"
-          className="grid size-14 place-items-center bg-whatsapp text-fundo transition-[filter] hover:brightness-95"
+          className="grid size-14 place-items-center rounded-full bg-whatsapp text-white shadow-lg shadow-black/25 transition-[filter] hover:brightness-95"
         >
           <IconeWhatsapp className="size-7" />
         </Link>

@@ -32,13 +32,23 @@ export interface Motorcycle {
   modelo: string
   ano: number
   preco: number
+  /**
+   * O preço de referência ("de") da promoção, riscado no site. Só faz
+   * sentido quando `emPromocao` é true — o formulário já garante isso,
+   * mas quem consome deve tratar null independentemente.
+   */
+  precoAntes: number | null
+  /**
+   * Moto em promoção: ganha o selo circular de desconto, o preço
+   * "de → por" e sai na frente na vitrine (no lugar do antigo destaque).
+   */
+  emPromocao: boolean
   quilometragem: number | null
   cilindrada: number | null
   categoria: MotorcycleCategory
   descricao: string
   especificacoes: MotorcycleSpec[]
   imagens: MotorcycleImage[]
-  destaque: boolean
   status: MotorcycleStatus
   /**
    * ISO do primeiro cadastro, preenchido só quando a moto vem do banco.

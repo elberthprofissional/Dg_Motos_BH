@@ -42,17 +42,13 @@ const STATUS_ROTULO: Record<MotorcycleStatus, string> = {
   vendida: 'Vendida',
 }
 
-function doisDigitos(valor: number): string {
-  return String(valor).padStart(2, '0')
-}
-
 function ordenarEstoque(motos: Motorcycle[], ordem: OrdemEstoque): Motorcycle[] {
   if (ordem === 'preco-desc') return [...motos].sort((a, b) => b.preco - a.preco)
   if (ordem === 'preco-asc') return [...motos].sort((a, b) => a.preco - b.preco)
   if (ordem === 'ano-desc') return [...motos].sort((a, b) => b.ano - a.ano)
   return [...motos].sort(
     (a, b) =>
-      Number(b.destaque) - Number(a.destaque) ||
+      Number(b.emPromocao) - Number(a.emPromocao) ||
       b.ano - a.ano ||
       a.modelo.localeCompare(b.modelo, 'pt-BR'),
   )
@@ -132,10 +128,6 @@ export function EstoqueTab({
     () => (motos === null || erroAtivo ? null : resumirEstoque(motos)),
     [motos, erroAtivo],
   )
-  const emDestaque = useMemo(
-    () => (motos === null ? 0 : motos.filter((m) => m.destaque && m.status === 'disponivel').length),
-    [motos],
-  )
 
   function limpar() {
     onBusca('')
@@ -158,8 +150,8 @@ export function EstoqueTab({
 
   const total = motos === null ? 0 : motos.length
   const vistos = visiveis.length
-  const contagem = erroAtivo || motos === null ? '' : filtrando ? `${doisDigitos(vistos)} de ${doisDigitos(total)}` : doisDigitos(total)
-  const unidadeContagem = filtrando ? (vistos === 1 ? 'veículo' : 'veículos') : total === 1 ? 'veículo' : 'veículos'
+  const contagem = erroAtivo || motos === null ? '' : filtrando ? `${vistos} de ${total}` : `${total}`
+  const unidadeContagem = filtrando ? (vistos === 1 ? 'moto vista' : 'motos vistas') : total === 1 ? 'moto' : 'motos'
 
   return (
     <div className="estoque-pagina">
@@ -176,24 +168,28 @@ export function EstoqueTab({
           {erroAtivo ? (
             <span className="estoque-resumo-total">Estoque indisponível</span>
           ) : motos === null ? (
-            <span className="estoque-resumo-total">Carregando inventário…</span>
+            <span className="estoque-resumo-total">Carregando estoque…</span>
           ) : resumo ? (
             <>
               <span className="estoque-resumo-total">
-                {doisDigitos(total)} {total === 1 ? 'veículo no inventário' : 'veículos no inventário'}
+                {total} {total === 1 ? 'moto no estoque' : 'motos no estoque'}
+                {/* Os disponíveis só se justificam na frase quando são
+                    menos que o total: "4 motos, 4 disponíveis" é eco. */}
+                {resumo.disponiveis < total &&
+                  `, ${resumo.disponiveis} ${resumo.disponiveis === 1 ? 'disponível' : 'disponíveis'}`}
               </span>
-              <span className="estoque-resumo-item">
-                {doisDigitos(resumo.disponiveis)} {resumo.disponiveis === 1 ? 'disponível' : 'disponíveis'}
-              </span>
-              <span className="estoque-resumo-item">
-                {doisDigitos(emDestaque)} em destaque
-              </span>
-              <span className="estoque-resumo-item">
-                {doisDigitos(resumo.indisponiveis)} {resumo.indisponiveis === 1 ? 'indisponível' : 'indisponíveis'}
-              </span>
-              <span className="estoque-resumo-item">
-                {doisDigitos(resumo.vendidas)} {resumo.vendidas === 1 ? 'vendido' : 'vendidos'}
-              </span>
+              {/* Diferente do zero não vira contador: só aparece quando
+                  existe — uma linha sem "00” gastos à toa. */}
+              {resumo.indisponiveis > 0 && (
+                <span className="estoque-resumo-item">
+                  {resumo.indisponiveis} {resumo.indisponiveis === 1 ? 'indisponível' : 'indisponíveis'}
+                </span>
+              )}
+              {resumo.vendidas > 0 && (
+                <span className="estoque-resumo-item">
+                  {resumo.vendidas} {resumo.vendidas === 1 ? 'vendida' : 'vendidas'}
+                </span>
+              )}
               <span className="estoque-resumo-valor">
                 {formatPrice(resumo.valorEmEstoque)} <span>em estoque</span>
               </span>
@@ -292,12 +288,12 @@ export function EstoqueTab({
             <div className="estoque-estado-celula" role="cell">
               <div className="estoque-estado-texto">
                 <p className="estoque-estado-titulo">
-                  {filtrando ? 'Nenhuma moto encontrada' : 'Nenhum veículo no inventário'}
+                  {filtrando ? 'Nenhuma moto encontrada' : 'Nenhuma moto no estoque'}
                 </p>
                 <p className="estoque-estado-descricao">
                   {filtrando
-                    ? 'A busca e a situação selecionada não retornaram nenhum veículo.'
-                    : 'Cadastre a primeira moto para iniciar o inventário da loja.'}
+                    ? 'A busca e a situação selecionada não retornaram nenhuma moto.'
+                    : 'Cadastre a primeira moto para começar.'}
                 </p>
               </div>
               {filtrando ? (
@@ -358,8 +354,8 @@ export function EstoqueTab({
                     <span className="estoque-status-ponto" aria-hidden="true" />
                     {STATUS_ROTULO[moto.status]}
                   </span>
-                  {moto.destaque && moto.status === 'disponivel' ? (
-                    <span className="estoque-destaque">Destaque</span>
+                  {moto.emPromocao && moto.status === 'disponivel' ? (
+                    <span className="estoque-destaque">Promoção</span>
                   ) : null}
                 </div>
 

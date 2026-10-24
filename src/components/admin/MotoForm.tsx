@@ -18,8 +18,9 @@ import { campoLinha, selectLinha } from './campoLinha'
  * Muitos campos seriam um rolinho interminável; o antigo wizard de
  * passos resolvia isso ao custo de esconder o resto do formulário.
  * Agora: todas as seções empilhadas numa página só, com scroll
- * natural e títulos discretos — e a ação de salvar fixa no rodapé,
- * no celular (fixed) e no desktop (sticky).
+ * natural — seções separadas por fio de cabelo, não por cartões de
+ * vidro (isso é linguagem de vitrine; o painel é bancada). A ação de
+ * salvar fica numa barra fixa no rodapé, sólida, sem blur.
  */
 
 const VAZIO: MotoParaSalvar = {
@@ -34,7 +35,8 @@ const VAZIO: MotoParaSalvar = {
   descricao: '',
   especificacoes: [],
   imagens: [],
-  destaque: false,
+  emPromocao: false,
+  precoAntes: null,
   status: 'disponivel',
 }
 
@@ -46,34 +48,31 @@ function numeroOuNulo(texto: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-/** Rótulo numérico das seções: orienta o preenchimento de cima p/ baixo. */
+/** Seção da folha: fio de cabelo no topo, número miúdo e título em
+    versalete — o mesmo vocabulário dos grupos da sidebar. Sem cartão:
+    o formulário inteiro é uma folha só de trabalho. */
 function Secao({
   numero,
   titulo,
   children,
-  className = '',
 }: {
   numero: string
   titulo: string
   children: React.ReactNode
-  className?: string
 }) {
   return (
-    <section
-      className={`rounded-2xl border border-neutral-800/70 bg-neutral-900/50 p-6 shadow-2xl shadow-black/40 backdrop-blur-md transition-all lg:p-8 ${className}`}
-    >
-      <header className="flex items-center gap-3 border-b border-neutral-800/80 pb-3 mb-6">
-        {/* Número da seção em pílula suave, em vez de quadrado rígido. */}
+    <section className="border-t border-line pt-6">
+      <h2 className="mb-4 flex items-baseline gap-3">
         <span
           aria-hidden="true"
-          className="inline-flex h-7 min-w-[1.75rem] shrink-0 items-center justify-center rounded-full bg-red-600/15 px-2 text-xs font-bold text-red-400"
+          className="numeros text-xs font-semibold tabular-nums text-steel-600"
         >
-          {numero}
+          {String(numero).padStart(2, '0')}
         </span>
-        <h2 className="font-display text-sm font-bold tracking-[0.14em] text-white uppercase">
+        <span className="font-display text-micro font-semibold tracking-[0.2em] uppercase text-steel-600">
           {titulo}
-        </h2>
-      </header>
+        </span>
+      </h2>
       <div className="space-y-4">{children}</div>
     </section>
   )
@@ -113,6 +112,21 @@ export function MotoForm({
     })
   }
 
+  // Resumo da promoção para ler junto ao campo: "de R$ 34.900 por R$ 31.900".
+  const porFormatado = form.preco.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  })
+  const precoAntesFormatado =
+    form.emPromocao && form.precoAntes != null
+      ? form.precoAntes.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+          maximumFractionDigits: 0,
+        })
+      : '—'
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErro(null)
@@ -123,6 +137,14 @@ export function MotoForm({
     }
     if (!form.slug.trim()) {
       setErro('O slug ficou vazio. Confira marca, modelo e ano.')
+      return
+    }
+    // O banco também barreira isso (check da promoção), mas o erro viria
+    // cru do Postgres: validates aqui dá mensagem humana ao dono.
+    if (form.emPromocao && (form.precoAntes == null || form.precoAntes <= form.preco)) {
+      setErro(
+        'Em promoção, o preço de referência ("de") precisa ser informado e maior que o preço de venda.',
+      )
       return
     }
 
@@ -220,12 +242,32 @@ export function MotoForm({
       <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-steel-300">
         <input
           type="checkbox"
-          checked={form.destaque}
-          onChange={(e) => set('destaque', e.target.checked)}
+          checked={form.emPromocao}
+          onChange={(e) => set('emPromocao', e.target.checked)}
           className="size-5 accent-brand-500"
         />
-        Destacar na home
+        Em promoção (ganha selo de desconto e sai na frente no site)
       </label>
+      {form.emPromocao && (
+        <div>
+          <label htmlFor="f-preco-antes" className="field-label">
+            Preço de referência "de" (R$)
+          </label>
+          <input
+            id="f-preco-antes"
+            type="number"
+            min={0}
+            step={100}
+            className={campoLinha}
+            value={form.precoAntes ?? ''}
+            onChange={(e) => set('precoAntes', numeroOuNulo(e.target.value))}
+            placeholder="O preço que ficará riscado no site"
+          />
+          <p className="mt-1 text-etiqueta text-steel-500">
+            O site mostra: de {precoAntesFormatado} por {porFormatado}.
+          </p>
+        </div>
+      )}
     </Secao>,
 
     /* ------------------------------------------------ 3. Ficha técnica */
@@ -333,11 +375,12 @@ export function MotoForm({
     </Secao>,
   ]
 
-  // Cor da pílula de status acompanha o estado comercial escolhido.
+  // A cor do status em texto puro: sem cápsula, sem borda — o ponto
+  // e a palavra bastam numa tela de trabalho.
   const corStatus: Record<MotorcycleStatus, string> = {
-    disponivel: 'border-green-600/40 bg-green-500/10 text-green-400',
-    indisponivel: 'border-amber-600/40 bg-amber-500/10 text-amber-400',
-    vendida: 'border-red-600/40 bg-red-500/10 text-red-400',
+    disponivel: 'text-ok',
+    indisponivel: 'text-alerta',
+    vendida: 'text-marca-texto',
   }
   const rotuloStatus: Record<MotorcycleStatus, string> = {
     disponivel: 'Disponível',
@@ -352,27 +395,31 @@ export function MotoForm({
           que aparece) e a pílula do status comercial. Duplicar o "voltar"
           é intencional: na topbar ele some com o rolar da página; aqui
           ele fica sempre à mão no início da edição. */}
-      <div className="mb-8 flex flex-col justify-between gap-4 border-b border-neutral-800/80 pb-6 md:flex-row md:items-center">
+      {/* ================= Cabeçalho do formulário =========================
+          Volta rápida, o nome em tempo real e o status em texto puro.
+          Duplicar o "voltar" é intencional: na topbar ele some com o
+          rolar da página; aqui ele fica sempre à mão no início. */}
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={onCancelar}
             aria-label="Voltar ao estoque"
-            className="foco-painel grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl border border-neutral-800 bg-black/60 text-neutral-400 transition-all hover:border-neutral-700 hover:text-white"
+            className="foco-painel grid size-10 shrink-0 cursor-pointer place-items-center border border-line bg-painel-2 text-steel-300 transition-colors hover:border-line-forte hover:text-paper"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-bold text-white">
+            <h1 className="truncate text-xl font-bold text-paper">
               {form.modelo.trim() || 'Nova Moto'}
             </h1>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-steel-500">
               {id ? 'Editando moto do estoque' : 'Nova moto para o estoque'}
             </p>
           </div>
         </div>
         <span
-          className={`inline-flex w-fit shrink-0 items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${corStatus[form.status]}`}
+          className={`inline-flex w-fit shrink-0 items-center gap-2 text-xs font-semibold ${corStatus[form.status]}`}
         >
           <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
           {rotuloStatus[form.status]}
@@ -380,39 +427,35 @@ export function MotoForm({
       </div>
 
       {erro && (
-        <p role="alert" className="rounded-xl border border-red-600/40 bg-red-950/20 px-3 py-2 text-xs text-red-400">
+        <p role="alert" className="border border-marca/40 bg-marca/10 px-3 py-2 text-xs text-marca-texto">
           {erro}
         </p>
       )}
 
       {/* Todas as seções empilhadas, uma página só, com scroll natural —
           no celular e no desktop. */}
-      <div className="space-y-8">{conteudo}</div>
+      <div className="space-y-6">{conteudo}</div>
 
       {/* Espaço para a barra flutuante não cobrir o fim da página. */}
       <div className="h-24" aria-hidden="true" />
 
-      {/* ================= Barra flutuante de salvar =========================
-          Cápsula fixa, centrada, com blur — estilo SaaS. Esquerda: o
-          aviso de rascunho; direita: Cancelar + Salvar. Aparece igual no
-          celular e no desktop; o Admin já esconde sua navegação
-          inferior quando o formulário abre. */}
-      <div className="fixed bottom-6 left-1/2 z-50 flex w-[90%] max-w-4xl -translate-x-1/2 items-center justify-between gap-3 rounded-2xl border border-neutral-700/60 bg-neutral-900/90 p-4 shadow-2xl shadow-black/80 backdrop-blur-xl">
-        <p className="hidden min-w-0 truncate text-xs font-medium text-neutral-400 sm:block">
-          Alterações não salvas
-        </p>
-        <div className="flex flex-1 items-center justify-end gap-2 sm:flex-none sm:gap-3">
+      {/* ================= Barra fixa de salvar =========================
+          Barra sólida de bancada colada no rodapé: fio de cabelo no topo,
+          fundo do painel, sem blur nem cápsula. Só as ações — o aviso
+          de rascunho era ruído; o dono sabe o que está editando. */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-painel-2">
+        <div className="mx-auto flex max-w-4xl items-center justify-end gap-3 px-4 py-3">
           <button
             type="button"
             onClick={onCancelar}
-            className="foco-painel inline-flex h-10 cursor-pointer items-center rounded-xl px-4 text-sm font-medium text-neutral-400 transition-colors hover:text-white"
+            className="foco-painel inline-flex h-10 cursor-pointer items-center px-4 text-sm font-medium text-steel-400 transition-colors hover:text-paper"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={salvando}
-            className="foco-painel inline-flex h-10 cursor-pointer items-center rounded-xl bg-red-600 px-6 text-sm font-bold text-white shadow-lg shadow-red-950/60 transition-all hover:scale-[1.02] hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-8 sm:py-2.5"
+            className="foco-painel inline-flex h-10 cursor-pointer items-center bg-marca px-6 text-sm font-bold text-white transition-colors hover:bg-marca-viva disabled:cursor-not-allowed disabled:opacity-50 sm:px-8"
           >
             {salvando ? 'Salvando...' : id ? 'Salvar Moto' : 'Adicionar Moto'}
           </button>

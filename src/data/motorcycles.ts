@@ -46,7 +46,8 @@ export const motorcycles: Motorcycle[] = [
       { src: '/motos/honda-xre-300-2021/02.webp', alt: 'Honda XRE 300 2021 — vista lateral' },
       { src: '/motos/honda-xre-300-2021/03.webp', alt: 'Honda XRE 300 2021 — painel' },
     ],
-    destaque: true,
+    emPromocao: true,
+    precoAntes: 34900,
     status: 'disponivel',
   },
   {
@@ -72,7 +73,8 @@ export const motorcycles: Motorcycle[] = [
       { src: '/motos/yamaha-lander-2024/02.webp', alt: 'Yamaha Lander 2024 — vista lateral' },
       { src: '/motos/yamaha-lander-2024/03.webp', alt: 'Yamaha Lander 2024 — detalhe' },
     ],
-    destaque: true,
+    emPromocao: true,
+    precoAntes: 29900,
     status: 'disponivel',
   },
   {
@@ -98,7 +100,8 @@ export const motorcycles: Motorcycle[] = [
       { src: '/motos/honda-titan-2022/02.webp', alt: 'Honda Titan 2022 — vista lateral' },
       { src: '/motos/honda-titan-2022/03.webp', alt: 'Honda Titan 2022 — detalhe' },
     ],
-    destaque: true,
+    emPromocao: true,
+    precoAntes: 18900,
     status: 'disponivel',
   },
   {
@@ -124,7 +127,8 @@ export const motorcycles: Motorcycle[] = [
       { src: '/motos/honda-start-2024/02.webp', alt: 'Honda CG 160 Start 2024 — vista lateral' },
       { src: '/motos/honda-start-2024/03.webp', alt: 'Honda CG 160 Start 2024 — detalhe' },
     ],
-    destaque: false,
+    emPromocao: false,
+    precoAntes: null,
     status: 'disponivel',
   },
   {
@@ -150,7 +154,8 @@ export const motorcycles: Motorcycle[] = [
       { src: '/motos/yamaha-fazer-150-2020/02.webp', alt: 'Yamaha Fazer 150 2020 — vista lateral' },
       { src: '/motos/yamaha-fazer-150-2020/03.webp', alt: 'Yamaha Fazer 150 2020 — detalhe' },
     ],
-    destaque: false,
+    emPromocao: false,
+    precoAntes: null,
     status: 'disponivel',
   },
 ]
