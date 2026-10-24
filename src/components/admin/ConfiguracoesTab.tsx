@@ -459,11 +459,11 @@ export function ConfiguracoesTab() {
         <nav aria-label="Seções de configuração" className="w-60 shrink-0">
           <div className="space-y-6">
             {GRUPOS.map((grupo) => {
-              const itens = SECOES.filter((s) => s.grupo === grupo.id && s.id !== 'publicacao')
+              const itens = SECOES.filter((s) => s.grupo === grupo.id)
               if (itens.length === 0) return null
               return (
                 <div key={grupo.id}>
-                  <p className="px-3 pb-1.5 font-display text-micro font-semibold tracking-[0.18em] text-steel-600 uppercase">
+                  <p className="px-3 pb-1.5 text-xs font-medium text-steel-500">
                     {grupo.titulo}
                   </p>
                   <div className="space-y-0.5 border-l border-line">
@@ -478,13 +478,13 @@ export function ConfiguracoesTab() {
                           aria-current={selecionada ? 'true' : undefined}
                           className={`foco-painel relative flex w-full items-center gap-3 rounded-r-lg py-2.5 pr-3 pl-3 text-left text-sm transition-colors ${
                             selecionada
-                              ? 'bg-claro/[0.04] font-medium text-paper before:absolute before:inset-y-0 before:-left-px before:w-0.5 before:bg-brand-500'
+                              ? 'font-medium text-paper before:absolute before:inset-y-0 before:-left-px before:w-px before:bg-brand-500'
                               : 'text-steel-400 hover:bg-claro/[0.03] hover:text-paper'
                           }`}
                         >
                           <Icone
                             className={`size-4 shrink-0 ${
-                              selecionada ? 'text-brand-500' : 'text-steel-500'
+                              selecionada ? 'text-steel-300' : 'text-steel-500'
                             }`}
                           />
                           <span className="min-w-0 flex-1 truncate">{s.rotulo}</span>
@@ -501,7 +501,7 @@ export function ConfiguracoesTab() {
         {/* Painel de edição: título, descrição e formulário. Largura
             máxima generosa para não virar coluna estreita no centro. */}
         <div className="min-w-0 flex-1">
-          <div className="max-w-2xl">
+          <div className="max-w-3xl">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-paper">{ativaDesktop.rotulo}</h3>
               {temAlteracoes ? (
@@ -567,7 +567,7 @@ export function ConfiguracoesTab() {
         </header>
 
         <div className="mt-5 divide-y divide-line border-y border-line">
-          {SECOES.filter((s) => s.id === 'publicacao').map((s) => {
+          {SECOES.filter((s) => s.id !== 'app').map((s) => {
             const Icone = s.icone
             return (
               <button
@@ -576,12 +576,10 @@ export function ConfiguracoesTab() {
                 onClick={() => setSecao(s.id)}
                 className="foco-painel item-linha group !px-4 !py-3.5"
               >
-                <span
+                <Icone
                   aria-hidden="true"
-                  className="grid size-9 shrink-0 place-items-center rounded-md border border-line bg-night-800 text-steel-300 transition-colors group-hover:border-brand-500/50 group-hover:text-brand-500"
-                >
-                  <Icone className="size-4" />
-                </span>
+                  className="size-4 shrink-0 text-steel-500 transition-colors group-hover:text-brand-400"
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-paper">{s.rotulo}</span>
                   <span className="block truncate text-xs text-steel-500">{s.resumo(config)}</span>

@@ -48,30 +48,18 @@ function numeroOuNulo(texto: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-/** Seção da folha: fio de cabelo no topo, número miúdo e título em
-    versalete — o mesmo vocabulário dos grupos da sidebar. Sem cartão:
-    o formulário inteiro é uma folha só de trabalho. */
+/** Grupo de campos com um título curto e leitura consistente com o painel. */
 function Secao({
-  numero,
   titulo,
   children,
 }: {
-  numero: string
   titulo: string
   children: React.ReactNode
 }) {
   return (
     <section className="border-t border-line pt-6">
-      <h2 className="mb-4 flex items-baseline gap-3">
-        <span
-          aria-hidden="true"
-          className="numeros text-xs font-semibold tabular-nums text-steel-600"
-        >
-          {String(numero).padStart(2, '0')}
-        </span>
-        <span className="font-display text-micro font-semibold tracking-[0.2em] uppercase text-steel-600">
-          {titulo}
-        </span>
+      <h2 className="mb-4 text-sm font-semibold text-steel-300">
+        {titulo}
       </h2>
       <div className="space-y-4">{children}</div>
     </section>
@@ -170,7 +158,7 @@ export function MotoForm({
 
   const conteudo = [
     /* ------------------------------------------------ 1. Identificação */
-    <Secao key="s1" numero="1" titulo="Identificação">
+    <Secao key="s1" titulo="Identificação">
       <div>
         <label htmlFor="f-modelo" className="field-label">Modelo *</label>
         <input id="f-modelo" className={campoLinha} value={form.modelo} onChange={(e) => set('modelo', e.target.value)} placeholder="XRE 300" />
@@ -211,7 +199,7 @@ export function MotoForm({
     </Secao>,
 
     /* ------------------------------------------------ 2. Comercial */
-    <Secao key="s2" numero="2" titulo="Preço & Stock">
+    <Secao key="s2" titulo="Preço e disponibilidade">
       <div>
         <label htmlFor="f-preco" className="field-label">Preço de venda (R$) *</label>
         <input id="f-preco" type="number" min={0} step={100} className={campoLinha} value={form.preco} onChange={(e) => set('preco', Number(e.target.value))} />
@@ -271,7 +259,7 @@ export function MotoForm({
     </Secao>,
 
     /* ------------------------------------------------ 3. Ficha técnica */
-    <Secao key="s3" numero="3" titulo="Ficha Técnica">
+    <Secao key="s3" titulo="Ficha técnica">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="f-cc" className="field-label">Cilindrada (cc)</label>
@@ -359,7 +347,7 @@ export function MotoForm({
     </Secao>,
 
     /* ------------------------------------------------ 4. Anúncio */
-    <Secao key="s4" numero="4" titulo="Fotos">
+    <Secao key="s4" titulo="Fotos e anúncio">
       <div>
         <label htmlFor="f-desc" className="field-label">Texto do anúncio</label>
         <textarea
@@ -443,7 +431,7 @@ export function MotoForm({
           Barra sólida de bancada colada no rodapé: fio de cabelo no topo,
           fundo do painel, sem blur nem cápsula. Só as ações — o aviso
           de rascunho era ruído; o dono sabe o que está editando. */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-painel-2">
+      <div className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-line bg-painel-2">
         <div className="mx-auto flex max-w-4xl items-center justify-end gap-3 px-4 py-3">
           <button
             type="button"

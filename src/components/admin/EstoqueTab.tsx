@@ -170,32 +170,34 @@ export function EstoqueTab({
           ) : motos === null ? (
             <span className="estoque-resumo-total">Abrir o pátio…</span>
           ) : resumo ? (
-            <>
-              <span className="estoque-resumo-total">
-                {total} {total === 1 ? 'moto no pátio' : 'motos no pátio'}
-                {/* Os disponíveis só se justificam na frase quando são
-                    menos que o total: "4 no pátio, 4 à venda" é eco. */}
-                {resumo.disponiveis < total && `, ${resumo.disponiveis} à venda`}
-              </span>
-              {/* Contador zero não aparece: só quando existe de verdade —
-                  a linha nunca tem "00” de enfeite. */}
-              {resumo.indisponiveis > 0 && (
-                <span className="estoque-resumo-item">
-                  {resumo.indisponiveis} {resumo.indisponiveis === 1 ? 'parada' : 'paradas'}
-                </span>
-              )}
-              {resumo.vendidas > 0 && (
-                <span className="estoque-resumo-item">
-                  {resumo.vendidas} {resumo.vendidas === 1 ? 'vendida' : 'vendidas'}
-                </span>
-              )}
-              <span className="estoque-resumo-valor">
-                {formatPrice(resumo.valorEmEstoque)} <span>somados</span>
-              </span>
-            </>
+            <span className="estoque-resumo-total">
+              {resumo.total} {resumo.total === 1 ? 'moto cadastrada' : 'motos cadastradas'}
+            </span>
           ) : null}
         </div>
       </header>
+
+      {motos !== null && !erroAtivo && resumo ? (
+        <section className="estoque-indicadores" aria-label="Resumo do estoque">
+          <div className="estoque-indicador">
+            <span className="estoque-indicador-valor">{resumo.disponiveis}</span>
+            <span className="estoque-indicador-rotulo">Disponíveis</span>
+          </div>
+          <div className="estoque-indicador">
+            <span className="estoque-indicador-valor">{resumo.indisponiveis}</span>
+            <span className="estoque-indicador-rotulo">Indisponíveis</span>
+          </div>
+          <div className="estoque-indicador">
+            <span className="estoque-indicador-valor">{resumo.vendidas}</span>
+            <span className="estoque-indicador-rotulo">Vendidas</span>
+          </div>
+          <div className="estoque-indicador estoque-indicador-financeiro">
+            <span className="estoque-indicador-valor">{formatPrice(resumo.valorEmEstoque)}</span>
+            <span className="estoque-indicador-rotulo">Valor em estoque</span>
+            <span className="estoque-indicador-dica">Disponíveis e indisponíveis</span>
+          </div>
+        </section>
+      ) : null}
 
       <div className="estoque-operacoes">
         <CampoBusca
@@ -317,7 +319,7 @@ export function EstoqueTab({
                   <div className="estoque-foto">
                     <img
                       src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
-                      alt=""
+                      alt={`${moto.marca} ${moto.modelo}, ${moto.ano}`}
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {

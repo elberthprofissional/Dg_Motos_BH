@@ -22,11 +22,11 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
   const outras = entregas.slice(1)
 
   return (
-    <section
-      id="sonhos"
-      aria-labelledby="sonhos-titulo"
-      className="bg-painel py-14 sm:py-20 lg:py-24"
-    >
+<section
+        id="sonhos"
+        aria-labelledby="sonhos-titulo"
+        className="bg-painel py-10 sm:py-12 lg:py-14"
+      >
       <div className="container-site">
         <header className="mb-8 grid gap-5 sm:mb-10 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.55fr)] lg:items-end lg:gap-12">
           <h2 id="sonhos-titulo" className="titulo max-w-[13ch] text-4xl text-texto sm:text-6xl">

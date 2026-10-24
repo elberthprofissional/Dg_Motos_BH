@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+﻿import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
@@ -7,10 +7,12 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
 import { BikeCard } from '../components/motorcycles/BikeCard'
+import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
 import { Revelar } from '../components/ui/Revelar'
 import { Marcas } from '../components/home/MarcasProcuradas'
 import { SonhosRealizados } from '../components/home/SonhosRealizados'
 import { useEntregasPublicadas } from '../hooks/useEntregasPublicadas'
+import { buildDefaultMessage } from '../lib/format'
 import heroDesktop from '../assets/hero/home-desktop.webp'
 import heroMobile from '../assets/hero/home-mobile.webp'
 import trocaDesktop from '../assets/troca/banner-desktop.webp'
@@ -124,7 +126,7 @@ export function Home() {
       {/* ============================================================
           2. PATIO — as fichas no pátio
           ============================================================ */}
-      <section id="acervo" className="bg-fundo pt-12 pb-16 sm:pt-16 sm:pb-24">
+      <section id="acervo" className="bg-fundo pt-12 pb-14 sm:pt-14 sm:pb-20">
         <div className="container-site">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -146,7 +148,7 @@ export function Home() {
           </div>
 
           {patio.length > 0 ? (
-            <div className="mt-8 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {patio.map((bike, i) => (
                 <Revelar key={bike.id} atraso={i * 45}>
                   <BikeCard bike={bike} priority={i < 2} />
@@ -170,60 +172,67 @@ export function Home() {
 
       <SonhosRealizados entregas={entregas} />
 
-      <section className="w-full bg-painel">
-        <div className="relative isolate w-full overflow-hidden bg-fundo lg:aspect-[4/1] lg:min-h-[20rem] xl:min-h-0">
-          <picture className="absolute inset-0 hidden lg:block" aria-hidden="true">
-            <source srcSet={trocaDesktop} type="image/webp" />
-            <img
-              src={trocaDesktop}
-              alt=""
-              width={1760}
-              height={440}
-              loading="lazy"
-              decoding="async"
-              className="size-full object-cover object-right"
-            />
-          </picture>
-
-          <div className="sr-only lg:hidden">
-            <h2>Vai trocar de moto?</h2>
-            <p>
-              Aceitamos sua moto usada como parte do pagamento. Converse com a
-              equipe sobre avaliação e documentação.
+      <section className="w-full bg-fundo">
+        <div className="container-site flex flex-col items-start gap-6 py-10 sm:py-12 lg:flex-row lg:items-center lg:gap-8 lg:py-12">
+          <div className="max-w-lg">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-marca-texto">
+              DG MOTOS · TROCA
             </p>
-          </div>
-
-          <div className="container-site relative z-10 hidden min-h-[20rem] items-center py-10 lg:flex lg:h-full lg:min-h-0">
-            <div className="max-w-xl">
-              <h2 className="titulo text-4xl text-texto xl:text-5xl">
-                Vai trocar de moto?
-              </h2>
-              <p className="corpo mt-4 max-w-[55ch] text-texto-2">
-                Aceitamos sua moto usada como parte do pagamento. Converse com a
-                equipe sobre avaliação e documentação.
-              </p>
-              <Link to="/contato" className="btn btn-primary mt-7 min-h-12 px-6">
-                Falar sobre uma troca
-              </Link>
+            <h2 className="display max-w-[18ch] text-3xl sm:text-4xl lg:text-[2.75rem]">
+              Sua próxima moto começa com a sua.
+            </h2>
+            <p className="corpo mt-4 max-w-[50ch] text-texto-2">
+              Avaliamos sua moto usada com transparência para facilitar a realização do seu próximo negócio.
+            </p>
+            <div className="mt-7">
+              <WhatsAppCTA
+                message={buildDefaultMessage()}
+                label="Avaliar minha moto"
+                className="btn btn-primary h-11 px-6 text-sm"
+              />
             </div>
           </div>
 
-          <div className="lg:hidden">
-            <img
-              src={trocaMobile}
-              alt=""
+          <div className="relative hidden lg:block lg:w-[34%]">
+            <div className="relative aspect-[4/3] w-full max-w-[520px] overflow-hidden">
+              <picture>
+                <source srcSet={trocaDesktop} type="image/webp" />
+                <img
+                  src={trocaDesktop}
+                  alt=""
+                  width={1760}
+                  height={440}
+                  loading="lazy"
+                  decoding="async"
+                  className="size-full object-cover object-right"
+                />
+              </picture>
+              <div
+                className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-fundo to-transparent"
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="relative mx-auto mt-8 w-full max-w-sm lg:hidden">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
+            <picture>
+              <source srcSet={trocaMobile} type="image/webp" />
+              <img
+                src={trocaMobile}
+                alt=""
+                width={1280}
+                height={400}
+                loading="lazy"
+                decoding="async"
+                className="size-full object-cover object-center"
+              />
+            </picture>
+            <div
+              className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-fundo to-transparent"
               aria-hidden="true"
-              width={1280}
-              height={400}
-              loading="lazy"
-              decoding="async"
-              className="block h-auto w-full"
             />
-            <div className="container-site py-5">
-              <Link to="/contato" className="btn btn-primary min-h-12 w-full px-6 sm:w-auto">
-                Falar sobre uma troca
-              </Link>
-            </div>
           </div>
         </div>
       </section>

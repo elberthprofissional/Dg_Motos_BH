@@ -9,6 +9,10 @@ em `migrations/` é aplicado uma vez, na ordem do nome.
 | `20260101000001_rls_storage.sql` | Liga o RLS, cria as políticas e o bucket público `motos` no Storage. |
 | `20260101000002_seed.sql` | Insere 5 motos de **demonstração** (só quando a tabela está vazia). |
 | `20260101000003_corrige_esquema.sql` | **Corrige um banco incompleto** (sem `status` / sem `motorcycle_images`). Rode se o `/admin` aparecer vazio. Idempotente. |
+| `20260101000004_site_settings.sql` | Configurações públicas editáveis da loja. |
+| `20260101000005_promocao.sql` | Campos de preço promocional do estoque. |
+| `20260101000006_vendas.sql` | Histórico privado de vendas. |
+| `20260101000007_entregas.sql` | Cria os registros de entregas, publicação moderada e fotos privadas para “Sonhos realizados”. |
 
 ## Como aplicar
 
@@ -20,8 +24,17 @@ Não há CLI do Supabase configurada: as migrações são aplicadas pelo painel.
 4. Opcional: rode `20260101000002_seed.sql` para começar com o estoque de
    demonstração. Se preferir cadastrar tudo pelo `/admin`, pule este passo.
 
+Em um projeto já atualizado até vendas, execute `migrations/20260101000007_entregas.sql`
+para habilitar a aba **Entregas** e o mural da Home. Em um projeto novo, aplique
+as migrações numeradas em ordem; o seed 0002 é opcional.
+
 Os scripts são idempotentes (`create ... if not exists`, `drop policy if
 exists`), então rodar de novo não quebra nem duplica.
+
+A migração 0007 cria a tabela `entregas` e o bucket privado `entregas` no
+Storage. Rascunhos e fotos não publicadas ficam acessíveis só pela sessão do
+admin. A Home lê apenas registros publicados; a publicação exige foto e a
+confirmação de autorização para o material escolhido.
 
 ## Banco incompleto (painel vazio)
 

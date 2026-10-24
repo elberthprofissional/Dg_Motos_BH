@@ -78,6 +78,41 @@ Entre em `/admin` e use a aba **Estoque**. No cadastro:
 - **Status**: `disponivel`, `indisponivel` ou `vendida`. Só as
   `disponivel` aparecem no site e no sitemap.
 
+### Evitar pausa por inatividade no plano Free
+
+A Supabase pode pausar projetos Free com pouca atividade por uma semana.
+O site continua abrindo com o catálogo estático, mas esse estoque pode ficar
+desatualizado e o painel não consegue salvar alterações enquanto o banco
+estiver pausado.
+
+O projeto inclui um Cloudflare Worker fora da Supabase, em
+[`cloudflare/supabase-keepalive/`](../cloudflare/supabase-keepalive/). O
+Cron Trigger faz uma leitura pública mínima do catálogo a cada seis horas:
+somente a coluna `id`, no máximo uma linha. A política `catalogo publico`
+já libera essa leitura anônima. O Worker não escreve, não altera estoque e
+não usa a chave `service_role`.
+
+Para configurar uma vez:
+
+1. Crie uma conta gratuita na Cloudflare e abra **Workers & Pages**.
+2. Crie um Worker chamado `dg-motos-supabase-keepalive` e publique o
+   conteúdo de `cloudflare/supabase-keepalive/worker.js`.
+3. Em **Settings → Variables and Secrets**, adicione como *secrets*
+   `SUPABASE_URL` (Project URL) e `SUPABASE_ANON_KEY` (anon/publishable
+   key). Nunca use a chave `service_role`.
+4. Em **Settings → Triggers → Cron Triggers**, adicione
+   `17 */6 * * *` (quatro execuções por dia).
+5. Confira **Logs** depois da primeira execução agendada. Uma falha aparece
+   no log com o código HTTP retornado pela Supabase.
+
+O código do Worker e o agendamento ficam registrados neste repositório;
+os dois valores secretos ficam só na conta Cloudflare. A faixa gratuita da
+Cloudflare comporta folgadamente quatro chamadas pequenas por dia, dentro
+dos limites atuais. Isso reduz bastante o risco de pausa, mas a Supabase
+decide a atividade suficiente e pode mudar suas regras; não é uma garantia
+de disponibilidade. Para confirmar o estado, confira os Logs do Worker e
+os avisos por e-mail da Supabase.
+
 ### Aba Configurações
 
 O contato, o Instagram, o endereço e os horários saem de

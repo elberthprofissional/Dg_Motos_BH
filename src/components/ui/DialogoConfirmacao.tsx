@@ -81,7 +81,7 @@ export function DialogoConfirmacao({
           <h2 id="dlg-titulo" className="text-base font-semibold text-white">
             {pedido.titulo}
           </h2>
-          <p id="dlg-descricao" className="mt-2 text-sm leading-relaxed text-neutral-400">
+          <p id="dlg-descricao" className="mt-2 text-sm leading-relaxed text-steel-400">
             {pedido.descricao}
           </p>
 
@@ -90,7 +90,7 @@ export function DialogoConfirmacao({
               ref={cancelarRef}
               type="button"
               onClick={onFechar}
-              className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-medium text-neutral-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+              className="foco-painel inline-flex h-11 items-center px-3 text-sm font-medium text-steel-400 transition-colors hover:text-paper"
             >
               Cancelar
             </button>
@@ -98,7 +98,7 @@ export function DialogoConfirmacao({
               type="button"
               disabled={ocupado}
               onClick={() => void pedido.onConfirmar()}
-              className="inline-flex h-10 cursor-pointer items-center rounded-xl bg-red-600 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/50 transition-all hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="foco-painel inline-flex h-11 cursor-pointer items-center bg-marca px-5 text-sm font-semibold text-white transition-colors hover:bg-marca-forte disabled:cursor-not-allowed disabled:opacity-50"
             >
               {ocupado ? (pedido.rotuloOcupado ?? 'Processando...') : pedido.rotuloConfirmar}
             </button>

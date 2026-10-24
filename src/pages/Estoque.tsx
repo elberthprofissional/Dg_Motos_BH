@@ -38,9 +38,10 @@ import { formatPrice } from '../lib/format'
  * pelo botão flutuante, sempre disponível.
  */
 export function Estoque() {
-  const { motos, carregando } = useCatalogo()
+  const { motos } = useCatalogo()
   const [searchParams] = useSearchParams()
   const marcaUrl = searchParams.get('marca') ?? ''
+  const buscaUrl = searchParams.get('busca') ?? ''
   const precoMaximo = useMemo(() => tetoPrecoDisponivel(motos), [motos])
 
   usePageMeta(
@@ -49,15 +50,18 @@ export function Estoque() {
   )
 
   const [marcaParamAnterior, setMarcaParamAnterior] = useState(marcaUrl)
+  const [buscaParamAnterior, setBuscaParamAnterior] = useState(buscaUrl)
   const [filtros, setFiltros] = useState<BikeFilterState>(() => ({
     ...FILTROS_PADRAO,
     precoMax: precoMaximo,
     marca: marcaUrl,
+    busca: buscaUrl,
   }))
   const [rascunho, setRascunho] = useState<BikeFilterState>(() => ({
     ...FILTROS_PADRAO,
     precoMax: precoMaximo,
     marca: marcaUrl,
+    busca: buscaUrl,
   }))
   const [tetoPrecoAplicadoAlterado, setTetoPrecoAplicadoAlterado] = useState(false)
   const [tetoPrecoRascunhoAlterado, setTetoPrecoRascunhoAlterado] = useState(false)
@@ -73,12 +77,14 @@ export function Estoque() {
     [rascunho, precoMaximo, tetoPrecoRascunhoAlterado],
   )
 
-  // Sincroniza quando a URL muda (ex.: clique em chip de marca na Home)
-  // sem efeito cascata. O modelo é solto porque pode ser de outra marca.
-  if (marcaUrl !== marcaParamAnterior) {
+  // Sincroniza quando a URL muda (ex.: clique em chip de marca na Home ou
+  // busca do header). O modelo é solto porque pode ser de outra marca
+  // ou outro termo de busca.
+  if (marcaUrl !== marcaParamAnterior || buscaUrl !== buscaParamAnterior) {
     setMarcaParamAnterior(marcaUrl)
-    setFiltros((prev) => ({ ...prev, marca: marcaUrl, modelo: '' }))
-    setRascunho((prev) => ({ ...prev, marca: marcaUrl, modelo: '' }))
+    setBuscaParamAnterior(buscaUrl)
+    setFiltros((prev) => ({ ...prev, marca: marcaUrl, modelo: '', busca: buscaUrl }))
+    setRascunho((prev) => ({ ...prev, marca: marcaUrl, modelo: '', busca: buscaUrl }))
   }
 
   // Folha aberta trava a rolagem do fundo, como o menu do celular.
@@ -200,22 +206,14 @@ export function Estoque() {
   const totalDisponiveis = motos.filter((moto) => moto.status === 'disponivel').length
 
   return (
-    <div className="pt-cabecalho">
-      <section className="bg-fundo pt-8 pb-16 sm:pt-12 sm:pb-24">
-        <div className="container-site">
-          <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end sm:gap-8">
-            <div>
-              <h1 className="titulo text-4xl text-texto sm:text-5xl">Estoque</h1>
-              <p className="corpo mt-3 text-texto-2">
-                Encontre uma moto por marca, modelo, ano ou faixa de preço.
-              </p>
-            </div>
-            <p className="text-sm text-texto-2" role="status" aria-live="polite">
-              {carregando
-                ? 'Atualizando disponibilidade…'
-                : `${resultados.length} ${resultados.length === 1 ? 'moto encontrada' : 'motos encontradas'}`}
-            </p>
-          </header>
+<div className="pt-4 sm:pt-6">
+        <section className="bg-fundo pt-6 pb-16 sm:pt-8 sm:pb-24">
+          <div className="container-site">
+            <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end sm:gap-8">
+              <div>
+                <h1 className="titulo text-4xl text-texto sm:text-5xl">Estoque</h1>
+              </div>
+            </header>
 
           {/* Resultado */}
           <div className="min-w-0 flex-1">
@@ -430,7 +428,7 @@ export function Estoque() {
 
             {resultados.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                <div className="-mx-4 grid grid-cols-1 gap-6 px-4 lg:mx-0 lg:grid-cols-2 lg:px-0 xl:grid-cols-3">
                   {resultados.map((bike, i) => (
                     <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
                       <BikeCard bike={bike} priority={i < 3} />

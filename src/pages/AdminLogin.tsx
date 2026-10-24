@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { LockKeyhole, Mail } from 'lucide-react'
+import { ArrowRight, CircleAlert, LockKeyhole, Mail } from 'lucide-react'
 import { SenhaInput } from '../components/ui/SenhaInput'
 import { useAuth } from '../hooks/authContexto'
 
@@ -54,7 +54,7 @@ export function AdminLogin() {
   if (!carregando && sessao) return <Navigate to="/admin" replace />
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-neutral-950 lg:grid-cols-2">
+    <div className="grid min-h-dvh grid-cols-1 bg-neutral-950 lg:grid-cols-[1.08fr_0.92fr]">
       {/* Esquerda: a metade do showroom. Some antes de lg — no celular a
           foto única do cartão faz o papel de "entrada". A foto cobre a
           coluna inteira e o overlay escuro suave protege o texto. */}
@@ -87,140 +87,140 @@ export function AdminLogin() {
         </div>
       </aside>
 
-      {/* Direita: base = cartão do celular; do lg pra cima o formulário
-          integra o painel, sem cartão. */}
-      <main className="flex w-full flex-col px-6 py-8 lg:px-12 lg:py-0 xl:px-16">
-        <div className="flex w-full flex-1 flex-col items-center justify-center py-6">
-          <div className="w-full max-w-sm">
-            {/* Logo da loja — clique volta ao site. No celular o cartão
-                já abre com a foto, então a logo só aparece no desktop. */}
-            <Link
-              to="/"
-              aria-label="DG Motos — voltar à página inicial"
-              className="mx-auto mb-10 hidden w-fit lg:block"
+      {/* A área de acesso ocupa o painel inteiro, sem cartão genérico. */}
+      <main className="flex min-h-dvh w-full flex-col bg-[#100f0d] px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-9 sm:pt-7 lg:px-10 lg:pt-8 xl:px-16">
+        <div className="mx-auto flex w-full max-w-[29rem] flex-1 flex-col justify-center py-3 sm:py-5">
+          <Link
+            to="/"
+            aria-label="DG Motos BH — voltar à página inicial"
+            className="group mb-5 inline-flex w-fit items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto sm:mb-7 lg:mb-9"
+          >
+            <img
+              src="/logo.webp"
+              alt="DG Motos — Realizando Sonhos"
+              width={96}
+              height={96}
+              className="size-[4.5rem] object-contain sm:size-24"
+            />
+            <span className="border-l-2 border-marca pl-3.5 sm:pl-4">
+              <span className="block text-xs font-bold tracking-[0.16em] text-texto uppercase sm:text-sm">
+                DG Motos BH
+              </span>
+              <span className="mt-1 block text-[11px] font-medium tracking-[0.12em] text-texto-3 uppercase">
+                Administração
+              </span>
+            </span>
+          </Link>
+
+          <img
+            src="/hero/entrada-painel.webp"
+            alt=""
+            aria-hidden="true"
+            className="mb-6 block aspect-[3/2] w-full object-cover object-[45%_57%] sm:mb-8 sm:aspect-[16/9] [@media(max-height:720px)]:aspect-[16/9] lg:hidden"
+          />
+
+          <div className="mb-7 sm:mb-9">
+            <h1 className="max-w-[12ch] font-display text-[clamp(2.5rem,5vw,3.75rem)] leading-[0.98] font-bold tracking-[-0.04em] text-white">
+              Seu estoque.
+              <span className="block text-marca-texto">Seu negócio.</span>
+            </h1>
+            <p className="mt-4 max-w-[42ch] text-base leading-relaxed text-neutral-300 sm:mt-5 sm:text-[17px]">
+              Acesse o painel para gerenciar as motos, atualizar anúncios e
+              acompanhar seu catálogo.
+            </p>
+          </div>
+
+          {!disponivel ? (
+            <p
+              role="status"
+              className="border-l-2 border-marca bg-neutral-900 px-4 py-4 text-sm leading-relaxed text-neutral-200"
             >
-              <img
-                src="/logo.webp"
-                alt="DG Motos"
-                width={48}
-                height={48}
-                className="h-12 w-auto object-contain"
-              />
-            </Link>
-
-            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
-              {/* Foto de captação no topo do cartão (só no celular) */}
-              <img
-                src="/hero/entrada-painel.webp"
-                alt=""
-                aria-hidden="true"
-                className="mb-6 block h-40 w-full rounded-xl object-cover object-center lg:hidden"
-              />
-
-              {/* Boas-vindas — o tom da referência, alinhado Ã esquerda */}
-              <div className="mb-6">
-                <h1 className="text-2xl leading-tight font-semibold text-white">
-                  Bem-vindo de volta{' '}
-                  <span aria-hidden="true">👋</span>
-                </h1>
-                <p className="mt-1.5 text-sm leading-relaxed text-neutral-400">
-                  Hoje é um bom dia pra cuidar do pátio. Entre para gerenciar
-                  o estoque e as configurações da loja.
-                </p>
+              Supabase não configurado neste deploy. Copie{' '}
+              <code className="text-white">.env.example</code> para{' '}
+              <code className="text-white">.env</code> e siga as instruções em{' '}
+              <code className="text-white">docs/SUPABASE.md</code>.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
+              <div>
+                <label
+                  htmlFor="admin-email"
+                  className="mb-2 block text-sm font-semibold text-neutral-200"
+                >
+                  E-mail
+                </label>
+                <div className="relative">
+                  <Mail
+                    className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-neutral-400"
+                    aria-hidden="true"
+                  />
+                  <input
+                    id="admin-email"
+                    type="email"
+                    name="email"
+                    autoComplete="username"
+                    required
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-14 w-full rounded-md border border-neutral-700 bg-neutral-950 py-3.5 pr-4 pl-12 text-base text-white transition-colors placeholder:text-neutral-500 focus:border-marca focus:ring-2 focus:ring-marca/25 focus:outline-none"
+                  />
+                </div>
               </div>
 
-              {!disponivel ? (
-                <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2.5 text-xs leading-relaxed text-neutral-300">
-                  Supabase não configurado neste deploy. Copie <code>.env.example</code> para{' '}
-                  <code>.env</code> e veja <code>docs/SUPABASE.md</code>.
+              <div>
+                <label
+                  htmlFor="admin-senha"
+                  className="mb-2 block text-sm font-semibold text-neutral-200"
+                >
+                  Senha
+                </label>
+                <div className="relative">
+                  <LockKeyhole
+                    className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-neutral-400"
+                    aria-hidden="true"
+                  />
+                  <SenhaInput
+                    id="admin-senha"
+                    autoComplete="current-password"
+                    required
+                    placeholder="Digite sua senha"
+                    rotulo="Senha"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    className="h-14 rounded-md border-neutral-700 bg-neutral-950 py-3.5 pr-12 pl-12 text-base text-white placeholder:text-neutral-500 focus:border-marca focus:ring-2 focus:ring-marca/25"
+                  />
+                </div>
+              </div>
+
+              {erro ? (
+                <p
+                  role="alert"
+                  className="flex items-start gap-2.5 border-l-2 border-marca bg-red-950/40 px-4 py-3 text-sm leading-relaxed text-red-100"
+                >
+                  <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  <span>{erro}</span>
                 </p>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                  <div>
-                    <label
-                      htmlFor="admin-email"
-                      className="mb-1.5 block text-xs font-medium text-neutral-300"
-                    >
-                      E-mail
-                    </label>
-                    <div className="relative">
-                      <Mail
-                        className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-neutral-500"
-                        aria-hidden="true"
-                      />
-                      <input
-                        id="admin-email"
-                        type="email"
-                        name="email"
-                        autoComplete="username"
-                        autoFocus
-                        required
-                        placeholder="E-mail"
-                        aria-label="E-mail"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950 py-3.5 pr-11 pl-11 text-sm text-white transition-colors placeholder:text-neutral-500 focus:border-red-600 focus:ring-1 focus:ring-red-600/30 focus:outline-none"
-                      />
-                    </div>
-                  </div>
+              ) : null}
 
-                  <div>
-                    <label
-                      htmlFor="admin-senha"
-                      className="mb-1.5 block text-xs font-medium text-neutral-300"
-                    >
-                      Senha
-                    </label>
-                    <div className="relative">
-                      <LockKeyhole
-                        className="pointer-events-none absolute top-1/2 left-4 z-10 size-4 -translate-y-1/2 text-neutral-500"
-                        aria-hidden="true"
-                      />
-                      <SenhaInput
-                        id="admin-senha"
-                        autoComplete="current-password"
-                        required
-                        placeholder="Senha"
-                        rotulo="Senha"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950 py-3.5 pr-10 pl-11 text-sm text-white transition-colors placeholder:text-neutral-500 focus:border-red-600 focus:ring-1 focus:ring-red-600/30 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* O "Esqueceu a senha?" fica colado à senha,
-                        alinhado à direita, como na referência. */}
-                    <div className="mt-2 flex justify-end">
-                      <Link
-                        to="/admin/esqueci"
-                        className="inline-block py-1 text-xs text-neutral-400 transition-colors hover:text-white"
-                      >
-                        Esqueceu a senha?
-                      </Link>
-                    </div>
-                  </div>
-
-                  {erro && (
-                    <p role="alert" className="text-xs leading-relaxed text-red-500">
-                      {erro}
-                    </p>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={enviando || carregando || !email || !senha}
-                    className="w-full cursor-pointer rounded-xl bg-red-600 py-3.5 font-bold text-sm text-white transition-all hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {enviando ? 'Entrando...' : 'Entrar'}
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
+              <button
+                type="submit"
+                disabled={enviando || carregando || !email || !senha}
+                aria-busy={enviando || carregando}
+                className="group flex min-h-14 w-full cursor-pointer items-center justify-between rounded-md bg-marca px-5 text-base font-bold text-white transition-colors hover:bg-marca-viva focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto disabled:cursor-not-allowed disabled:bg-marca-forte disabled:text-white sm:px-6"
+              >
+                <span>{enviando ? 'Acessando painel…' : 'Acessar painel'}</span>
+                <ArrowRight
+                  className="size-5 transition-transform group-hover:translate-x-1"
+                  aria-hidden="true"
+                />
+              </button>
+            </form>
+          )}
         </div>
 
-        <p className="pb-2 text-center text-[11px] text-neutral-600">
-          © {ANO_ATUAL} DG Motos — Todos os direitos reservados.
+        <p className="mx-auto w-full max-w-[29rem] pt-4 text-center text-[13px] tracking-[0.02em] text-neutral-400">
+          © {ANO_ATUAL} DG Motos BH · Acesso restrito
         </p>
       </main>
     </div>

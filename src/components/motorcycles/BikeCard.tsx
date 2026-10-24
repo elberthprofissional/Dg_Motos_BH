@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+﻿import { Link } from 'react-router-dom'
 import { Calendar, ChevronRight, Gauge } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
 import { bikeTitle, buildBikeMessage, descontoPercentual, formatKm, formatPrice, precoRequerConfirmacao } from '../../lib/format'
@@ -28,7 +28,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   const disponivel = bike.status === 'disponivel'
 
   const foto = (
-    <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-painel-2">
+    <div className="relative aspect-[16/10] w-full overflow-hidden bg-painel-2">
       {capa ? (
         <img
           src={capa.src}
@@ -38,7 +38,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           decoding={priority ? 'sync' : 'async'}
           width={1200}
           height={1600}
-          className="size-full object-contain p-2 transition-transform duration-300 motion-safe:group-hover:scale-[1.02] sm:p-4"
+          className="size-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-[1.02]"
         />
       ) : (
         <p className="px-5 text-center text-sm text-texto-2">Foto ainda não disponível</p>
@@ -55,20 +55,20 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   // Dados e preço ficam em linhas próprias para modelos longos não
   // comprimirem o valor em telas menores.
   const preco = (
-      <div className="mt-3 sm:mt-4">
+      <div className="mt-1.5 sm:mt-2">
       {desconto != null ? (
         <>
           <p className="numeros text-[11px] leading-none text-texto-3">
             <span className="line-through">de {formatPrice(bike.precoAntes ?? bike.preco)}</span>
           </p>
-          <p className="numeros mt-1 font-display text-base leading-none font-semibold text-marca-texto sm:text-lg">
+          <p className="numeros mt-1 font-display text-base leading-none font-extrabold text-marca-viva">
             {formatPrice(bike.preco)}
           </p>
         </>
       ) : (
-        <p className="numeros font-display text-base leading-none font-semibold text-texto sm:text-lg">
-          {formatPrice(bike.preco)}
-        </p>
+<p className="numeros font-display text-base leading-none font-semibold text-texto">
+            {formatPrice(bike.preco)}
+          </p>
       )}
       {precoRequerConfirmacao(bike.preco) ? (
         <p className="mt-2 text-xs leading-relaxed text-texto-2">
@@ -80,39 +80,39 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
 
   const informacoes = (
     <>
-      <h3 className="font-display text-[15px] leading-tight font-semibold tracking-[-0.02em] text-texto sm:text-lg">
+      <h3 className="font-display text-[14px] leading-tight font-semibold tracking-[-0.02em] text-texto sm:text-base">
         {titulo}
       </h3>
 
-      {/* Meta compacta com ícone: lê em um relance, como na referência. */}
-      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-none text-texto-3 sm:mt-2.5 sm:gap-x-3 sm:text-[13px]">
-        <span className="inline-flex items-center gap-1.5">
-          <Calendar className="size-3.5 shrink-0" aria-hidden="true" />
+      {/* Linha de metadados compacta: ano, km, categoria e estado */}
+      <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-none text-texto-3 sm:mt-2 sm:text-xs">
+        <span className="inline-flex items-center gap-1">
+          <Calendar className="size-3 shrink-0" aria-hidden="true" />
           <span className="numeros">{bike.ano}</span>
         </span>
         {bike.quilometragem != null ? (
-          <span className="inline-flex items-center gap-1.5">
-            <Gauge className="size-3.5 shrink-0" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1">
+            <Gauge className="size-3 shrink-0" aria-hidden="true" />
             <span className="numeros">{formatKm(bike.quilometragem)}</span>
           </span>
         ) : null}
+        <span className="text-texto-3">·</span>
         <span>{bike.categoria}</span>
-        {estado ? <span>{estado}</span> : null}
+        {estado ? <><span className="text-texto-3">·</span><span>{estado}</span></> : null}
       </p>
       {preco}
     </>
   )
 
-  // Ações permanecem visíveis em qualquer tela; nenhuma depende de hover.
+  // Ações: no celular cada botão ocupa linha própria para evitar
+  // sobreposição; no tablet para cima, lado a lado quando houver espaço.
   const acoesMobile = (
-    <div
-      className={`grid gap-2 px-4 pt-2 pb-4 sm:px-5 ${disponivel ? 'grid-cols-2' : 'grid-cols-1'}`}
-    >
+    <div className={`flex flex-col gap-2 px-3 py-2.5 sm:px-3.5 sm:py-3 sm:flex-row sm:items-center sm:gap-3 ${disponivel ? '' : 'items-center'}`}>
       <Link
         to={`/moto/${bike.slug}`}
         aria-label={`Ver os detalhes de ${titulo} ${bike.ano}`}
-        className={`grid min-h-11 place-items-center bg-white py-2.5 font-sans text-[13px] font-bold text-black transition-colors hover:bg-neutral-200 ${
-          disponivel ? '' : 'col-span-2'
+        className={`inline-flex min-h-11 w-full items-center justify-center border border-borda-forte bg-painel-2 py-2.5 font-sans text-[13px] font-semibold text-texto transition-colors hover:border-marca hover:bg-marca/10 hover:text-marca-texto sm:w-auto ${
+          !disponivel ? 'sm:w-full' : ''
         }`}
       >
         Ver detalhes
@@ -123,7 +123,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-borda-forte py-2.5 font-sans text-[13px] font-semibold text-texto-2 transition-colors hover:border-marca hover:text-marca-texto"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 bg-marca py-2.5 font-sans text-[13px] font-bold text-white transition-colors hover:bg-marca-forte sm:w-auto"
         >
           <IconeWhatsapp className="size-4 shrink-0" />
           WhatsApp
@@ -133,7 +133,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
       {disponivel && !waLink ? (
         <Link
           to="/contato"
-          className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-borda-forte py-2.5 font-sans text-[13px] font-semibold text-texto-2 transition-colors hover:border-marca hover:text-marca-texto"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 bg-marca py-2.5 font-sans text-[13px] font-bold text-white transition-colors hover:bg-marca-forte sm:w-auto"
         >
           <IconeWhatsapp className="size-4 shrink-0" />
           Falar com a loja
@@ -224,7 +224,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   return (
     <article className={artigo}>
       {foto}
-      <div className="flex flex-1 flex-col p-4 pb-2 sm:px-5">
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
         {informacoes}
       </div>
       {acoesMobile}

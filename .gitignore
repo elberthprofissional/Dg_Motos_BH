@@ -18,3 +18,4 @@ scripts/inspect-barroca2.mjs
 scripts/fetch-barroca.mjs
 scripts/fix-lint.mjs
 scripts/mark-admin-lint.mjs
+.aider*

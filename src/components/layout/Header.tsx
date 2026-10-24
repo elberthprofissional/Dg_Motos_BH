@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Menu, Search, X } from 'lucide-react'
 import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { InstagramIcon } from '../ui/InstagramIcon'
@@ -31,12 +31,27 @@ const WA_TEXTO: Record<string, string> = {
  */
 export function Header() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [aberto, setAberto] = useState(false)
+  const [busca, setBusca] = useState('')
+  const [buscaAberta, setBuscaAberta] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const botaoRef = useRef<HTMLButtonElement>(null)
+  const buscaInputRef = useRef<HTMLInputElement>(null)
 
   const { config } = useSiteConfig()
   const wa = useWhatsappLink(WA_TEXTO[location.pathname] ?? buildDefaultMessage())
+
+  /** Navega para o estoque com o termo na URL. O campo do estoque
+      lê o parâmetro na inicialização (veja Estoque.tsx). */
+  function executarBusca(event?: React.FormEvent) {
+    event?.preventDefault()
+    const termo = busca.trim()
+    const query = termo ? `?busca=${encodeURIComponent(termo)}` : ''
+    setBuscaAberta(false)
+    setBusca('')
+    navigate(`/estoque${query}`)
+  }
 
   // O <dialog> nativo cuida do modal: `showModal()` prende o foco,
   // Esc fecha e o navegador devolve o foco ao botão de origem.
@@ -71,6 +86,27 @@ export function Header() {
     return () => dialog.removeEventListener('close', onClose)
   }, [])
 
+  // A busca fecha com Esc ou clique fora. O clique fora é capturado
+  // na janela: se o alvo não estiver dentro do wrapper da busca, fecha.
+  useEffect(() => {
+    if (!buscaAberta) return
+    function aoCliqueFora(event: MouseEvent) {
+      const wrapper = buscaInputRef.current?.closest('[data-busca]')
+      if (wrapper && !wrapper.contains(event.target as Node)) {
+        setBuscaAberta(false)
+      }
+    }
+    function aoEsc(event: KeyboardEvent) {
+      if (event.key === 'Escape') setBuscaAberta(false)
+    }
+    window.addEventListener('mousedown', aoCliqueFora)
+    window.addEventListener('keydown', aoEsc)
+    return () => {
+      window.removeEventListener('mousedown', aoCliqueFora)
+      window.removeEventListener('keydown', aoEsc)
+    }
+  }, [buscaAberta])
+
   // Trocar de rota fecha o menu: a folha não pode ficar aberta sobre
   // a página nova. Fechar o <dialog> dispara o evento `close`, que
   // sincroniza o estado — sem setState dentro do efeito.
@@ -82,7 +118,7 @@ export function Header() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 w-full bg-painel">
-        <div className="container-site flex h-20 items-center justify-between gap-6 sm:h-[4.25rem]">
+        <div className="container-site flex h-20 items-center gap-4 sm:h-[4.25rem]">
           <Link
             to="/"
             aria-label="DG Motos — Página inicial"
@@ -102,6 +138,28 @@ export function Header() {
               <span className="text-xs leading-none text-texto-3">Seminovas em Belo Horizonte</span>
             </span>
           </Link>
+
+          {/* Busca desktop — compacta, à direita da marca */}
+          <form
+            data-busca
+            onSubmit={executarBusca}
+            className="relative mx-2 hidden w-full max-w-xs flex-1 lg:flex"
+            role="search"
+            aria-label="Busca de motos"
+          >
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-3"
+              aria-hidden="true"
+            />
+            <input
+              ref={buscaInputRef}
+              type="search"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar moto por marca ou modelo..."
+              className="h-10 w-full rounded border border-borda-forte bg-fundo px-3 py-1.5 pl-9 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30"
+            />
+          </form>
 
           <nav aria-label="Navegação principal" className="hidden items-center gap-8 lg:flex">
             {NAV.map((item) => (
@@ -126,7 +184,18 @@ export function Header() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setBuscaAberta((v) => !v)}
+              aria-expanded={buscaAberta}
+              aria-controls="busca-mobile"
+              aria-label="Abrir busca"
+              className="grid size-11 place-items-center text-texto transition-colors hover:text-marca-texto lg:hidden"
+            >
+              <Search className="size-5" aria-hidden="true" />
+            </button>
+
             {wa ? (
               <a
                 href={wa}
@@ -135,7 +204,7 @@ export function Header() {
                 className="btn btn-primary hidden h-10 gap-2 px-4 text-[13px] lg:inline-flex"
               >
                 <IconeWhatsapp className="size-4" />
-                WhatsApp
+                Fale conosco
               </a>
             ) : (
               <Link
@@ -159,6 +228,46 @@ export function Header() {
             </button>
           </div>
         </div>
+
+        {/* Busca mobile expansível — abaixo do header, não sobreposição */}
+        {buscaAberta && (
+          <div
+            id="busca-mobile"
+            className="container-site pb-4 lg:hidden"
+          >
+            <form
+              data-busca
+              onSubmit={executarBusca}
+              className="flex items-center gap-2"
+              role="search"
+              aria-label="Busca de motos"
+            >
+              <div className="relative flex-1">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-3"
+                  aria-hidden="true"
+                />
+                <input
+                  ref={buscaInputRef}
+                  type="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder=" buscar moto por marca ou modelo..."
+                  className="h-11 w-full rounded border border-borda-forte bg-fundo px-3 py-1.5 pl-9 text-base text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30"
+                  style={{ fontSize: '16px' }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setBuscaAberta(false)}
+                aria-label="Fechar busca"
+                className="grid size-11 shrink-0 place-items-center text-texto-3 transition-colors hover:text-texto"
+              >
+                <X className="size-5" aria-hidden="true" />
+              </button>
+            </form>
+          </div>
+        )}
       </header>
 
       {/* Menu do celular — <dialog> nativo (Esc, foco preso e retorno) */}

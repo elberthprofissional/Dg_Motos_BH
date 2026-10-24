@@ -5,6 +5,7 @@ import {
   Settings,
   LogOut,
   Package,
+  Images,
 } from 'lucide-react'
 import { atualizarStatus, buscarCatalogo, excluirMoto } from '../lib/catalog'
 import type { MotoParaSalvar, ResultadoCatalogo } from '../lib/catalog'
@@ -12,16 +13,18 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
 import { EstoqueTab } from '../components/admin/EstoqueTab'
 import { ConfiguracoesTab } from '../components/admin/ConfiguracoesTab'
+import { EntregasTab } from '../components/admin/EntregasTab'
 import { DialogoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import type { PedidoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import { Toast } from '../components/ui/Toast'
 import type { Feedback } from '../components/ui/Toast'
 import type { Motorcycle, MotorcycleStatus } from '../types'
 
-type Aba = 'estoque' | 'configuracoes'
+type Aba = 'estoque' | 'entregas' | 'configuracoes'
 
 const ABAS: { id: Aba; rotulo: string; icone: typeof Package }[] = [
   { id: 'estoque', rotulo: 'Estoque', icone: Package },
+  { id: 'entregas', rotulo: 'Entregas', icone: Images },
   { id: 'configuracoes', rotulo: 'Configurações', icone: Settings },
 ]
 
@@ -29,14 +32,12 @@ const ABAS: { id: Aba; rotulo: string; icone: typeof Package }[] = [
  * ============================================================
  * PAINEL DO PROPRIETÁRIO
  * ============================================================
- * Duas áreas: gestão de estoque e configurações da loja (contato,
+ * Áreas: gestão de estoque, entregas publicadas na Home e configurações da loja (contato,
  * endereço, horários). Sem dashboard, financeiro ou relatórios — o
  * que a operação usa de verdade cabe nestas duas telas.
  *
  * Navegação: sidebar lateral no desktop e, no celular, barra inferior
- * fixa (o polegar alcança as duas abas sem abrir menu nenhum). São só
- * duas opções — um hamburger + drawer seria cerimônia demais e ainda
- * esconderia a contagem do estoque.
+ * fixa no celular para manter as três áreas principais ao alcance.
  */
 export function Admin() {
   const { sair } = useAuth()
@@ -151,7 +152,7 @@ export function Admin() {
     ? editando.id
       ? 'Editar moto'
       : 'Nova moto'
-    : aba === 'configuracoes'
+    : aba !== 'estoque'
       ? rotuloAba
       : ''
   const topbarSemContexto = aba === 'estoque' && !editando
@@ -163,28 +164,31 @@ export function Admin() {
       {/* inferior fixa (mais abaixo).                                  */}
       {/* ---------------------------------------------------------- */}
       <aside
-        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-sidebar lg:flex"
+        className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line bg-sidebar lg:flex"
         aria-label="Menu do painel"
       >
         {/* Marca: logo + wordmark, sem ornamento — o vermelho do painel
             fica para os itens ativos e para o que é ação. */}
-        <div className="flex h-[4.5rem] shrink-0 items-center gap-3 border-b border-line px-5">
+        <div className="flex h-[4.75rem] shrink-0 items-center gap-3 border-b border-line px-5">
           <Link
             to="/"
             aria-label="DG Motos — ver o site"
             className="foco-painel group flex min-w-0 items-center gap-3 rounded-lg"
           >
-            <span className="relative grid size-9 shrink-0 place-items-center">
-              <img src="/logo.webp" alt="" width={36} height={36} className="size-9 object-contain" />
+            <span className="relative grid size-10 shrink-0 place-items-center">
+              <img src="/logo.webp" alt="" width={40} height={40} className="size-10 object-contain" />
             </span>
-            <span className="font-display text-sm font-semibold tracking-[0.14em] text-paper uppercase">
-              DG Motos
+            <span className="min-w-0">
+              <span className="block truncate font-display text-sm font-semibold tracking-[0.12em] text-paper uppercase">
+                DG Motos BH
+              </span>
+              <span className="mt-0.5 block text-xs leading-none text-steel-500">Painel da loja</span>
             </span>
           </Link>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <p className="px-3 pb-2 font-display text-micro font-semibold tracking-[0.2em] text-steel-600 uppercase">
+          <p className="px-3 pb-2 text-xs font-medium text-steel-500">
             Gerenciar
           </p>
           <div className="space-y-0.5">
@@ -198,25 +202,16 @@ export function Admin() {
                   aria-current={ativa ? 'page' : undefined}
                   className={`foco-painel nav-item ${
                     ativa
-                      ? 'nav-item-ativo bg-claro/[0.04] text-paper'
+                      ? 'nav-item-ativo text-paper'
                       : 'text-steel-400 hover:bg-claro/[0.03] hover:text-paper'
                   }`}
                 >
                   <Icone
-                    className={`size-[17px] shrink-0 ${ativa ? 'text-brand-500' : 'text-steel-500'}`}
+                    className={`size-[17px] shrink-0 ${ativa ? 'text-steel-300' : 'text-steel-500'}`}
                     strokeWidth={ativa ? 2.2 : 1.8}
                     aria-hidden="true"
                   />
                   <span className="flex-1 truncate">{rotulo}</span>
-                  {id === 'estoque' && motos !== null ? (
-                    <span
-                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-etiqueta leading-4 tabular-nums ${
-                        ativa ? 'text-brand-500' : 'text-steel-500'
-                      }`}
-                    >
-                      {motos.length}
-                    </span>
-                  ) : null}
                 </button>
               )
             })}
@@ -238,13 +233,13 @@ export function Admin() {
       {/* ---------------------------------------------------------- */}
       {/* Conteúdo                                                     */}
       {/* ---------------------------------------------------------- */}
-      <div className="flex min-w-0 flex-1 flex-col pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] lg:pb-0 lg:pl-64">
+      <div className="flex min-w-0 flex-1 flex-col pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] lg:pb-0 lg:pl-60">
         {/* Topbar. Só carrega título quando há contexto a informar (edição
             de moto, seção de configurações). Na listagem do estoque o
             título é da própria página — repetir aqui era ruído. No celular
             a marca ocupa o canto, já que a sidebar está escondida. */}
         <header
-          className={`sticky top-0 z-30 border-b border-line bg-night-950/90 backdrop-blur-md ${
+          className={`sticky top-0 z-30 border-b border-line bg-night-950 ${
             topbarSemContexto ? 'lg:hidden' : ''
           }`}
         >
@@ -255,8 +250,8 @@ export function Admin() {
               className="foco-painel flex items-center gap-2.5 rounded-lg lg:hidden"
             >
               <img src="/logo.webp" alt="" width={24} height={24} className="size-6 object-contain" />
-              <span className="font-display text-sm font-semibold tracking-[0.16em] text-paper uppercase">
-                DG Motos
+              <span className="font-display text-sm font-semibold tracking-[0.12em] text-paper uppercase">
+                DG Motos BH
               </span>
             </Link>
 
@@ -285,7 +280,7 @@ export function Admin() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[105rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="mx-auto w-full max-w-[105rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9">
           {aba === 'estoque' ? (
             <EstoqueTab
               motos={motos}
@@ -299,9 +294,11 @@ export function Admin() {
               onSalva={aoSalvarMoto}
               onRecarregar={recarregar}
             />
-          ) : (
-            <ConfiguracoesTab />
-          )}
+          ) : null}
+          <div className={aba === 'entregas' ? '' : 'hidden'}>
+            <EntregasTab motos={motos ?? []} onFeedback={avisar} />
+          </div>
+          {aba === 'configuracoes' ? <ConfiguracoesTab /> : null}
         </main>
       </div>
 
@@ -319,7 +316,7 @@ export function Admin() {
             : 'safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-line bg-sidebar lg:hidden'
         }
       >
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-3">
           {ABAS.map(({ id, rotulo, icone: Icone }) => {
             const ativa = aba === id
             return (
@@ -329,22 +326,17 @@ export function Admin() {
                 onClick={() => trocarAba(id)}
                 aria-current={ativa ? 'page' : undefined}
                 className={`foco-painel relative flex min-h-[3.25rem] flex-col items-center justify-center gap-1 transition-colors ${
-                  ativa ? 'text-brand-500' : 'text-steel-500'
+                  ativa ? 'text-paper' : 'text-steel-500'
                 }`}
               >
                 {ativa && (
                   <span
                     aria-hidden="true"
-                    className="absolute top-0 h-0.5 w-8 rounded-full bg-brand-500"
+                    className="absolute top-0 h-px w-8 bg-brand-500"
                   />
                 )}
                 <span className="relative">
                   <Icone className="size-[21px]" strokeWidth={ativa ? 2.2 : 1.8} aria-hidden="true" />
-                  {id === 'estoque' && motos !== null && motos.length > 0 ? (
-                    <span className="absolute -top-1 -right-2.5 min-w-[1.1rem] rounded-full bg-claro/10 px-1 text-center text-micro leading-[1.1rem] font-medium tabular-nums text-steel-300">
-                      {motos.length}
-                    </span>
-                  ) : null}
                 </span>
                 <span className="text-etiqueta leading-none font-medium">{rotulo}</span>
               </button>
