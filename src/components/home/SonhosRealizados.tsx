@@ -1,17 +1,25 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
-import type { EntregaRealizada } from '../../data/entregas'
+import type { EntregaPublicada } from '../../data/entregas'
 
 interface SonhosRealizadosProps {
-  entregas: EntregaRealizada[]
+  entregas: EntregaPublicada[]
+}
+
+function dataDaEntrega(valor?: string): string | null {
+  if (!valor) return null
+  const data = new Date(`${valor}T12:00:00`)
+  if (Number.isNaN(data.valueOf())) return null
+  return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(data)
 }
 
 export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
-  // Imagens de referência ficam fora da página pública até serem trocadas
-  // por registros reais com autorização de uso.
-  const publicadas = entregas.filter((entrega) => !entrega.previaTemporaria)
-  const principal = publicadas[0]
-  const outras = publicadas.slice(1, 4)
+  // A vitrine pública só existe quando há ao menos uma entrega publicada.
+  // Rascunhos e registros privados já são filtrados pela consulta de origem.
+  if (entregas.length === 0) return null
+
+  const principal = entregas[0]
+  const outras = entregas.slice(1)
 
   return (
     <section
@@ -21,14 +29,11 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
     >
       <div className="container-site">
         <header className="mb-8 grid gap-5 sm:mb-10 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.55fr)] lg:items-end lg:gap-12">
-          <h2
-            id="sonhos-titulo"
-            className="titulo max-w-[13ch] text-4xl text-texto sm:text-6xl"
-          >
+          <h2 id="sonhos-titulo" className="titulo max-w-[13ch] text-4xl text-texto sm:text-6xl">
             Sonhos realizados
           </h2>
           <p className="corpo max-w-[38ch] text-texto-2 lg:justify-self-end">
-            Registros de clientes que levaram uma moto da DG Motos para casa.
+            Entregas da DG Motos.
           </p>
         </header>
 
@@ -45,29 +50,30 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
                   fetchPriority="high"
                   decoding="async"
                 />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-black/75 px-5 py-4 text-sm text-white sm:px-7 sm:py-5">
-                  <span className="block font-display text-xl font-semibold sm:text-2xl">
-                    {principal.moto}
-                  </span>
-                  {principal.entregueEm ? (
-                    <span className="mt-1 block text-sm text-white/80">{principal.entregueEm}</span>
-                  ) : null}
-                </figcaption>
+                {dataDaEntrega(principal.entregueEm) ? (
+                  <figcaption className="absolute inset-x-0 bottom-0 bg-black/75 px-5 py-4 text-sm text-white sm:px-7 sm:py-5">
+                    <span className="block font-display text-xl font-semibold sm:text-2xl">
+                      {principal.moto}
+                    </span>
+                    <span className="mt-1 block text-sm text-white/80">
+                      {dataDaEntrega(principal.entregueEm)}
+                    </span>
+                  </figcaption>
+                ) : null}
               </figure>
 
               <div className="flex flex-col justify-between gap-8 p-5 sm:p-8 lg:p-10">
                 <div>
-                  {principal.depoimento ? (
-                    <blockquote className="font-display text-2xl leading-snug font-semibold tracking-[-0.02em] text-texto sm:text-3xl">
-                      “{principal.depoimento}”
-                    </blockquote>
-                  ) : (
-                    <p className="corpo text-texto-2">
-                      Uma entrega registrada com autorização do cliente.
-                    </p>
-                  )}
+                  <h3 className="font-display text-2xl leading-snug font-semibold tracking-[-0.02em] text-texto sm:text-3xl">
+                    {principal.moto}
+                  </h3>
                   {principal.nomeCliente ? (
-                    <p className="mt-5 text-sm text-texto-2">{principal.nomeCliente}</p>
+                    <p className="mt-3 text-sm text-texto-2">{principal.nomeCliente}</p>
+                  ) : null}
+                  {principal.depoimento ? (
+                    <blockquote className="mt-6 border-l border-marca pl-4 text-base leading-relaxed text-texto-2 sm:mt-8 sm:pl-5 sm:text-lg">
+                      {principal.depoimento}
+                    </blockquote>
                   ) : null}
                 </div>
                 <Link to="/estoque" className="btn btn-secondary min-h-12 w-fit gap-2 px-5">
@@ -95,12 +101,15 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
                         <h3 className="font-display text-xl font-semibold text-texto">
                           {entrega.moto}
                         </h3>
+                        {dataDaEntrega(entrega.entregueEm) ? (
+                          <p className="mt-1 text-sm text-texto-3">{dataDaEntrega(entrega.entregueEm)}</p>
+                        ) : null}
                         {entrega.nomeCliente ? (
                           <p className="mt-1 text-sm text-texto-2">{entrega.nomeCliente}</p>
                         ) : null}
                         {entrega.depoimento ? (
                           <p className="mt-3 text-sm leading-relaxed text-texto-2">
-                            “{entrega.depoimento}”
+                            {entrega.depoimento}
                           </p>
                         ) : null}
                       </div>
@@ -110,38 +119,7 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
               </ul>
             ) : null}
           </>
-        ) : (
-          <div className="grid overflow-hidden bg-fundo sm:grid-cols-[minmax(12rem,0.68fr)_minmax(0,1.32fr)]">
-            <div className="relative flex min-h-52 items-center justify-center bg-painel-2 p-8 sm:min-h-72">
-              <span className="absolute inset-y-8 left-0 w-1 bg-marca" aria-hidden="true" />
-              <img
-                src="/logo.webp"
-                alt=""
-                aria-hidden="true"
-                width={160}
-                height={160}
-                className="w-28 object-contain opacity-90 sm:w-36"
-              />
-            </div>
-            <div className="flex flex-col items-start justify-between gap-8 p-6 sm:p-9 lg:p-12">
-              <div>
-                <p className="text-xs font-semibold tracking-[0.12em] text-marca-texto uppercase">
-                  Arquivo de entregas
-                </p>
-                <h3 className="titulo mt-4 max-w-[17ch] text-2xl text-texto sm:text-3xl">
-                  Momentos reais, registrados com autorização.
-                </h3>
-                <p className="corpo mt-4 max-w-2xl text-texto-2">
-                  Ainda não há fotos de entrega autorizadas para exibir. Quando houver, cada momento será publicado com o contexto confirmado.
-                </p>
-              </div>
-              <Link to="/estoque" className="btn btn-secondary min-h-12 w-fit gap-2 px-5">
-                Ver motos disponíveis
-                <ArrowUpRight className="size-4" aria-hidden="true" />
-              </Link>
-            </div>
-          </div>
-        )}
+        ) : null}
       </div>
     </section>
   )

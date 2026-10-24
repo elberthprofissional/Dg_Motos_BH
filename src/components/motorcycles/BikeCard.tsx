@@ -38,7 +38,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           decoding={priority ? 'sync' : 'async'}
           width={1200}
           height={1600}
-          className={`size-full transition-transform duration-300 motion-safe:group-hover:scale-[1.02] ${lateral ? 'object-cover' : 'object-contain p-3 sm:p-4'}`}
+          className="size-full object-contain p-2 transition-transform duration-300 motion-safe:group-hover:scale-[1.02] sm:p-4"
         />
       ) : (
         <p className="px-5 text-center text-sm text-texto-2">Foto ainda não disponível</p>
@@ -55,18 +55,18 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   // Dados e preço ficam em linhas próprias para modelos longos não
   // comprimirem o valor em telas menores.
   const preco = (
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
       {desconto != null ? (
         <>
           <p className="numeros text-[11px] leading-none text-texto-3">
             <span className="line-through">de {formatPrice(bike.precoAntes ?? bike.preco)}</span>
           </p>
-          <p className="numeros mt-1 font-display text-lg leading-none font-semibold text-marca-texto">
+          <p className="numeros mt-1 font-display text-base leading-none font-semibold text-marca-texto sm:text-lg">
             {formatPrice(bike.preco)}
           </p>
         </>
       ) : (
-        <p className="numeros font-display text-lg leading-none font-semibold text-texto">
+        <p className="numeros font-display text-base leading-none font-semibold text-texto sm:text-lg">
           {formatPrice(bike.preco)}
         </p>
       )}
@@ -80,12 +80,12 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
 
   const informacoes = (
     <>
-      <h3 className="font-display text-lg leading-tight font-semibold tracking-[-0.02em] text-texto">
+      <h3 className="font-display text-[15px] leading-tight font-semibold tracking-[-0.02em] text-texto sm:text-lg">
         {titulo}
       </h3>
 
       {/* Meta compacta com ícone: lê em um relance, como na referência. */}
-      <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] leading-none text-texto-3">
+      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-none text-texto-3 sm:mt-2.5 sm:gap-x-3 sm:text-[13px]">
         <span className="inline-flex items-center gap-1.5">
           <Calendar className="size-3.5 shrink-0" aria-hidden="true" />
           <span className="numeros">{bike.ano}</span>

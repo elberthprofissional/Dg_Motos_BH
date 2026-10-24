@@ -430,16 +430,7 @@ export function Estoque() {
 
             {resultados.length > 0 ? (
               <>
-                {/* No celular, os cards usam toda a largura para manter
-                    preço, detalhes e ações fáceis de ler e tocar. */}
-                <div className="grid grid-cols-1 gap-4 sm:hidden">
-                  {resultados.map((bike) => (
-                    <BikeCard key={bike.id} bike={bike} />
-                  ))}
-                </div>
-
-                {/* Do tablet em diante: grade de vitrines. */}
-                <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                   {resultados.map((bike, i) => (
                     <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
                       <BikeCard bike={bike} priority={i < 3} />

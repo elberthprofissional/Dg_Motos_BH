@@ -45,6 +45,7 @@ export function requireSupabase(): SupabaseClient {
 
 /** Nome do bucket de fotos. */
 export const BUCKET_FOTOS = 'motos'
+export const BUCKET_ENTREGAS = 'entregas'
 
 /** Monta a URL pública de uma foto do Storage. */
 export function urlPublica(caminho: string): string {

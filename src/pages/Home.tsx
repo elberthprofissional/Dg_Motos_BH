@@ -9,10 +9,12 @@ import { autoDealerSchema } from '../lib/schema'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { Revelar } from '../components/ui/Revelar'
 import { Marcas } from '../components/home/MarcasProcuradas'
-import { entregasRealizadas } from '../data/entregas'
 import { SonhosRealizados } from '../components/home/SonhosRealizados'
+import { useEntregasPublicadas } from '../hooks/useEntregasPublicadas'
 import heroDesktop from '../assets/hero/home-desktop.webp'
 import heroMobile from '../assets/hero/home-mobile.webp'
+import trocaDesktop from '../assets/troca/banner-desktop.webp'
+import trocaMobile from '../assets/troca/banner-mobile.webp'
 
 /**
  * Página inicial — a bancada da loja.
@@ -29,6 +31,7 @@ import heroMobile from '../assets/hero/home-mobile.webp'
 export function Home() {
   const { motos } = useCatalogo()
   const { config } = useSiteConfig()
+  const entregas = useEntregasPublicadas()
 
   usePageMeta(
     'DG Motos — Motos seminovas em Belo Horizonte',
@@ -53,7 +56,7 @@ export function Home() {
   return (
     <>
       <section data-hero className="overflow-hidden bg-fundo pt-cabecalho">
-        <div className="relative isolate overflow-hidden bg-fundo">
+        <div className="relative isolate min-h-[22rem] overflow-hidden bg-fundo sm:min-h-[32rem] lg:min-h-[24rem] xl:min-h-[26rem]">
           <picture className="absolute inset-0 hidden lg:block" aria-hidden="true">
             <source srcSet={heroDesktop} type="image/webp" />
             <img
@@ -66,40 +69,55 @@ export function Home() {
               className="size-full object-cover object-center"
             />
           </picture>
-          <div className="container-site relative z-10 py-8 sm:py-12 lg:flex lg:min-h-[24rem] lg:items-center lg:py-14 xl:min-h-[26rem]">
-            <div className="max-w-xl">
-              <p className="mb-5 flex items-center gap-3 text-xs font-semibold tracking-[0.12em] text-texto-2 uppercase">
+
+          <picture className="pointer-events-none absolute inset-0 overflow-hidden lg:hidden" aria-hidden="true">
+            <source srcSet={heroMobile} type="image/webp" />
+            <img
+              src={heroMobile}
+              alt=""
+              width={1280}
+              height={400}
+              fetchPriority="high"
+              decoding="async"
+              className="absolute right-0 bottom-0 h-auto w-[255%] max-w-none object-contain object-right-bottom sm:w-[185%] md:w-[160%]"
+            />
+          </picture>
+
+          <div
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-fundo/95 via-fundo/55 to-transparent lg:hidden"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-3/5 bg-gradient-to-b from-fundo/50 to-transparent lg:hidden"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-b from-transparent via-fundo/40 to-fundo lg:hidden"
+            aria-hidden="true"
+          />
+
+          <div className="container-site relative z-10 flex min-h-[22rem] items-start py-4 sm:min-h-[32rem] sm:py-8 lg:min-h-[24rem] lg:items-center lg:py-14 xl:min-h-[26rem]">
+            <div className="max-w-[18rem] sm:max-w-[24rem] lg:max-w-xl">
+              <p className="mb-2 flex items-center gap-3 text-xs font-semibold tracking-[0.12em] text-texto-2 uppercase sm:mb-5">
                 <span className="h-px w-8 bg-marca" aria-hidden="true" />
-                Seminovas · Belo Horizonte
+                DG Motos · Belo Horizonte, MG
               </p>
-              <h1 className="display text-4xl text-texto sm:text-5xl lg:text-[4.5rem]">
-                Motos para seguir em frente.
+              <h1 className="display max-w-[17ch] text-balance text-[1.625rem] leading-[1.04] text-texto sm:max-w-none sm:text-4xl md:text-5xl lg:text-[4.5rem]">
+                Motos seminovas em Belo Horizonte.
               </h1>
-              <p className="corpo mt-5 max-w-[38ch] text-texto-2">
-                Veja o estoque real da DG Motos, compare cada unidade e encontre a próxima moto no seu ritmo.
+              <p className="corpo mt-2 max-w-[32ch] text-sm leading-6 text-texto-2 sm:mt-5 sm:max-w-[38ch] sm:text-base sm:leading-[1.55] lg:text-[length:var(--step-body)]">
+                Realizando sonhos sobre duas rodas.
               </p>
-              <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
-                <Link to="/estoque" className="btn btn-primary min-h-12 px-6">
-                  Ver motos no estoque
+              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3 sm:mt-7">
+                <Link to="/estoque" className="btn btn-primary min-h-11 px-5 sm:min-h-12 sm:px-6">
+                  Ver estoque
                 </Link>
-                <span className="text-sm text-texto-3">
-                  {disponiveis.length} {disponiveis.length === 1 ? 'moto disponível' : 'motos disponíveis'}
+                <span className="text-sm text-texto-2">
+                  {disponiveis.length} {disponiveis.length === 1 ? 'moto no pátio' : 'motos no pátio'}
                 </span>
               </div>
             </div>
           </div>
-        </div>
-        <div className="relative aspect-[3.2/1] max-h-36 overflow-hidden bg-painel-2 lg:hidden">
-          <img
-            src={heroMobile}
-            alt=""
-            aria-hidden="true"
-            width={1280}
-            height={400}
-            fetchPriority="high"
-            decoding="async"
-            className="size-full object-cover object-center"
-          />
         </div>
       </section>
 
@@ -128,7 +146,7 @@ export function Home() {
           </div>
 
           {patio.length > 0 ? (
-            <div className="mt-8 grid grid-cols-1 gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="mt-8 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-3">
               {patio.map((bike, i) => (
                 <Revelar key={bike.id} atraso={i * 45}>
                   <BikeCard bike={bike} priority={i < 2} />
@@ -150,20 +168,63 @@ export function Home() {
         </div>
       </section>
 
-      <SonhosRealizados entregas={entregasRealizadas} />
+      <SonhosRealizados entregas={entregas} />
 
-      <section className="section bg-painel">
-        <div className="container-site grid gap-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-10">
-          <div>
-            <h2 className="titulo text-3xl text-texto sm:text-4xl">Vai trocar de moto?</h2>
-            <p className="corpo mt-4 max-w-2xl text-texto-2">
+      <section className="w-full bg-painel">
+        <div className="relative isolate w-full overflow-hidden bg-fundo lg:aspect-[4/1] lg:min-h-[20rem] xl:min-h-0">
+          <picture className="absolute inset-0 hidden lg:block" aria-hidden="true">
+            <source srcSet={trocaDesktop} type="image/webp" />
+            <img
+              src={trocaDesktop}
+              alt=""
+              width={1760}
+              height={440}
+              loading="lazy"
+              decoding="async"
+              className="size-full object-cover object-right"
+            />
+          </picture>
+
+          <div className="sr-only lg:hidden">
+            <h2>Vai trocar de moto?</h2>
+            <p>
               Aceitamos sua moto usada como parte do pagamento. Converse com a
               equipe sobre avaliação e documentação.
             </p>
           </div>
-          <Link to="/contato" className="btn btn-primary min-h-12 px-6">
-            Falar sobre uma troca
-          </Link>
+
+          <div className="container-site relative z-10 hidden min-h-[20rem] items-center py-10 lg:flex lg:h-full lg:min-h-0">
+            <div className="max-w-xl">
+              <h2 className="titulo text-4xl text-texto xl:text-5xl">
+                Vai trocar de moto?
+              </h2>
+              <p className="corpo mt-4 max-w-[55ch] text-texto-2">
+                Aceitamos sua moto usada como parte do pagamento. Converse com a
+                equipe sobre avaliação e documentação.
+              </p>
+              <Link to="/contato" className="btn btn-primary mt-7 min-h-12 px-6">
+                Falar sobre uma troca
+              </Link>
+            </div>
+          </div>
+
+          <div className="lg:hidden">
+            <img
+              src={trocaMobile}
+              alt=""
+              aria-hidden="true"
+              width={1280}
+              height={400}
+              loading="lazy"
+              decoding="async"
+              className="block h-auto w-full"
+            />
+            <div className="container-site py-5">
+              <Link to="/contato" className="btn btn-primary min-h-12 w-full px-6 sm:w-auto">
+                Falar sobre uma troca
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
