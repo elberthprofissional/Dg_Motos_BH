@@ -1,6 +1,6 @@
 ﻿import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Clock, MapPin } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { usePageMeta } from '../hooks/usePageMeta'
@@ -100,6 +100,25 @@ export function Home() {
                   <ArrowRight className="hidden size-4 lg:block" aria-hidden="true" />
                 </Link>
               </div>
+
+              <div className="mt-4 hidden flex-col gap-2 text-xs font-medium text-neutral-400 lg:flex">
+                <p className="flex items-center gap-2">
+                  <MapPin className="size-3.5 shrink-0 text-neutral-500" aria-hidden="true" />
+                  <span>
+                    {config.enderecoRua} — {config.enderecoCidadeUf}
+                  </span>
+                </p>
+                {config.horarios.length > 0 ? (
+                  <p className="flex items-center gap-2">
+                    <Clock className="size-3.5 shrink-0 text-neutral-500" aria-hidden="true" />
+                    <span>
+                      {config.horarios
+                        .map((horario) => `${horario.dias}, ${horario.horas}`)
+                        .join(' · ')}
+                    </span>
+                  </p>
+                ) : null}
+              </div>
             </div>
 
             {/* No celular a moto sobe para logo depois do botão: um
@@ -118,24 +137,6 @@ export function Home() {
               />
             </div>
 
-            {/* No desktop o rodapé do herói fecha o vazio com os dois
-                fatos reais da loja: onde fica e quando abre. */}
-            <div className="mt-12 hidden max-w-[44rem] grid-cols-2 gap-x-10 gap-y-2 text-sm leading-relaxed text-texto-2 lg:grid">
-              <p>
-                {config.enderecoRua}
-                <br />
-                {config.enderecoCidadeUf}
-              </p>
-              {config.horarios.length > 0 ? (
-                <div>
-                  {config.horarios.map((horario) => (
-                    <p key={`${horario.dias}-${horario.horas}`}>
-                      {horario.dias}, {horario.horas}
-                    </p>
-                  ))}
-                </div>
-              ) : null}
-            </div>
           </div>
         </div>
       </section>
@@ -184,38 +185,38 @@ export function Home() {
       <SonhosRealizados entregas={entregas} />
 
       {/* ============================================================
-          TROCA — texto e moto em campos separados
+          TROCA — um card escuro com a conversa e a moto
           ============================================================
-          Sem foto por baixo do texto: o painel escuro segura a
-          leitura e a moto ocupa o campo da direita. No celular os dois
+          O bloco inteiro vive na mesma chapa: texto à esquerda, foto à
+          direita com vinheta e brilho vermelho suave. No celular os
           campos empilham — primeiro a conversa, depois a imagem. */}
       <section
         aria-labelledby="troca-titulo"
-        className="bg-fundo py-8 sm:py-10 lg:bg-[#ece7de] lg:py-0 lg:text-[#0f0e0c]"
+        className="bg-fundo py-8 sm:py-10 lg:bg-[#0b0a09] lg:py-20 xl:py-24"
       >
         <div className="container-site">
-          <div className="overflow-hidden rounded-2xl border border-borda bg-painel lg:grid lg:grid-cols-12 lg:items-stretch lg:rounded-none lg:border-0 lg:bg-transparent">
-            <div className="px-6 py-8 sm:px-9 sm:py-10 lg:col-span-5 lg:flex lg:flex-col lg:justify-center lg:px-0 lg:py-20 xl:py-24">
+          <div className="overflow-hidden rounded-2xl border border-borda bg-painel lg:grid lg:grid-cols-12 lg:items-center lg:gap-10 lg:rounded-3xl lg:border-neutral-800 lg:bg-neutral-900/40 lg:p-8 lg:backdrop-blur-md xl:p-12">
+            <div className="px-6 py-8 sm:px-9 sm:py-10 lg:col-span-5 lg:flex lg:flex-col lg:justify-center lg:px-0 lg:py-4">
               <h2
                 id="troca-titulo"
-                className="cartaz display titulo-troca max-w-[18ch] text-3xl text-balance text-texto sm:text-4xl lg:max-w-none lg:text-[length:clamp(2.9rem,4.7vw,4.75rem)] lg:leading-[0.86] lg:text-[#0f0e0c]"
+                className="cartaz display titulo-troca max-w-[18ch] text-3xl text-balance text-texto sm:text-4xl lg:max-w-none lg:text-[length:clamp(2.9rem,4.7vw,4.75rem)] lg:leading-[0.86]"
               >
                 Sua próxima moto
                 <br className="hidden lg:block" /> começa com a sua.
               </h2>
-              <p className="corpo mt-4 max-w-[46ch] text-texto-2 lg:mt-6 lg:max-w-[38ch] lg:text-[#3c372f]">
+              <p className="corpo mt-4 max-w-[46ch] text-texto-2 lg:mt-6 lg:max-w-[38ch] lg:text-neutral-300">
                 Avaliamos sua moto usada com transparência para facilitar a realização do seu próximo negócio.
               </p>
               <div className="mt-7 lg:mt-9">
                 <WhatsAppCTA
                   message={buildDefaultMessage()}
                   label="Avaliar minha moto"
-                  className="h-12 w-full rounded-xl px-6 text-sm font-bold shadow-lg shadow-marca/25 sm:w-auto lg:h-14 lg:rounded-none lg:px-8 lg:text-base lg:shadow-none"
+                  className="h-12 w-full rounded-xl px-6 text-sm font-bold shadow-lg shadow-marca/25 sm:w-auto lg:h-14 lg:px-8 lg:text-base"
                 />
               </div>
             </div>
 
-            <div className="relative aspect-[16/9] w-full border-t border-borda lg:col-span-7 lg:aspect-auto lg:min-h-[36rem] lg:border-0 xl:min-h-[40rem]">
+            <div className="relative aspect-[16/9] w-full overflow-hidden border-t border-borda bg-neutral-950 lg:col-span-7 lg:aspect-[4/3] lg:min-h-[26rem] lg:rounded-2xl lg:border-0 xl:min-h-[30rem]">
               <img
                 src={trocaDesktop}
                 alt=""
@@ -224,6 +225,14 @@ export function Home() {
                 loading="lazy"
                 decoding="async"
                 className="absolute inset-0 size-full object-cover object-center lg:object-[68%_50%]"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 hidden shadow-[inset_0_0_120px_40px_rgba(10,9,8,0.6)] lg:block"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_68%_50%,rgba(217,31,38,0.18),transparent_60%)] mix-blend-screen lg:block"
               />
             </div>
           </div>

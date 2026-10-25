@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
 import type { EntregaPublicada } from '../../data/entregas'
 import { EsteiraFotos } from '../entregas/EsteiraFotos'
 import { GaleriaEntregasDesktop } from './GaleriaEntregasDesktop'
@@ -9,8 +7,8 @@ interface SonhosRealizadosProps {
 }
 
 /**
- * Quantas entregas entram na vitrine da Home. A galeria completa fica
- * atrás do link; a esteira mostra o restante no celular.
+ * Quantas entregas entram na vitrine da Home. A esteira mostra o
+ * restante no celular.
  */
 export const LIMITE_MURAL = 6
 
@@ -22,9 +20,9 @@ export const LIMITE_MURAL = 6
  *
  * - No celular, a esteira aprovada continua igual: as fotos passam
  *   como uma escada rolante e pausam ao toque.
- * - No desktop, a galeria vira uma história presa: o título fica
- *   parado, as fotos trocam conforme o scroll e qualquer foto abre
- *   ampliada. Uma entrega por cliente, sem repetir imagem.
+ * - No desktop, a galeria vira um carrossel editorial: texto à
+ *   esquerda, card 16:9 à direita e qualquer foto abre ampliada.
+ *   Uma entrega por cliente, sem repetir imagem.
  */
 export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
   // A vitrine pública só existe quando há ao menos uma entrega publicada.
@@ -51,17 +49,6 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
                 Entregas reais com autorização de quem comprou.
               </p>
             </div>
-
-            <Link
-              to="/sonhos"
-              className="link-acao group inline-flex min-h-11 shrink-0 items-center gap-2 self-start sm:self-auto"
-            >
-              Ver galeria completa
-              <ArrowRight
-                className="size-4 transition-transform duration-300 motion-safe:group-hover:translate-x-0.5"
-                aria-hidden="true"
-              />
-            </Link>
           </header>
 
           <div data-vitrine className="mt-8 sm:mt-10">

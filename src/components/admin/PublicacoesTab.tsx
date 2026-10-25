@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, ArrowUpRight, ImageOff, Plus } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { ArrowRight, ImageOff, Plus } from 'lucide-react'
 import type { EntregaParaSalvar } from '../../lib/entregas'
 import {
   arquivarEntrega,
@@ -287,16 +286,6 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
         </div>
 
         <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-          <Link
-            to="/sonhos"
-            target="_blank"
-            rel="noreferrer"
-            className="foco-painel inline-flex min-h-11 w-full items-center justify-center gap-1.5 px-3 text-sm font-medium text-steel-400 transition-colors hover:text-paper sm:w-auto"
-          >
-            Ver o mural
-            <ArrowUpRight className="size-3.5" aria-hidden="true" />
-            <span className="sr-only"> (abre em nova aba)</span>
-          </Link>
           {mostrarCtaNoTopo ? (
             <button
               type="button"

@@ -22,7 +22,7 @@
 const CDP = process.env.CDP ?? 'http://127.0.0.1:9222'
 const BASE = process.env.BASE ?? 'http://localhost:4173'
 
-const ROTAS = ['/', '/estoque', '/sonhos', '/contato', '/moto/honda-xre-300-2021', '/admin/login']
+const ROTAS = ['/', '/estoque', '/contato', '/moto/honda-xre-300-2021', '/admin/login']
 const VIEWPORTS = [
   { nome: 'desktop', width: 1440, height: 900, mobile: false },
   { nome: 'mobile', width: 390, height: 844, mobile: true },

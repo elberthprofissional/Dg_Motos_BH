@@ -252,7 +252,6 @@ async function run() {
     { loc: `${base}/`, lastmod: null, priority: '1.0', freq: 'weekly' },
     { loc: `${base}/estoque`, lastmod: null, priority: '0.9', freq: 'daily' },
     ...fichas.map((f) => ({ ...f, priority: '0.8', freq: 'weekly' })),
-    { loc: `${base}/sonhos`, lastmod: null, priority: '0.7', freq: 'weekly' },
     { loc: `${base}/contato`, lastmod: null, priority: '0.6', freq: 'monthly' },
   ]
 

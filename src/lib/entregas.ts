@@ -108,8 +108,8 @@ export async function buscarEntregasPublicadas(limite?: number): Promise<Entrega
     .order('ordem', { ascending: true })
     .order('entregue_em', { ascending: false, nullsFirst: false })
 
-  // A Home passa um limite para não baixar a galeria inteira só para
-  // preencher a seção; a página /sonhos pede tudo.
+  // A Home passa um limite para não baixar o mural inteiro; sem limite,
+  // a consulta traz todas as entregas publicadas.
   const { data, error } = await (limite && limite > 0 ? consulta.limit(limite) : consulta)
 
   if (error || !data) return []

@@ -156,16 +156,6 @@ export function Header() {
                 {item.label}
               </NavLink>
             ))}
-            <NavLink
-              to="/sonhos"
-              className={({ isActive }) =>
-                `inline-flex min-h-11 items-center py-3 font-sans text-sm font-medium transition-colors ${
-                  isActive ? 'font-semibold text-marca-texto' : 'text-texto-2 hover:text-texto'
-                }`
-              }
-            >
-              Entregas
-            </NavLink>
           </nav>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
@@ -317,17 +307,6 @@ export function Header() {
                   <span>{item.label}</span>
                 </NavLink>
               ))}
-              <NavLink
-                to="/sonhos"
-                onClick={() => setAberto(false)}
-                className={({ isActive }) =>
-                  `display py-5 text-4xl transition-colors ${
-                    isActive ? 'text-marca-texto' : 'text-texto hover:text-marca-texto'
-                  }`
-                }
-              >
-                <span>Entregas</span>
-              </NavLink>
             </nav>
           </div>
 

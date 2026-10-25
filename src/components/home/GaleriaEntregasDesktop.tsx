@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import type { EntregaPublicada } from '../../data/entregas'
 import { mesDaEntrega } from '../../lib/format'
 
@@ -13,30 +12,15 @@ interface GaleriaEntregasDesktopProps {
   entregas: EntregaPublicada[]
 }
 
-const ALTURA_CABECALHO = 68
-
-function useReduzirMovimento() {
-  return useSyncExternalStore(
-    (avisar) => {
-      if (typeof window === 'undefined') return () => {}
-      const consulta = window.matchMedia('(prefers-reduced-motion: reduce)')
-      consulta.addEventListener('change', avisar)
-      return () => consulta.removeEventListener('change', avisar)
-    },
-    () => {
-      if (typeof window === 'undefined') return false
-      return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    },
-    () => false,
-  )
-}
-
 /**
  * Todas as fotos publicadas, na ordem das entregas. O teto existe só
- * para o palco não virar uma rolagem sem fim quando o mural crescer;
+ * para o carrossel não virar uma rolagem sem fim quando o mural crescer;
  * nenhuma imagem é repetida para preencher espaço.
  */
 const MAX_FOTOS = 6
+
+/** Tempo de leitura de cada foto antes de a próxima entrar. */
+const INTERVALO_SLIDE_MS = 5000
 
 function fotosDaGaleria(entregas: EntregaPublicada[]): FotoEntrega[] {
   return entregas
@@ -47,9 +31,9 @@ function fotosDaGaleria(entregas: EntregaPublicada[]): FotoEntrega[] {
     .slice(0, MAX_FOTOS)
 }
 
-function AberturaGaleria({ id, className = '' }: { id: string; className?: string }) {
+function AberturaGaleria({ id }: { id: string }) {
   return (
-    <div className={className}>
+    <div>
       <h2 id={id} className="cartaz titulo-galeria text-texto">
         Sonhos{' '}
         <br />
@@ -58,61 +42,49 @@ function AberturaGaleria({ id, className = '' }: { id: string; className?: strin
       <p className="mt-6 max-w-[34ch] text-[length:var(--step-body)] leading-relaxed text-texto-2">
         Entregas reais com autorização de quem comprou.
       </p>
-      <Link to="/sonhos" className="link-acao mt-7 text-[0.9375rem]">
-        Ver galeria completa
-        <ArrowUpRight className="size-4" aria-hidden="true" />
-      </Link>
     </div>
   )
 }
 
+/**
+ * Vitrine editorial das entregas no desktop: texto à esquerda e um card
+ * 16:9 à direita. O card carrega só a foto inteira, que passa sozinha e
+ * abre em tela cheia ao clique; legendas, contagem e navegação manual
+ * ficam no lightbox. O avanço pausa ao menor sinal de leitura.
+ */
 export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps) {
   const fotos = useMemo(() => fotosDaGaleria(entregas), [entregas])
-  const reduzir = useReduzirMovimento()
   const [ativo, setAtivo] = useState(0)
+  const [pausado, setPausado] = useState(false)
   const [ampliada, setAmpliada] = useState(false)
   const [indiceAmpliado, setIndiceAmpliado] = useState(0)
-  const palcoRef = useRef<HTMLDivElement>(null)
+  const [reduzMovimento, setReduzMovimento] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
   const dialogRef = useRef<HTMLDialogElement>(null)
   const gatilhoRef = useRef<HTMLButtonElement | null>(null)
 
   const total = fotos.length
-  const usaPalcoFixo = total >= 3 && !reduzir
 
-  // O palco fica preso sob o cabeçalho enquanto a seção percorre
-  // duas a três telas. A foto ativa é derivada da posição do scroll,
-  // nunca de um autoplay: o visitante manda no ritmo.
   useEffect(() => {
-    if (!usaPalcoFixo) return
-    const palco = palcoRef.current
-    if (!palco) return
+    const consulta = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const aoMudar = (evento: MediaQueryListEvent) => setReduzMovimento(evento.matches)
+    consulta.addEventListener('change', aoMudar)
+    return () => consulta.removeEventListener('change', aoMudar)
+  }, [])
 
-    let quadro = 0
-    const medir = () => {
-      quadro = 0
-      const caixa = palco.getBoundingClientRect()
-      const alturaPalco = window.innerHeight - ALTURA_CABECALHO
-      const percurso = palco.offsetHeight - alturaPalco
-      const progresso = Math.min(
-        1,
-        Math.max(0, (ALTURA_CABECALHO - caixa.top) / Math.max(1, percurso)),
-      )
-      const indice = Math.min(total - 1, Math.floor(progresso * total))
-      setAtivo((anterior) => (anterior === indice ? anterior : indice))
-    }
-    const agendar = () => {
-      if (!quadro) quadro = window.requestAnimationFrame(medir)
-    }
-
-    medir()
-    window.addEventListener('scroll', agendar, { passive: true })
-    window.addEventListener('resize', agendar)
-    return () => {
-      window.cancelAnimationFrame(quadro)
-      window.removeEventListener('scroll', agendar)
-      window.removeEventListener('resize', agendar)
-    }
-  }, [total, usaPalcoFixo])
+  // O carrossel passa sozinho, mas cede a vez para quem está lendo: pausa
+  // com o ponteiro ou o teclado dentro do card, com o lightbox aberto e
+  // para quem pediu menos movimento no sistema.
+  useEffect(() => {
+    if (total <= 1 || ampliada || pausado || reduzMovimento) return
+    const temporizador = window.setTimeout(() => {
+      setAtivo((indice) => (indice + 1) % total)
+    }, INTERVALO_SLIDE_MS)
+    return () => window.clearTimeout(temporizador)
+  }, [ativo, total, ampliada, pausado, reduzMovimento])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -144,7 +116,7 @@ export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps
     setAmpliada(true)
   }
 
-  function navegar(delta: number) {
+  function navegarAmpliada(delta: number) {
     setIndiceAmpliado((indice) => (indice + delta + total) % total)
   }
 
@@ -165,105 +137,58 @@ export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps
   return (
     <>
       <div className="hidden lg:block">
-        {usaPalcoFixo ? (
-          <div
-            ref={palcoRef}
-            className="relative"
-            style={{ height: `calc(100svh - 4.25rem + ${(total - 1) * 60}svh)` }}
-          >
-            <div className="sticky top-[4.25rem] h-[calc(100svh-4.25rem)] overflow-hidden bg-[#0b0a09]">
-              <div className="container-site grid h-full grid-cols-12 gap-x-8">
-                <div className="col-span-5 flex flex-col justify-between py-10 xl:py-14">
-                  <AberturaGaleria id="sonhos-titulo-desktop" />
-
-                  <div className="flex items-end justify-between gap-8">
-                    <div>
-                      <p className="numeros text-sm text-texto-3">
-                        {String(ativo + 1).padStart(2, '0')} /{' '}
-                        {String(total).padStart(2, '0')}
-                      </p>
-                      <p className="mt-2 font-display text-lg leading-snug text-texto">
-                        {fotoAtiva.mes ?? 'Entrega realizada'}
-                      </p>
-                    </div>
-                    <p className="max-w-[20ch] pb-1 text-sm leading-relaxed text-texto-3">
-                      Clique na foto para ampliar.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="relative col-span-7 flex h-full items-center py-10 xl:py-14">
-                  <div className="relative ml-auto h-full max-h-[45rem] w-full max-w-[34rem]">
-                    {fotos.map((foto, indice) => {
-                      const visivel = indice === ativo
-                      return (
-                        <button
-                          key={foto.src}
-                          type="button"
-                          onClick={(evento) => abrirFoto(indice, evento.currentTarget)}
-                          aria-label={rotuloAmpliar(foto)}
-                          aria-hidden={!visivel}
-                          tabIndex={visivel ? 0 : -1}
-                          className={`absolute inset-0 block overflow-hidden bg-painel-2 text-left transition-opacity duration-700 ease-out focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto ${
-                            visivel
-                              ? 'z-10 opacity-100'
-                              : 'pointer-events-none z-0 opacity-0'
-                          }`}
-                        >
-                          <img
-                            src={foto.src}
-                            alt={visivel ? legenda(foto) : ''}
-                            width={1080}
-                            height={1350}
-                            loading={indice === 0 ? 'eager' : 'lazy'}
-                            decoding="async"
-                            className="size-full object-cover"
-                          />
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
+        <div className="bg-[#0b0a09] py-20 xl:py-24">
+          <div className="container-site grid grid-cols-12 items-center gap-x-14">
+            <div className="col-span-5">
+              <AberturaGaleria id="sonhos-titulo-desktop" />
             </div>
-          </div>
-        ) : (
-          <div className="bg-[#0b0a09] py-20">
-            <div className="container-site grid grid-cols-12 gap-x-8 gap-y-12">
-              <AberturaGaleria
-                id="sonhos-titulo-desktop"
-                className="col-span-4 self-start"
-              />
+
+            <div className="col-span-7 flex justify-center">
               <div
-                className={`col-span-8 grid gap-4 ${
-                  total === 1 ? 'grid-cols-1' : total === 2 ? 'grid-cols-2' : 'grid-cols-3'
-                }`}
+                role="group"
+                aria-roledescription="carrossel"
+                aria-label="Fotos de entregas realizadas"
+                onMouseEnter={() => setPausado(true)}
+                onMouseLeave={() => setPausado(false)}
+                onFocusCapture={() => setPausado(true)}
+                onBlurCapture={(evento) => {
+                  const alvo = evento.relatedTarget
+                  if (!(alvo instanceof Node) || !evento.currentTarget.contains(alvo)) {
+                    setPausado(false)
+                  }
+                }}
+                className="relative h-[400px] w-full max-w-2xl overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 shadow-2xl"
               >
-                {fotos.map((foto, indice) => (
-                  <button
-                    key={foto.src}
-                    type="button"
-                    onClick={(evento) => abrirFoto(indice, evento.currentTarget)}
-                    aria-label={rotuloAmpliar(foto)}
-                    className={`relative aspect-[4/5] overflow-hidden bg-painel-2 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto ${
-                      total === 1 ? 'w-full max-w-[30rem] justify-self-end' : ''
-                    }`}
-                  >
-                    <img
-                      src={foto.src}
-                      alt={legenda(foto)}
-                      width={720}
-                      height={900}
-                      loading="lazy"
-                      decoding="async"
-                      className="size-full object-cover"
-                    />
-                  </button>
-                ))}
+                {fotos.map((foto, indice) => {
+                  const visivel = indice === ativo
+                  return (
+                    <button
+                      key={foto.src}
+                      type="button"
+                      onClick={(evento) => abrirFoto(indice, evento.currentTarget)}
+                      aria-label={rotuloAmpliar(foto)}
+                      aria-hidden={!visivel}
+                      tabIndex={visivel ? 0 : -1}
+                      className={`absolute inset-0 block cursor-zoom-in overflow-hidden text-left transition-opacity duration-500 ease-out focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white ${
+                        visivel ? 'z-10 opacity-100' : 'pointer-events-none z-0 opacity-0'
+                      }`}
+                    >
+                      <img
+                        src={foto.src}
+                        alt={visivel ? legenda(foto) : ''}
+                        width={1080}
+                        height={1350}
+                        loading={indice === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                        className="size-full bg-neutral-950 object-contain"
+                      />
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       <dialog
@@ -281,11 +206,11 @@ export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps
         onKeyDown={(evento) => {
           if (evento.key === 'ArrowLeft') {
             evento.preventDefault()
-            navegar(-1)
+            navegarAmpliada(-1)
           }
           if (evento.key === 'ArrowRight') {
             evento.preventDefault()
-            navegar(1)
+            navegarAmpliada(1)
           }
         }}
       >
@@ -320,7 +245,7 @@ export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps
             <footer className="flex items-center justify-between gap-4 px-5 py-6 sm:px-8">
               <button
                 type="button"
-                onClick={() => navegar(-1)}
+                onClick={() => navegarAmpliada(-1)}
                 aria-label="Foto anterior"
                 className="grid size-12 shrink-0 place-items-center border border-borda-forte text-texto-2 transition-colors hover:border-texto hover:text-texto"
               >
@@ -331,7 +256,7 @@ export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps
               </p>
               <button
                 type="button"
-                onClick={() => navegar(1)}
+                onClick={() => navegarAmpliada(1)}
                 aria-label="Próxima foto"
                 className="grid size-12 shrink-0 place-items-center border border-borda-forte text-texto-2 transition-colors hover:border-texto hover:text-texto"
               >

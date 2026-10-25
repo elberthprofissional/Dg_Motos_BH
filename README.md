@@ -59,7 +59,7 @@ src/
   components/
     layout/     Header, Footer, RootLayout
     home/       SonhosRealizados, GaleriaEntregasDesktop, MarcasProcuradas
-    entregas/   CartaoEntrega, CarrosselFotos, EsteiraFotos
+    entregas/   CartaoEntrega, EsteiraFotos
     admin/      MotoForm, PhotoUploader, EstoqueTab, ConfiguracoesTab,
                 InstalarApp, useInstalarApp, SeletorMarca
     motorcycles/ BikeCard, BikeFilters, BikeGallery, LinhaEstoque,

@@ -1929,6 +1929,48 @@
   }
 
   /* ============================================================
+     ESTEIRA DE MARCAS — a faixa de logos em movimento
+     Quatro sequências idênticas; deslocar um quarto do track alinha
+     a cópia seguinte no início e fecha o loop mesmo em telas largas.
+     ============================================================ */
+  @keyframes esteira-marcas {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-25%);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .esteira-marcas {
+      animation: esteira-marcas var(--marcas-duracao-mobile, 35s) linear infinite;
+    }
+  }
+
+  @media (min-width: 640px) and (prefers-reduced-motion: no-preference) {
+    .esteira-marcas {
+      animation-duration: var(--marcas-duracao-larga, 48s);
+    }
+  }
+
+  .marcas-viewport:hover .esteira-marcas,
+  .marcas-viewport:focus-visible .esteira-marcas {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marcas-viewport {
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+    }
+
+    .marcas-clonagem {
+      display: none;
+    }
+  }
+
+  /* ============================================================
      MENU DO CELULAR — <dialog> nativo
      showModal() entrega foco preso, Esc e camada superior de
      graça. A entrada é uma lâmina que desliza da esquerda.

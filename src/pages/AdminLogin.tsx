@@ -108,20 +108,20 @@ export function AdminLogin() {
           className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,15,13,0.4)_0%,rgba(16,15,13,0.52)_38%,rgba(16,15,13,0.78)_74%,#100f0d_100%)] lg:hidden"
         />
 
-        <div className="relative mx-auto flex w-full max-w-[29rem] flex-1 flex-col justify-center px-6 pt-[max(1.25rem,env(safe-area-inset-top))] pb-6 sm:px-9 sm:pt-7 lg:px-10 lg:pt-8 xl:px-16">
-          {/* Logo — a única marca da tela: sobre a foto no celular (com
-              sombra pra garantir contraste), do jeito aprovado na mesa. */}
+        <div className="relative mx-auto flex w-full max-w-[29rem] flex-1 flex-col justify-center px-6 pt-[max(1.25rem,env(safe-area-inset-top))] pb-6 sm:px-9 sm:pt-7 lg:max-w-none lg:px-16 lg:py-8">
+          {/* Logo — no celular ela abre a tela; no desktop fica no canto
+              superior, liberando o formulário para centralizar. */}
           <Link
             to="/"
             aria-label="DG Motos BH — voltar à página inicial"
-            className="group mb-8 inline-flex w-fit items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto lg:mb-9"
+            className="group mb-8 inline-flex w-fit items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto lg:absolute lg:top-10 lg:left-16 lg:mb-0"
           >
             <img
               src="/logo.webp"
               alt="DG Motos — Realizando Sonhos"
               width={112}
               height={112}
-              className="size-14 object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] lg:size-28 lg:drop-shadow-none"
+              className="size-14 object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] lg:size-20 lg:drop-shadow-none"
             />
             <span className="border-l-2 border-marca pl-3 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] lg:pl-4 lg:drop-shadow-none">
               <span className="block text-sm font-bold tracking-[0.16em] text-white uppercase lg:text-base lg:text-texto">
@@ -133,105 +133,107 @@ export function AdminLogin() {
             </span>
           </Link>
 
-          {/* Headline curta e o resto silêncio: o parágrafo de apoio é
-              conversa de vitrine — no celular a tela vai direto aos
-              campos, como um app. Na mesa ele volta. */}
-          <div className="mb-8 lg:mb-10">
-            <h1 className="max-w-[12ch] font-display text-[clamp(2.25rem,5vw,3.75rem)] leading-[0.98] font-bold tracking-[-0.04em] text-white">
-              Seu estoque.
-              <span className="block text-marca-texto">Seu negócio.</span>
-            </h1>
-            <p className="mt-4 hidden max-w-[42ch] text-base leading-relaxed text-neutral-300 sm:mt-5 sm:text-[17px] lg:block">
-              Acesse o painel para gerenciar as motos, atualizar anúncios e
-              acompanhar seu catálogo.
-            </p>
-          </div>
+          <div className="mx-auto flex w-full max-w-[29rem] flex-col items-stretch lg:max-w-md">
+            {/* Headline curta e o resto silêncio: o parágrafo de apoio é
+                conversa de vitrine — no celular a tela vai direto aos
+                campos, como um app. Na mesa ele volta. */}
+            <div className="mb-8 lg:mb-9">
+              <h1 className="max-w-[12ch] font-display text-[clamp(2.25rem,5vw,3.75rem)] leading-[0.98] font-bold tracking-[-0.04em] text-white lg:text-[2.5rem] xl:text-[2.75rem]">
+                Seu estoque.
+                <span className="block text-marca-texto">Seu negócio.</span>
+              </h1>
+              <p className="mt-4 hidden max-w-[42ch] text-base leading-relaxed text-neutral-300 sm:mt-5 sm:text-[17px] lg:block">
+                Acesse o painel para gerenciar as motos, atualizar anúncios e
+                acompanhar seu catálogo.
+              </p>
+            </div>
 
-          {!disponivel ? (
-            <p
-              role="status"
-              className="border-l-2 border-marca bg-neutral-900 px-4 py-4 text-sm leading-relaxed text-neutral-200"
-            >
-              Supabase não configurado neste deploy. Copie{' '}
-              <code className="text-white">.env.example</code> para{' '}
-              <code className="text-white">.env</code> e siga as instruções em{' '}
-              <code className="text-white">docs/SUPABASE.md</code>.
-            </p>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7" noValidate>
-              <div>
-                <label
-                  htmlFor="admin-email"
-                  className="mb-2 block text-sm font-semibold text-neutral-200"
-                >
-                  E-mail
-                </label>
-                <div className="relative">
-                  <Mail
-                    className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-neutral-400"
-                    aria-hidden="true"
-                  />
-                  <input
-                    id="admin-email"
-                    type="email"
-                    name="email"
-                    autoComplete="username"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-14 w-full rounded-md border border-neutral-700 bg-neutral-950 py-3.5 pr-4 pl-12 text-base text-white transition-colors focus:border-marca focus:ring-2 focus:ring-marca/25 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="admin-senha"
-                  className="mb-2 block text-sm font-semibold text-neutral-200"
-                >
-                  Senha
-                </label>
-                <div className="relative">
-                  <LockKeyhole
-                    className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-neutral-400"
-                    aria-hidden="true"
-                  />
-                  <SenhaInput
-                    id="admin-senha"
-                    autoComplete="current-password"
-                    required
-                    rotulo="Senha"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    className="h-14 rounded-md border-neutral-700 bg-neutral-950 py-3.5 pr-12 pl-12 text-base text-white focus:border-marca focus:ring-2 focus:ring-marca/25"
-                  />
-                </div>
-              </div>
-
-              {erro ? (
-                <p
-                  role="alert"
-                  className="flex items-start gap-2.5 border-l-2 border-marca bg-red-950/40 px-4 py-3 text-sm leading-relaxed text-red-100"
-                >
-                  <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                  <span>{erro}</span>
-                </p>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={enviando || carregando || !email || !senha}
-                aria-busy={enviando || carregando}
-                className="group flex min-h-14 w-full cursor-pointer items-center justify-between rounded-md bg-marca px-5 text-base font-bold text-white transition-colors hover:bg-marca-viva focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto disabled:cursor-not-allowed disabled:bg-marca-forte disabled:text-white sm:px-6"
+            {!disponivel ? (
+              <p
+                role="status"
+                className="border-l-2 border-marca bg-neutral-900 px-4 py-4 text-sm leading-relaxed text-neutral-200"
               >
-                <span>{enviando ? 'Acessando painel…' : 'Acessar painel'}</span>
-                <ArrowRight
-                  className="size-5 transition-transform group-hover:translate-x-1"
-                  aria-hidden="true"
-                />
-              </button>
-            </form>
-          )}
+                Supabase não configurado neste deploy. Copie{' '}
+                <code className="text-white">.env.example</code> para{' '}
+                <code className="text-white">.env</code> e siga as instruções em{' '}
+                <code className="text-white">docs/SUPABASE.md</code>.
+              </p>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7" noValidate>
+                <div>
+                  <label
+                    htmlFor="admin-email"
+                    className="mb-2 block text-sm font-semibold text-neutral-200"
+                  >
+                    E-mail
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-neutral-400"
+                      aria-hidden="true"
+                    />
+                    <input
+                      id="admin-email"
+                      type="email"
+                      name="email"
+                      autoComplete="username"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-14 w-full rounded-xl border border-neutral-800 bg-neutral-900/80 py-3.5 pr-4 pl-12 text-base text-white transition-colors focus:border-red-600 focus:ring-1 focus:ring-red-600 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="admin-senha"
+                    className="mb-2 block text-sm font-semibold text-neutral-200"
+                  >
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <LockKeyhole
+                      className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-neutral-400"
+                      aria-hidden="true"
+                    />
+                    <SenhaInput
+                      id="admin-senha"
+                      autoComplete="current-password"
+                      required
+                      rotulo="Senha"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      className="h-14 rounded-xl border border-neutral-800 bg-neutral-900/80 py-3.5 pr-12 pl-12 text-base text-white transition-colors focus:border-red-600 focus:ring-1 focus:ring-red-600 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {erro ? (
+                  <p
+                    role="alert"
+                    className="flex items-start gap-2.5 border-l-2 border-marca bg-red-950/40 px-4 py-3 text-sm leading-relaxed text-red-100"
+                  >
+                    <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <span>{erro}</span>
+                  </p>
+                ) : null}
+
+                <button
+                  type="submit"
+                  disabled={enviando || carregando || !email || !senha}
+                  aria-busy={enviando || carregando}
+                  className="group flex min-h-14 w-full cursor-pointer items-center justify-between rounded-xl bg-marca px-5 text-base font-bold text-white transition-colors hover:bg-marca-viva focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto disabled:cursor-not-allowed disabled:bg-marca-forte disabled:text-white sm:px-6"
+                >
+                  <span>{enviando ? 'Acessando painel…' : 'Acessar painel'}</span>
+                  <ArrowRight
+                    className="size-5 transition-transform group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
+                </button>
+              </form>
+            )}
+          </div>
         </div>
 
         {/* relative: o véu da foto é absoluto e pintaria por cima deste

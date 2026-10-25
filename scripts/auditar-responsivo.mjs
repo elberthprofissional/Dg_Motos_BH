@@ -13,7 +13,6 @@ const ROTAS = [
   '/estoque',
   '/moto/honda-xre-rally-300-2023',
   '/contato',
-  '/sonhos',
   '/admin/login',
   '/rota-que-nao-existe',
 ]

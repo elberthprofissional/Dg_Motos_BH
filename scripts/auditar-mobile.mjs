@@ -159,14 +159,5 @@ checar('login: campo de senha', login.senha === true)
 checar('login: botão visível', login.enviarVisivel === true)
 checar('login: sem overflow', login.overflow === 0, String(login.overflow))
 
-// ── 6. Página de sonhos ────────────────────────────────────────────
-await ir('/sonhos')
-const sonhos = await avaliar(`({
-  titulo: document.querySelector('h1')?.textContent.trim(),
-  overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-})`)
-checar('sonhos: tem h1', Boolean(sonhos.titulo), sonhos.titulo ?? '')
-checar('sonhos: sem overflow', sonhos.overflow === 0, String(sonhos.overflow))
-
 console.log(falhas === 0 ? '\nTudo certo no celular.' : `\n${falhas} falha(s).`)
 process.exit(0)
