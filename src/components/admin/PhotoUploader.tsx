@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
-import { ImagePlus, Loader2, Trash2, Upload } from 'lucide-react'
+import { Camera, ImagePlus, Loader2, Trash2, Upload } from 'lucide-react'
 import { BUCKET_FOTOS, getSupabase, urlPublica } from '../../lib/supabase'
 import { caminhoUnico, nomeSeguro } from '../../lib/fotos'
+import { temCameraNaHora } from '../../lib/dispositivo'
 import type { FotoSaida } from '../../lib/fotos'
 
 /**
@@ -51,6 +52,9 @@ interface PhotoUploaderProps {
 
 export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
+  // Só no celular: lá o "Tirar foto" abre a câmera em vez do seletor.
+  const [temCamera] = useState(temCameraNaHora)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [arrastando, setArrastando] = useState(false)
@@ -96,6 +100,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
       setEnviando(false)
       // Permite reenviar o mesmo arquivo depois de corrigir.
       if (inputRef.current) inputRef.current.value = ''
+      if (cameraRef.current) cameraRef.current.value = ''
     }
   }
 
@@ -137,6 +142,17 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
           className="sr-only"
           id="admin-fotos"
         />
+        {/* Mesma trilha do upload, só que abrindo a câmera na hora: no
+            pátio o dono fotografa em vez de procurar na galeria. */}
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => void enviar(e.target.files)}
+          className="sr-only"
+          id="admin-fotos-camera"
+        />
         <div className="mx-auto grid size-12 place-items-center text-brand-400">
           {enviando ? (
             <Loader2 className="size-6 animate-spin" aria-hidden="true" />
@@ -145,20 +161,33 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
           )}
         </div>
         <p className="mt-3 text-sm font-medium text-steel-300">
-          {enviando ? 'Enviando fotos...' : 'Arraste as fotos aqui ou'}
+          {enviando
+            ? 'Enviando fotos...'
+            : temCamera
+              ? 'Do celular: escolha ou tire a foto agora'
+              : 'Arraste as fotos aqui ou'}
         </p>
-        <label
-          htmlFor="admin-fotos"
-          className="btn btn-secondary btn-sm mt-3 inline-flex cursor-pointer"
-        >
-          {!enviando && <Upload className="size-4" aria-hidden="true" />}
-          {enviando ? 'Aguarde' : 'Escolher fotos'}
-        </label>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+          <label htmlFor="admin-fotos" className="btn btn-secondary btn-sm inline-flex cursor-pointer">
+            {!enviando && <Upload className="size-4" aria-hidden="true" />}
+            {enviando ? 'Aguarde' : 'Escolher fotos'}
+          </label>
+          {temCamera && (
+            <label
+              htmlFor="admin-fotos-camera"
+              className="btn btn-secondary btn-sm inline-flex cursor-pointer"
+            >
+              {!enviando && <Camera className="size-4" aria-hidden="true" />}
+              {enviando ? 'Aguarde' : 'Tirar foto'}
+            </label>
+          )}
+        </div>
         {/* "Arraste também" só faz sentido com mouse: no celular o input de
             arquivo é o caminho, e a frase só ocupava espaço. */}
         <p className="mt-3 text-etiqueta text-steel-500">
           <span className="hidden sm:inline">Convertidas para WebP automaticamente. </span>A primeira vira a capa do anúncio.
         </p>
+
       </div>
 
       {erro && (

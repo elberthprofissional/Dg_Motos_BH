@@ -24,6 +24,19 @@ export function buildDefaultMessage(): string {
   return 'Olá! Vim pelo site da DG Motos e gostaria de negociar uma motocicleta.'
 }
 
+/**
+ * "março de 2026" a partir da data da entrega (YYYY-MM-DD).
+ *
+ * O meio-dia evita que o fuso de Brasília empurre a data para o dia
+ * anterior quando o navegador está em UTC.
+ */
+export function mesDaEntrega(valor?: string): string | null {
+  if (!valor) return null
+  const data = new Date(`${valor}T12:00:00`)
+  if (Number.isNaN(data.valueOf())) return null
+  return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(data)
+}
+
 export function bikeTitle(bike: Motorcycle): string {
   return nomeExibicao(bike.marca, bike.modelo)
 }

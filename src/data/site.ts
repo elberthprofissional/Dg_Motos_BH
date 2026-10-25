@@ -34,7 +34,6 @@ export const SITE = {
     handle: '@dgmotosbh',
     url: 'https://instagram.com/dgmotosbh',
   },
-  telefoneExibicao: null as string | null,
   horarios: [
     { dias: 'Seg a Sex', horas: '9h–18h' },
     { dias: 'Sáb', horas: '9h–13h' },

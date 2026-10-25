@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react'
 import type { EntregaPublicada } from '../data/entregas'
 import { buscarEntregasPublicadas } from '../lib/entregas'
 
-export function useEntregasPublicadas() {
+/**
+ * Posts publicados no mural.
+ *
+ * A re-assinatura acontece antes de a URL vencer (as do mural valem 1h),
+ * então uma aba aberta não fica com fotos quebradas. `limite` existe
+ * para a Home pedir só o que cabe na seção — a página de entregas pede
+ * tudo.
+ */
+export function useEntregasPublicadas(limite?: number) {
   const [entregas, setEntregas] = useState<EntregaPublicada[]>([])
 
   useEffect(() => {
@@ -10,7 +18,7 @@ export function useEntregasPublicadas() {
     let ultimaBusca = 0
     const atualizar = () => {
       ultimaBusca = Date.now()
-      void buscarEntregasPublicadas().then((resultado) => {
+      void buscarEntregasPublicadas(limite).then((resultado) => {
         if (ativo) setEntregas(resultado)
       })
     }
@@ -27,7 +35,7 @@ export function useEntregasPublicadas() {
       window.clearInterval(intervalo)
       document.removeEventListener('visibilitychange', aoVoltar)
     }
-  }, [])
+  }, [limite])
 
   return entregas
 }

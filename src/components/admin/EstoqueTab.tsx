@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArchiveRestore,
+  ArrowRight,
   CircleDollarSign,
   Eye,
+  MoreHorizontal,
   Pencil,
   Plus,
   RotateCw,
@@ -20,11 +22,12 @@ import { CampoBusca } from '../ui/CampoBusca'
 import { Esqueleto } from '../ui/Esqueleto'
 import { MotoForm } from './MotoForm'
 
+/* Vendida não é situação de estoque: a moto sai do pátio e passa a
+   viver na aba Vendidas. Por isso não há filtro "Vendidas" aqui. */
 const FILTROS: { valor: FiltroEstoque['status']; rotulo: string }[] = [
-  { valor: 'todas', rotulo: 'Todas as situações' },
+  { valor: 'todas', rotulo: 'Todas' },
   { valor: 'disponivel', rotulo: 'Disponíveis' },
   { valor: 'indisponivel', rotulo: 'Indisponíveis' },
-  { valor: 'vendida', rotulo: 'Vendidas' },
 ]
 
 type OrdemEstoque = 'padrao' | 'preco-desc' | 'preco-asc' | 'ano-desc'
@@ -81,7 +84,7 @@ function EsqueletoEstoque() {
             <Esqueleto className="h-3.5 w-24" />
           </div>
           <div className="estoque-celula-acoes" role="cell">
-            <Esqueleto className="h-8 w-32" />
+            <Esqueleto className="h-11 w-full max-w-[14rem]" />
           </div>
         </div>
       ))}
@@ -100,6 +103,7 @@ export function EstoqueTab({
   onAlterarStatus,
   onSalva,
   onRecarregar,
+  onIrParaVendidas,
 }: {
   motos: Motorcycle[] | null
   erro: string | null
@@ -111,14 +115,45 @@ export function EstoqueTab({
   onAlterarStatus: (moto: Motorcycle, status: MotorcycleStatus) => void
   onSalva: () => void
   onRecarregar: () => void
+  /** A moto vendida sai do pátio; o atalho leva para onde ela foi. */
+  onIrParaVendidas: () => void
 }) {
   const [status, setStatus] = useState<FiltroEstoque['status']>('todas')
   const [ordem, setOrdem] = useState<OrdemEstoque>('padrao')
+  // Menu ⋯ do cartão (celular): um aberto por vez, pelo id da moto.
+  const [acoesAbertas, setAcoesAbertas] = useState<string | null>(null)
+
+  // Fecha o menu com Esc ou clique fora de qualquer menu ⋯. O
+  // mousedown precedente ao click do próprio kebab não o fecha: só
+  // conta clique fora do wrapper (o próprio toque alterna).
+  useEffect(() => {
+    if (!acoesAbertas) return
+    function aoCliqueFora(evento: MouseEvent) {
+      if (!(evento.target as HTMLElement).closest('[data-estoque-menu]')) {
+        setAcoesAbertas(null)
+      }
+    }
+    function aoEsc(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') setAcoesAbertas(null)
+    }
+    window.addEventListener('mousedown', aoCliqueFora)
+    window.addEventListener('keydown', aoEsc)
+    return () => {
+      window.removeEventListener('mousedown', aoCliqueFora)
+      window.removeEventListener('keydown', aoEsc)
+    }
+  }, [acoesAbertas])
+
+  // O pátio é o que ainda pode ser vendido. Vendida tem casa própria.
+  const noPatio = useMemo(
+    () => (motos ?? []).filter((moto) => moto.status !== 'vendida'),
+    [motos],
+  )
 
   const visiveis = useMemo(() => {
     if (motos === null) return []
-    return ordenarEstoque(filtrarEstoque(motos, { busca, status }), ordem)
-  }, [motos, busca, status, ordem])
+    return ordenarEstoque(filtrarEstoque(noPatio, { busca, status }), ordem)
+  }, [motos, noPatio, busca, status, ordem])
 
   const filtrando = busca.trim() !== '' || status !== 'todas'
   const ajustado = filtrando || ordem !== 'padrao'
@@ -148,10 +183,14 @@ export function EstoqueTab({
     )
   }
 
-  const total = motos === null ? 0 : motos.length
+  const total = motos === null ? 0 : noPatio.length
   const vistos = visiveis.length
-  const contagem = erroAtivo || motos === null ? '' : filtrando ? `${vistos} de ${total}` : `${total}`
-  const unidadeContagem = filtrando ? (vistos === 1 ? 'moto na tela' : 'motos na tela') : total === 1 ? 'moto' : 'motos'
+  // A contagem só aparece quando há filtro: em repouso ela repetia o
+  // "4 motos cadastradas" que já está no cabeçalho.
+  const contagem =
+    erroAtivo || motos === null
+      ? ''
+      : `${vistos} de ${total} ${total === 1 ? 'moto' : 'motos'} na tela`
 
   return (
     <div className="estoque-pagina">
@@ -171,7 +210,8 @@ export function EstoqueTab({
             <span className="estoque-resumo-total">Abrir o pátio…</span>
           ) : resumo ? (
             <span className="estoque-resumo-total">
-              {resumo.total} {resumo.total === 1 ? 'moto cadastrada' : 'motos cadastradas'}
+              {resumo.disponiveis + resumo.indisponiveis}{' '}
+              {resumo.disponiveis + resumo.indisponiveis === 1 ? 'moto no pátio' : 'motos no pátio'}
             </span>
           ) : null}
         </div>
@@ -187,10 +227,18 @@ export function EstoqueTab({
             <span className="estoque-indicador-valor">{resumo.indisponiveis}</span>
             <span className="estoque-indicador-rotulo">Indisponíveis</span>
           </div>
-          <div className="estoque-indicador">
+          <button
+            type="button"
+            onClick={onIrParaVendidas}
+            className="estoque-indicador estoque-indicador-acao"
+            aria-label={`Ver as ${resumo.vendidas} vendidas`}
+          >
             <span className="estoque-indicador-valor">{resumo.vendidas}</span>
-            <span className="estoque-indicador-rotulo">Vendidas</span>
-          </div>
+            <span className="estoque-indicador-rotulo inline-flex items-center gap-1.5">
+              Vendidas
+              <ArrowRight className="size-3.5 text-texto-3" aria-hidden="true" />
+            </span>
+          </button>
           <div className="estoque-indicador estoque-indicador-financeiro">
             <span className="estoque-indicador-valor">{formatPrice(resumo.valorEmEstoque)}</span>
             <span className="estoque-indicador-rotulo">Valor em estoque</span>
@@ -199,6 +247,11 @@ export function EstoqueTab({
         </section>
       ) : null}
 
+      {/* Barra de filtros: cada controle tem o mesmo desenho de campo
+          (mesma altura, mesma borda, mesmo fundo) e o resumo fica à
+          direita. A situação virou um grupo de quatro opções à vista —
+          num select, "quantas vendidas?" ficava escondido atrás de um
+          clique. */}
       <div className="estoque-operacoes">
         <CampoBusca
           value={busca}
@@ -208,45 +261,42 @@ export function EstoqueTab({
           className="estoque-busca-primaria"
         />
 
-        <div className="estoque-operacoes-direita">
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as FiltroEstoque['status'])}
-            aria-label="Filtrar por situação"
-            className={`estoque-select ${status !== 'todas' ? 'estoque-select-ativo' : ''}`}
-          >
-            {FILTROS.map((f) => (
-              <option key={f.valor} value={f.valor}>
-                {f.rotulo}
-              </option>
-            ))}
-          </select>
+        <div className="estoque-situacao" role="group" aria-label="Filtrar por situação">
+          {FILTROS.map((f) => (
+            <button
+              key={f.valor}
+              type="button"
+              onClick={() => setStatus(f.valor)}
+              aria-pressed={status === f.valor}
+              className="estoque-situacao-item"
+            >
+              {f.rotulo}
+            </button>
+          ))}
+        </div>
 
-          <select
-            value={ordem}
-            onChange={(e) => setOrdem(e.target.value as OrdemEstoque)}
-            aria-label="Ordenar inventário"
-            className={`estoque-select ${ordem !== 'padrao' ? 'estoque-select-ativo' : ''}`}
-          >
-            {ORDENS.map((o) => (
-              <option key={o.valor} value={o.valor}>
-                {o.rotulo}
-              </option>
-            ))}
-          </select>
+        <select
+          value={ordem}
+          onChange={(e) => setOrdem(e.target.value as OrdemEstoque)}
+          aria-label="Ordenar inventário"
+          className="estoque-select"
+        >
+          {ORDENS.map((o) => (
+            <option key={o.valor} value={o.valor}>
+              {o.rotulo}
+            </option>
+          ))}
+        </select>
 
-          <div className="estoque-contagem" aria-live="polite">
-            {contagem ? (
-              <span className="estoque-contagem-texto">
-                {contagem} {unidadeContagem}
-              </span>
-            ) : null}
-            {ajustado ? (
-              <button type="button" onClick={limpar} className="estoque-limpar">
-                Limpar
-              </button>
-            ) : null}
-          </div>
+        <div className="estoque-contagem" aria-live="polite">
+          {filtrando && contagem ? (
+            <span className="estoque-contagem-texto">{contagem}</span>
+          ) : null}
+          {ajustado ? (
+            <button type="button" onClick={limpar} className="estoque-limpar">
+              Limpar
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -289,17 +339,24 @@ export function EstoqueTab({
             <div className="estoque-estado-celula" role="cell">
               <div className="estoque-estado-texto">
                 <p className="estoque-estado-titulo">
-                  {filtrando ? 'Nada com esses filtros' : 'O pátio está vazio'}
+                  {filtrando ? 'Nada com esses filtros' : 'Nenhuma moto no pátio'}
                 </p>
                 <p className="estoque-estado-descricao">
                   {filtrando
                     ? 'Nenhuma moto caiu nessa busca. Limpe os filtros ou tente outro termo.'
-                    : 'Cadastre a primeira moto para começar — rápido, chega em dois minutos.'}
+                    : (resumo?.vendidas ?? 0) > 0
+                      ? `${resumo?.vendidas} ${resumo?.vendidas === 1 ? 'moto vendida já está' : 'motos vendidas já estão'} na aba Vendidas, esperando virar post no mural.`
+                      : 'Cadastre a primeira moto para começar — rápido, chega em dois minutos.'}
                 </p>
               </div>
               {filtrando ? (
                 <button type="button" onClick={limpar} className="estoque-estado-acao">
                   Limpar filtros
+                </button>
+              ) : (resumo?.vendidas ?? 0) > 0 ? (
+                <button type="button" onClick={onIrParaVendidas} className="estoque-estado-acao">
+                  Ver as vendidas
+                  <ArrowRight className="size-3.5" aria-hidden="true" />
                 </button>
               ) : (
                 <button type="button" onClick={() => onEditando({})} className="estoque-estado-acao">
@@ -348,6 +405,84 @@ export function EstoqueTab({
                       ))}
                     </p>
                   </div>
+                </div>
+
+                {/* Menu ⋯ do cartão: vive só no celular (o CSS esconde
+                    na mesa). Cada item fecha o menu antes de agir, e
+                    Excluir continua passando pela confirmação global. */}
+                <div className="estoque-menu-acoes" data-estoque-menu>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAcoesAbertas((abertas) => (abertas === moto.id ? null : moto.id))
+                    }
+                    aria-expanded={acoesAbertas === moto.id}
+                    aria-haspopup="menu"
+                    aria-label={`Mais ações de ${moto.marca} ${moto.modelo}`}
+                    className="estoque-menu-botao"
+                  >
+                    <MoreHorizontal className="size-5" strokeWidth={1.7} aria-hidden="true" />
+                  </button>
+
+                  {acoesAbertas === moto.id ? (
+                    <div
+                      role="menu"
+                      aria-label={`Ações de ${moto.marca} ${moto.modelo}`}
+                      className="estoque-menu-painel"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setAcoesAbertas(null)
+                          onAlterarStatus(moto, vendida ? 'disponivel' : 'vendida')
+                        }}
+                        className="estoque-menu-item"
+                      >
+                        {vendida ? (
+                          <ArchiveRestore className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                        ) : (
+                          <CircleDollarSign className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                        )}
+                        {vendida ? 'Reativar moto' : 'Marcar como vendida'}
+                      </button>
+                      <Link
+                        role="menuitem"
+                        to={`/moto/${moto.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="estoque-menu-item"
+                        onClick={() => setAcoesAbertas(null)}
+                      >
+                        <Eye className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                        Ver no site
+                      </Link>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setAcoesAbertas(null)
+                          onEditando({ id: moto.id, dados: motoParaFormulario(moto) })
+                        }}
+                        className="estoque-menu-item"
+                      >
+                        <Pencil className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setAcoesAbertas(null)
+                          onPedirExclusao(moto)
+                        }}
+                        className="estoque-menu-item estoque-menu-item-perigo"
+                      >
+                        <Trash2 className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                        Excluir
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="estoque-celula-situacao" role="cell">

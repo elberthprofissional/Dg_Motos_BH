@@ -23,7 +23,6 @@ export interface ConfigLoja {
   whatsapp: string | null
   instagramHandle: string
   instagramUrl: string
-  telefoneExibicao: string | null
   enderecoRua: string
   enderecoCidadeUf: string
   horarios: { dias: string; horas: string }[]
@@ -35,7 +34,6 @@ export function configPadrao(): ConfigLoja {
     whatsapp: WHATSAPP_NUMBER,
     instagramHandle: SITE.instagram.handle,
     instagramUrl: SITE.instagram.url,
-    telefoneExibicao: SITE.telefoneExibicao,
     enderecoRua: SITE.endereco.rua,
     enderecoCidadeUf: SITE.endereco.cidadeUf,
     horarios: SITE.horarios ?? [],
@@ -52,9 +50,13 @@ export function whatsappUrlCom(
   return `https://wa.me/${config.whatsapp}${text}`
 }
 
-/** Mescla config com valores de fábrica para garantir campos obrigatórios. */
+/** Mescla config com valores de fábrica para garantir campos obrigatórios.
+ *  Descarta chaves obsoletas (ex.: telefoneExibicao, removido do painel). */
 function normalizarConfig(salvo: Partial<ConfigLoja> | null | undefined): ConfigLoja {
-  return { ...configPadrao(), ...(salvo ?? {}) }
+  const { telefoneExibicao: _obsoleta, ...resto } = (salvo ?? {}) as Partial<ConfigLoja> & {
+    telefoneExibicao?: unknown
+  }
+  return { ...configPadrao(), ...resto }
 }
 
 /** Busca configuração salva no banco. */

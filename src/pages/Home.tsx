@@ -10,13 +10,12 @@ import { BikeCard } from '../components/motorcycles/BikeCard'
 import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
 import { Revelar } from '../components/ui/Revelar'
 import { Marcas } from '../components/home/MarcasProcuradas'
-import { SonhosRealizados } from '../components/home/SonhosRealizados'
+import { LIMITE_MURAL, SonhosRealizados } from '../components/home/SonhosRealizados'
 import { useEntregasPublicadas } from '../hooks/useEntregasPublicadas'
 import { buildDefaultMessage } from '../lib/format'
 import heroDesktop from '../assets/hero/home-desktop.webp'
 import heroMobile from '../assets/hero/home-mobile.webp'
 import trocaDesktop from '../assets/troca/banner-desktop.webp'
-import trocaMobile from '../assets/troca/banner-mobile.webp'
 
 /**
  * Página inicial — a bancada da loja.
@@ -33,7 +32,9 @@ import trocaMobile from '../assets/troca/banner-mobile.webp'
 export function Home() {
   const { motos } = useCatalogo()
   const { config } = useSiteConfig()
-  const entregas = useEntregasPublicadas()
+  // Um post a mais que o mural exibe: a sobra é o que revela se vale
+  // mostrar o link "Ver todas as entregas".
+  const entregas = useEntregasPublicadas(LIMITE_MURAL + 1)
 
   usePageMeta(
     'DG Motos — Motos seminovas em Belo Horizonte',
@@ -58,7 +59,7 @@ export function Home() {
   return (
     <>
       <section data-hero className="overflow-hidden bg-fundo pt-cabecalho">
-        <div className="relative isolate min-h-[22rem] overflow-hidden bg-fundo sm:min-h-[32rem] lg:min-h-[24rem] xl:min-h-[26rem]">
+        <div className="relative isolate min-h-[24rem] overflow-hidden bg-fundo sm:min-h-[32rem] lg:min-h-[24rem] xl:min-h-[26rem]">
           <picture className="absolute inset-0 hidden lg:block" aria-hidden="true">
             <source srcSet={heroDesktop} type="image/webp" />
             <img
@@ -72,25 +73,28 @@ export function Home() {
             />
           </picture>
 
-          <picture className="pointer-events-none absolute inset-0 overflow-hidden lg:hidden" aria-hidden="true">
+          {/* No celular a moto também é o fundo da seção (cortada pela
+              direita, como na mesa): texto e moto ficam na MESMA cena em
+              vez de um em cima e outro lá embaixo. */}
+          <picture className="pointer-events-none absolute inset-0 lg:hidden" aria-hidden="true">
             <source srcSet={heroMobile} type="image/webp" />
             <img
               src={heroMobile}
               alt=""
               width={1280}
-              height={400}
+              height={428}
               fetchPriority="high"
               decoding="async"
-              className="absolute right-0 bottom-0 h-auto w-[255%] max-w-none object-contain object-right-bottom sm:w-[185%] md:w-[160%]"
+              className="size-full object-cover object-right"
             />
           </picture>
 
           <div
-            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-fundo/95 via-fundo/55 to-transparent lg:hidden"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-fundo/95 via-fundo/60 to-transparent lg:hidden"
             aria-hidden="true"
           />
           <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-3/5 bg-gradient-to-b from-fundo/50 to-transparent lg:hidden"
+            className="pointer-events-none absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b from-fundo/60 to-transparent lg:hidden"
             aria-hidden="true"
           />
           <div
@@ -98,12 +102,10 @@ export function Home() {
             aria-hidden="true"
           />
 
-          <div className="container-site relative z-10 flex min-h-[22rem] items-start py-4 sm:min-h-[32rem] sm:py-8 lg:min-h-[24rem] lg:items-center lg:py-14 xl:min-h-[26rem]">
+          <div className="container-site relative z-10 flex min-h-[24rem] items-start pt-8 pb-4 sm:min-h-[32rem] sm:py-8 lg:min-h-[24rem] lg:items-center lg:py-14 xl:min-h-[26rem]">
             <div className="max-w-[18rem] sm:max-w-[24rem] lg:max-w-xl">
-              <p className="mb-2 flex items-center gap-3 text-xs font-semibold tracking-[0.12em] text-texto-2 uppercase sm:mb-5">
-                <span className="h-px w-8 bg-marca" aria-hidden="true" />
-                DG Motos · Belo Horizonte, MG
-              </p>
+              {/* A cidade e a loja já estão no título e no cabeçalho:
+                  a etiqueta acima só empurrava o texto para baixo. */}
               <h1 className="display max-w-[17ch] text-balance text-[1.625rem] leading-[1.04] text-texto sm:max-w-none sm:text-4xl md:text-5xl lg:text-[4.5rem]">
                 Motos seminovas em Belo Horizonte.
               </h1>
@@ -172,16 +174,51 @@ export function Home() {
 
       <SonhosRealizados entregas={entregas} />
 
-      <section className="w-full bg-fundo">
-        <div className="container-site flex flex-col items-start gap-6 py-10 sm:py-12 lg:flex-row lg:items-center lg:gap-8 lg:py-12">
-          <div className="max-w-lg">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-marca-texto">
-              DG MOTOS · TROCA
-            </p>
+      {/* ============================================================
+          TROCA — texto à esquerda, a moto encostada na borda
+          ============================================================
+          Mesma ideia do hero: a foto ocupa a direita da TELA, não a
+          direita de uma caixa. O neon vermelho chega até o canto e o
+          preto da arte se funde com o fundo (`lighten`), então não há
+          retângulo — só a moto ao lado do texto. */}
+      <section className="relative isolate w-full overflow-hidden bg-fundo">
+        {/* Mesa: metade direita da tela, do topo ao pé. Celular: a mesma
+            foto como fundo da seção inteira, para o texto e a moto não
+            virarem dois blocos empilhados com um vazio no meio. */}
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 md:block">
+          <img
+            src={trocaDesktop}
+            alt=""
+            width={1760}
+            height={648}
+            loading="lazy"
+            decoding="async"
+            className="size-full object-cover object-right mix-blend-lighten"
+          />
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] md:hidden">
+          <img
+            src={trocaDesktop}
+            alt=""
+            width={1760}
+            height={648}
+            loading="lazy"
+            decoding="async"
+            className="size-full object-cover object-right mix-blend-lighten"
+          />
+        </div>
+        {/* A roda derrete no preto antes de a faixa de marcas começar. */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-fundo to-transparent md:hidden"
+          aria-hidden="true"
+        />
+
+        <div className="container-site relative z-10 flex min-h-[30rem] items-start py-14 sm:py-16 md:items-center lg:py-20">
+          <div className="max-w-lg md:max-w-[calc(50%-2.5rem)]">
             <h2 className="display max-w-[18ch] text-3xl sm:text-4xl lg:text-[2.75rem]">
               Sua próxima moto começa com a sua.
             </h2>
-            <p className="corpo mt-4 max-w-[50ch] text-texto-2">
+            <p className="corpo mt-4 max-w-[46ch] text-texto-2">
               Avaliamos sua moto usada com transparência para facilitar a realização do seu próximo negócio.
             </p>
             <div className="mt-7">
@@ -192,49 +229,8 @@ export function Home() {
               />
             </div>
           </div>
-
-          <div className="relative hidden lg:block lg:w-[34%]">
-            <div className="relative aspect-[4/3] w-full max-w-[520px] overflow-hidden">
-              <picture>
-                <source srcSet={trocaDesktop} type="image/webp" />
-                <img
-                  src={trocaDesktop}
-                  alt=""
-                  width={1760}
-                  height={440}
-                  loading="lazy"
-                  decoding="async"
-                  className="size-full object-cover object-right"
-                />
-              </picture>
-              <div
-                className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-fundo to-transparent"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
         </div>
 
-        <div className="relative mx-auto mt-8 w-full max-w-sm lg:hidden">
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
-            <picture>
-              <source srcSet={trocaMobile} type="image/webp" />
-              <img
-                src={trocaMobile}
-                alt=""
-                width={1280}
-                height={400}
-                loading="lazy"
-                decoding="async"
-                className="size-full object-cover object-center"
-              />
-            </picture>
-            <div
-              className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-fundo to-transparent"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
       </section>
 
       <Marcas />

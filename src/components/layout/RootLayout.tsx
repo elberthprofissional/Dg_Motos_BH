@@ -55,18 +55,25 @@ function CatalogoProvider({ children }: { children: React.ReactNode }) {
     if (!supabaseConfigured) return
 
     let ativo = true
-    buscarCatalogo().then((r) => {
-      if (!ativo) return
-      // `doBanco` já distingue "consulta funcionou" de "falhou". Um
-      // catálogo vazio no banco é intencional (owner removeu tudo) e
-      // precisa ser respeitado — senão as motos do seed voltariam a
-      // aparecer sozinhas. O fallback só entra em caso de falha.
-      if (r.doBanco) {
-        setEstado({ motos: r.motos, carregando: false, doBanco: true })
-      } else {
-        setEstado({ motos: catalogoEstatico, carregando: false, doBanco: false })
-      }
-    })
+    buscarCatalogo()
+      .then((r) => {
+        if (!ativo) return
+        // `doBanco` já distingue "consulta funcionou" de "falhou". Um
+        // catálogo vazio no banco é intencional (owner removeu tudo) e
+        // precisa ser respeitado — senão as motos do seed voltariam a
+        // aparecer sozinhas. O fallback só entra em caso de falha.
+        if (r.doBanco) {
+          setEstado({ motos: r.motos, carregando: false, doBanco: true })
+        } else {
+          setEstado({ motos: catalogoEstatico, carregando: false, doBanco: false })
+        }
+      })
+      // Rede de segurança: nenhuma falha pode deixar a vitrine
+      // eternamente em "carregando" — declara indisponível e usa o
+      // catálogo estático.
+      .catch(() => {
+        if (ativo) setEstado({ motos: catalogoEstatico, carregando: false, doBanco: false })
+      })
 
     return () => {
       ativo = false

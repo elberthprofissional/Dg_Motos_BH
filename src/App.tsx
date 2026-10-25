@@ -10,6 +10,7 @@ import { RotaAdmin } from './pages/AdminGuard'
 const Estoque = lazy(() => import('./pages/Estoque').then((m) => ({ default: m.Estoque })))
 const BikeDetail = lazy(() => import('./pages/BikeDetail').then((m) => ({ default: m.BikeDetail })))
 const Contato = lazy(() => import('./pages/Contato').then((m) => ({ default: m.Contato })))
+const Sonhos = lazy(() => import('./pages/Sonhos').then((m) => ({ default: m.Sonhos })))
 const NotFound = lazy(() => import('./pages/NotFound').then((m) => ({ default: m.NotFound })))
 
 // Painel do dono: fora do bundle público, junto com o SDK do Supabase.
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="estoque" element={<Estoque />} />
             <Route path="moto/:slug" element={<BikeDetail />} />
             <Route path="contato" element={<Contato />} />
+            <Route path="sonhos" element={<Sonhos />} />
 
             <Route path="*" element={<NotFound />} />
           </Route>

@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ChevronRight,
   Clock,
-  Globe,
   MapPin,
   MessageCircle,
   RotateCcw,
@@ -44,7 +43,7 @@ import type { Feedback } from '../ui/Toast'
  * no topo — os dois layouts leem dos mesmos dados e do mesmo `conteudo`.
  */
 
-type Secao = 'contato' | 'instagram' | 'endereco' | 'horarios' | 'app' | 'publicacao'
+type Secao = 'contato' | 'instagram' | 'endereco' | 'horarios' | 'app'
 
 interface DescricaoSecao {
   id: Secao
@@ -99,14 +98,6 @@ const SECOES: DescricaoSecao[] = [
     descricao: 'Acesse o painel como um app, em tela cheia, direto do celular.',
     resumo: () => 'App instalável neste aparelho',
     icone: Smartphone,
-    grupo: 'app',
-  },
-  {
-    id: 'publicacao',
-    rotulo: 'Publicação & SEO',
-    descricao: 'Entenda como o site se publica e por que o SEO depende do build.',
-    resumo: () => 'Prerender estático',
-    icone: Globe,
     grupo: 'app',
   },
 ]
@@ -251,19 +242,6 @@ export function ConfiguracoesTab() {
               onChange={(e) => set('whatsapp', e.target.value.replace(/\D/g, '') || null)}
             />
           </Campo>
-          <Campo
-            id="cfg-telefone"
-            label="Telefone fixo (opcional)"
-            dica="Exibido no rodapé. Deixe vazio se não quiser publicar linha fixa."
-          >
-            <input
-              id="cfg-telefone"
-              className="input"
-              value={config.telefoneExibicao ?? ''}
-              placeholder="(31) 3000-0000"
-              onChange={(e) => set('telefoneExibicao', e.target.value.trim() || null)}
-            />
-          </Campo>
           <AcoesSecao onSalvar={salvar} onRestaurar={restaurar} />
         </fieldset>
       )
@@ -404,29 +382,6 @@ export function ConfiguracoesTab() {
             </span>
             Adicionar faixa de horário
           </button>
-        </fieldset>
-      )
-    }
-
-    if (id === 'publicacao') {
-      return (
-        <fieldset className="space-y-4">
-          <legend className="sr-only">Publicação & SEO</legend>
-          <div className="rounded-lg border border-line bg-night-900/40 p-4">
-            <h4 className="text-sm font-semibold text-paper">Como funciona</h4>
-            <ul className="mt-2 space-y-2 text-sm text-steel-400">
-              <li>• O site é estático. Salvar no painel atualiza a vitrine na hora, mas as páginas <code>/moto/&lt;slug&gt;</code> geradas para o Google só são atualizadas com <strong>novo build/deploy</strong>.</li>
-              <li>• Ao rodar <code>npm run build</code>, o <code>postbuild</code> executa <code>prerender.mjs</code> e gera HTML estático + sitemap + robots com as motos <strong>disponíveis</strong> no momento do build.</li>
-              <li>• Se você adicionar/editar uma moto pelo painel sem fazer deploy, ela aparece na vitrine (cliente-side), mas o Google pode ver a versão antiga ou vazia da ficha até o próximo deploy.</li>
-              <li>• As configurações de contato (WhatsApp/Instagram/endereço) já ficam salvas no banco e aparecem pra todos sem rebuild.</li>
-            </ul>
-          </div>
-          <div className="rounded-lg border border-line bg-night-900/40 p-4">
-            <h4 className="text-sm font-semibold text-paper">Dica prática</h4>
-            <p className="mt-2 text-sm text-steel-400">
-              Sempre que alterar fotos, descrição, preço ou adicionar uma moto nova, faça o deploy (push) para atualizar o SEO e o sitemap.
-            </p>
-          </div>
         </fieldset>
       )
     }

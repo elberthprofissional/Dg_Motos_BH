@@ -1,5 +1,5 @@
 ﻿import { Link } from 'react-router-dom'
-import { Calendar, ChevronRight, Gauge } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
 import { bikeTitle, buildBikeMessage, descontoPercentual, formatKm, formatPrice, precoRequerConfirmacao } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
@@ -27,6 +27,16 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   const desconto = descontoPercentual(bike)
   const disponivel = bike.status === 'disponivel'
 
+  /* ============================================================
+     VITRINE (variante 'grade')
+
+     A hierarquia é a da placa de vidraça: o nome da moto em cima à
+     esquerda, o preço em cima à direita — são as duas coisas que o
+     cliente cruza antes de tudo. O resto é uma linha quieta de
+     ficha. Sem ícones nos metadados: dado com ponto corrido lê-se
+     de relance; ícone aí é ruído de planilha.
+     ============================================================ */
+
   const foto = (
     <div className="relative aspect-[16/10] w-full overflow-hidden bg-painel-2">
       {capa ? (
@@ -38,112 +48,98 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
           decoding={priority ? 'sync' : 'async'}
           width={1200}
           height={1600}
-          className="size-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-[1.02]"
+          className="size-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
         />
       ) : (
         <p className="px-5 text-center text-sm text-texto-2">Foto ainda não disponível</p>
       )}
       {desconto != null ? (
-        <span className="absolute top-3 left-3 grid min-h-8 place-items-center bg-marca px-2.5 font-sans text-xs font-bold text-white">
+        <span className="absolute top-3 left-3 flex items-center gap-2 bg-marca px-2.5 py-1.5 font-display text-xs font-bold tracking-[0.04em] text-white uppercase">
           <span className="sr-only">Promoção: </span>
-          -{desconto}%
+          Oferta · −{desconto}%
+        </span>
+      ) : null}
+      {estado ? (
+        <span className="absolute bottom-3 left-3 bg-fundo/85 px-2.5 py-1.5 font-sans text-xs font-semibold text-texto">
+          {estado}
         </span>
       ) : null}
     </div>
   )
 
-  // Dados e preço ficam em linhas próprias para modelos longos não
-  // comprimirem o valor em telas menores.
-  const preco = (
-      <div className="mt-1.5 sm:mt-2">
-      {desconto != null ? (
-        <>
-          <p className="numeros text-[11px] leading-none text-texto-3">
-            <span className="line-through">de {formatPrice(bike.precoAntes ?? bike.preco)}</span>
-          </p>
-          <p className="numeros mt-1 font-display text-base leading-none font-extrabold text-marca-viva">
-            {formatPrice(bike.preco)}
-          </p>
-        </>
-      ) : (
-<p className="numeros font-display text-base leading-none font-semibold text-texto">
-            {formatPrice(bike.preco)}
-          </p>
-      )}
-      {precoRequerConfirmacao(bike.preco) ? (
-        <p className="mt-2 text-xs leading-relaxed text-texto-2">
-          Valor cadastrado. Confirme com a loja antes de negociar.
-        </p>
-      ) : null}
-    </div>
-  )
+  /* ============================================================
+     A FICHA
 
-  const informacoes = (
-    <>
-      <h3 className="font-display text-[14px] leading-tight font-semibold tracking-[-0.02em] text-texto sm:text-base">
+     Nome, ficha corrida e preço numa coluna só. O preço é o último
+     e o maior — é o que o cliente procura; o nome já disse qual é a
+     moto. Nada de preço espremido na mesma linha do nome.
+     ============================================================ */
+  const ficha = (
+    <div className="flex flex-1 flex-col px-4 pt-3.5 pb-4 sm:px-5">
+      <h3 className="font-display text-[15px] leading-snug font-semibold tracking-[-0.01em] text-texto sm:text-base">
         {titulo}
       </h3>
 
-      {/* Linha de metadados compacta: ano, km, categoria e estado */}
-      <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-none text-texto-3 sm:mt-2 sm:text-xs">
-        <span className="inline-flex items-center gap-1">
-          <Calendar className="size-3 shrink-0" aria-hidden="true" />
-          <span className="numeros">{bike.ano}</span>
-        </span>
-        {bike.quilometragem != null ? (
-          <span className="inline-flex items-center gap-1">
-            <Gauge className="size-3 shrink-0" aria-hidden="true" />
-            <span className="numeros">{formatKm(bike.quilometragem)}</span>
-          </span>
-        ) : null}
-        <span className="text-texto-3">·</span>
-        <span>{bike.categoria}</span>
-        {estado ? <><span className="text-texto-3">·</span><span>{estado}</span></> : null}
+      <p className="numeros mt-1 text-[12.5px] leading-snug text-texto-3">
+        {[bike.ano, bike.quilometragem != null ? formatKm(bike.quilometragem) : null, bike.categoria, estado]
+          .filter(Boolean)
+          .join(' · ')}
       </p>
-      {preco}
-    </>
-  )
 
-  // Ações: no celular cada botão ocupa linha própria para evitar
-  // sobreposição; no tablet para cima, lado a lado quando houver espaço.
-  const acoesMobile = (
-    <div className={`flex flex-col gap-2 px-3 py-2.5 sm:px-3.5 sm:py-3 sm:flex-row sm:items-center sm:gap-3 ${disponivel ? '' : 'items-center'}`}>
-      <Link
-        to={`/moto/${bike.slug}`}
-        aria-label={`Ver os detalhes de ${titulo} ${bike.ano}`}
-        className={`inline-flex min-h-11 w-full items-center justify-center border border-borda-forte bg-painel-2 py-2.5 font-sans text-[13px] font-semibold text-texto transition-colors hover:border-marca hover:bg-marca/10 hover:text-marca-texto sm:w-auto ${
-          !disponivel ? 'sm:w-full' : ''
-        }`}
-      >
-        Ver detalhes
-      </Link>
-
-      {disponivel && waLink ? (
-        <a
-          href={waLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 bg-marca py-2.5 font-sans text-[13px] font-bold text-white transition-colors hover:bg-marca-forte sm:w-auto"
-        >
-          <IconeWhatsapp className="size-4 shrink-0" />
-          WhatsApp
-        </a>
+      {precoRequerConfirmacao(bike.preco) ? (
+        <p className="mt-2 max-w-[34ch] text-xs leading-relaxed text-texto-2">
+          Valor cadastrado. Confirme com a loja antes de negociar.
+        </p>
       ) : null}
 
-      {disponivel && !waLink ? (
-        <Link
-          to="/contato"
-          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 bg-marca py-2.5 font-sans text-[13px] font-bold text-white transition-colors hover:bg-marca-forte sm:w-auto"
-        >
-          <IconeWhatsapp className="size-4 shrink-0" />
-          Falar com a loja
-        </Link>
-      ) : null}
+      <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+        <div className="min-w-0">
+          {desconto != null ? (
+            <p className="numeros text-[11px] leading-none text-texto-3 line-through">
+              de {formatPrice(bike.precoAntes ?? bike.preco)}
+            </p>
+          ) : null}
+          <p
+            className={`numeros font-display text-[21px] leading-none font-bold tracking-[-0.02em] ${
+              desconto != null ? 'mt-1.5 text-marca-viva' : 'text-texto'
+            }`}
+          >
+            {formatPrice(bike.preco)}
+          </p>
+        </div>
+
+        {/* A única ação do cartão. O resto do bloco já leva para a ficha,
+            então o botão não precisa de rótulo para competir com ela. */}
+        {disponivel ? (
+          waLink ? (
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Falar no WhatsApp sobre a ${titulo} ${bike.ano}`}
+              className="relative z-20 grid size-11 shrink-0 place-items-center bg-marca text-white transition-colors hover:bg-marca-forte"
+            >
+              <IconeWhatsapp className="size-[18px]" />
+            </a>
+          ) : (
+            <Link
+              to="/contato"
+              aria-label={`Falar com a loja sobre a ${titulo} ${bike.ano}`}
+              className="relative z-20 grid size-11 shrink-0 place-items-center bg-marca text-white transition-colors hover:bg-marca-forte"
+            >
+              <IconeWhatsapp className="size-[18px]" />
+            </Link>
+          )
+        ) : null}
+      </div>
     </div>
   )
 
+  // O cartão inteiro é o link da ficha; o “Ver detalhes” de chapa
+  // dupla saiu — era um segundo botão para a mesma página.
   const artigo =
-    'group flex h-full flex-col overflow-hidden bg-painel transition-colors duration-200 hover:bg-painel-2'
+    'group relative flex h-full flex-col overflow-hidden bg-painel'
+
 
   if (variante === 'lista') {
     /* Linha de catálogo compacta: foto miúda, ficha de uma linha e
@@ -223,11 +219,15 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
 
   return (
     <article className={artigo}>
+      {/* Camada de clique: o cartão todo abre a ficha. Fica abaixo do
+          conteúdo mas acima do fundo, e o botão do zap sobe com z-10. */}
+      <Link
+        to={`/moto/${bike.slug}`}
+        aria-label={`Ver a ficha de ${titulo} ${bike.ano}`}
+        className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca"
+      />
       {foto}
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
-        {informacoes}
-      </div>
-      {acoesMobile}
+      {ficha}
     </article>
   )
 }

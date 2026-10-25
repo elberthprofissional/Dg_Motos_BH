@@ -118,6 +118,9 @@ export function Header() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 w-full bg-painel">
+        {/* Ordem da barra = quem fala primeiro: a marca, depois os
+            caminhos, e as ferramentas na porta da direita. A busca é
+            secundária — apertada, sem roubar o meio da barra. */}
         <div className="container-site flex h-20 items-center gap-4 sm:h-[4.25rem]">
           <Link
             to="/"
@@ -139,29 +142,7 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Busca desktop — compacta, à direita da marca */}
-          <form
-            data-busca
-            onSubmit={executarBusca}
-            className="relative mx-2 hidden w-full max-w-xs flex-1 lg:flex"
-            role="search"
-            aria-label="Busca de motos"
-          >
-            <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-3"
-              aria-hidden="true"
-            />
-            <input
-              ref={buscaInputRef}
-              type="search"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar moto por marca ou modelo..."
-              className="h-10 w-full rounded border border-borda-forte bg-fundo px-3 py-1.5 pl-9 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30"
-            />
-          </form>
-
-          <nav aria-label="Navegação principal" className="hidden items-center gap-8 lg:flex">
+          <nav aria-label="Navegação principal" className="hidden items-center gap-7 lg:flex">
             {NAV.map((item) => (
               <NavLink
                 key={item.to}
@@ -169,22 +150,49 @@ export function Header() {
                 end={item.to === '/'}
                 className={({ isActive }) =>
                   `inline-flex items-center py-3 font-sans text-sm font-medium transition-colors ${
-                    isActive ? 'text-white' : 'text-neutral-300 hover:text-white'
+                    isActive ? 'font-semibold text-marca-texto' : 'text-texto-2 hover:text-texto'
                   }`
                 }
               >
                 {item.label}
               </NavLink>
             ))}
-            <a
-              href="/#sonhos"
-              className="inline-flex min-h-11 items-center py-3 font-sans text-sm font-medium text-neutral-300 transition-colors hover:text-white"
+            <NavLink
+              to="/sonhos"
+              className={({ isActive }) =>
+                `inline-flex min-h-11 items-center py-3 font-sans text-sm font-medium transition-colors ${
+                  isActive ? 'font-semibold text-marca-texto' : 'text-texto-2 hover:text-texto'
+                }`
+              }
             >
               Entregas
-            </a>
+            </NavLink>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            {/* Busca desktop — encolheu e foi pra borda: ferramenta,
+                não destaque */}
+            <form
+              data-busca
+              onSubmit={executarBusca}
+              className="relative hidden lg:block"
+              role="search"
+              aria-label="Busca de motos"
+            >
+              <Search
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-3"
+                aria-hidden="true"
+              />
+              <input
+                ref={buscaInputRef}
+                type="search"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar moto…"
+                className="font-sans h-9 w-44 rounded border border-borda bg-fundo py-1.5 pr-3 pl-9 text-sm text-texto transition-colors placeholder:text-texto-3 hover:border-borda-forte focus:w-56 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30 xl:w-56 xl:focus:w-72"
+              />
+            </form>
+
             <button
               type="button"
               onClick={() => setBuscaAberta((v) => !v)}
@@ -310,13 +318,17 @@ export function Header() {
                   <span>{item.label}</span>
                 </NavLink>
               ))}
-              <a
-                href="/#sonhos"
+              <NavLink
+                to="/sonhos"
                 onClick={() => setAberto(false)}
-                className="display py-5 text-4xl text-texto transition-colors hover:text-marca-texto"
+                className={({ isActive }) =>
+                  `display py-5 text-4xl transition-colors ${
+                    isActive ? 'text-marca-texto' : 'text-texto hover:text-marca-texto'
+                  }`
+                }
               >
-                Entregas
-              </a>
+                <span>Entregas</span>
+              </NavLink>
             </nav>
           </div>
 

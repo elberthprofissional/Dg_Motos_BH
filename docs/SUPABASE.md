@@ -67,14 +67,17 @@ criadas por você.
 
 Entre em `/admin` e use a aba **Estoque**. No cadastro:
 
-- **Fotos**: arrastar ou clicar. As imagens são convertidas para WebP,
-  redimensionadas para no máximo 1600 px e enviadas para o bucket
-  `motos`, dentro da pasta do slug da moto.
+- **Fotos**: arrastar ou clicar em **Escolher fotos**; no celular
+  aparece também **Tirar foto**, que abre a câmera na hora. As imagens
+  são convertidas para WebP, redimensionadas para no máximo 1600 px e
+  enviadas para o bucket `motos`, dentro da pasta da moto.
 - **Km a confirmar**: deixe a quilometragem em branco. O site escreve
   "Km a confirmar" em vez de mostrar `null`.
-- **Slug**: é o endereço da página (`/moto/...`). Se você editar o slug
-  depois, a página antiga some do sitemap — evite renomear depois que a
-  moto já foi divulgada.
+- **Endereço da página (slug)**: não há campo para preencher. O sistema
+  monta `/moto/marca-modelo-ano` com o que você digitou; numa segunda
+  unidade do mesmo modelo e ano ele acrescenta um número (`-2`). Depois
+  de publicada, a URL não muda mais sozinha — trocar o modelo não quebra
+  o link já divulgado.
 - **Status**: `disponivel`, `indisponivel` ou `vendida`. Só as
   `disponivel` aparecem no site e no sitemap.
 
@@ -180,7 +183,7 @@ embaladas no JavaScript e ficam públicas para qualquer visitante.
 | `/admin` diz "Área restrita desativada" | `.env` ausente, ou build anterior ao `.env`. Refaça o build. |
 | Login diz "E-mail ou senha incorretos" | Usuário não criado em Authentication → Users, ou e-mail não confirmado. |
 | Fotos não sobem | Bucket `motos` não criado (rode `..._rls_storage.sql`) ou política de Storage faltando. |
-| `duplicate key` ao salvar | Já existe uma moto com o mesmo slug. Troque o modelo/ano ou edite o slug. |
+| `duplicate key` ao salvar | O sistema tenta sozinho o próximo endereço livre (`-2`, `-3`…). Se persistir, é outra restrição do banco: veja o erro completo no console. |
 | Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). A config da loja (aba Configurações) é exceção: vale na hora, mas só no navegador onde foi salva. |
 | Instalar o app não aparece | Precisa HTTPS e o manifest acessível. No iPhone/Safari não há prompt: use *Compartilhar → Adicionar à Tela de Início*. |
 | `npm run build` usa o catálogo antigo | Faltam as chaves no `.env` **no ambiente do build**, não só localmente. |

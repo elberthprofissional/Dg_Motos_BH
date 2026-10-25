@@ -87,44 +87,61 @@ export function AdminLogin() {
         </div>
       </aside>
 
-      {/* A área de acesso ocupa o painel inteiro, sem cartão genérico. */}
-      <main className="flex min-h-dvh w-full flex-col bg-[#100f0d] px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-9 sm:pt-7 lg:px-10 lg:pt-8 xl:px-16">
-        <div className="mx-auto flex w-full max-w-[29rem] flex-1 flex-col justify-center py-3 sm:py-5">
+      {/* Área de acesso. No celular a foto NÃO é um bloco: é o fundo
+          inteiro da tela, com véu escuro — marca no topo, form centrado
+          com respiro, rodapé discreto. Nada empilhado: uma camada só,
+          como num app nativo. A partir de lg a foto some de novo e
+          volta o par de colunas aprovado (showroom + painel). */}
+      <main className="relative flex min-h-dvh w-full flex-col bg-[#100f0d]">
+        {/* Fundo fotográfico + véu: dois elementos absolutos que só
+            existem abaixo de lg. O véu é mais pesado onde o form
+            senta (baixo/meio) e quase transparente no topo pro
+            showroom aparecer. */}
+        <img
+          src="/hero/entrada-painel.webp"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 size-full object-cover object-center lg:hidden"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,15,13,0.4)_0%,rgba(16,15,13,0.52)_38%,rgba(16,15,13,0.78)_74%,#100f0d_100%)] lg:hidden"
+        />
+
+        <div className="relative mx-auto flex w-full max-w-[29rem] flex-1 flex-col justify-center px-6 pt-[max(1.25rem,env(safe-area-inset-top))] pb-6 sm:px-9 sm:pt-7 lg:px-10 lg:pt-8 xl:px-16">
+          {/* Logo — a única marca da tela: sobre a foto no celular (com
+              sombra pra garantir contraste), do jeito aprovado na mesa. */}
           <Link
             to="/"
             aria-label="DG Motos BH — voltar à página inicial"
-            className="group mb-5 inline-flex w-fit items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto sm:mb-7 lg:mb-9"
+            className="group mb-8 inline-flex w-fit items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto lg:mb-9"
           >
             <img
               src="/logo.webp"
               alt="DG Motos — Realizando Sonhos"
-              width={96}
-              height={96}
-              className="size-[4.5rem] object-contain sm:size-24"
+              width={112}
+              height={112}
+              className="size-14 object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] lg:size-28 lg:drop-shadow-none"
             />
-            <span className="border-l-2 border-marca pl-3.5 sm:pl-4">
-              <span className="block text-xs font-bold tracking-[0.16em] text-texto uppercase sm:text-sm">
+            <span className="border-l-2 border-marca pl-3 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] lg:pl-4 lg:drop-shadow-none">
+              <span className="block text-sm font-bold tracking-[0.16em] text-white uppercase lg:text-base lg:text-texto">
                 DG Motos BH
               </span>
-              <span className="mt-1 block text-[11px] font-medium tracking-[0.12em] text-texto-3 uppercase">
+              <span className="mt-0.5 block text-xs font-medium tracking-[0.12em] text-white/70 uppercase lg:mt-1 lg:text-texto-3">
                 Administração
               </span>
             </span>
           </Link>
 
-          <img
-            src="/hero/entrada-painel.webp"
-            alt=""
-            aria-hidden="true"
-            className="mb-6 block aspect-[3/2] w-full object-cover object-[45%_57%] sm:mb-8 sm:aspect-[16/9] [@media(max-height:720px)]:aspect-[16/9] lg:hidden"
-          />
-
-          <div className="mb-7 sm:mb-9">
-            <h1 className="max-w-[12ch] font-display text-[clamp(2.5rem,5vw,3.75rem)] leading-[0.98] font-bold tracking-[-0.04em] text-white">
+          {/* Headline curta e o resto silêncio: o parágrafo de apoio é
+              conversa de vitrine — no celular a tela vai direto aos
+              campos, como um app. Na mesa ele volta. */}
+          <div className="mb-8 lg:mb-10">
+            <h1 className="max-w-[12ch] font-display text-[clamp(2.25rem,5vw,3.75rem)] leading-[0.98] font-bold tracking-[-0.04em] text-white">
               Seu estoque.
               <span className="block text-marca-texto">Seu negócio.</span>
             </h1>
-            <p className="mt-4 max-w-[42ch] text-base leading-relaxed text-neutral-300 sm:mt-5 sm:text-[17px]">
+            <p className="mt-4 hidden max-w-[42ch] text-base leading-relaxed text-neutral-300 sm:mt-5 sm:text-[17px] lg:block">
               Acesse o painel para gerenciar as motos, atualizar anúncios e
               acompanhar seu catálogo.
             </p>
@@ -141,7 +158,7 @@ export function AdminLogin() {
               <code className="text-white">docs/SUPABASE.md</code>.
             </p>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7" noValidate>
               <div>
                 <label
                   htmlFor="admin-email"
@@ -160,10 +177,9 @@ export function AdminLogin() {
                     name="email"
                     autoComplete="username"
                     required
-                    placeholder="seu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-14 w-full rounded-md border border-neutral-700 bg-neutral-950 py-3.5 pr-4 pl-12 text-base text-white transition-colors placeholder:text-neutral-500 focus:border-marca focus:ring-2 focus:ring-marca/25 focus:outline-none"
+                    className="h-14 w-full rounded-md border border-neutral-700 bg-neutral-950 py-3.5 pr-4 pl-12 text-base text-white transition-colors focus:border-marca focus:ring-2 focus:ring-marca/25 focus:outline-none"
                   />
                 </div>
               </div>
@@ -184,11 +200,10 @@ export function AdminLogin() {
                     id="admin-senha"
                     autoComplete="current-password"
                     required
-                    placeholder="Digite sua senha"
                     rotulo="Senha"
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
-                    className="h-14 rounded-md border-neutral-700 bg-neutral-950 py-3.5 pr-12 pl-12 text-base text-white placeholder:text-neutral-500 focus:border-marca focus:ring-2 focus:ring-marca/25"
+                    className="h-14 rounded-md border-neutral-700 bg-neutral-950 py-3.5 pr-12 pl-12 text-base text-white focus:border-marca focus:ring-2 focus:ring-marca/25"
                   />
                 </div>
               </div>
@@ -219,7 +234,9 @@ export function AdminLogin() {
           )}
         </div>
 
-        <p className="mx-auto w-full max-w-[29rem] pt-4 text-center text-[13px] tracking-[0.02em] text-neutral-400">
+        {/* relative: o véu da foto é absoluto e pintaria por cima deste
+            parágrafo não posicionado — o © sumiria no celular. */}
+        <p className="relative mx-auto w-full max-w-[29rem] px-6 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-[13px] tracking-[0.02em] text-neutral-400 sm:px-9 lg:pb-0">
           © {ANO_ATUAL} DG Motos BH · Acesso restrito
         </p>
       </main>

@@ -1,11 +1,21 @@
 -- ============================================================
--- DG MOTOS — 0007: entregas e publicações da Home
+-- DG MOTOS — 0007: vendidas (posts "Realizando Sonhos")
 -- ============================================================
+-- Cada linha é um post de publicação da Home, estilo mural
+-- fotográfico. O post nasce de uma moto marcada como vendida no
+-- estoque (moto_id) ou é avulso para uma venda fora do catálogo
+-- (moto_id nulo + moto_nome digitado). Várias fotos por post.
 
 create table if not exists public.entregas (
   id uuid primary key default gen_random_uuid(),
-  moto text not null check (length(btrim(moto)) > 0),
-  foto_path text,
+  moto_id uuid references public.motorcycles (id) on delete set null,
+  -- Nome calcado por segurança: se a moto for excluída do estoque
+  -- depois, o post continua com o nome que foi publicado.
+  moto_nome text not null check (length(btrim(moto_nome)) > 0),
+  -- Array de caminhos no bucket privado 'entregas', na ordem de
+  -- exibição do carrossel.
+  fotos jsonb not null default '[]'::jsonb
+    check (jsonb_typeof(fotos) = 'array'),
   legenda text,
   nome_cliente text,
   entregue_em date,
@@ -16,13 +26,18 @@ create table if not exists public.entregas (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint entrega_publicada_autorizada check (
-    status <> 'publicada' or (foto_path is not null and autorizacao_publicacao)
+    status <> 'publicada'
+    or (jsonb_array_length(fotos) >= 1 and autorizacao_publicacao)
   )
 );
 
 create index if not exists idx_entregas_publicadas_ordem
   on public.entregas (ordem, entregue_em desc)
   where status = 'publicada';
+
+create index if not exists idx_entregas_moto
+  on public.entregas (moto_id)
+  where moto_id is not null;
 
 drop trigger if exists trg_entregas_updated_at on public.entregas;
 create trigger trg_entregas_updated_at
@@ -58,8 +73,9 @@ create policy "entregas_admin_edicao"
   using (true)
   with check (true);
 
--- Fotos privadas por padrão. Só uma linha publicada em entregas pode
--- gerar URL assinada anônima para a respectiva imagem.
+-- Fotos privadas por padrão. Só linhas publicadas em entregas podem
+-- gerar URL assinada anônima para as respectivas imagens (a pasta do
+-- arquivo usa o id do post como primeiro nível).
 insert into storage.buckets (id, name, public)
 values ('entregas', 'entregas', false)
 on conflict (id) do update set public = false;

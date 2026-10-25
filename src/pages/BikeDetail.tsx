@@ -49,7 +49,7 @@ function TabelaFicha({ titulo, itens }: { titulo: string; itens: LinhaFicha[] })
 
 export function BikeDetail() {
   const { slug } = useParams<{ slug: string }>()
-  const { motos, carregando } = useCatalogo()
+  const { motos, carregando, doBanco } = useCatalogo()
   const { config } = useSiteConfig()
   const bike = motos.find((m) => m.slug === slug)
 
@@ -84,16 +84,25 @@ export function BikeDetail() {
   }
 
   if (!bike) {
+    // Sem o banco, a lista é o catálogo antigo: dizer "foi vendida" aqui
+    // seria mentira numa queda do Supabase.
+    const semCatalogo = !doBanco
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-5 pt-cabecalho text-center">
-        <h1 className="titulo mt-4 text-3xl text-texto sm:text-4xl">
-          Motocicleta não encontrada
+        <h1 className="titulo mt-4 max-w-[22ch] text-3xl text-balance text-texto sm:text-4xl">
+          {semCatalogo ? 'Não conseguimos abrir o estoque agora' : 'Motocicleta não encontrada'}
         </h1>
         <p className="corpo mt-4 max-w-md text-texto-2">
-          Essa moto pode já ter sido vendida, ou o endereço do link está errado.
+          {semCatalogo
+            ? 'O catálogo não respondeu. Tente de novo em instantes — ou fale com a loja que a gente confirma a moto pra você.'
+            : 'Essa moto pode já ter sido vendida, ou o endereço do link está errado.'}
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button to="/estoque">Ver as outras motos do estoque</Button>
+          {semCatalogo ? (
+            <Button onClick={() => window.location.reload()}>Tentar de novo</Button>
+          ) : (
+            <Button to="/estoque">Ver as outras motos do estoque</Button>
+          )}
           <Button to="/contato" variant="outline">
             Falar com a loja
           </Button>
@@ -141,8 +150,11 @@ export function BikeDetail() {
           </span>
         </nav>
 
-        <div className="grid gap-9 md:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] md:items-start md:gap-10 lg:gap-12 xl:gap-16">
-          <div className="order-2 md:order-none">
+        {/* `grid-cols-1` (minmax(0,1fr)) e não só `grid`: sem isso a
+            coluna cresce até o min-content da esteira de miniaturas e
+            a página inteira passa da tela no celular. */}
+        <div className="grid grid-cols-1 gap-9 md:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] md:items-start md:gap-10 lg:gap-12 xl:gap-16">
+          <div className="order-2 min-w-0 md:order-none">
             <BikeGallery
               key={bike.id}
               imagens={bike.imagens}
@@ -150,7 +162,7 @@ export function BikeDetail() {
             />
           </div>
 
-          <div className="contents md:sticky md:top-[5.75rem] md:col-start-2 md:row-start-1 md:flex md:flex-col md:gap-8">
+          <div className="contents min-w-0 md:sticky md:top-[5.75rem] md:col-start-2 md:row-start-1 md:flex md:min-w-0 md:flex-col md:gap-8">
             <div className="order-1 md:order-none">
               <h1 className="text-balance font-display text-[2.5rem] leading-[1.02] font-semibold tracking-[-0.03em] text-texto lg:text-[3.25rem] xl:text-[3.5rem]">
                 {titulo}
@@ -171,7 +183,7 @@ export function BikeDetail() {
                   <p className="flex flex-wrap items-center gap-3 font-display text-[2.5rem] leading-none font-semibold tracking-[-0.035em] text-texto lg:text-[2.75rem]">
                     <span className="numeros">{formatPrice(bike.preco)}</span>
                     {desconto != null ? (
-                      <span className="numeros rounded-full bg-marca px-2.5 py-1 font-sans text-sm font-bold text-white">
+                      <span className="numeros bg-marca px-2.5 py-1 font-sans text-sm font-bold text-white">
                         -{desconto}%
                       </span>
                     ) : null}
@@ -297,7 +309,7 @@ export function BikeDetail() {
             </div>
           ) : (
             <Revelar className="mt-10">
-              <div className="max-w-xl rounded-2xl border border-borda bg-fundo/60 p-6">
+              <div className="max-w-xl border border-borda bg-fundo/60 p-6">
                 <p className="text-sm leading-relaxed text-texto-2">
                   A ficha detalhada dessa unidade ainda não foi publicada.
                   Chama a loja que a gente conta tudo: estado do motor,

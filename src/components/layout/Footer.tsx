@@ -95,14 +95,6 @@ export function Footer() {
                 <span>WhatsApp</span>
               </a>
             ) : null}
-            {config.telefoneExibicao ? (
-              <a
-                href={`tel:${config.telefoneExibicao.replace(/[^\d+]/g, '')}`}
-                className="inline-flex min-h-11 items-center text-sm text-texto-2 transition-colors hover:text-texto"
-              >
-                {config.telefoneExibicao}
-              </a>
-            ) : null}
             {config.instagramUrl ? (
               <a
                 href={config.instagramUrl}

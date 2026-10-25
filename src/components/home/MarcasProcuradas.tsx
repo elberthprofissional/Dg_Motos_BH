@@ -56,21 +56,21 @@ export function Marcas() {
   } as CSSProperties
 
   return (
-    <section aria-labelledby="marcas-titulo" className="border-y border-borda bg-painel">
-      <div className="container-site grid gap-4 py-5 sm:py-6 lg:grid-cols-[8rem_minmax(0,1fr)] lg:items-center lg:gap-8">
-        <h2 id="marcas-titulo" className="font-display text-lg font-semibold text-texto">
-          Marcas
-        </h2>
-        <div
-          className="marcas-viewport no-scrollbar min-w-0 overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca"
-          role="group"
-          aria-label="Esteira de marcas. O movimento pausa quando recebe foco."
-          tabIndex={0}
-        >
-          <div className="esteira flex w-max items-center" style={duracoes}>
-            <ListaDeMarcas />
-            <ListaDeMarcas clonagem />
-          </div>
+    <section aria-labelledby="marcas-titulo" className="border-y border-borda bg-painel py-5 sm:py-6">
+      {/* O título saiu da tela mas continua no sumário do leitor de
+          tela: sem ele a faixa vira um bloco de imagens sem nome. */}
+      <h2 id="marcas-titulo" className="sr-only">
+        Marcas
+      </h2>
+      <div
+        className="marcas-viewport no-scrollbar w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca"
+        role="group"
+        aria-label="Esteira de marcas. O movimento pausa quando recebe foco."
+        tabIndex={0}
+      >
+        <div className="esteira flex w-max items-center" style={duracoes}>
+          <ListaDeMarcas />
+          <ListaDeMarcas clonagem />
         </div>
       </div>
     </section>

@@ -3,8 +3,9 @@ import { BUCKET_ENTREGAS, getSupabase } from './supabase'
 
 interface LinhaEntrega {
   id: string
-  moto: string
-  foto_path: string | null
+  moto_id: string | null
+  moto_nome: string
+  fotos: string[] | null
   legenda: string | null
   nome_cliente: string | null
   entregue_em: string | null
@@ -16,8 +17,9 @@ interface LinhaEntrega {
 
 export interface EntregaParaSalvar {
   id: string
-  moto: string
-  fotoPath: string | null
+  motoId: string
+  motoNome: string
+  fotos: string[]
   legenda: string
   nomeCliente: string
   entregueEm: string
@@ -27,25 +29,46 @@ export interface EntregaParaSalvar {
 }
 
 const COLUNAS =
-  'id,moto,foto_path,legenda,nome_cliente,entregue_em,autorizacao_publicacao,status,ordem,updated_at'
+  'id,moto_id,moto_nome,fotos,legenda,nome_cliente,entregue_em,autorizacao_publicacao,status,ordem,updated_at'
 
-async function assinarFoto(path: string | null, validadeSegundos = 60 * 60 * 24): Promise<string | null> {
-  if (!path) return null
+/**
+ * Assina TODAS as fotos da página em uma única chamada e devolve um mapa
+ * caminho → URL.
+ *
+ * Antes era uma requisição por foto: um mural com dez posts de seis
+ * fotos fazia sessenta idas ao Storage antes de a seção aparecer. O
+ * caminho que não pôde ser assinado simplesmente não entra no mapa — a
+ * foto correspondente fica sem URL e o chamador decide o que fazer.
+ */
+async function assinarFotos(
+  paths: string[],
+  validadeSegundos = 60 * 60 * 24,
+): Promise<Map<string, string>> {
+  const urls = new Map<string, string>()
   const sb = getSupabase()
-  if (!sb) return null
+  const unicos = [...new Set(paths)]
+  if (!sb || unicos.length === 0) return urls
+
   const { data, error } = await sb.storage
     .from(BUCKET_ENTREGAS)
-    .createSignedUrl(path, validadeSegundos)
-  if (error) return null
-  return data.signedUrl
+    .createSignedUrls(unicos, validadeSegundos)
+  if (error || !data) return urls
+
+  for (const item of data) {
+    if (item.path && item.signedUrl) urls.set(item.path, item.signedUrl)
+  }
+  return urls
 }
 
-async function paraRegistro(linha: LinhaEntrega): Promise<EntregaRegistro> {
+function paraRegistro(linha: LinhaEntrega, urls: Map<string, string>): EntregaRegistro {
+  const fotos = linha.fotos ?? []
   return {
     id: linha.id,
-    moto: linha.moto,
-    fotoPath: linha.foto_path,
-    imagemUrl: await assinarFoto(linha.foto_path),
+    motoId: linha.moto_id ?? '',
+    motoNome: linha.moto_nome,
+    fotos,
+    // Alinhadas por índice com `fotos`; sem URL, string vazia.
+    imagens: fotos.map((caminho) => urls.get(caminho) ?? ''),
     legenda: linha.legenda ?? '',
     nomeCliente: linha.nome_cliente ?? '',
     entregueEm: linha.entregue_em ?? '',
@@ -67,51 +90,65 @@ export async function buscarEntregasAdmin(): Promise<EntregaRegistro[]> {
     .order('entregue_em', { ascending: false, nullsFirst: false })
 
   if (error) throw new Error(error.message)
-  return Promise.all(((data ?? []) as LinhaEntrega[]).map(paraRegistro))
+  const linhas = (data ?? []) as LinhaEntrega[]
+  const urls = await assinarFotos(linhas.flatMap((linha) => linha.fotos ?? []))
+  return linhas.map((linha) => paraRegistro(linha, urls))
 }
 
-export async function buscarEntregasPublicadas(): Promise<EntregaPublicada[]> {
+export async function buscarEntregasPublicadas(limite?: number): Promise<EntregaPublicada[]> {
   const sb = getSupabase()
   if (!sb) return []
 
-  const { data, error } = await sb
+  const consulta = sb
     .from('entregas')
-    .select('id,moto,foto_path,legenda,nome_cliente,entregue_em')
+    .select('id,moto_nome,fotos,legenda,nome_cliente,entregue_em')
     .eq('status', 'publicada')
     .order('ordem', { ascending: true })
     .order('entregue_em', { ascending: false, nullsFirst: false })
 
+  // A Home pede um post a mais do que exibe: o excedente é o que decide
+  // se existe o link "Ver todas as entregas".
+  const { data, error } = await (limite && limite > 0 ? consulta.limit(limite) : consulta)
+
   if (error || !data) return []
 
-  const registros = await Promise.all(
-    (data as Pick<LinhaEntrega, 'id' | 'moto' | 'foto_path' | 'legenda' | 'nome_cliente' | 'entregue_em'>[])
-      .map(async (linha): Promise<EntregaPublicada | null> => {
-        const imagem = await assinarFoto(linha.foto_path, 60 * 60)
-        if (!imagem) return null
-        return {
-          id: linha.id,
-          moto: linha.moto,
-          imagem,
-          nomeCliente: linha.nome_cliente || undefined,
-          depoimento: linha.legenda || undefined,
-          entregueEm: linha.entregue_em || undefined,
-        }
-      }),
-  )
+  const linhas = data as Pick<
+    LinhaEntrega,
+    'id' | 'moto_nome' | 'fotos' | 'legenda' | 'nome_cliente' | 'entregue_em'
+  >[]
+  // Uma assinatura para o mural inteiro (URLs de 1h, renovadas pelo hook).
+  const urls = await assinarFotos(linhas.flatMap((linha) => linha.fotos ?? []), 60 * 60)
+
+  const registros = linhas.map((linha): EntregaPublicada | null => {
+    const imagens = (linha.fotos ?? []).map((caminho) => urls.get(caminho) ?? '').filter(Boolean)
+    // Post sem nenhuma foto legível não tem o que mostrar no mural.
+    if (imagens.length === 0) return null
+    return {
+      id: linha.id,
+      moto: linha.moto_nome,
+      imagens,
+      nomeCliente: linha.nome_cliente || undefined,
+      depoimento: linha.legenda || undefined,
+      entregueEm: linha.entregue_em || undefined,
+    }
+  })
   return registros.filter((item): item is EntregaPublicada => item !== null)
 }
 
 export async function salvarEntrega(dados: EntregaParaSalvar): Promise<void> {
   const sb = getSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
-  if (dados.status === 'publicada' && (!dados.fotoPath || !dados.autorizacaoPublicacao)) {
-    throw new Error('Para publicar, adicione uma foto e confirme a autorização de uso.')
+  if (dados.status === 'publicada' && (dados.fotos.length === 0 || !dados.autorizacaoPublicacao)) {
+    throw new Error('Para publicar, adicione ao menos uma foto e confirme a autorização de uso.')
   }
 
   const linha = {
     id: dados.id,
-    moto: dados.moto.trim(),
-    foto_path: dados.fotoPath,
+    // Moto roteirizada desde o estoque. Avulso fica nulo — o nome
+    // denormalizado (moto_nome) cobre a exibição nos dois casos.
+    moto_id: dados.motoId || null,
+    moto_nome: dados.motoNome.trim(),
+    fotos: dados.fotos,
     legenda: dados.legenda.trim() || null,
     nome_cliente: dados.nomeCliente.trim() || null,
     entregue_em: dados.entregueEm || null,
@@ -131,9 +168,9 @@ export async function arquivarEntrega(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
-export async function removerFotoEntrega(path: string): Promise<void> {
+export async function removerFotosEntrega(paths: string[]): Promise<void> {
   const sb = getSupabase()
-  if (!sb) throw new Error('Supabase não configurado neste deploy.')
-  const { error } = await sb.storage.from(BUCKET_ENTREGAS).remove([path])
+  if (!sb || paths.length === 0) return
+  const { error } = await sb.storage.from(BUCKET_ENTREGAS).remove(paths)
   if (error) throw new Error(error.message)
 }

@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
   Settings,
+  User,
   LogOut,
   Package,
   Images,
@@ -13,7 +14,7 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
 import { EstoqueTab } from '../components/admin/EstoqueTab'
 import { ConfiguracoesTab } from '../components/admin/ConfiguracoesTab'
-import { EntregasTab } from '../components/admin/EntregasTab'
+import { VendidasTab } from '../components/admin/VendidasTab'
 import { DialogoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import type { PedidoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import { Toast } from '../components/ui/Toast'
@@ -22,10 +23,20 @@ import type { Motorcycle, MotorcycleStatus } from '../types'
 
 type Aba = 'estoque' | 'entregas' | 'configuracoes'
 
+/* "Vendidas": a aba da Home não é mais um cadastro à parte — é o
+   eco do estoque. Toda moto vendida entra aqui pronta pra virar
+   post em "Realizando Sonhos". */
 const ABAS: { id: Aba; rotulo: string; icone: typeof Package }[] = [
   { id: 'estoque', rotulo: 'Estoque', icone: Package },
-  { id: 'entregas', rotulo: 'Entregas', icone: Images },
+  { id: 'entregas', rotulo: 'Vendidas', icone: Images },
   { id: 'configuracoes', rotulo: 'Configurações', icone: Settings },
+]
+
+/* Barra inferior do celular: só as duas áreas de trabalho. Configurações
+   vive no menu do avatar, no topo — barra com 2 itens respira melhor. */
+const ABAS_CELLULAR: { id: Aba; rotulo: string; icone: typeof Package }[] = [
+  { id: 'estoque', rotulo: 'Estoque', icone: Package },
+  { id: 'entregas', rotulo: 'Vendidas', icone: Images },
 ]
 
 /**
@@ -49,8 +60,30 @@ export function Admin() {
   const [confirmacao, setConfirmacao] = useState<PedidoConfirmacao | null>(null)
   const [excluindo, setExcluindo] = useState(false)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
+  const [menuConta, setMenuConta] = useState(false)
+  const contaRef = useRef<HTMLDivElement>(null)
 
   usePageMeta('Painel | DG Motos', 'Área restrita do proprietário.')
+
+  // Menu do avatar (celular): fecha com Esc e clique fora — o painel
+  // fica preso ao header; os itens podem trocar de aba sem recarregar.
+  useEffect(() => {
+    if (!menuConta) return
+    function aoCliqueFora(evento: MouseEvent) {
+      if (contaRef.current && !contaRef.current.contains(evento.target as Node)) {
+        setMenuConta(false)
+      }
+    }
+    function aoEsc(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') setMenuConta(false)
+    }
+    window.addEventListener('mousedown', aoCliqueFora)
+    window.addEventListener('keydown', aoEsc)
+    return () => {
+      window.removeEventListener('mousedown', aoCliqueFora)
+      window.removeEventListener('keydown', aoEsc)
+    }
+  }, [menuConta])
 
   const aplicarResultado = useCallback((r: ResultadoCatalogo) => {
     if (!r.doBanco) {
@@ -123,7 +156,7 @@ export function Admin() {
     const texto: Record<MotorcycleStatus, string> = {
       disponivel: `${moto.marca} ${moto.modelo} está disponível de novo.`,
       indisponivel: `${moto.marca} ${moto.modelo} foi marcada como indisponível.`,
-      vendida: `${moto.marca} ${moto.modelo} foi marcada como vendida.`,
+      vendida: `${moto.marca} ${moto.modelo} saiu do pátio e já está em Vendidas.`,
     }
     await concluirAcao(texto[status])
   }
@@ -233,7 +266,7 @@ export function Admin() {
       {/* ---------------------------------------------------------- */}
       {/* Conteúdo                                                     */}
       {/* ---------------------------------------------------------- */}
-      <div className="flex min-w-0 flex-1 flex-col pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] lg:pb-0 lg:pl-60">
+      <div className="flex min-w-0 flex-1 flex-col pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0 lg:pl-60">
         {/* Topbar. Só carrega título quando há contexto a informar (edição
             de moto, seção de configurações). Na listagem do estoque o
             título é da própria página — repetir aqui era ruído. No celular
@@ -263,19 +296,80 @@ export function Admin() {
               <div className="flex-1" />
             )}
 
-            {/* Com o formulário aberto, o "voltar" sobe para a topbar:
-                fecha a edição e volta à lista, fora do rolar do form. */}
+            {/* Com o formulário aberto, o "voltar" sobe pra topbar — mas
+                só na mesa. No celular a única saída é a seta do próprio
+                formulário no canto superior esquerdo: dois caminhos de
+                volta brigando é o que dá cara de adaptação mal feita. */}
             {aba === 'estoque' && editando && (
               <button
                 type="button"
                 onClick={() => setEditando(null)}
-                className="foco-painel inline-flex items-center gap-1.5 rounded-lg border border-line-forte px-3 py-1.5 text-xs font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper"
+                className="foco-painel hidden items-center gap-1.5 rounded-lg border border-line-forte px-3 py-1.5 text-xs font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper lg:inline-flex"
               >
                 <ArrowLeft className="size-3.5" aria-hidden="true" />
-                <span className="hidden sm:inline">Voltar ao estoque</span>
-                <span className="sm:hidden">Voltar</span>
+                Voltar ao estoque
               </button>
             )}
+
+            {/* Avatar da conta (só no celular): o caminho para Configurações
+                e Sair, que saíram da barra inferior. Desktop é sidebar. */}
+            <div className="ml-auto relative lg:hidden" ref={contaRef}>
+              <button
+                type="button"
+                onClick={() => setMenuConta((v) => !v)}
+                aria-expanded={menuConta}
+                aria-haspopup="menu"
+                aria-label="Menu da conta"
+                className={`foco-painel grid size-10 place-items-center rounded-full border transition-colors ${
+                  menuConta
+                    ? 'border-brand-500/60 bg-brand-500/10 text-paper'
+                    : 'border-line-forte bg-painel-2 text-steel-400 hover:border-claro/25 hover:text-paper'
+                }`}
+              >
+                <User className="size-5" strokeWidth={1.8} aria-hidden="true" />
+              </button>
+
+              {menuConta ? (
+                <div
+                  role="menu"
+                  aria-label="Conta"
+                  className="absolute right-0 top-[3.25rem] z-50 w-52 overflow-hidden rounded-lg border border-line bg-sidebar shadow-xl shadow-black/40"
+                >
+                  <p className="border-b border-line px-4 pb-2.5 pt-3">
+                    <span className="block font-display text-sm font-semibold text-paper">DG Motos BH</span>
+                    <span className="mt-0.5 block text-xs text-steel-500">Painel da loja</span>
+                  </p>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuConta(false)
+                      trocarAba('configuracoes')
+                    }}
+                    className={`foco-painel flex min-h-11 w-full items-center gap-3 px-4 text-sm transition-colors ${
+                      aba === 'configuracoes'
+                        ? 'text-paper'
+                        : 'text-steel-300 hover:bg-claro/[0.04] hover:text-paper'
+                    }`}
+                  >
+                    <Settings className="size-4 shrink-0 text-steel-500" aria-hidden="true" />
+                    Configurações
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuConta(false)
+                      pedirSaida()
+                    }}
+                    className="foco-painel flex min-h-11 w-full items-center gap-3 border-t border-line px-4 text-sm text-steel-300 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                  >
+                    <LogOut className="size-4 shrink-0 text-steel-500" aria-hidden="true" />
+                    Sair
+                  </button>
+                </div>
+              ) : null}
+            </div>
 
           </div>
         </header>
@@ -293,10 +387,11 @@ export function Admin() {
               onAlterarStatus={alterarStatus}
               onSalva={aoSalvarMoto}
               onRecarregar={recarregar}
+              onIrParaVendidas={() => trocarAba('entregas')}
             />
           ) : null}
           <div className={aba === 'entregas' ? '' : 'hidden'}>
-            <EntregasTab motos={motos ?? []} onFeedback={avisar} />
+            <VendidasTab motos={motos ?? []} onFeedback={avisar} />
           </div>
           {aba === 'configuracoes' ? <ConfiguracoesTab /> : null}
         </main>
@@ -316,8 +411,8 @@ export function Admin() {
             : 'safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-line bg-sidebar lg:hidden'
         }
       >
-        <div className="grid grid-cols-3">
-          {ABAS.map(({ id, rotulo, icone: Icone }) => {
+        <div className="grid grid-cols-2">
+          {ABAS_CELLULAR.map(({ id, rotulo, icone: Icone }) => {
             const ativa = aba === id
             return (
               <button
@@ -325,20 +420,24 @@ export function Admin() {
                 type="button"
                 onClick={() => trocarAba(id)}
                 aria-current={ativa ? 'page' : undefined}
-                className={`foco-painel relative flex min-h-[3.25rem] flex-col items-center justify-center gap-1 transition-colors ${
+                className={`foco-painel relative flex min-h-[3.75rem] flex-col items-center justify-center gap-1.5 py-2 transition-colors ${
                   ativa ? 'text-paper' : 'text-steel-500'
                 }`}
               >
                 {ativa && (
                   <span
                     aria-hidden="true"
-                    className="absolute top-0 h-px w-8 bg-brand-500"
+                    className="absolute top-0 h-[2px] w-8 bg-brand-500"
                   />
                 )}
                 <span className="relative">
-                  <Icone className="size-[21px]" strokeWidth={ativa ? 2.2 : 1.8} aria-hidden="true" />
+                  <Icone
+                    className={`size-[22px] ${ativa ? 'text-steel-300' : ''}`}
+                    strokeWidth={ativa ? 2.2 : 1.8}
+                    aria-hidden="true"
+                  />
                 </span>
-                <span className="text-etiqueta leading-none font-medium">{rotulo}</span>
+                <span className="text-xs leading-none font-medium">{rotulo}</span>
               </button>
             )
           })}

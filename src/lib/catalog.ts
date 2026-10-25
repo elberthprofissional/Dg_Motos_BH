@@ -125,19 +125,29 @@ export async function buscarCatalogo(): Promise<ResultadoCatalogo> {
     return { motos: [], doBanco: false, erro: 'Supabase não configurado neste deploy.' }
   }
 
-  const { data, error } = await sb
-    .from('motorcycles')
-    .select(SELECT_MOTO)
-    .order('ano', { ascending: false })
+  try {
+    const { data, error } = await sb
+      .from('motorcycles')
+      .select(SELECT_MOTO)
+      .order('ano', { ascending: false })
 
-  if (error) {
-    return { motos: [], doBanco: false, erro: error.message }
-  }
+    if (error) {
+      return { motos: [], doBanco: false, erro: error.message }
+    }
 
-  return {
-    motos: ((data ?? []) as LinhaCatalogo[]).map(linhaParaMotos),
-    doBanco: true,
-    erro: null,
+    return {
+      motos: ((data ?? []) as LinhaCatalogo[]).map(linhaParaMotos),
+      doBanco: true,
+      erro: null,
+    }
+  } catch (e) {
+    // Rede caída, DNS, CORS ou projeto pausado: sem o catch a promessa
+    // rejeitava e a vitrine ficava "carregando" para sempre.
+    return {
+      motos: [],
+      doBanco: false,
+      erro: e instanceof Error ? e.message : 'Falha ao consultar o catálogo.',
+    }
   }
 }
 
@@ -234,8 +244,12 @@ export async function salvarMoto(
   const sb = getSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
 
+  // O dono nunca digita slug: o endereço sai do que ele já preencheu.
+  const slugBase =
+    dados.slug.trim() || montarSlug(dados.marca, dados.modelo, dados.ano) || 'moto'
+
   const payload = {
-    slug: dados.slug,
+    slug: slugBase,
     marca: dados.marca,
     modelo: dados.modelo,
     ano: dados.ano,
@@ -257,9 +271,29 @@ export async function salvarMoto(
     const { error } = await sb.from('motorcycles').update(payload).eq('id', id)
     if (error) return { ok: false, erro: error.message }
   } else {
-    const { data, error } = await sb.from('motorcycles').insert(payload).select('id').single()
-    if (error) return { ok: false, erro: error.message }
-    motoId = (data as { id: string }).id
+    // Duas unidades do mesmo modelo e ano são normais num pátio. Em vez de
+    // devolver um erro de "duplicate key" que o dono não teria como
+    // resolver (não há campo de slug), o endereço ganha um número:
+    // -2, -3…
+    let erro: { code?: string; message: string; details?: string | null } | null = null
+    for (let tentativa = 1; tentativa <= 50; tentativa++) {
+      const slug = tentativa === 1 ? slugBase : `${slugBase}-${tentativa}`
+      const { data, error } = await sb
+        .from('motorcycles')
+        .insert({ ...payload, slug })
+        .select('id')
+        .single()
+      if (!error) {
+        motoId = (data as { id: string }).id
+        erro = null
+        break
+      }
+      erro = error
+      const ehSlugRepetido =
+        error.code === '23505' && /slug/i.test(`${error.message} ${error.details ?? ''}`)
+      if (!ehSlugRepetido) break
+    }
+    if (!motoId) return { ok: false, erro: erro?.message ?? 'Erro ao salvar.' }
   }
 
   const erroImagens = await salvarImagens(motoId!, dados.imagens)

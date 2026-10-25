@@ -1,124 +1,100 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import type { EntregaPublicada } from '../../data/entregas'
+import { mesDaEntrega } from '../../lib/format'
+import { CarrosselFotos } from '../entregas/CarrosselFotos'
+import { CartaoEntrega } from '../entregas/CartaoEntrega'
 
 interface SonhosRealizadosProps {
   entregas: EntregaPublicada[]
 }
 
-function dataDaEntrega(valor?: string): string | null {
-  if (!valor) return null
-  const data = new Date(`${valor}T12:00:00`)
-  if (Number.isNaN(data.valueOf())) return null
-  return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(data)
-}
+/**
+ * Quantos posts cabem na Home. O primeiro ganha destaque; o resto
+ * desce em grade. Sem teto, em um ano a seção vira uma parede de
+ * entregas e empurra a vitrine de motos para fora da primeira tela.
+ */
+export const LIMITE_MURAL = 6
 
+/**
+ * ============================================================
+ * SONHOS REALIZADOS — o mural da Home
+ * ============================================================
+ * Uma postagem, não um catálogo: foto 4:5, nome e a frase da entrega.
+ * O primeiro post ocupa a seção inteira (carrossel grande ao lado do
+ * texto) e os demais descem em grade, como um perfil. Quem quiser o
+ * mural completo segue para /sonhos.
+ */
 export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
   // A vitrine pública só existe quando há ao menos uma entrega publicada.
   // Rascunhos e registros privados já são filtrados pela consulta de origem.
   if (entregas.length === 0) return null
 
-  const principal = entregas[0]
-  const outras = entregas.slice(1)
+  const visiveis = entregas.slice(0, LIMITE_MURAL)
+  const principal = visiveis[0]
+  const outras = visiveis.slice(1)
+  const temMais = entregas.length > LIMITE_MURAL
+  const mes = mesDaEntrega(principal.entregueEm)
 
   return (
-<section
-        id="sonhos"
-        aria-labelledby="sonhos-titulo"
-        className="bg-painel py-10 sm:py-12 lg:py-14"
-      >
+    <section
+      id="sonhos"
+      aria-labelledby="sonhos-titulo"
+      className="bg-painel py-10 sm:py-12 lg:py-14"
+    >
       <div className="container-site">
         <header className="mb-8 grid gap-5 sm:mb-10 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.55fr)] lg:items-end lg:gap-12">
           <h2 id="sonhos-titulo" className="titulo max-w-[13ch] text-4xl text-texto sm:text-6xl">
             Sonhos realizados
           </h2>
-          <p className="corpo max-w-[38ch] text-texto-2 lg:justify-self-end">
-            Entregas da DG Motos.
-          </p>
+          <div className="lg:justify-self-end">
+            <p className="corpo max-w-[34ch] text-texto-2">Entregas da DG Motos.</p>
+            {temMais ? (
+              <Link to="/sonhos" className="btn btn-secondary mt-4 min-h-11 w-fit gap-2 px-4 text-sm">
+                Ver todas as entregas
+                <ArrowUpRight className="size-4" aria-hidden="true" />
+              </Link>
+            ) : null}
+          </div>
         </header>
 
-        {principal ? (
-          <>
-            <article className="grid bg-fundo lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)]">
-              <figure className="relative aspect-[4/3] overflow-hidden bg-painel-2 lg:aspect-auto lg:min-h-[34rem]">
-                <img
-                  src={principal.imagem}
-                  alt={`Entrega da ${principal.moto} pela DG Motos`}
-                  className="absolute inset-0 size-full object-cover"
-                  width={1200}
-                  height={900}
-                  fetchPriority="high"
-                  decoding="async"
-                />
-                {dataDaEntrega(principal.entregueEm) ? (
-                  <figcaption className="absolute inset-x-0 bottom-0 bg-black/75 px-5 py-4 text-sm text-white sm:px-7 sm:py-5">
-                    <span className="block font-display text-xl font-semibold sm:text-2xl">
-                      {principal.moto}
-                    </span>
-                    <span className="mt-1 block text-sm text-white/80">
-                      {dataDaEntrega(principal.entregueEm)}
-                    </span>
-                  </figcaption>
-                ) : null}
-              </figure>
+        <article className="grid bg-fundo lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
+          <figure className="relative aspect-[4/5] overflow-hidden bg-painel-2 sm:aspect-[4/3] lg:aspect-auto lg:min-h-[30rem]">
+            <CarrosselFotos imagens={principal.imagens} moto={principal.moto} prioridade />
+          </figure>
 
-              <div className="flex flex-col justify-between gap-8 p-5 sm:p-8 lg:p-10">
-                <div>
-                  <h3 className="font-display text-2xl leading-snug font-semibold tracking-[-0.02em] text-texto sm:text-3xl">
-                    {principal.moto}
-                  </h3>
-                  {principal.nomeCliente ? (
-                    <p className="mt-3 text-sm text-texto-2">{principal.nomeCliente}</p>
-                  ) : null}
-                  {principal.depoimento ? (
-                    <blockquote className="mt-6 border-l border-marca pl-4 text-base leading-relaxed text-texto-2 sm:mt-8 sm:pl-5 sm:text-lg">
-                      {principal.depoimento}
-                    </blockquote>
-                  ) : null}
-                </div>
-                <Link to="/estoque" className="btn btn-secondary min-h-12 w-fit gap-2 px-5">
-                  Ver motos disponíveis
-                  <ArrowUpRight className="size-4" aria-hidden="true" />
-                </Link>
-              </div>
-            </article>
+          <div className="flex flex-col justify-between gap-8 p-5 sm:p-8 lg:p-10">
+            <div>
+              <p className="text-[11px] font-semibold tracking-[0.14em] text-marca uppercase">
+                {mes ? `Entrega · ${mes}` : 'Entrega realizada'}
+              </p>
+              <h3 className="mt-3 font-display text-2xl leading-snug font-semibold tracking-[-0.02em] text-texto sm:text-3xl">
+                {principal.moto}
+              </h3>
+              {principal.nomeCliente ? (
+                <p className="mt-3 text-sm text-texto-2">{principal.nomeCliente}</p>
+              ) : null}
+              {principal.depoimento ? (
+                <blockquote className="mt-6 border-l border-marca pl-4 text-base leading-relaxed text-texto-2 sm:mt-8 sm:pl-5 sm:text-lg">
+                  {principal.depoimento}
+                </blockquote>
+              ) : null}
+            </div>
+            <Link to="/estoque" className="btn btn-secondary min-h-12 w-fit gap-2 px-5">
+              Ver motos disponíveis
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </article>
 
-            {outras.length > 0 ? (
-              <ul className="mt-6 grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-                {outras.map((entrega) => (
-                  <li key={entrega.id}>
-                    <article className="h-full bg-fundo">
-                      <img
-                        src={entrega.imagem}
-                        alt={`Entrega da ${entrega.moto} pela DG Motos`}
-                        className="aspect-[4/3] w-full object-cover"
-                        width={960}
-                        height={720}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <div className="py-4">
-                        <h3 className="font-display text-xl font-semibold text-texto">
-                          {entrega.moto}
-                        </h3>
-                        {dataDaEntrega(entrega.entregueEm) ? (
-                          <p className="mt-1 text-sm text-texto-3">{dataDaEntrega(entrega.entregueEm)}</p>
-                        ) : null}
-                        {entrega.nomeCliente ? (
-                          <p className="mt-1 text-sm text-texto-2">{entrega.nomeCliente}</p>
-                        ) : null}
-                        {entrega.depoimento ? (
-                          <p className="mt-3 text-sm leading-relaxed text-texto-2">
-                            {entrega.depoimento}
-                          </p>
-                        ) : null}
-                      </div>
-                    </article>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </>
+        {outras.length > 0 ? (
+          <ul className="mt-8 grid grid-cols-1 gap-x-5 gap-y-8 sm:mt-10 sm:grid-cols-2 lg:grid-cols-3">
+            {outras.map((entrega) => (
+              <li key={entrega.id}>
+                <CartaoEntrega entrega={entrega} />
+              </li>
+            ))}
+          </ul>
         ) : null}
       </div>
     </section>

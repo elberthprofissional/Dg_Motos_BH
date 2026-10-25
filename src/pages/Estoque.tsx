@@ -206,7 +206,7 @@ export function Estoque() {
   const totalDisponiveis = motos.filter((moto) => moto.status === 'disponivel').length
 
   return (
-<div className="pt-4 sm:pt-6">
+<div className="pt-cabecalho">
         <section className="bg-fundo pt-6 pb-16 sm:pt-8 sm:pb-24">
           <div className="container-site">
             <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end sm:gap-8">
