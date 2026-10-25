@@ -228,10 +228,10 @@ larguras:**
 
 ## 5. Limitação
 
-Este modelo não lê imagens. A conferência foi feita sobre o DOM renderizado
-(structura, ARIA, estados, contraste medido, transbordo medido) e sobre as
-imagens do código-fonte. **Recomenda-se uma conferência visual humana** das
-telas de destaque antes de publicar.
+Naquela rodada, a conferência foi feita sobre o DOM renderizado (estrutura,
+ARIA, estados, contraste medido, transbordo medido) e sobre as imagens do
+código-fonte; as capturas não foram abertas. Elas ficaram preservadas e
+foram conferidas visualmente na rodada de 25/10 (seção 8).
 
 A foto nova do hero (`img/hero-showroom-2026-03.jfif`) tem **1024 × 434 px**:
 em tela cheia ela é ampliada e fica suave. O site já serve uma versão
@@ -313,10 +313,9 @@ Supabase, autenticação e catálogo não mudou.
 - Medições de layout: cartão do login centralizado (448×568 px em 1440),
   raio de 24 px, campos de 48 px; galeria da ficha em 792×594 px (4:3);
   ficha técnica em 4 colunas no desktop e 2 no celular.
-- **Limitação:** este modelo não lê imagens. A conferência visual das
-  capturas de tela não foi possível; a validação foi feita por geometria e
-  estilos computados no DOM. Recomenda-se uma revisão humana das três telas
-  antes do deploy.
+- **Limitação daquela rodada:** as capturas de tela não foram abertas; a
+  validação foi feita por geometria e estilos computados no DOM. As
+  capturas foram preservadas para conferência posterior.
 
 ### 7.6 Nota de documentação
 
