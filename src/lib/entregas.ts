@@ -101,34 +101,30 @@ export async function buscarEntregasPublicadas(limite?: number): Promise<Entrega
 
   const consulta = sb
     .from('entregas')
-    .select('id,moto_nome,fotos,legenda,nome_cliente,entregue_em')
+    // Só o que a galeria mostra: fotos e data. Nome, moto e legenda
+    // permanecem no painel e nunca são enviados ao navegador do visitante.
+    .select('id,fotos,entregue_em')
     .eq('status', 'publicada')
     .order('ordem', { ascending: true })
     .order('entregue_em', { ascending: false, nullsFirst: false })
 
-  // A Home pede um post a mais do que exibe: o excedente é o que decide
-  // se existe o link "Ver todas as entregas".
+  // A Home passa um limite para não baixar a galeria inteira só para
+  // preencher a seção; a página /sonhos pede tudo.
   const { data, error } = await (limite && limite > 0 ? consulta.limit(limite) : consulta)
 
   if (error || !data) return []
 
-  const linhas = data as Pick<
-    LinhaEntrega,
-    'id' | 'moto_nome' | 'fotos' | 'legenda' | 'nome_cliente' | 'entregue_em'
-  >[]
-  // Uma assinatura para o mural inteiro (URLs de 1h, renovadas pelo hook).
+  const linhas = data as Pick<LinhaEntrega, 'id' | 'fotos' | 'entregue_em'>[]
+  // Uma assinatura para a galeria inteira (URLs de 1h, renovadas pelo hook).
   const urls = await assinarFotos(linhas.flatMap((linha) => linha.fotos ?? []), 60 * 60)
 
   const registros = linhas.map((linha): EntregaPublicada | null => {
     const imagens = (linha.fotos ?? []).map((caminho) => urls.get(caminho) ?? '').filter(Boolean)
-    // Post sem nenhuma foto legível não tem o que mostrar no mural.
+    // Post sem nenhuma foto legível não tem o que mostrar na galeria.
     if (imagens.length === 0) return null
     return {
       id: linha.id,
-      moto: linha.moto_nome,
       imagens,
-      nomeCliente: linha.nome_cliente || undefined,
-      depoimento: linha.legenda || undefined,
       entregueEm: linha.entregue_em || undefined,
     }
   })

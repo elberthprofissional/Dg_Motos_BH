@@ -1,5 +1,5 @@
 -- ============================================================
--- DG MOTOS — Migração 0003: estoque de demonstração
+-- DG MOTOS — Migração 0002: estoque de demonstração
 -- ============================================================
 -- ATENÇÃO: estes 5 registros são DADOS DE DEMONSTRAÇÃO, herdados do site
 -- anterior. Preço, ano e descrição precisam ser confirmados pelo

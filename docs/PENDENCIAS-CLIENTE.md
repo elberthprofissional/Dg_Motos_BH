@@ -9,7 +9,7 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 > na aba **Configurações** do `/admin`: no projeto com Supabase, o valor é
 > salvo na tabela `site_settings` e vale para todos os visitantes na hora
 > (sem rebuild) — o `localStorage` fica só como cache/fallback.
-> Ver `docs/SUPABASE.md` e `supabase/migrations/20260101000004_site_settings.sql`.
+> Ver `docs/SUPABASE.md` e `supabase/migrations/20260101000004_configuracoes_da_loja.sql`.
 
 ## 1. WhatsApp oficial (crítico)
 

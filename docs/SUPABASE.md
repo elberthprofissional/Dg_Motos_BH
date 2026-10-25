@@ -26,14 +26,17 @@ ambiente não existirem, o site simplesmente ignora o Supabase.
 
 ## 2. Criar as tabelas
 
-Abra o **SQL Editor** e execute, na ordem, os três arquivos de
-[`supabase/migrations/`](../supabase/migrations) (detalhes em
+Abra o **SQL Editor** e execute as migrações numeradas de
+[`supabase/migrations/`](../supabase/migrations), em ordem (detalhes em
 [`supabase/README.md`](../supabase/README.md)):
 
-- `..._init_schema.sql` — tabelas `motorcycles` e `motorcycle_images`,
+- `..._cria_esquema_inicial.sql` — tabelas `motorcycles` e `motorcycle_images`,
   índices e trigger de `updated_at`;
-- `..._rls_storage.sql` — RLS, políticas e o bucket público `motos`;
-- `..._seed.sql` — (opcional) 5 motos de demonstração.
+- `..._seguranca_rls_e_storage.sql` — RLS, políticas e o bucket público `motos`;
+- `..._dados_iniciais_estoque.sql` — (opcional) 5 motos de demonstração;
+- `..._configuracoes_da_loja.sql`, `..._promocoes_do_estoque.sql`,
+  `..._registro_de_vendas.sql` e `..._publicacoes_de_entregas.sql` —
+  configurações, promoções, histórico de vendas e a galeria de entregas.
 
 ## 3. Ligar o projeto ao site
 
@@ -120,12 +123,13 @@ os avisos por e-mail da Supabase.
 
 O contato, o Instagram, o endereço e os horários saem de
 `src/data/site.ts` (padrão de fábrica). A aba **Configurações** deixa o
-dono editar isso e salvar; o valor vai para o `localStorage` e a vitrine
-passa a usá-lo na hora, sem novo build. Duas ressalvas:
+dono editar isso e salvar. Com o Supabase configurado, o valor vai para a
+tabela pública `site_settings` (migração
+`20260101000004_configuracoes_da_loja.sql`) e passa a valer para todos os
+visitantes na hora, sem novo build. O `localStorage` fica como cache e
+fallback quando o banco não responde.
 
-- vale só **neste navegador/aparelho** — os visitantes continuam vendo o
-  padrão de fábrica até essa config migrar para uma tabela do Supabase;
-- o mesmo local tem o botão **Instalar o aplicativo** (ver PWA abaixo).
+- O mesmo local tem o botão **Instalar o aplicativo** (ver PWA abaixo).
 
 ---
 
@@ -182,8 +186,8 @@ embaladas no JavaScript e ficam públicas para qualquer visitante.
 | --- | --- |
 | `/admin` diz "Área restrita desativada" | `.env` ausente, ou build anterior ao `.env`. Refaça o build. |
 | Login diz "E-mail ou senha incorretos" | Usuário não criado em Authentication → Users, ou e-mail não confirmado. |
-| Fotos não sobem | Bucket `motos` não criado (rode `..._rls_storage.sql`) ou política de Storage faltando. |
+| Fotos não sobem | Bucket `motos` não criado (rode `..._seguranca_rls_e_storage.sql`) ou política de Storage faltando. |
 | `duplicate key` ao salvar | O sistema tenta sozinho o próximo endereço livre (`-2`, `-3`…). Se persistir, é outra restrição do banco: veja o erro completo no console. |
-| Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). A config da loja (aba Configurações) é exceção: vale na hora, mas só no navegador onde foi salva. |
+| Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). A config da loja (aba Configurações) é exceção: vai para `site_settings` e vale na hora. |
 | Instalar o app não aparece | Precisa HTTPS e o manifest acessível. No iPhone/Safari não há prompt: use *Compartilhar → Adicionar à Tela de Início*. |
 | `npm run build` usa o catálogo antigo | Faltam as chaves no `.env` **no ambiente do build**, não só localmente. |

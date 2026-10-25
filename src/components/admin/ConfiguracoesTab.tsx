@@ -6,19 +6,14 @@ import {
   Clock,
   MapPin,
   MessageCircle,
-  RotateCcw,
   Smartphone,
   Trash2,
 } from 'lucide-react'
 import {
-  configPadrao,
   gravarConfig,
   gravarConfigNoBanco,
   lerConfig,
   lerConfigDoBanco,
-  limparConfig,
-  limparConfigLocal,
-  limparConfigNoBanco,
 } from '../../lib/configLoja'
 import type { ConfigLoja } from '../../lib/configLoja'
 import { buildMapsRouteUrl } from '../../lib/maps'
@@ -131,21 +126,11 @@ function Campo({
 }
 
 /** Botões de salvar/restaurar no pé de cada seção. */
-function AcoesSecao({
-  onSalvar,
-  onRestaurar,
-}: {
-  onSalvar: () => void
-  onRestaurar: () => void
-}) {
+function AcoesSecao({ onSalvar }: { onSalvar: () => void }) {
   return (
     <div className="flex flex-wrap gap-3 border-t border-line pt-5">
       <button type="button" onClick={onSalvar} className="btn btn-primary h-11 sm:h-auto">
         Salvar
-      </button>
-      <button type="button" onClick={onRestaurar} className="btn btn-secondary h-11 sm:h-auto">
-        <RotateCcw className="size-4" aria-hidden="true" />
-        Restaurar padrão
       </button>
     </div>
   )
@@ -202,22 +187,6 @@ export function ConfiguracoesTab() {
     setSalvo(config)
   }
 
-  function restaurar() {
-    limparConfig()
-    limparConfigLocal()
-    void limparConfigNoBanco().then((ok) => {
-      const padrao = configPadrao()
-      setConfig(padrao)
-      setSalvo(padrao)
-      setFeedback({
-        tipo: ok ? 'ok' : 'erro',
-        texto: ok
-          ? 'Valores de fábrica restaurados no banco e no site.'
-          : 'Valores restaurados localmente. Não foi possível restaurar no banco.',
-      })
-    })
-  }
-
   /**
    * Formulário de cada seção. É uma função (não componente) de propósito:
    * assim os campos não perdem foco a cada render do pai — identidade de
@@ -231,7 +200,6 @@ export function ConfiguracoesTab() {
           <Campo
             id="cfg-whatsapp"
             label="WhatsApp da loja"
-            dica="Só dígitos, com DDI e DDD. Ex.: 5531987654321. Vazio = os botões do site caem na página de contato."
           >
             <input
               id="cfg-whatsapp"
@@ -242,7 +210,7 @@ export function ConfiguracoesTab() {
               onChange={(e) => set('whatsapp', e.target.value.replace(/\D/g, '') || null)}
             />
           </Campo>
-          <AcoesSecao onSalvar={salvar} onRestaurar={restaurar} />
+          <AcoesSecao onSalvar={salvar} />
         </fieldset>
       )
     }
@@ -282,7 +250,7 @@ export function ConfiguracoesTab() {
               </a>
             </p>
           ) : null}
-          <AcoesSecao onSalvar={salvar} onRestaurar={restaurar} />
+          <AcoesSecao onSalvar={salvar} />
         </fieldset>
       )
     }
@@ -320,7 +288,7 @@ export function ConfiguracoesTab() {
               </a>
             </p>
           ) : null}
-          <AcoesSecao onSalvar={salvar} onRestaurar={restaurar} />
+          <AcoesSecao onSalvar={salvar} />
         </fieldset>
       )
     }
@@ -400,20 +368,12 @@ export function ConfiguracoesTab() {
   /* ==================================================================== */
   const desktop = (
     <div className="hidden lg:block">
-      <header className="border-b border-line pb-5">
-        <h2 className="painel-h1">Configurações</h2>
-        <p className="mt-1.5 max-w-2xl text-sm text-steel-500">
-          Ajuste o que aparece nos botões e no rodapé do site, além do
-          aplicativo do painel. Escolha uma seção à esquerda.
-        </p>
-      </header>
-
-      <div className="mt-6 flex gap-8">
+      <div className="mt-2 flex gap-10">
         {/* Navegação secundária: subordinada à sidebar — mais leve, sem
             caixa própria, só divisores sutis e o fio vermelho no ativo. */}
-        <nav aria-label="Seções de configuração" className="w-60 shrink-0">
+        <nav aria-label="Seções de configuração" className="w-64 shrink-0">
           <div className="space-y-6">
-            {GRUPOS.map((grupo) => {
+            {GRUPOS.filter((g) => g.id !== 'app').map((grupo) => {
               const itens = SECOES.filter((s) => s.grupo === grupo.id)
               if (itens.length === 0) return null
               return (
@@ -456,7 +416,7 @@ export function ConfiguracoesTab() {
         {/* Painel de edição: título, descrição e formulário. Largura
             máxima generosa para não virar coluna estreita no centro. */}
         <div className="min-w-0 flex-1">
-          <div className="max-w-3xl">
+          <div className="max-w-4xl">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-paper">{ativaDesktop.rotulo}</h3>
               {temAlteracoes ? (

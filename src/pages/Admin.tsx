@@ -2,50 +2,53 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
+  CircleDollarSign,
   Settings,
   User,
   LogOut,
   Package,
   Images,
 } from 'lucide-react'
-import { atualizarStatus, buscarCatalogo, excluirMoto } from '../lib/catalog'
+import { atualizarStatus, buscarCatalogo, excluirMoto, motoParaFormulario } from '../lib/catalog'
 import type { MotoParaSalvar, ResultadoCatalogo } from '../lib/catalog'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
 import { EstoqueTab } from '../components/admin/EstoqueTab'
 import { ConfiguracoesTab } from '../components/admin/ConfiguracoesTab'
 import { VendidasTab } from '../components/admin/VendidasTab'
+import { PublicacoesTab } from '../components/admin/PublicacoesTab'
 import { DialogoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import type { PedidoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import { Toast } from '../components/ui/Toast'
 import type { Feedback } from '../components/ui/Toast'
 import type { Motorcycle, MotorcycleStatus } from '../types'
 
-type Aba = 'estoque' | 'entregas' | 'configuracoes'
+type Aba = 'estoque' | 'vendidas' | 'publicacoes' | 'configuracoes'
 
-/* "Vendidas": a aba da Home não é mais um cadastro à parte — é o
-   eco do estoque. Toda moto vendida entra aqui pronta pra virar
-   post em "Realizando Sonhos". */
+/* "Vendidas" é o eco do estoque: toda moto vendida entra aqui, com a
+   ficha editável. As fotos de entrega vivem em "Publicações". */
 const ABAS: { id: Aba; rotulo: string; icone: typeof Package }[] = [
   { id: 'estoque', rotulo: 'Estoque', icone: Package },
-  { id: 'entregas', rotulo: 'Vendidas', icone: Images },
+  { id: 'vendidas', rotulo: 'Vendidas', icone: CircleDollarSign },
+  { id: 'publicacoes', rotulo: 'Publicações', icone: Images },
   { id: 'configuracoes', rotulo: 'Configurações', icone: Settings },
 ]
 
-/* Barra inferior do celular: só as duas áreas de trabalho. Configurações
-   vive no menu do avatar, no topo — barra com 2 itens respira melhor. */
+/* Barra inferior do celular: as três áreas de trabalho. Configurações
+   vive no menu do avatar, no topo. */
 const ABAS_CELLULAR: { id: Aba; rotulo: string; icone: typeof Package }[] = [
   { id: 'estoque', rotulo: 'Estoque', icone: Package },
-  { id: 'entregas', rotulo: 'Vendidas', icone: Images },
+  { id: 'vendidas', rotulo: 'Vendidas', icone: CircleDollarSign },
+  { id: 'publicacoes', rotulo: 'Publicações', icone: Images },
 ]
 
 /**
  * ============================================================
  * PAINEL DO PROPRIETÁRIO
  * ============================================================
- * Áreas: gestão de estoque, entregas publicadas na Home e configurações da loja (contato,
- * endereço, horários). Sem dashboard, financeiro ou relatórios — o
- * que a operação usa de verdade cabe nestas duas telas.
+ * Áreas: estoque, vendidas, publicações da galeria e configurações da
+ * loja (contato, endereço, horários). Sem dashboard, financeiro ou
+ * relatórios — o que a operação usa de verdade cabe nestas telas.
  *
  * Navegação: sidebar lateral no desktop e, no celular, barra inferior
  * fixa no celular para manter as três áreas principais ao alcance.
@@ -165,12 +168,18 @@ export function Admin() {
     setAba(proxima)
   }
 
+  /** Editar uma vendida é editar a moto: abre a ficha no Estoque. */
+  function editarVendida(moto: Motorcycle) {
+    setEditando({ id: moto.id, dados: motoParaFormulario(moto) })
+    setAba('estoque')
+  }
+
   /** Sair pede confirmação: o botão fica junto de "Ver o site" e um
       toque errado derrubaria a sessão no meio de uma edição. */
   function pedirSaida() {
     setConfirmacao({
       titulo: 'Sair do painel',
-      descricao: 'Você vai precisar entrar de novo com e-mail e senha para gerenciar o estoque.',
+      descricao: 'Tem certeza que deseja sair?',
       rotuloConfirmar: 'Sair',
       tom: 'neutro',
       onConfirmar: async () => {
@@ -387,11 +396,18 @@ export function Admin() {
               onAlterarStatus={alterarStatus}
               onSalva={aoSalvarMoto}
               onRecarregar={recarregar}
-              onIrParaVendidas={() => trocarAba('entregas')}
+              onIrParaVendidas={() => trocarAba('vendidas')}
             />
           ) : null}
-          <div className={aba === 'entregas' ? '' : 'hidden'}>
-            <VendidasTab motos={motos ?? []} onFeedback={avisar} />
+          <div className={aba === 'vendidas' ? '' : 'hidden'}>
+            <VendidasTab
+              motos={motos ?? []}
+              onEditar={editarVendida}
+              onIrParaEstoque={() => trocarAba('estoque')}
+            />
+          </div>
+          <div className={aba === 'publicacoes' ? '' : 'hidden'}>
+            <PublicacoesTab onFeedback={avisar} />
           </div>
           {aba === 'configuracoes' ? <ConfiguracoesTab /> : null}
         </main>
@@ -411,7 +427,7 @@ export function Admin() {
             : 'safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-line bg-sidebar lg:hidden'
         }
       >
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-3">
           {ABAS_CELLULAR.map(({ id, rotulo, icone: Icone }) => {
             const ativa = aba === id
             return (

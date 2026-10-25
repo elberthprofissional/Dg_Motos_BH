@@ -321,8 +321,119 @@ Supabase, autenticação e catálogo não mudou.
 ### 7.6 Nota de documentação
 
 O relatório das seções 1–6 descreve uma iteração anterior e cita IBM Plex e
-"canto reto" como regra absoluta. O código atual usa **Lato** como família
-única e admite superfícies arredondadas no catálogo e no login desktop; o
-painel administrativo continua com a regra de canto reto. Os tokens de cor
-vigentes são os de `src/index.css` (`--cor-fundo: #080808`,
-`--cor-painel: #111111`, `--cor-marca: #e5161d`).
+"canto reto" como regra absoluta. Da rodada de 22/10 até aqui, o corpo do
+site usa **Lato** e admite superfícies arredondadas no catálogo e no login
+desktop; o painel administrativo continua com a regra de canto reto. Na
+home desktop, a partir de 25/10, o título editorial usa **Archivo**
+(ver seção 8). Os tokens de cor vigentes são os de `src/index.css`
+(`--cor-fundo: #0f0e0c`, `--cor-painel: #161513`,
+`--cor-marca: #d91f26`).
+
+---
+
+## 8. Atualização — 25/10/2026: redesign desktop da home
+
+Rodada desktop-first. **O catálogo e o estoque não foram tocados**, por
+instrução do cliente: nenhum preço, quilometragem, modelo, card ou filtro
+mudou nesta rodada. Também não mudaram rotas, consultas ao Supabase, busca,
+fluxo de troca, links de contato ou os ramos mobile dos componentes.
+
+### 8.1 Direção e referências
+
+A direção escolhida foi **pinned poster** (seed `1647049801`): um título fixo
+segura o palco enquanto as fotografias trocam sob ele. O assunto é uma
+série — as entregas reais —, e o palco dá a cada foto o tempo de uma capa.
+A tipografia de display é **Archivo variável** no eixo estreito (62%) e peso
+800, em caixa alta, com Lato no texto; a paleta preto/branco/vermelho foi
+mantida, com o vermelho reservado a ação, preço e sinal.
+
+Referências de mercado: a pesquisa foi feita, mas o acesso foi limitado e
+precisa ser registrado como tal — a Ducati retornou **403**, a Honda
+retornou **403**, a BMW Motorrad expirou por timeout e o Awwwards devolveu
+apenas CSS, sem padrões úteis. A Triumph respondeu uma vez, com um resumo
+curto (fotografia grande, tipografia branca pesada, navegação segmentada);
+não houve inspeção visual do site. A decisão final veio do acervo de
+direções da skill de design (pinned poster + Archivo comprimida) e das
+fotos reais do projeto, não de uma cópia de layout de concorrente.
+
+### 8.2 O que mudou
+
+- **Hero desktop** (`Home.tsx`): foto do showroom em tela cheia, título
+  Archivo em duas linhas, linha de apoio, CTA "Ver estoque" e dados da loja
+  no rodapé do hero. O `h1` continua único e legível por leitor de tela.
+  O mobile segue com o título menor em Lato e a foto em cartão, como estava.
+- **Sonhos realizados** (`SonhosRealizados.tsx` + novo
+  `GaleriaEntregasDesktop.tsx`): no desktop, palco `sticky` sob o cabeçalho,
+  título fixo à esquerda e foto ativa à direita; a foto muda pelo scroll
+  (sem autoplay), com contador `01 / 04` e o mês da entrega. Clique abre um
+  `<dialog>` nativo em tela cheia com setas, teclado e devolução de foco.
+  São usadas **todas as fotos publicadas**, até o limite de 6 — com os
+  dados atuais, 4 fotos de 1 entrega, sem repetição artificial. Em
+  `prefers-reduced-motion`, o palco vira grade estática.
+- **Troca** (`Home.tsx`): bloco de papel claro em contraste com o preto,
+  título Archivo, texto factual e CTA "Avaliar minha moto" com o mesmo link
+  de WhatsApp/fallback de antes.
+- **Marcas** (`MarcasProcuradas.tsx`): faixa escura integrada ao rodapé,
+  8 logos estáticos, sem inversão de cor.
+- **Cabeçalho e rodapé** (`Header.tsx`, `Footer.tsx`): no desktop, busca
+  preenchida e CTA vermelho; fundo do rodapé alinhado ao breu da home. Os
+  destinos e comportamentos dos links não mudaram; o menu mobile continua
+  intacto.
+- **Tipografia** (`index.css`, `index.html`): Archivo variável entra apenas
+  no display do desktop; Lato continua no corpo, no painel, no catálogo e
+  no mobile.
+
+### 8.3 Validação
+
+As capturas foram geradas por CDP em `npm run preview` e **inspecionadas
+visualmente**. O script também mediu geometria e estilos computados.
+
+| Largura | h1 | Cabeçalho | Hero | Palco | Foto | Transbordo |
+|---|---|---|---|---|---|---|
+| 1366×768 | 80,6 px · 2 linhas | 68 px | 740 px | 700 px | 544×588 | 0 px |
+| 1440×900 | 85,0 px · 2 linhas | 68 px | 740 px | 832 px | 544×720 | 0 px |
+| 1920×1080 | 110,4 px · 2 linhas | 68 px | 740 px | 1012 px | 544×720 | 0 px |
+| 390×844 | 26 px · 2 linhas | 80 px | 526 px | — | esteira 358×210 | 0 px |
+
+- **Galeria:** 4 fotos reais; contador e mês corretos; lightbox abre,
+  prende o foco no fechar, trava o scroll do fundo, avança com seta,
+  fecha com Esc, restaura o scroll e devolve o foco ao gatilho.
+- **Mobile:** galeria desktop com `display: none`; hero, esteira, troca,
+  marcas e rodapé comparados com as capturas anteriores e sem regressão.
+- **Console:** 0 erros nas rotas e larguras testadas.
+- **Contraste e alvos:** sem novas violações; os controles do lightbox têm
+  rótulo acessível e alvos ≥ 44 px.
+
+### 8.4 Testes e build
+
+- `npm run lint`: 0 erros; permanecem 8 avisos pré-existentes (2 em
+  `vendasContexto`, 6 em scripts `.mjs`).
+- `npm run typecheck`: ok.
+- `npm test`: 98 testes em 6 arquivos, todos passando.
+- `npm run build`: ok; 2062 módulos; prerender de 4 fichas; sitemap com 8
+  URLs; robots bloqueando `/admin`.
+
+### 8.5 Migrações e documentação
+
+As oito migrações foram renomeadas para nomes descritivos, mantendo a ordem
+numérica: `cria_esquema_inicial`, `seguranca_rls_e_storage`,
+`dados_iniciais_estoque`, `corrige_estrutura_estoque`, `configuracoes_da_loja`,
+`promocoes_do_estoque`, `registro_de_vendas`, `publicacoes_de_entregas`.
+Os cabeçalhos internos foram renumerados para coincidir com os arquivos, e
+`README.md`, `supabase/README.md`, `docs/SUPABASE.md` e
+`docs/PENDENCIAS-CLIENTE.md` apontam para os nomes novos.
+
+### 8.6 Pendências e limitações
+
+- **Preços do estoque:** três cards exibem R$ 30,90, R$ 27,90 e R$ 23,90
+  (valores gravados pela metade), enquanto outro mostra R$ 15.999,00. O
+  catálogo não foi alterado nesta rodada por instrução; a correção está em
+  `supabase/diagnostico-precos.sql` e no aviso do README do Supabase.
+- `WHATSAPP_NUMBER` continua nulo; os CTAs caem em `/contato`.
+- A foto do hero tem 1024×434 px e é ampliada no desktop; para telas 1920
+  o ideal é uma origem de 1920 px ou mais.
+- A auditoria antiga `.taste-skill/inspect/auditar-sonhos-home.mjs` ainda
+  descreve a esteira desktop que foi substituída; ela é um artefato local
+  (gitignored) e foi substituída por `.taste-skill/inspect/validar-redesign.mjs`.
+- As referências externas tiveram o acesso parcial descrito em 8.1; nenhuma
+  tela de concorrente foi inspecionada visualmente.

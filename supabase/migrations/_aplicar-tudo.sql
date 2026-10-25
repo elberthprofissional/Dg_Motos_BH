@@ -1,15 +1,18 @@
 -- ============================================================
 -- DG MOTOS — aplicar todas as migrações de uma vez
 -- ============================================================
--- Ordem: 0000 init · 0001 RLS/Storage · 0002 demo · 0003 correção ·
---         0004 site_settings · 0005 promoção · 0006 vendas · 0007 entregas.
+-- Ordem (mesma dos arquivos numerados):
+--   0000 cria_esquema_inicial · 0001 seguranca_rls_e_storage ·
+--   0002 dados_iniciais_estoque · 0003 corrige_estrutura_estoque ·
+--   0004 configuracoes_da_loja · 0005 promocoes_do_estoque ·
+--   0006 registro_de_vendas · 0007 publicacoes_de_entregas.
 -- O bloco de demo é opcional — cria 5 motos de demonstração.
 -- O bloco final conserta banco que já tinha uma tabela `motorcycles`
 -- incompleta e cria a config global da loja (site_settings).
 -- ============================================================
 
 -- ============================================================
--- 0001: estrutura do catálogo
+-- 0000: estrutura do catálogo (cria_esquema_inicial)
 --   motorcycles       → a moto (dados comerciais e técnicos)
 --   motorcycle_images → relação 1:N das fotos, com ordem (posicao)
 -- ============================================================
@@ -82,7 +85,7 @@ create trigger trg_motos_updated_at
   for each row execute function public.touch_updated_at();
 
 -- ============================================================
--- 0002: RLS e Storage
+-- 0001: RLS e Storage (seguranca_rls_e_storage)
 --   Leitura do catálogo ...... liberada (a vitrine precisa)
 --   Escrita no catálogo ...... apenas usuário autenticado (o dono)
 --   Upload/remoção de foto ... apenas usuário autenticado
@@ -172,7 +175,7 @@ create policy "dono apaga foto"
   using (bucket_id = 'motos');
 
 -- ============================================================
--- 0003: estoque de demonstração (OPCIONAL)
+-- 0002: estoque de demonstração (dados_iniciais_estoque — OPCIONAL)
 --   5 motos de demonstração. Preço/ano/descrição precisam ser
 --   confirmados pelo proprietário (ver docs/PENDENCIAS-CLIENTE.md).
 --   Só insere quando a tabela está vazia.
@@ -229,7 +232,7 @@ join (values
 ) as img(slug, src, alt, posicao) on img.slug = n.slug;
 
 -- ============================================================
--- 0004: correção de banco incompleto (ver arquivo dedicado)
+-- 0003: correção de banco incompleto (corrige_estrutura_estoque)
 -- ============================================================
 -- Se `motorcycles` já existia sem a coluna `status` (create table if not
 -- exists não altera tabela existente) e/ou `motorcycle_images` não existia,
@@ -293,7 +296,7 @@ where not exists (
 );
 
 -- ============================================================
--- 0004: configurações globais da loja (site_settings)
+-- 0004: configurações globais da loja (configuracoes_da_loja)
 --   WhatsApp, Instagram, endereço e horários editáveis pelo dono
 --   em /admin → Configurações, sem rebuild. A vitrine lê daqui
 --   (src/lib/configLoja.ts) com fallback para src/data/site.ts.
@@ -361,7 +364,7 @@ values (
 on conflict (key) do nothing;
 
 -- ============================================================
--- 0005: promoção — em_promocao + preco_antes (ver arquivo dedicado)
+-- 0005: promoção — em_promocao + preco_antes (promocoes_do_estoque)
 --   O antigo "destaque" vira promoção: selo de desconto e preço
 --   "de → por" no site, e a moto sai na frente da vitrine.
 -- ============================================================
@@ -392,8 +395,8 @@ alter table public.motorcycles drop column if exists destaque;
 drop index if exists public.idx_motos_destaque;
 
 -- ============================================================
--- 0006: vendas — histórico de vendas + custo de compra (ver arquivo
---   dedicado 20260101000006_vendas.sql). Quando o dono marca uma
+-- 0006: vendas — histórico de vendas + custo de compra (registro_de_vendas).
+--   Quando o dono marca uma
 --   moto como vendida, o painel registra quem comprou, como pagou
 --   e por quanto; a aba "Vendas" lista e soma o lucro.
 -- ============================================================
@@ -441,7 +444,7 @@ create policy "sales_dono_remove"
   using (true);
 
 -- ============================================================
--- 0007: entregas e publicações da Home
+-- 0007: entregas e publicações da Home (publicacoes_de_entregas)
 -- ============================================================
 
 create table if not exists public.entregas (

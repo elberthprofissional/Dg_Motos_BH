@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
-import { Camera, ImagePlus, Loader2, Trash2 } from 'lucide-react'
+import { ImageOff, Trash2 } from 'lucide-react'
 import { BUCKET_ENTREGAS, getSupabase } from '../../lib/supabase'
-import { temCameraNaHora } from '../../lib/dispositivo'
+import { AreaUploadFoto } from './AreaUploadFoto'
+import { MarcaCapa } from './MarcaCapa'
 
 interface FotosEntregaInputProps {
   entregaId: string
@@ -39,13 +40,11 @@ async function comprimirFoto(arquivo: File): Promise<Blob> {
 
 /**
  * ============================================================
- * FOTOS DO POST — galeria estilo Instagram
+ * FOTOS DA PUBLICAÇÃO — prova de contato
  * ============================================================
- * O post de "Realizando Sonhos" aceita várias fotos: a primeira é
- * a capa do cartão no mural e as demais entram no carrossel. Cada
- * miniatura se apaga individualmente; a entrada é por lote (o
- * seletor aceita vários arquivos de uma vez, como um post do
- * Instagram).
+ * A primeira foto abre o card no mural; todas entram no carrossel,
+ * na ordem em que foram enviadas. As molduras são numeradas como
+ * numa prova de contato e a capa recebe a marca de lápis graxa.
  */
 export function FotosEntregaInput({
   entregaId,
@@ -56,8 +55,6 @@ export function FotosEntregaInput({
 }: FotosEntregaInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
-  // Só no celular: lá o "Tirar foto" abre a câmera em vez do seletor.
-  const [temCamera] = useState(temCameraNaHora)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -129,96 +126,92 @@ export function FotosEntregaInput({
   return (
     <div>
       {paths.length > 0 ? (
-        <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+        <div className="mb-4 grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 lg:grid-cols-4">
           {paths.map((path, index) => (
-            <div
-              key={path}
-              className="relative aspect-[4/3] overflow-hidden border border-line bg-painel-2"
-            >
-              {urls[index] ? (
-                <img
-                  src={urls[index]}
-                  alt={descricao ? `Foto ${index + 1} do post ${descricao}` : `Foto ${index + 1} do post`}
-                  className="size-full object-cover"
-                />
-              ) : null}
-              {index === 0 ? (
-                /* A capa é a ordem: a primeira foto pende no cartão
-                    do mural; as outras abrem no carrossel. */
-                <span className="absolute left-0 top-0 bg-night-950/85 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-paper uppercase">
-                  Capa
+            <div key={path}>
+              <div className="relative aspect-[4/5] overflow-hidden bg-painel-2">
+                {urls[index] ? (
+                  <img
+                    src={urls[index]}
+                    alt={
+                      descricao
+                        ? `Foto ${index + 1} da ${descricao}${index === 0 ? ', capa' : ''}`
+                        : `Foto ${index + 1} da publicação${index === 0 ? ', capa' : ''}`
+                    }
+                    className="size-full object-cover"
+                    width={640}
+                    height={800}
+                  />
+                ) : (
+                  <span className="grid size-full place-items-center text-steel-600">
+                    <ImageOff className="size-4" aria-hidden="true" />
+                  </span>
+                )}
+
+                {index === 0 ? (
+                  <MarcaCapa className="pointer-events-none absolute inset-2 text-brand-400" />
+                ) : null}
+
+                <button
+                  type="button"
+                  onClick={() => remover(index)}
+                  disabled={enviando}
+                  aria-label={`Remover foto ${index + 1}`}
+                  className="foco-painel absolute top-1.5 right-1.5 grid size-11 place-items-center bg-night-950/90 text-steel-300 transition-colors hover:bg-night-950 hover:text-brand-400 disabled:cursor-wait disabled:opacity-40"
+                >
+                  <Trash2 className="size-4" aria-hidden="true" />
+                </button>
+              </div>
+
+              {/* Legenda da prova de contato: número da moldura e a
+                  marca de capa, não um selo de interface. */}
+              <div className="flex items-center justify-between gap-2 border-b border-line py-2">
+                <span
+                  className={`numeros text-[11px] ${
+                    index === 0 ? 'text-brand-400' : 'text-steel-600'
+                  }`}
+                >
+                  {String(index + 1).padStart(2, '0')}
                 </span>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => remover(index)}
-                aria-label={`Remover foto ${index + 1}`}
-                className="foco-painel grid size-9 place-items-center border border-line-forte bg-night-950/95 text-steel-300 transition-colors hover:border-red-400/50 hover:text-red-300"
-              >
-                <Trash2 className="size-4" aria-hidden="true" />
-              </button>
+                {index === 0 ? (
+                  <span className="text-[11px] font-medium text-brand-400">capa</span>
+                ) : null}
+              </div>
             </div>
           ))}
         </div>
       ) : null}
 
-      {/* Quem escolhe as fotos é o painel inteiro: <label> clicável. */}
-      <label
-        htmlFor={`fotos-post-${entregaId}`}
-        className={`foco-entrega-foto group flex cursor-pointer items-center gap-4 border border-dashed border-line-forte bg-painel-2 p-4 transition-colors focus-within:border-brand-400/80 focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-brand-400 ${
-          enviando ? 'pointer-events-none opacity-70' : 'hover:border-brand-400/60 hover:bg-painel-3'
-        }`}
-      >
-        <input
-          ref={inputRef}
-          id={`fotos-post-${entregaId}`}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => void enviar(e.currentTarget.files)}
-          className="sr-only"
-        />
-        <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center border border-line bg-night-950 text-brand-400">
-          {enviando ? <Loader2 className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}
-        </span>
-        <span className="min-w-0">
-          <span className="block text-sm font-semibold text-paper">
-            {enviando ? 'Enviando fotos…' : paths.length > 0 ? 'Adicionar mais fotos' : 'Escolher as fotos'}
-          </span>
-          <span className="mt-1 block text-xs leading-snug text-steel-400">
-            {paths.length > 0
-              ? `${paths.length} no post · a primeira vira a capa do mural`
-              : 'Quantas quiser (até 10). A primeira vira a capa do mural.'}
-          </span>
-          <span className="mt-1 block text-xs text-steel-500">JPG, PNG ou WebP · até 12 MB cada</span>
-        </span>
-      </label>
-      {/* Na entrega a foto é tirada na hora, com a moto e o cliente na
-          frente — a galeria é o caminho do que já foi fotografado. */}
-      {temCamera ? (
-        <label
-          htmlFor={`camera-post-${entregaId}`}
-          className={`foco-painel mt-2 flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-line bg-painel-2 text-sm font-medium text-steel-300 transition-colors hover:border-line-forte hover:text-paper ${
-            enviando ? 'pointer-events-none opacity-60' : ''
-          }`}
-        >
-          <input
-            ref={cameraRef}
-            id={`camera-post-${entregaId}`}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => void enviar(e.currentTarget.files)}
-            className="sr-only"
-          />
-          {enviando ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Camera className="size-4" aria-hidden="true" />
-          )}
-          {enviando ? 'Enviando foto…' : 'Tirar foto agora'}
-        </label>
-      ) : null}
+      {/* Os inputs nativos ficam fora da árvore de acessibilidade: o
+          controle real é o retângulo de upload, e o texto "Nenhum
+          arquivo escolhido" não deve vazar para a tela. */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(e) => void enviar(e.currentTarget.files)}
+        className="hidden"
+      />
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(e) => void enviar(e.currentTarget.files)}
+        className="hidden"
+      />
+      <AreaUploadFoto
+        enviando={enviando}
+        compacto={paths.length > 0}
+        onEscolher={() => inputRef.current?.click()}
+        onTirarFoto={() => cameraRef.current?.click()}
+        onArquivos={(arquivos) => void enviar(arquivos)}
+      />
 
       {erro ? <p role="alert" className="mt-2 text-sm text-red-400">{erro}</p> : null}
     </div>

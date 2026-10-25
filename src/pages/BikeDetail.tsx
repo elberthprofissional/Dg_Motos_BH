@@ -1,12 +1,10 @@
 import { Link, useParams } from 'react-router-dom'
-import { ChevronRight, MapPin } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { useWhatsappLink } from '../hooks/useWhatsappLink'
 import { vehicleSchema } from '../lib/schema'
 import { bikeTitle, buildBikeMessage, descontoPercentual, formatKm, formatPrice, precoRequerConfirmacao } from '../lib/format'
 import { usePageMeta } from '../hooks/usePageMeta'
-import { useSiteConfig } from '../hooks/siteConfigContexto'
 import { BikeGallery } from '../components/motorcycles/BikeGallery'
 import { IconeWhatsapp } from '../components/ui/IconeWhatsapp'
 import { Button } from '../components/ui/Button'
@@ -50,7 +48,6 @@ function TabelaFicha({ titulo, itens }: { titulo: string; itens: LinhaFicha[] })
 export function BikeDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { motos, carregando, doBanco } = useCatalogo()
-  const { config } = useSiteConfig()
   const bike = motos.find((m) => m.slug === slug)
 
   useJsonLd(bike ? vehicleSchema(bike) : {})
@@ -117,7 +114,7 @@ export function BikeDetail() {
   const desconto = descontoPercentual(bike)
   const resumo = `Motocicleta ${bike.categoria.toLocaleLowerCase('pt-BR')} ${bike.ano}${
     bike.cilindrada ? `, ${bike.cilindrada} cc` : ''
-  }, em ${config.enderecoCidadeUf}.`
+  }.`
 
   const mecanica = bike.especificacoes ?? []
   const temFicha = mecanica.length > 0 || temDescricao
@@ -126,33 +123,7 @@ export function BikeDetail() {
     .slice(0, 3)
   return (
     <div className="pt-cabecalho">
-      <div className="container-site pt-7 pb-12 lg:pt-10 lg:pb-16">
-        <nav
-          aria-label="Navegação estrutural"
-          className="mb-7 flex flex-wrap items-center gap-1.5 text-[13px] text-texto-3"
-        >
-          <Link
-            to="/"
-            className="inline-flex min-h-6 items-center transition-colors hover:text-texto"
-          >
-            Início
-          </Link>
-          <ChevronRight className="size-3" aria-hidden="true" />
-          <Link
-            to="/estoque"
-            className="inline-flex min-h-6 items-center transition-colors hover:text-texto"
-          >
-            Estoque
-          </Link>
-          <ChevronRight className="size-3" aria-hidden="true" />
-          <span className="text-texto-2">
-            {titulo} {bike.ano}
-          </span>
-        </nav>
-
-        {/* `grid-cols-1` (minmax(0,1fr)) e não só `grid`: sem isso a
-            coluna cresce até o min-content da esteira de miniaturas e
-            a página inteira passa da tela no celular. */}
+       <div className="container-site pt-7 pb-12 lg:pt-10 lg:pb-16">
         <div className="grid grid-cols-1 gap-9 md:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] md:items-start md:gap-10 lg:gap-12 xl:gap-16">
           <div className="order-2 min-w-0 md:order-none">
             <BikeGallery
@@ -253,20 +224,8 @@ export function BikeDetail() {
                   <IconeWhatsapp className="size-[18px] shrink-0" />
                   Falar com a loja
                 </Link>
-              )}
-
-              <p className="mt-4 flex items-start gap-2 text-sm leading-relaxed text-texto-2">
-                <MapPin
-                  className="mt-0.5 size-4 shrink-0 text-texto-3"
-                  aria-hidden="true"
-                />
-                <span>
-                  {config.enderecoRua}
-                  <br />
-                  <span className="text-texto-3">{config.enderecoCidadeUf}</span>
-                </span>
-              </p>
-            </div>
+               )}
+             </div>
           </div>
         </div>
       </div>
@@ -307,32 +266,7 @@ export function BikeDetail() {
                 </Revelar>
               ) : null}
             </div>
-          ) : (
-            <Revelar className="mt-10">
-              <div className="max-w-xl border border-borda bg-fundo/60 p-6">
-                <p className="text-sm leading-relaxed text-texto-2">
-                  A ficha detalhada dessa unidade ainda não foi publicada.
-                  Chama a loja que a gente conta tudo: estado do motor,
-                  documentação e histórico.
-                </p>
-                {waHref ? (
-                  <a
-                    href={waHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-primary mt-4 h-10 gap-2 px-5 text-sm"
-                  >
-                    <IconeWhatsapp className="size-4 shrink-0" />
-                    Perguntar no WhatsApp
-                  </a>
-                ) : (
-                  <Link to="/contato" className="btn btn-primary mt-4 h-10 px-5 text-sm">
-                    Perguntar à loja
-                  </Link>
-                )}
-              </div>
-            </Revelar>
-          )}
+           ) : null}
         </div>
       </section>
 

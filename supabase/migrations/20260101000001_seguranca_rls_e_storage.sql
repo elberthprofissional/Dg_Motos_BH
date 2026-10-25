@@ -1,5 +1,5 @@
 -- ============================================================
--- DG MOTOS — Migração 0002: RLS e Storage
+-- DG MOTOS — Migração 0001: RLS e Storage
 -- ============================================================
 -- A chave anônima do Supabase é pública (vai no bundle do site). Por
 -- isso a segurança real mora aqui: sem estas políticas, qualquer pessoa

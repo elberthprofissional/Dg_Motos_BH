@@ -1,5 +1,5 @@
 -- ============================================================
--- DG MOTOS — Migração 0001: estrutura do catálogo
+-- DG MOTOS — Migração 0000: estrutura do catálogo
 -- ============================================================
 -- Aplicar em ordem numérica no SQL Editor do Supabase
 -- (ver supabase/README.md). O script é idempotente: pode rodar de novo.

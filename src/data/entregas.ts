@@ -1,13 +1,16 @@
 export type StatusEntrega = 'rascunho' | 'publicada' | 'arquivada'
 
-/** Post que pode aparecer no mural público depois da publicação no admin. */
+/**
+ * Post que pode aparecer na galeria pública depois da publicação no admin.
+ *
+ * A galeria é anônima de propósito: o visitante vê as fotos e a data, sem
+ * modelo da moto, nome do cliente ou legenda. Esses dados continuam no
+ * painel para o dono se organizar, mas não saem do banco para o site.
+ */
 export interface EntregaPublicada {
   id: string
-  moto: string
   /** Fotos do post, na ordem de exibição (URLs assinadas de 1h). */
   imagens: string[]
-  nomeCliente?: string
-  depoimento?: string
   entregueEm?: string
 }
 

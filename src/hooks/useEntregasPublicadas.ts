@@ -12,15 +12,20 @@ import { buscarEntregasPublicadas } from '../lib/entregas'
  */
 export function useEntregasPublicadas(limite?: number) {
   const [entregas, setEntregas] = useState<EntregaPublicada[]>([])
+  const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
     let ativo = true
     let ultimaBusca = 0
     const atualizar = () => {
       ultimaBusca = Date.now()
-      void buscarEntregasPublicadas(limite).then((resultado) => {
-        if (ativo) setEntregas(resultado)
-      })
+      void buscarEntregasPublicadas(limite)
+        .then((resultado) => {
+          if (ativo) setEntregas(resultado)
+        })
+        .finally(() => {
+          if (ativo) setCarregando(false)
+        })
     }
     atualizar()
     const intervalo = window.setInterval(atualizar, 50 * 60 * 1000)
@@ -37,5 +42,5 @@ export function useEntregasPublicadas(limite?: number) {
     }
   }, [limite])
 
-  return entregas
+  return { entregas, carregando }
 }

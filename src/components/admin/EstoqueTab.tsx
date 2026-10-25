@@ -9,6 +9,7 @@ import {
   Pencil,
   Plus,
   RotateCw,
+  TriangleAlert,
   Trash2,
 } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
@@ -16,7 +17,7 @@ import { motoParaFormulario } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
 import { filtrarEstoque, resumirEstoque } from '../../lib/painel'
 import type { FiltroEstoque } from '../../lib/painel'
-import { formatKm, formatPrice } from '../../lib/format'
+import { formatKm, formatPrice, precoPareceIncompleto } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 import { CampoBusca } from '../ui/CampoBusca'
 import { Esqueleto } from '../ui/Esqueleto'
@@ -24,12 +25,6 @@ import { MotoForm } from './MotoForm'
 
 /* Vendida não é situação de estoque: a moto sai do pátio e passa a
    viver na aba Vendidas. Por isso não há filtro "Vendidas" aqui. */
-const FILTROS: { valor: FiltroEstoque['status']; rotulo: string }[] = [
-  { valor: 'todas', rotulo: 'Todas' },
-  { valor: 'disponivel', rotulo: 'Disponíveis' },
-  { valor: 'indisponivel', rotulo: 'Indisponíveis' },
-]
-
 type OrdemEstoque = 'padrao' | 'preco-desc' | 'preco-asc' | 'ano-desc'
 
 const ORDENS: { valor: OrdemEstoque; rotulo: string }[] = [
@@ -38,12 +33,6 @@ const ORDENS: { valor: OrdemEstoque; rotulo: string }[] = [
   { valor: 'preco-asc', rotulo: 'Menor preço' },
   { valor: 'ano-desc', rotulo: 'Mais novo' },
 ]
-
-const STATUS_ROTULO: Record<MotorcycleStatus, string> = {
-  disponivel: 'Disponível',
-  indisponivel: 'Indisponível',
-  vendida: 'Vendida',
-}
 
 function ordenarEstoque(motos: Motorcycle[], ordem: OrdemEstoque): Motorcycle[] {
   if (ordem === 'preco-desc') return [...motos].sort((a, b) => b.preco - a.preco)
@@ -76,9 +65,6 @@ function EsqueletoEstoque() {
               <Esqueleto className="h-3.5 w-2/5" />
               <Esqueleto className="mt-2 h-3 w-3/5" />
             </div>
-          </div>
-          <div className="estoque-celula-situacao" role="cell">
-            <Esqueleto className="h-3 w-20" />
           </div>
           <div className="estoque-celula-valor" role="cell">
             <Esqueleto className="h-3.5 w-24" />
@@ -120,6 +106,7 @@ export function EstoqueTab({
 }) {
   const [status, setStatus] = useState<FiltroEstoque['status']>('todas')
   const [ordem, setOrdem] = useState<OrdemEstoque>('padrao')
+  const [apenasSuspeitos, setApenasSuspeitos] = useState(false)
   // Menu ⋯ do cartão (celular): um aberto por vez, pelo id da moto.
   const [acoesAbertas, setAcoesAbertas] = useState<string | null>(null)
 
@@ -152,10 +139,18 @@ export function EstoqueTab({
 
   const visiveis = useMemo(() => {
     if (motos === null) return []
-    return ordenarEstoque(filtrarEstoque(noPatio, { busca, status }), ordem)
-  }, [motos, noPatio, busca, status, ordem])
+    const base = apenasSuspeitos
+      ? noPatio.filter((moto) => precoPareceIncompleto(moto.preco))
+      : noPatio
+    return ordenarEstoque(filtrarEstoque(base, { busca, status }), ordem)
+  }, [motos, noPatio, busca, status, ordem, apenasSuspeitos])
 
-  const filtrando = busca.trim() !== '' || status !== 'todas'
+  const suspeitos = useMemo(
+    () => noPatio.filter((moto) => precoPareceIncompleto(moto.preco)),
+    [noPatio],
+  )
+
+  const filtrando = busca.trim() !== '' || status !== 'todas' || apenasSuspeitos
   const ajustado = filtrando || ordem !== 'padrao'
   const erroAtivo = erro !== null
 
@@ -168,6 +163,7 @@ export function EstoqueTab({
     onBusca('')
     setStatus('todas')
     setOrdem('padrao')
+    setApenasSuspeitos(false)
   }
 
   if (editando) {
@@ -223,10 +219,6 @@ export function EstoqueTab({
             <span className="estoque-indicador-valor">{resumo.disponiveis}</span>
             <span className="estoque-indicador-rotulo">Disponíveis</span>
           </div>
-          <div className="estoque-indicador">
-            <span className="estoque-indicador-valor">{resumo.indisponiveis}</span>
-            <span className="estoque-indicador-rotulo">Indisponíveis</span>
-          </div>
           <button
             type="button"
             onClick={onIrParaVendidas}
@@ -242,9 +234,31 @@ export function EstoqueTab({
           <div className="estoque-indicador estoque-indicador-financeiro">
             <span className="estoque-indicador-valor">{formatPrice(resumo.valorEmEstoque)}</span>
             <span className="estoque-indicador-rotulo">Valor em estoque</span>
-            <span className="estoque-indicador-dica">Disponíveis e indisponíveis</span>
           </div>
         </section>
+      ) : null}
+
+      {motos !== null && !erroAtivo && suspeitos.length > 0 ? (
+        <div
+          role="status"
+          className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 border border-alerta/30 bg-alerta/10 px-4 py-3 text-sm"
+        >
+          <TriangleAlert className="size-4 shrink-0 text-alerta" aria-hidden="true" />
+          <p className="min-w-0 flex-1 text-steel-200">
+            <strong className="font-semibold text-paper">
+              {suspeitos.length} {suspeitos.length === 1 ? 'moto está' : 'motos estão'} com preço abaixo de
+              R$ 1.000.
+            </strong>{' '}
+            Pode ser um zero que ficou para trás — confira a ficha antes de anunciar.
+          </p>
+          <button
+            type="button"
+            onClick={() => setApenasSuspeitos((valor) => !valor)}
+            className="foco-painel inline-flex min-h-9 items-center border border-alerta/40 px-3 text-xs font-semibold text-alerta transition-colors hover:bg-alerta/10 hover:text-paper"
+          >
+            {apenasSuspeitos ? 'Mostrar todo o pátio' : 'Ver essas motos'}
+          </button>
+        </div>
       ) : null}
 
       {/* Barra de filtros: cada controle tem o mesmo desenho de campo
@@ -260,20 +274,6 @@ export function EstoqueTab({
           rotulo="Buscar no estoque"
           className="estoque-busca-primaria"
         />
-
-        <div className="estoque-situacao" role="group" aria-label="Filtrar por situação">
-          {FILTROS.map((f) => (
-            <button
-              key={f.valor}
-              type="button"
-              onClick={() => setStatus(f.valor)}
-              aria-pressed={status === f.valor}
-              className="estoque-situacao-item"
-            >
-              {f.rotulo}
-            </button>
-          ))}
-        </div>
 
         <select
           value={ordem}
@@ -308,9 +308,6 @@ export function EstoqueTab({
       >
         <div className="estoque-cabecalho" role="row">
           <span role="columnheader">Veículo</span>
-          <span role="columnheader" className="estoque-col-situacao">
-            Situação
-          </span>
           <span role="columnheader" className="estoque-col-valor">
             Valor
           </span>
@@ -345,7 +342,7 @@ export function EstoqueTab({
                   {filtrando
                     ? 'Nenhuma moto caiu nessa busca. Limpe os filtros ou tente outro termo.'
                     : (resumo?.vendidas ?? 0) > 0
-                      ? `${resumo?.vendidas} ${resumo?.vendidas === 1 ? 'moto vendida já está' : 'motos vendidas já estão'} na aba Vendidas, esperando virar post no mural.`
+                      ? `${resumo?.vendidas} ${resumo?.vendidas === 1 ? 'moto vendida já está' : 'motos vendidas já estão'} na aba Vendidas.`
                       : 'Cadastre a primeira moto para começar — rápido, chega em dois minutos.'}
                 </p>
               </div>
@@ -485,18 +482,19 @@ export function EstoqueTab({
                   ) : null}
                 </div>
 
-                <div className="estoque-celula-situacao" role="cell">
-                  <span className={`estoque-status estoque-status-${moto.status}`}>
-                    <span className="estoque-status-ponto" aria-hidden="true" />
-                    {STATUS_ROTULO[moto.status]}
-                  </span>
-                  {moto.emPromocao && moto.status === 'disponivel' ? (
-                    <span className="estoque-destaque">Promoção</span>
-                  ) : null}
-                </div>
-
                 <div className="estoque-celula-valor" role="cell">
-                  <span className="estoque-preco">{formatPrice(moto.preco)}</span>
+                  <span className="estoque-preco inline-flex items-center justify-end gap-1.5">
+                    {formatPrice(moto.preco)}
+                    {precoPareceIncompleto(moto.preco) ? (
+                      <span
+                        className="inline-flex text-alerta"
+                        title="Preço abaixo de R$ 1.000 — confira se não faltou um zero."
+                      >
+                        <TriangleAlert className="size-3.5" aria-hidden="true" />
+                        <span className="sr-only">Preço abaixo de R$ 1.000</span>
+                      </span>
+                    ) : null}
+                  </span>
                 </div>
 
                 <div className="estoque-celula-acoes" role="cell">

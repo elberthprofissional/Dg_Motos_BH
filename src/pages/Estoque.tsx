@@ -207,13 +207,8 @@ export function Estoque() {
 
   return (
 <div className="pt-cabecalho">
-        <section className="bg-fundo pt-6 pb-16 sm:pt-8 sm:pb-24">
+        <section className="bg-fundo pt-2 pb-16 sm:pt-3 sm:pb-24">
           <div className="container-site">
-            <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end sm:gap-8">
-              <div>
-                <h1 className="titulo text-4xl text-texto sm:text-5xl">Estoque</h1>
-              </div>
-            </header>
 
           {/* Resultado */}
           <div className="min-w-0 flex-1">
@@ -428,7 +423,7 @@ export function Estoque() {
 
             {resultados.length > 0 ? (
               <>
-                <div className="-mx-4 grid grid-cols-1 gap-6 px-4 lg:mx-0 lg:grid-cols-2 lg:px-0 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {resultados.map((bike, i) => (
                     <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
                       <BikeCard bike={bike} priority={i < 3} />

@@ -42,8 +42,11 @@ as dependências na primeira vez e abre o navegador.
 
 ```
 supabase/
-  migrations/       0001 schema, 0002 RLS+Storage, 0003 seed,
-                    0004 corrige banco incompleto (rode em ordem)
+  migrations/       0000 cria_esquema_inicial, 0001 seguranca_rls_e_storage,
+                    0002 dados_iniciais_estoque, 0003 corrige_estrutura_estoque,
+                    0004 configuracoes_da_loja, 0005 promocoes_do_estoque,
+                    0006 registro_de_vendas, 0007 publicacoes_de_entregas
+                    (aplicar em ordem pelo SQL Editor)
 docs/
   SUPABASE.md       passo a passo do painel do dono
   PENDENCIAS-CLIENTE.md
@@ -55,7 +58,8 @@ src/
                 useJsonLd, useScroll, useInstalarPwa, contexto de config
   components/
     layout/     Header, Footer, RootLayout
-    home/       MarcasProcuradas
+    home/       SonhosRealizados, GaleriaEntregasDesktop, MarcasProcuradas
+    entregas/   CartaoEntrega, CarrosselFotos, EsteiraFotos
     admin/      MotoForm, PhotoUploader, EstoqueTab, ConfiguracoesTab,
                 InstalarApp, useInstalarApp, SeletorMarca
     motorcycles/ BikeCard, BikeFilters, BikeGallery, LinhaEstoque,

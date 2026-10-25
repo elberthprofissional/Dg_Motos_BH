@@ -32,6 +32,9 @@
      tabulares de verdade ficam por conta do @utility numeros. */
   --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system,
     'Segoe UI', sans-serif;
+  /* Voz editorial do desktop: cartaz condensado. Não entra no
+     catálogo, no painel nem no celular. */
+  --font-cartaz: 'Archivo', 'Arial Narrow', Arial, sans-serif;
 
   /* Rótulos de 10 e 11 px: sobraram só para o painel do dono, que é
      uma tela de trabalho e não uma vitrine. O site público não usa
@@ -200,6 +203,27 @@
   --color-steel-400: #b7bac0;
   --color-steel-500: #969ba3;
   --color-steel-600: #858a92;
+}
+
+/* Prévia do mural dentro do painel: recoloca os tokens do site público
+   no trecho, para o cartão ser exatamente o que o visitante recebe. */
+[data-tema='publico'] {
+  --cor-fundo: #0f0e0c;
+  --cor-painel: #161513;
+  --cor-painel-2: #1d1b18;
+  --cor-painel-3: #252320;
+  --cor-texto: #ece7de;
+  --cor-texto-2: #a8a198;
+  --cor-texto-3: #8e887e;
+  --cor-borda: rgba(236, 231, 222, 0.09);
+  --cor-borda-forte: rgba(236, 231, 222, 0.18);
+  --cor-marca: #d91f26;
+  --cor-marca-viva: #ef302f;
+  --cor-marca-texto: #f26d62;
+  --cor-marca-forte: #b3131a;
+  --cor-ok: #3fbf7f;
+  --cor-papel-claro: #ffffff;
+  --cor-tinta: #ffffff;
 }
 
 @theme inline {
@@ -524,6 +548,105 @@
 
   .esqueleto {
     @apply animate-pulse bg-painel-2;
+  }
+
+  /* ============================================================
+     CARTÁZ — a voz editorial do desktop
+     Archivo condensada em peso pesado, caixa alta e entrelinha
+     curta. Só existe a partir de 1024 px: o celular continua com
+     a composição aprovada, em Lato. O catálogo e o estoque não
+     usam esta classe.
+     ============================================================ */
+  .galeria-lightbox {
+    width: 100vw;
+    max-width: none;
+    height: 100svh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #080706;
+    color: var(--cor-texto);
+    overscroll-behavior: contain;
+  }
+
+  .galeria-lightbox::backdrop {
+    background: rgba(5, 4, 3, 0.94);
+  }
+
+  @media (min-width: 1024px) {
+    .cartaz {
+      font-family: var(--font-cartaz);
+      font-stretch: 62%;
+      font-variation-settings: 'wdth' 62, 'wght' 800;
+      font-weight: 800;
+      font-kerning: normal;
+      font-synthesis: none;
+      text-transform: uppercase;
+      letter-spacing: -0.012em;
+      line-height: 0.86;
+      text-wrap: balance;
+      margin-left: -0.02em;
+    }
+
+    .titulo-galeria {
+      font-size: clamp(3rem, 5.15vw, 5.75rem);
+    }
+
+    .titulo-troca {
+      font-size: clamp(2.9rem, 4.7vw, 4.75rem);
+    }
+
+    /* Véu neutro só atrás do texto: a foto e a moto continuam
+       limpas à direita. É o único gradiente permitido na casa. */
+    .hero-veu {
+      background: linear-gradient(
+        90deg,
+        #0f0e0c 0%,
+        rgba(15, 14, 12, 0.94) 28%,
+        rgba(15, 14, 12, 0.82) 42%,
+        rgba(15, 14, 12, 0.3) 56%,
+        rgba(15, 14, 12, 0) 66%
+      );
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .hero-foto {
+        animation: hero-foto 1.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .hero-texto > * {
+        animation: hero-texto 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .hero-texto > *:nth-child(2) {
+        animation-delay: 0.08s;
+      }
+
+      .hero-texto > *:nth-child(3) {
+        animation-delay: 0.16s;
+      }
+    }
+  }
+
+  @keyframes hero-foto {
+    from {
+      transform: scale(1.035);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes hero-texto {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   /* ============================================================
@@ -1759,8 +1882,9 @@
     animation: respira 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  /* A esteira tem duas sequências idênticas. Deslocar metade do track
-     alinha a cópia no início e fecha o loop sem salto ou intervalo vazio. */
+  /* A esteira de entregas tem duas sequências idênticas. Deslocar
+     metade do track alinha a cópia no início e fecha o loop sem salto
+     ou intervalo vazio. */
   @keyframes esteira {
     from {
       transform: translateX(0);
@@ -1770,30 +1894,36 @@
     }
   }
 
+  /* ============================================================
+     ESTEIRA DE ENTREGAS — a galeria em movimento
+     Duas sequências idênticas e deslocamento de metade. Aqui o botão
+     de pausa é explícito porque a foto é conteúdo, não decoração.
+     ============================================================ */
   @media (prefers-reduced-motion: no-preference) {
-    .esteira {
-      animation: esteira var(--marcas-duracao-mobile, 66s) linear infinite;
+    .esteira-sonhos {
+      animation: esteira var(--sonhos-duracao, 60s) linear infinite;
     }
   }
 
-  @media (min-width: 640px) and (prefers-reduced-motion: no-preference) {
-    .esteira {
-      animation-duration: var(--marcas-duracao-larga, 90s);
-    }
-  }
-
-  .marcas-viewport:hover .esteira,
-  .marcas-viewport:focus-visible .esteira {
+  .sonhos-viewport:hover .esteira-sonhos,
+  .sonhos-viewport:focus-visible .esteira-sonhos,
+  .esteira-sonhos[data-pausada='true'] {
     animation-play-state: paused;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .marcas-viewport {
+    .sonhos-viewport {
       overflow-x: auto;
       overscroll-behavior-inline: contain;
     }
 
-    .marcas-clonagem {
+    /* Especificidade acima do utilitário `flex`: o clone sai de cena e a
+       sequência única vira uma fileira que se arrasta com o dedo. */
+    .sonhos-viewport .sonhos-clonagem {
+      display: none;
+    }
+
+    .sonhos-acoes .sonhos-controle {
       display: none;
     }
   }
@@ -1875,5 +2005,15 @@
     .dialogo {
       margin: auto;
     }
+  }
+
+  /* Folha de ações do upload: sempre colada no rodapé, com a altura
+     do conteúdo, para as duas opções ficarem ao alcance do polegar. */
+  .dialogo-folha {
+    margin: auto auto 0;
+    max-width: min(30rem, 100%);
+    border-top: 1px solid var(--cor-borda-forte);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    overscroll-behavior: contain;
   }
 }

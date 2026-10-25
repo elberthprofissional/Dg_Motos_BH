@@ -38,7 +38,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
      ============================================================ */
 
   const foto = (
-    <div className="relative aspect-[16/10] w-full overflow-hidden bg-painel-2">
+    <div className="relative h-48 w-full overflow-hidden rounded-t-2xl bg-painel-2">
       {capa ? (
         <img
           src={capa.src}
@@ -70,46 +70,47 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   /* ============================================================
      A FICHA
 
-     Nome, ficha corrida e preço numa coluna só. O preço é o último
-     e o maior — é o que o cliente procura; o nome já disse qual é a
-     moto. Nada de preço espremido na mesma linha do nome.
+     Nome, ficha corrida e preço numa coluna só, com altura curta:
+     o card é uma peça de catálogo, não um pôster. O preço vermelho
+     fecha o rodapé e o WhatsApp fica discreto ao lado, sem competir
+     com ele.
      ============================================================ */
   const ficha = (
-    <div className="flex flex-1 flex-col px-4 pt-3.5 pb-4 sm:px-5">
-      <h3 className="font-display text-[15px] leading-snug font-semibold tracking-[-0.01em] text-texto sm:text-base">
+    <div className="flex flex-1 flex-col p-4">
+      <h3 className="truncate font-display text-sm leading-tight font-bold text-texto lg:text-base">
         {titulo}
       </h3>
 
-      <p className="numeros mt-1 text-[12.5px] leading-snug text-texto-3">
-        {[bike.ano, bike.quilometragem != null ? formatKm(bike.quilometragem) : null, bike.categoria, estado]
+      <p className="numeros mt-1 truncate text-xs leading-snug text-texto-3">
+        {[
+          bike.ano,
+          bike.categoria,
+          bike.quilometragem != null ? formatKm(bike.quilometragem) : null,
+        ]
           .filter(Boolean)
           .join(' · ')}
       </p>
 
       {precoRequerConfirmacao(bike.preco) ? (
-        <p className="mt-2 max-w-[34ch] text-xs leading-relaxed text-texto-2">
+        <p className="mt-2 text-[11px] leading-snug text-texto-2">
           Valor cadastrado. Confirme com a loja antes de negociar.
         </p>
       ) : null}
 
-      <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
         <div className="min-w-0">
           {desconto != null ? (
             <p className="numeros text-[11px] leading-none text-texto-3 line-through">
               de {formatPrice(bike.precoAntes ?? bike.preco)}
             </p>
           ) : null}
-          <p
-            className={`numeros font-display text-[21px] leading-none font-bold tracking-[-0.02em] ${
-              desconto != null ? 'mt-1.5 text-marca-viva' : 'text-texto'
-            }`}
-          >
+          <p className="numeros mt-1 font-display text-lg leading-none font-black tracking-[-0.01em] text-marca-viva">
             {formatPrice(bike.preco)}
           </p>
         </div>
 
-        {/* A única ação do cartão. O resto do bloco já leva para a ficha,
-            então o botão não precisa de rótulo para competir com ela. */}
+        {/* A única ação do cartão. O fundo transparente e o contorno
+            fino deixam o preço ser o que chama atenção aqui. */}
         {disponivel ? (
           waLink ? (
             <a
@@ -117,7 +118,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Falar no WhatsApp sobre a ${titulo} ${bike.ano}`}
-              className="relative z-20 grid size-11 shrink-0 place-items-center bg-marca text-white transition-colors hover:bg-marca-forte"
+              className="relative z-20 grid size-11 shrink-0 place-items-center rounded-full border border-borda-forte text-texto-2 transition-colors hover:border-texto-3 hover:bg-painel-3 hover:text-texto"
             >
               <IconeWhatsapp className="size-[18px]" />
             </a>
@@ -125,7 +126,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
             <Link
               to="/contato"
               aria-label={`Falar com a loja sobre a ${titulo} ${bike.ano}`}
-              className="relative z-20 grid size-11 shrink-0 place-items-center bg-marca text-white transition-colors hover:bg-marca-forte"
+              className="relative z-20 grid size-11 shrink-0 place-items-center rounded-full border border-borda-forte text-texto-2 transition-colors hover:border-texto-3 hover:bg-painel-3 hover:text-texto"
             >
               <IconeWhatsapp className="size-[18px]" />
             </Link>
@@ -138,7 +139,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
   // O cartão inteiro é o link da ficha; o “Ver detalhes” de chapa
   // dupla saiu — era um segundo botão para a mesma página.
   const artigo =
-    'group relative flex h-full flex-col overflow-hidden bg-painel'
+    'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-borda bg-painel/70 backdrop-blur-md transition-colors hover:border-borda-forte'
 
 
   if (variante === 'lista') {
@@ -224,7 +225,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
       <Link
         to={`/moto/${bike.slug}`}
         aria-label={`Ver a ficha de ${titulo} ${bike.ano}`}
-        className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca"
+        className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca"
       />
       {foto}
       {ficha}

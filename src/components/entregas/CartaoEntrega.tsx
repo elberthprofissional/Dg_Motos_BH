@@ -4,31 +4,25 @@ import { mesDaEntrega } from '../../lib/format'
 
 interface CartaoEntregaProps {
   entrega: EntregaPublicada
-  /** Sem `onVer` o cartão é só imagem e texto (a grade da Home). */
-  onVer?: (entrega: EntregaPublicada) => void
 }
 
 /**
  * ============================================================
- * CARTÃO DE POST DO MURAL
+ * CARTÃO DA GALERIA
  * ============================================================
- * Recorte 4:5 — proporção de post, não de anúncio de moto. É o que
- * separa "Sonhos realizados" da vitrine: aqui a foto é a lembrança da
- * entrega, não o produto à venda.
+ * Recorte 4:5 — proporção de post, não de anúncio de moto. Aqui a foto
+ * é a lembrança da entrega, nunca o produto à venda: sem modelo, sem
+ * nome de cliente e sem legenda. Só a imagem e o mês, quando existir.
  */
-export function CartaoEntrega({ entrega, onVer }: CartaoEntregaProps) {
+export function CartaoEntrega({ entrega }: CartaoEntregaProps) {
   const mes = mesDaEntrega(entrega.entregueEm)
-  // Na grade da Home o cartão é conteúdo: o título é título de verdade.
-  // No mural com leitor ele vira botão, e botão só aceita conteúdo de
-  // frase — daí o span.
-  const Titulo = onVer ? 'span' : 'h3'
 
-  const conteudo = (
-    <>
+  return (
+    <article className="group h-full bg-fundo">
       <span className="relative block aspect-[4/5] w-full overflow-hidden bg-painel-2">
         <img
           src={entrega.imagens[0]}
-          alt={`Entrega da ${entrega.moto} pela DG Motos`}
+          alt={mes ? `Entrega realizada pela DG Motos em ${mes}` : 'Entrega realizada pela DG Motos'}
           className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           width={960}
           height={1200}
@@ -43,38 +37,11 @@ export function CartaoEntrega({ entrega, onVer }: CartaoEntregaProps) {
         ) : null}
       </span>
 
-      <span className="block py-4">
-        {mes ? (
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-texto-3 uppercase">
-            {mes}
-          </span>
-        ) : null}
-        <Titulo className="mt-1.5 block font-display text-xl font-semibold text-texto">
-          {entrega.moto}
-        </Titulo>
-        {entrega.nomeCliente ? (
-          <span className="mt-1 block text-sm text-texto-2">{entrega.nomeCliente}</span>
-        ) : null}
-        {entrega.depoimento ? (
-          <span className="mt-3 line-clamp-3 block text-sm leading-relaxed text-texto-2">
-            {entrega.depoimento}
-          </span>
-        ) : null}
-      </span>
-    </>
-  )
-
-  if (!onVer) {
-    return <article className="group h-full bg-fundo">{conteudo}</article>
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => onVer(entrega)}
-      className="group block h-full w-full cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca"
-    >
-      {conteudo}
-    </button>
+      {mes ? (
+        <span className="block py-3 text-[11px] font-semibold tracking-[0.12em] text-texto-3 uppercase">
+          {mes}
+        </span>
+      ) : null}
+    </article>
   )
 }

@@ -117,7 +117,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 w-full bg-painel">
+      <header className="fixed inset-x-0 top-0 z-50 w-full bg-painel lg:bg-[#0b0a09]">
         {/* Ordem da barra = quem fala primeiro: a marca, depois os
             caminhos, e as ferramentas na porta da direita. A busca é
             secundária — apertada, sem roubar o meio da barra. */}
@@ -138,7 +138,6 @@ export function Header() {
               <span className="font-display text-base leading-none font-bold tracking-[0.04em] text-white sm:text-lg">
                 DG Motos
               </span>
-              <span className="text-xs leading-none text-texto-3">Seminovas em Belo Horizonte</span>
             </span>
           </Link>
 
@@ -189,7 +188,7 @@ export function Header() {
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 placeholder="Buscar moto…"
-                className="font-sans h-9 w-44 rounded border border-borda bg-fundo py-1.5 pr-3 pl-9 text-sm text-texto transition-colors placeholder:text-texto-3 hover:border-borda-forte focus:w-56 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30 xl:w-56 xl:focus:w-72"
+                className="font-sans h-10 w-48 rounded-none border-0 bg-painel py-1.5 pr-3 pl-9 text-sm text-texto transition-[width,background-color] placeholder:text-texto-3 hover:bg-painel-2 focus:w-60 focus:bg-painel-2 focus:ring-2 focus:ring-marca/60 focus:outline-none xl:w-56 xl:focus:w-72"
               />
             </form>
 
@@ -209,7 +208,7 @@ export function Header() {
                 href={wa}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary hidden h-10 gap-2 px-4 text-[13px] lg:inline-flex"
+                className="btn btn-primary hidden h-11 gap-2 px-5 text-sm lg:inline-flex"
               >
                 <IconeWhatsapp className="size-4" />
                 Fale conosco
@@ -217,7 +216,7 @@ export function Header() {
             ) : (
               <Link
                 to="/contato"
-                className="btn btn-primary hidden h-10 gap-2 px-4 text-[13px] lg:inline-flex"
+                className="btn btn-primary hidden h-11 gap-2 px-5 text-sm lg:inline-flex"
               >
                 <IconeWhatsapp className="size-4" />
                 Fale conosco

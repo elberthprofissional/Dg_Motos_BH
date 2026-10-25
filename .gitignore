@@ -7,9 +7,12 @@ dist-ssr
 !.env.example
 preview.log
 
-# artefatos locais de skills e inspecao temporaria
+# artefatos locais de skills, CLIs e inspecao temporaria
 .agents/
 .taste-skill/
+.qoder/
+workspace/
+supabase/.temp/
 skills-lock.json
 barroca.html
 scripts/peek.mjs

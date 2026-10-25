@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { bikeTitle, buildBikeMessage, buildDefaultMessage, formatKm, formatPrice, precoRequerConfirmacao } from './format'
+import {
+  bikeTitle,
+  buildBikeMessage,
+  buildDefaultMessage,
+  formatarNumeroBR,
+  formatKm,
+  formatPrice,
+  parseNumeroBR,
+  precoPareceIncompleto,
+  precoRequerConfirmacao,
+} from './format'
 import { autoDealerSchema, vehicleSchema } from './schema'
 import { motorcycles } from '../data/motorcycles'
 
@@ -23,6 +33,45 @@ describe('formatPrice', () => {
     expect(precoRequerConfirmacao(15000000)).toBe(true)
     expect(precoRequerConfirmacao(31900)).toBe(false)
     expect(formatPrice(15000000)).toContain('15.000.000,00')
+  })
+})
+
+describe('parseNumeroBR', () => {
+  it('lê milhar com ponto como o dono digita', () => {
+    expect(parseNumeroBR('23.000')).toBe(23000)
+    expect(parseNumeroBR('R$ 23.000')).toBe(23000)
+    expect(parseNumeroBR('23.000,50')).toBe(23000.5)
+    expect(parseNumeroBR('1.234.567,89')).toBe(1234567.89)
+  })
+
+  it('lê "23 mil" e "1,5 milhão"', () => {
+    expect(parseNumeroBR('23 mil')).toBe(23000)
+    expect(parseNumeroBR('R$ 32,5 mil')).toBe(32500)
+    expect(parseNumeroBR('1,5 milhão')).toBe(1500000)
+  })
+
+  it('mantém decimal com ponto quando não é grupo de milhar', () => {
+    expect(parseNumeroBR('291.6')).toBe(291.6)
+    expect(parseNumeroBR('291,6')).toBe(291.6)
+  })
+
+  it('rejeita texto sem número', () => {
+    expect(parseNumeroBR('')).toBeNull()
+    expect(parseNumeroBR('abc')).toBeNull()
+    expect(parseNumeroBR('23.00.00')).toBeNull()
+    expect(parseNumeroBR('23,,5')).toBeNull()
+  })
+
+  it('formata de volta para edição sem perder centavos', () => {
+    expect(formatarNumeroBR(23000)).toBe('23.000')
+    expect(formatarNumeroBR(23000.5)).toBe('23.000,5')
+    expect(parseNumeroBR(formatarNumeroBR(23000.5))).toBe(23000.5)
+  })
+
+  it('sinaliza preço que provavelmente perdeu um zero', () => {
+    expect(precoPareceIncompleto(23)).toBe(true)
+    expect(precoPareceIncompleto(0)).toBe(true)
+    expect(precoPareceIncompleto(23000)).toBe(false)
   })
 })
 

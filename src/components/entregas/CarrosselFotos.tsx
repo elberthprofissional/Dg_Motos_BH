@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface CarrosselFotosProps {
   imagens: string[]
-  moto: string
+  /** Descrição curta para o texto alternativo; o visitante nunca vê nome ou modelo. */
+  rotulo?: string
   /** Recorte do quadro é do pai: o carrossel preenche a caixa. */
   className?: string
   /** Capa do mural carrega junto com a página; no leitor, pode ser lazy. */
@@ -21,7 +22,7 @@ interface CarrosselFotosProps {
  */
 export function CarrosselFotos({
   imagens,
-  moto,
+  rotulo = 'Entrega realizada pela DG Motos',
   className = '',
   prioridade = false,
 }: CarrosselFotosProps) {
@@ -29,6 +30,7 @@ export function CarrosselFotos({
   const toqueInicial = useRef<number | null>(null)
 
   const total = imagens.length
+  if (total === 0) return null
   const andar = (passo: number) => setAtual((valor) => (valor + passo + total) % total)
 
   function aoTerminarToque(evento: React.TouchEvent) {
@@ -50,7 +52,7 @@ export function CarrosselFotos({
     >
       <img
         src={imagens[atual]}
-        alt={`Entrega da ${moto} pela DG Motos — foto ${atual + 1} de ${total}`}
+        alt={`${rotulo} — foto ${atual + 1} de ${total}`}
         className="absolute inset-0 size-full object-cover"
         width={1200}
         height={1500}

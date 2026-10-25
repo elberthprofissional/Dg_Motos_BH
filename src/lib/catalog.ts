@@ -261,7 +261,9 @@ export async function salvarMoto(
     especificacoes: dados.especificacoes,
     em_promocao: dados.emPromocao,
     preco_antes: dados.precoAntes,
-    custo_compra: dados.custoCompra,
+    // O formulário de moto não edita custo; quando não há valor, omitir
+    // evita quebrar o save em bancos que ainda não rodaram a migração 0006.
+    ...(dados.custoCompra != null ? { custo_compra: dados.custoCompra } : {}),
     status: dados.status,
   }
 

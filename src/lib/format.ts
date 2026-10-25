@@ -52,6 +52,72 @@ export function precoRequerConfirmacao(preco: number): boolean {
   return preco >= 1_000_000
 }
 
+/**
+ * Preço abaixo de R$ 1.000 numa moto quase sempre é digitação incompleta
+ * ("23" no lugar de "23.000"). Não bloqueia o cadastro: sinaliza para o
+ * dono conferir antes de anunciar.
+ */
+export function precoPareceIncompleto(preco: number): boolean {
+  return !Number.isFinite(preco) || preco < 1_000
+}
+
+/**
+ * Lê valor digitado no formato brasileiro, do jeito que o dono escreve:
+ * "23.000", "23.000,50", "R$ 23 mil", "291,6". Ponto com exatamente três
+ * dígitos depois é milhar; ponto com outra quantidade é decimal — é o que
+ * permite "23.000" virar 23000 e "291.6" continuar 291,6.
+ */
+export function parseNumeroBR(texto: string): number | null {
+  let limpo = texto
+    .toLowerCase()
+    .replace(/r\$/g, '')
+    .replace(/\s+/g, '')
+    .replace(/reais?$/, '')
+  if (!limpo) return null
+
+  let multiplicador = 1
+  if (/milh(?:ão|oes|ões)$/.test(limpo)) {
+    limpo = limpo.replace(/milh(?:ão|oes|ões)$/, '')
+    multiplicador = 1_000_000
+  } else if (limpo.endsWith('mil')) {
+    limpo = limpo.slice(0, -3)
+    multiplicador = 1_000
+  }
+
+  if (!/^[\d.,]+$/.test(limpo) || !/\d/.test(limpo)) return null
+
+  let normalizado: string
+  if (limpo.includes(',')) {
+    if ((limpo.match(/,/g) ?? []).length > 1) return null
+    normalizado = limpo.replace(/\./g, '').replace(',', '.')
+  } else if (limpo.includes('.')) {
+    const partes = limpo.split('.')
+    if (partes.some((parte) => parte === '')) return null
+    const gruposDeMilhar = partes.slice(1).every((parte) => parte.length === 3)
+    if (gruposDeMilhar) {
+      normalizado = partes.join('')
+    } else if (partes.length === 2) {
+      normalizado = `${partes[0]}.${partes[1]}`
+    } else {
+      return null
+    }
+  } else {
+    normalizado = limpo
+  }
+
+  const valor = Number(normalizado)
+  if (!Number.isFinite(valor)) return null
+  return valor * multiplicador
+}
+
+/** Número para o campo de edição: milhar com ponto, decimal com vírgula. */
+export function formatarNumeroBR(valor: number): string {
+  return valor.toLocaleString('pt-BR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })
+}
+
 function nomeExibicao(marcaInformada: string, modeloInformado: string): string {
   const marca = marcaInformada.trim()
   let modelo = modeloInformado.trim()

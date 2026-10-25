@@ -6,6 +6,7 @@ import {
   salvarMoto,
 } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
+import { formatarNumeroBR, formatPrice, parseNumeroBR, precoPareceIncompleto } from '../../lib/format'
 import type { Motorcycle, MotorcycleSpec, MotorcycleStatus } from '../../types'
 import { PhotoUploader } from './PhotoUploader'
 import { SeletorMarca } from './SeletorMarca'
@@ -40,12 +41,75 @@ const VAZIO: MotoParaSalvar = {
   status: 'disponivel',
 }
 
-/** Converte "32.500" ou "32500" em número; texto solto vira null. */
+/** Converte "32.500", "32.500 km" ou "291,6" em número; texto solto vira null. */
 function numeroOuNulo(texto: string): number | null {
-  const limpo = texto.replace(/\./g, '').replace(',', '.')
-  if (!limpo.trim()) return null
-  const n = Number(limpo)
-  return Number.isFinite(n) ? n : null
+  return parseNumeroBR(texto)
+}
+
+function textoInicial(valor: number | null): string {
+  return valor == null || valor === 0 ? '' : formatarNumeroBR(valor)
+}
+
+/**
+ * Campo de dinheiro em texto livre. `type="number"` engolia "23.000"
+ * como 23 e o dono anunciava a moto por R$ 23. Aqui o valor é lido pelo
+ * parser brasileiro, a prévia confirma o que vai para o site e valores
+ * abaixo de R$ 1.000 ganham um aviso — não um bloqueio.
+ */
+function CampoPreco({
+  id,
+  valor,
+  onChange,
+  placeholder,
+}: {
+  id: string
+  valor: number | null
+  onChange: (valor: number | null) => void
+  placeholder?: string
+}) {
+  const [texto, setTexto] = useState(() => textoInicial(valor))
+  const numero = parseNumeroBR(texto)
+  const vazio = texto.trim() === ''
+  const invalido = !vazio && numero == null
+  const incompleto = numero != null && numero > 0 && precoPareceIncompleto(numero)
+
+  return (
+    <>
+      <input
+        id={id}
+        type="text"
+        inputMode="decimal"
+        autoComplete="off"
+        className={campoLinha}
+        value={texto}
+        onChange={(evento) => {
+          const proximo = evento.target.value
+          setTexto(proximo)
+          onChange(parseNumeroBR(proximo))
+        }}
+        onBlur={() => {
+          const lido = parseNumeroBR(texto)
+          if (lido != null) setTexto(formatarNumeroBR(lido))
+        }}
+        placeholder={placeholder}
+        aria-invalid={invalido || undefined}
+        aria-describedby={`${id}-previa`}
+      />
+      <p
+        id={`${id}-previa`}
+        aria-live="polite"
+        className={`mt-1.5 text-xs ${invalido ? 'text-red-300' : incompleto ? 'text-alerta' : 'text-steel-500'}`}
+      >
+        {vazio
+          ? 'Digite 23.000 ou 23 mil — o campo entende os dois.'
+          : numero == null
+            ? 'Não consegui ler esse valor. Use, por exemplo, 23.000,00.'
+            : incompleto
+              ? `No site: ${formatPrice(numero)}. Faltou um zero?`
+              : `No site: ${formatPrice(numero)}.`}
+      </p>
+    </>
+  )
 }
 
 /** Grupo de campos com título de seção do painel: fio + carimbo vermelho. */
@@ -127,6 +191,10 @@ export function MotoForm({
       setErro('Faltou marca ou modelo.')
       return
     }
+    if (!Number.isFinite(form.preco) || form.preco <= 0) {
+      setErro('Informe o preço de venda da moto — por exemplo, 23.000.')
+      return
+    }
     // O banco também barreira isso (check da promoção), mas o erro viria
     // cru do Postgres: valida aqui dá mensagem humana ao dono.
     if (form.emPromocao && (form.precoAntes == null || form.precoAntes <= form.preco)) {
@@ -203,14 +271,19 @@ export function MotoForm({
     <Secao key="s2" titulo="Preço e disponibilidade">
       <div>
         <label htmlFor="f-preco" className="field-label">Preço de venda (R$) *</label>
-        <input id="f-preco" type="number" min={0} step={100} className={campoLinha} value={form.preco} onChange={(e) => set('preco', Number(e.target.value))} />
+        <CampoPreco
+          id="f-preco"
+          valor={form.preco}
+          onChange={(valor) => set('preco', valor ?? 0)}
+          placeholder="23.000"
+        />
       </div>
       <div>
         <label htmlFor="f-km" className="field-label">Quilometragem</label>
         <input
           id="f-km"
           className={campoLinha}
-          defaultValue={form.quilometragem ?? ''}
+          defaultValue={textoInicial(form.quilometragem)}
           onChange={(e) => set('quilometragem', numeroOuNulo(e.target.value))}
           placeholder="Deixe vazio = Km a confirmar"
         />
@@ -242,15 +315,11 @@ export function MotoForm({
           <label htmlFor="f-preco-antes" className="field-label">
             Preço de referência "de" (R$)
           </label>
-          <input
+          <CampoPreco
             id="f-preco-antes"
-            type="number"
-            min={0}
-            step={100}
-            className={campoLinha}
-            value={form.precoAntes ?? ''}
-            onChange={(e) => set('precoAntes', numeroOuNulo(e.target.value))}
-            placeholder="O preço que ficará riscado no site"
+            valor={form.precoAntes}
+            onChange={(valor) => set('precoAntes', valor)}
+            placeholder="Ex.: 24.900"
           />
           <p className="mt-1 text-etiqueta text-steel-500">
             O site mostra: de {precoAntesFormatado} por {porFormatado}.
@@ -266,9 +335,9 @@ export function MotoForm({
         <input
           id="f-cc"
           className={campoLinha}
-          defaultValue={form.cilindrada ?? ''}
+          defaultValue={textoInicial(form.cilindrada)}
           onChange={(e) => set('cilindrada', numeroOuNulo(e.target.value))}
-          placeholder="Ex.: 291"
+          placeholder="Ex.: 291,6"
         />
       </div>
 

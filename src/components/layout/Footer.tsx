@@ -19,7 +19,7 @@ export function Footer() {
   const wa = useWhatsappLink(buildDefaultMessage())
 
   return (
-    <footer className="bg-painel text-texto">
+    <footer className="bg-painel text-texto lg:bg-fundo">
       <div className="container-site py-12 sm:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-5">
