@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { Check, Download, Share, Smartphone, X } from 'lucide-react'
-import { useInstalarApp } from './useInstalarApp'
 import type { EstadoInstalarApp } from './useInstalarApp'
 
 /**
@@ -12,99 +11,10 @@ import type { EstadoInstalarApp } from './useInstalarApp'
  * (Compartilhar → Adicionar à Tela). Quando já está instalado, o texto
  * muda para "instalado" em vez de sumir — o dono vê que está tudo certo.
  *
- * Dois formatos, mesma lógica (o estado vem de `useInstalarApp`):
- *   `LinhaInstalarApp`  — linha da lista (mobile)
- *   `PainelInstalarApp` — painel de edição (desktop)
+ * O estado vem de `useInstalarApp`; o gatilho fica em cada tela que
+ * oferece a instalação (rail do desktop, lista do celular).
  * ============================================================
  */
-
-/** Linha da lista (formato mobile): abre o modal de instalação. */
-export function LinhaInstalarApp() {
-  const app = useInstalarApp()
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={app.abrir}
-        className="foco-painel item-linha group w-full !px-4 !py-3.5"
-      >
-        <span
-          aria-hidden="true"
-          className="grid size-9 shrink-0 place-items-center rounded-md border border-brand-500/30 bg-brand-500/10 text-brand-500"
-        >
-          {app.instalado ? <Check className="size-4" /> : <Download className="size-4" />}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium text-paper">Instalar o aplicativo</span>
-          <span className="block truncate text-xs text-steel-500">
-            {app.instalado ? 'App instalado neste aparelho' : 'Acesse o painel como um app, em tela cheia'}
-          </span>
-        </span>
-        <span
-          aria-hidden="true"
-          className="shrink-0 rounded-full border border-claro/10 px-2 py-0.5 text-micro tracking-[0.1em] text-steel-500 uppercase"
-        >
-          {app.instalado ? 'Ativo' : 'Novo'}
-        </span>
-      </button>
-
-      <ModalInstalar app={app} />
-    </>
-  )
-}
-
-/** Painel do desktop: explica o app e oferece a instalação. */
-export function PainelInstalarApp() {
-  const app = useInstalarApp()
-
-  return (
-    <>
-      <div className="space-y-5">
-        <ul className="space-y-3">
-          {[
-            'Abre em tela cheia, sem barra do navegador',
-            'Ícone próprio na tela inicial do celular',
-            'Atalho direto para o painel de estoque',
-          ].map((texto) => (
-            <li key={texto} className="flex items-start gap-3 text-sm text-steel-300">
-              <span
-                aria-hidden="true"
-                className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-brand-500/15 text-brand-500"
-              >
-                <Check className="size-3" />
-              </span>
-              {texto}
-            </li>
-          ))}
-        </ul>
-
-        {app.instalado ? (
-          <p className="flex items-center gap-2 rounded-lg border border-ok/30 bg-ok/10 px-4 py-3 text-sm text-steel-300">
-            <Check className="size-4 text-ok" aria-hidden="true" />
-            O app já está instalado neste aparelho.
-          </p>
-        ) : app.podeInstalar ? (
-          <button type="button" onClick={() => void app.instalar()} className="btn btn-primary h-11">
-            <Download className="size-4" aria-hidden="true" />
-            Instalar aplicativo
-          </button>
-        ) : (
-          <div className="flex items-start gap-3 rounded-lg border border-line bg-night-800 px-4 py-3">
-            <Smartphone className="mt-0.5 size-4 shrink-0 text-steel-400" aria-hidden="true" />
-            <p className="text-xs leading-relaxed text-steel-400">
-              Abra este site no Chrome do Android (ou Safari no iPhone) para
-              instalar. Se a opção não aparecer, use o menu do navegador e
-              escolha <span className="text-steel-300">“Adicionar à tela inicial”</span>.
-            </p>
-          </div>
-        )}
-      </div>
-
-      <ModalInstalar app={app} />
-    </>
-  )
-}
 
 export function ModalInstalar({ app }: { app: EstadoInstalarApp }) {
   const caixa = useRef<HTMLDivElement>(null)
