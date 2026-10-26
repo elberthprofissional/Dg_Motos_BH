@@ -134,8 +134,8 @@ export async function buscarEntregasPublicadas(limite?: number): Promise<Entrega
 export async function salvarEntrega(dados: EntregaParaSalvar): Promise<void> {
   const sb = getSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
-  if (dados.status === 'publicada' && (dados.fotos.length === 0 || !dados.autorizacaoPublicacao)) {
-    throw new Error('Para publicar, adicione ao menos uma foto e confirme a autorização de uso.')
+  if (dados.status === 'publicada' && dados.fotos.length === 0) {
+    throw new Error('Para publicar, adicione ao menos uma foto.')
   }
 
   const linha = {
@@ -162,6 +162,100 @@ export async function arquivarEntrega(id: string): Promise<void> {
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
   const { error } = await sb.from('entregas').update({ status: 'arquivada' }).eq('id', id)
   if (error) throw new Error(error.message)
+}
+
+/**
+ * Grava a lista de fotos restantes de uma publicação.
+ *
+ * Sem nenhuma foto o registro sai do mural como `arquivada` numa única
+ * escrita: assim o check `entrega_publicada_autorizada` do banco (exige
+ * foto quando o status é `publicada`) continua válido sem virar erro.
+ */
+export async function atualizarFotosEntrega(id: string, fotos: string[]): Promise<void> {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase não configurado neste deploy.')
+  const linha = fotos.length === 0 ? { fotos, status: 'arquivada' } : { fotos }
+  const { error } = await sb.from('entregas').update(linha).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Comprime no navegador antes de subir: economiza o bucket e acelera a
+ * galeria. Mesma regra das fotos do estoque (1600px, WebP 0.82).
+ */
+async function comprimirFoto(arquivo: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(arquivo)
+  try {
+    const escala = Math.min(1, 1600 / bitmap.width)
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(bitmap.width * escala)
+    canvas.height = Math.round(bitmap.height * escala)
+    const contexto = canvas.getContext('2d')
+    if (!contexto) throw new Error('Este navegador não conseguiu preparar a foto.')
+    contexto.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    const resultado = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/webp', 0.82),
+    )
+    if (!resultado) throw new Error('Não foi possível converter a foto.')
+    return resultado
+  } finally {
+    bitmap.close()
+  }
+}
+
+/**
+ * Sobe as fotos de uma publicação e devolve caminho + URL assinada.
+ *
+ * Falha parcial desfaz tudo o que subiu: uma publicação nunca é
+ * gravada com meia dúzia de fotos e o resto sumido no meio do caminho.
+ * As mensagens são de interface (aparecem no toast do painel).
+ */
+export async function enviarFotosEntrega(
+  entregaId: string,
+  arquivos: File[],
+): Promise<{ paths: string[]; urls: string[] }> {
+  if (arquivos.some((arquivo) => !arquivo.type.startsWith('image/'))) {
+    throw new Error('Só fotos: escolha arquivos de imagem.')
+  }
+  if (arquivos.some((arquivo) => arquivo.size > 12 * 1024 * 1024)) {
+    throw new Error('Cada foto precisa ter até 12 MB.')
+  }
+  if (arquivos.length > 10) {
+    throw new Error('Até 10 fotos por publicação.')
+  }
+
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase não configurado neste deploy.')
+
+  const paths: string[] = []
+  const urls: string[] = []
+  try {
+    for (const arquivo of arquivos) {
+      const caminho = `${entregaId}/${crypto.randomUUID()}.webp`
+      const blob = await comprimirFoto(arquivo)
+      const { error: erroUpload } = await sb.storage
+        .from(BUCKET_ENTREGAS)
+        .upload(caminho, blob, { contentType: 'image/webp', upsert: false })
+      if (erroUpload) throw erroUpload
+      // Entra na lista já aqui: se a assinatura falhar em seguida, o
+      // arquivo precisa entrar na limpeza junto com os outros.
+      paths.push(caminho)
+
+      const { data, error: erroAssinatura } = await sb.storage
+        .from(BUCKET_ENTREGAS)
+        .createSignedUrl(caminho, 60 * 60 * 24)
+      if (erroAssinatura) throw erroAssinatura
+      if (!data.signedUrl) throw new Error('Não foi possível preparar todas as fotos. Tente de novo.')
+
+      urls.push(data.signedUrl)
+    }
+    return { paths, urls }
+  } catch (e) {
+    if (paths.length > 0) {
+      await sb.storage.from(BUCKET_ENTREGAS).remove(paths).catch(() => undefined)
+    }
+    throw e
+  }
 }
 
 export async function removerFotosEntrega(paths: string[]): Promise<void> {

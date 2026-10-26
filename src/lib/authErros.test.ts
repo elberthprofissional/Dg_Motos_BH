@@ -8,7 +8,9 @@ const erro = (code: string, message = ''): AuthError =>
 describe('traduzirErroLogin', () => {
   it('não revela se o e-mail existe em credencial inválida', () => {
     // Enumerar contas seria o efeito colateral de dizer "e-mail não existe".
-    expect(traduzirErroLogin(erro('invalid_credentials'))).not.toMatch(/não existe/i)
+    const msg = traduzirErroLogin(erro('invalid_credentials'))
+    expect(msg).toBe('E-mail ou senha inválidos.')
+    expect(msg).not.toMatch(/não existe/i)
   })
 
   it('explica e-mail não confirmado, que só se resolve no painel', () => {

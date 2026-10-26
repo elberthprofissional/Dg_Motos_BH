@@ -45,7 +45,8 @@ supabase/
   migrations/       0000 cria_esquema_inicial, 0001 seguranca_rls_e_storage,
                     0002 dados_iniciais_estoque, 0003 corrige_estrutura_estoque,
                     0004 configuracoes_da_loja, 0005 promocoes_do_estoque,
-                    0006 registro_de_vendas, 0007 publicacoes_de_entregas
+                    0006 registro_de_vendas, 0007 publicacoes_de_entregas,
+                    0008 lixeira_do_estoque, 0009 edicao_de_vendas
                     (aplicar em ordem pelo SQL Editor)
 docs/
   SUPABASE.md       passo a passo do painel do dono
@@ -61,7 +62,7 @@ src/
     home/       SonhosRealizados, GaleriaEntregasDesktop, MarcasProcuradas
     entregas/   CartaoEntrega, EsteiraFotos
     admin/      MotoForm, PhotoUploader, EstoqueTab, ConfiguracoesTab,
-                InstalarApp, useInstalarApp, SeletorMarca
+                LixeiraSecao, InstalarApp, useInstalarApp, SeletorMarca
     motorcycles/ BikeCard, BikeFilters, BikeGallery, LinhaEstoque,
                 WhatsAppCTA
     ui/         Button, Badge, SectionHeading, EstadoVazio, Revelar,

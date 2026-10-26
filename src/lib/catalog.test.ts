@@ -108,6 +108,15 @@ describe('linhaParaMotos', () => {
     expect(moto.precoAntes).toBe(34900)
     expect(moto.emPromocao).toBe(true)
   })
+
+  it('mapeia a data da lixeira e trata banco antigo como moto ativa', () => {
+    expect(linhaParaMotos(linhaBase).lixeiraEm).toBeNull()
+    const excluida = linhaParaMotos({
+      ...linhaBase,
+      lixeira_em: '2026-10-20T12:00:00Z',
+    })
+    expect(excluida.lixeiraEm).toBe('2026-10-20T12:00:00Z')
+  })
 })
 
 describe('slugificar', () => {

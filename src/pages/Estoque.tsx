@@ -15,6 +15,7 @@ import {
 } from '../lib/filters'
 import type { BikeFilterState } from '../types'
 import { usePageMeta } from '../hooks/usePageMeta'
+import { Marcas } from '../components/home/MarcasProcuradas'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { BikeFilters } from '../components/motorcycles/BikeFilters'
 import { EstadoVazio } from '../components/ui/EstadoVazio'
@@ -207,7 +208,7 @@ export function Estoque() {
 
   return (
 <div className="pt-cabecalho">
-        <section className="bg-fundo pt-2 pb-16 sm:pt-3 sm:pb-24">
+        <section className="bg-fundo pt-2 pb-6 sm:pt-3 sm:pb-8">
           <div className="container-site">
 
           {/* Resultado */}
@@ -458,6 +459,10 @@ export function Estoque() {
           </div>
         </div>
       </section>
+
+      {/* A esteira de marcas fecha a vitrine, como na Home: fica depois
+          do resultado para não competir com os filtros. */}
+      <Marcas />
 
       {/* Folha de filtros do celular: dialog nativo — foco preso, Esc
           e camada superior de graça, como o menu. */}

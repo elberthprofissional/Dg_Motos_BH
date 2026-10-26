@@ -1,13 +1,31 @@
 import { useMemo } from 'react'
-import { Pencil } from 'lucide-react'
-import type { Motorcycle } from '../../types'
+import { MessageCircle, Pencil, Tag } from 'lucide-react'
+import type { Motorcycle, Venda } from '../../types'
+import { ROTULO_PAGAMENTO } from '../../types'
 import { bikeTitle, formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 
 interface VendidasTabProps {
   motos: Motorcycle[]
+  /** Vendas lançadas; a da moto decide o que a linha mostra. */
+  vendas: Venda[]
   onEditar: (moto: Motorcycle) => void
+  /** Clique em "Comprou…" — abre o diálogo para lançar ou corrigir. */
+  onRegistrarVenda: (moto: Motorcycle) => void
   onIrParaEstoque: () => void
+}
+
+/** Telefone só com dígito, no formato que o wa.me entende. */
+function digitos(telefone: string): string {
+  return telefone.replace(/\D/g, '')
+}
+
+/** Link do comprador: Brasil assume 55, e sem DDD não há link. */
+function linkConversa(telefone: string): string | null {
+  let numero = digitos(telefone)
+  if (numero.length < 10) return null
+  if (numero.length === 10 || numero.length === 11) numero = `55${numero}`
+  return `https://wa.me/${numero}`
 }
 
 /**
@@ -17,8 +35,18 @@ interface VendidasTabProps {
  * Toda moto marcada como vendida aparece aqui, e só isso: sem post,
  * sem "falta publicar". A ficha continua editável — inclusive para
  * reativar a moto — e as fotos da entrega vivem na aba Publicações.
+ *
+ * Quem comprou é assunto desta aba: a linha "Comprou: …" abre o
+ * diálogo para lançar ou corrigir a venda (comprador, telefone,
+ * pagamento, valor), e o telefone vira link de WhatsApp direto.
  */
-export function VendidasTab({ motos, onEditar, onIrParaEstoque }: VendidasTabProps) {
+export function VendidasTab({
+  motos,
+  vendas,
+  onEditar,
+  onRegistrarVenda,
+  onIrParaEstoque,
+}: VendidasTabProps) {
   const vendidas = useMemo(
     () =>
       motos
@@ -26,6 +54,12 @@ export function VendidasTab({ motos, onEditar, onIrParaEstoque }: VendidasTabPro
         .sort((a, b) => (b.atualizadoEm ?? '').localeCompare(a.atualizadoEm ?? '')),
     [motos],
   )
+
+  const vendaDaMoto = useMemo(() => {
+    const mapa = new Map<string, Venda>()
+    for (const venda of vendas) if (venda.motoId) mapa.set(venda.motoId, venda)
+    return mapa
+  }, [vendas])
 
   return (
     <section className="mx-auto max-w-5xl" aria-labelledby="vendidas-titulo">
@@ -35,8 +69,9 @@ export function VendidasTab({ motos, onEditar, onIrParaEstoque }: VendidasTabPro
             Vendidas
           </h2>
           <p className="mt-2 max-w-[58ch] text-sm leading-relaxed text-steel-400">
-            Toda moto marcada como vendida no Estoque cai aqui. A ficha continua editável — até
-            para devolver a moto ao pátio.
+            Toda moto marcada como vendida no Estoque cai aqui. Toque em quem comprou para
+            corrigir os dados da venda — a ficha também segue editável, até para devolver a moto
+            ao pátio.
           </p>
         </div>
       </header>
@@ -76,6 +111,10 @@ export function VendidasTab({ motos, onEditar, onIrParaEstoque }: VendidasTabPro
               moto.quilometragem != null ? formatKm(moto.quilometragem) : null,
             ].filter(Boolean)
 
+            const venda = vendaDaMoto.get(moto.id)
+            const telefone = venda?.telefone?.trim() ?? ''
+            const conversa = telefone ? linkConversa(telefone) : null
+
             return (
               <li key={moto.id} className="flex flex-wrap items-center gap-4 py-4">
                 <div className="size-16 shrink-0 overflow-hidden bg-painel-2 sm:size-20">
@@ -105,6 +144,65 @@ export function VendidasTab({ motos, onEditar, onIrParaEstoque }: VendidasTabPro
                     <span aria-hidden="true">·</span>
                     <span>{ficha.join(' · ')}</span>
                   </p>
+
+                  {/* Quem comprou: o botão lança ou corrige a venda, e o
+                      telefone fica como link do WhatsApp ao lado — nunca
+                      <a> dentro de <button>. */}
+                  <div className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1">
+                    {venda?.comprador ? (
+                      <button
+                        type="button"
+                        onClick={() => onRegistrarVenda(moto)}
+                        className="foco-painel group inline-flex min-h-9 max-w-full items-center gap-1.5 border border-line px-2 text-left text-xs text-steel-300 transition-colors hover:border-brand-400/60 hover:text-paper"
+                      >
+                        <Tag className="size-3.5 shrink-0 text-brand-400" aria-hidden="true" />
+                        <span className="truncate">
+                          Comprou:{' '}
+                          <span className="font-semibold text-paper group-hover:text-brand-300">
+                            {venda.comprador}
+                          </span>
+                        </span>
+                        <Pencil className="size-3 shrink-0 text-steel-500" aria-hidden="true" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onRegistrarVenda(moto)}
+                        className="foco-painel inline-flex min-h-9 items-center gap-1.5 border border-dashed border-line-forte px-2 text-xs font-medium text-steel-400 transition-colors hover:border-brand-400/60 hover:text-paper"
+                      >
+                        <Tag className="size-3.5" aria-hidden="true" />
+                        Registrar quem comprou
+                      </button>
+                    )}
+
+                    {telefone ? (
+                      conversa ? (
+                        <a
+                          href={conversa}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`Conversar com ${venda?.comprador ?? 'o comprador'} no WhatsApp`}
+                          className="foco-painel inline-flex min-h-9 items-center gap-1.5 px-1.5 text-xs text-steel-300 transition-colors hover:text-brand-300"
+                        >
+                          <MessageCircle className="size-3.5" aria-hidden="true" />
+                          {telefone}
+                        </a>
+                      ) : (
+                        <span className="inline-flex min-h-9 items-center gap-1.5 px-1.5 text-xs text-steel-300">
+                          <MessageCircle className="size-3.5" aria-hidden="true" />
+                          {telefone}
+                        </span>
+                      )
+                    ) : null}
+
+                    {venda ? (
+                      <span className="numeros text-[11px] text-steel-500">
+                        {ROTULO_PAGAMENTO[venda.formaPagamento]} · {formatPrice(venda.valor)} ·{' '}
+                        {new Date(venda.vendidaEm).toLocaleDateString('pt-BR')}
+                      </span>
+                    ) : null}
+                  </div>
+
                   <p className="numeros mt-1 text-sm font-semibold text-paper sm:hidden">
                     {formatPrice(moto.preco)}
                   </p>

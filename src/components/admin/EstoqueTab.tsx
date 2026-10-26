@@ -9,7 +9,6 @@ import {
   Pencil,
   Plus,
   RotateCw,
-  TriangleAlert,
   Trash2,
 } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
@@ -17,7 +16,7 @@ import { motoParaFormulario } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
 import { filtrarEstoque, resumirEstoque } from '../../lib/painel'
 import type { FiltroEstoque } from '../../lib/painel'
-import { formatKm, formatPrice, precoPareceIncompleto } from '../../lib/format'
+import { formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 import { CampoBusca } from '../ui/CampoBusca'
 import { Esqueleto } from '../ui/Esqueleto'
@@ -106,7 +105,6 @@ export function EstoqueTab({
 }) {
   const [status, setStatus] = useState<FiltroEstoque['status']>('todas')
   const [ordem, setOrdem] = useState<OrdemEstoque>('padrao')
-  const [apenasSuspeitos, setApenasSuspeitos] = useState(false)
   // Menu ⋯ do cartão (celular): um aberto por vez, pelo id da moto.
   const [acoesAbertas, setAcoesAbertas] = useState<string | null>(null)
 
@@ -139,18 +137,10 @@ export function EstoqueTab({
 
   const visiveis = useMemo(() => {
     if (motos === null) return []
-    const base = apenasSuspeitos
-      ? noPatio.filter((moto) => precoPareceIncompleto(moto.preco))
-      : noPatio
-    return ordenarEstoque(filtrarEstoque(base, { busca, status }), ordem)
-  }, [motos, noPatio, busca, status, ordem, apenasSuspeitos])
+    return ordenarEstoque(filtrarEstoque(noPatio, { busca, status }), ordem)
+  }, [motos, noPatio, busca, status, ordem])
 
-  const suspeitos = useMemo(
-    () => noPatio.filter((moto) => precoPareceIncompleto(moto.preco)),
-    [noPatio],
-  )
-
-  const filtrando = busca.trim() !== '' || status !== 'todas' || apenasSuspeitos
+  const filtrando = busca.trim() !== '' || status !== 'todas'
   const ajustado = filtrando || ordem !== 'padrao'
   const erroAtivo = erro !== null
 
@@ -163,7 +153,6 @@ export function EstoqueTab({
     onBusca('')
     setStatus('todas')
     setOrdem('padrao')
-    setApenasSuspeitos(false)
   }
 
   if (editando) {
@@ -236,29 +225,6 @@ export function EstoqueTab({
             <span className="estoque-indicador-rotulo">Valor em estoque</span>
           </div>
         </section>
-      ) : null}
-
-      {motos !== null && !erroAtivo && suspeitos.length > 0 ? (
-        <div
-          role="status"
-          className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 border border-alerta/30 bg-alerta/10 px-4 py-3 text-sm"
-        >
-          <TriangleAlert className="size-4 shrink-0 text-alerta" aria-hidden="true" />
-          <p className="min-w-0 flex-1 text-steel-200">
-            <strong className="font-semibold text-paper">
-              {suspeitos.length} {suspeitos.length === 1 ? 'moto está' : 'motos estão'} com preço abaixo de
-              R$ 1.000.
-            </strong>{' '}
-            Pode ser um zero que ficou para trás — confira a ficha antes de anunciar.
-          </p>
-          <button
-            type="button"
-            onClick={() => setApenasSuspeitos((valor) => !valor)}
-            className="foco-painel inline-flex min-h-9 items-center border border-alerta/40 px-3 text-xs font-semibold text-alerta transition-colors hover:bg-alerta/10 hover:text-paper"
-          >
-            {apenasSuspeitos ? 'Mostrar todo o pátio' : 'Ver essas motos'}
-          </button>
-        </div>
       ) : null}
 
       {/* Barra de filtros: cada controle tem o mesmo desenho de campo
@@ -483,18 +449,7 @@ export function EstoqueTab({
                 </div>
 
                 <div className="estoque-celula-valor" role="cell">
-                  <span className="estoque-preco inline-flex items-center justify-end gap-1.5">
-                    {formatPrice(moto.preco)}
-                    {precoPareceIncompleto(moto.preco) ? (
-                      <span
-                        className="inline-flex text-alerta"
-                        title="Preço abaixo de R$ 1.000 — confira se não faltou um zero."
-                      >
-                        <TriangleAlert className="size-3.5" aria-hidden="true" />
-                        <span className="sr-only">Preço abaixo de R$ 1.000</span>
-                      </span>
-                    ) : null}
-                  </span>
+                  <span className="estoque-preco">{formatPrice(moto.preco)}</span>
                 </div>
 
                 <div className="estoque-celula-acoes" role="cell">

@@ -64,6 +64,11 @@ export interface Motorcycle {
   criadoEm?: string
   /** ISO da última alteração, preenchido só quando a moto vem do banco. */
   atualizadoEm?: string
+  /**
+   * ISO de quando a moto foi movida para a lixeira. `null`/ausente =
+   * ativa. A lixeira é só do painel: a vitrine nunca mostra estas motos.
+   */
+  lixeiraEm?: string | null
 }
 
 export type BikeSort = 'relevancia' | 'preco-asc' | 'preco-desc' | 'ano-desc'
@@ -104,6 +109,8 @@ export interface Venda {
 }
 
 export interface VendaParaSalvar {
+  /** Presente = corrigindo uma venda já lançada (update); ausente = nova. */
+  id?: string
   motoId: string | null
   marca: string
   modelo: string

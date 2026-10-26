@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -9,19 +9,30 @@ import {
   Package,
   Images,
 } from 'lucide-react'
-import { atualizarStatus, buscarCatalogo, excluirMoto, motoParaFormulario } from '../lib/catalog'
+import {
+  atualizarStatus,
+  buscarCatalogo,
+  excluirMotoDefinitivamente,
+  excluirMotosDefinitivamente,
+  moverParaLixeira,
+  motoParaFormulario,
+  restaurarMoto,
+} from '../lib/catalog'
 import type { MotoParaSalvar, ResultadoCatalogo } from '../lib/catalog'
+import { motosAtivas, motosNaLixeira } from '../lib/painel'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
+import { useVendas } from '../hooks/vendasContexto'
 import { EstoqueTab } from '../components/admin/EstoqueTab'
 import { ConfiguracoesTab } from '../components/admin/ConfiguracoesTab'
 import { VendidasTab } from '../components/admin/VendidasTab'
 import { PublicacoesTab } from '../components/admin/PublicacoesTab'
+import { DialogoRegistrarVenda } from '../components/admin/DialogoRegistrarVenda'
 import { DialogoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import type { PedidoConfirmacao } from '../components/ui/DialogoConfirmacao'
 import { Toast } from '../components/ui/Toast'
 import type { Feedback } from '../components/ui/Toast'
-import type { Motorcycle, MotorcycleStatus } from '../types'
+import type { Motorcycle, MotorcycleStatus, Venda } from '../types'
 
 type Aba = 'estoque' | 'vendidas' | 'publicacoes' | 'configuracoes'
 
@@ -35,7 +46,7 @@ const ABAS: { id: Aba; rotulo: string; icone: typeof Package }[] = [
 ]
 
 /* Barra inferior do celular: as três áreas de trabalho. Configurações
-   vive no menu do avatar, no topo. */
+   — e a Lixeira, dentro dela — vive no menu do avatar, no topo. */
 const ABAS_CELLULAR: { id: Aba; rotulo: string; icone: typeof Package }[] = [
   { id: 'estoque', rotulo: 'Estoque', icone: Package },
   { id: 'vendidas', rotulo: 'Vendidas', icone: CircleDollarSign },
@@ -47,8 +58,8 @@ const ABAS_CELLULAR: { id: Aba; rotulo: string; icone: typeof Package }[] = [
  * PAINEL DO PROPRIETÁRIO
  * ============================================================
  * Áreas: estoque, vendidas, publicações da galeria e configurações da
- * loja (contato, endereço, horários). Sem dashboard, financeiro ou
- * relatórios — o que a operação usa de verdade cabe nestas telas.
+ * loja (contato, endereço, horários e lixeira). Sem dashboard, financeiro
+ * ou relatórios — o que a operação usa de verdade cabe nestas telas.
  *
  * Navegação: sidebar lateral no desktop e, no celular, barra inferior
  * fixa no celular para manter as três áreas principais ao alcance.
@@ -64,7 +75,14 @@ export function Admin() {
   const [excluindo, setExcluindo] = useState(false)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [menuConta, setMenuConta] = useState(false)
+  // Venda no diálogo: lançamento logo após sair do pátio, ou correção
+  // vinda da aba Vendidas.
+  const [vendaAberta, setVendaAberta] = useState<{
+    moto: Motorcycle
+    venda: Venda | null
+  } | null>(null)
   const contaRef = useRef<HTMLDivElement>(null)
+  const { vendas, desvincularVenda } = useVendas()
 
   usePageMeta('Painel | DG Motos', 'Área restrita do proprietário.')
 
@@ -99,18 +117,23 @@ export function Admin() {
   }, [])
 
   const recarregar = useCallback(async () => {
-    aplicarResultado(await buscarCatalogo())
+    aplicarResultado(await buscarCatalogo({ incluirLixeira: true }))
   }, [aplicarResultado])
 
   useEffect(() => {
     let vivo = true
-    void buscarCatalogo().then((r) => {
+    void buscarCatalogo({ incluirLixeira: true }).then((r) => {
       if (vivo) aplicarResultado(r)
     })
     return () => {
       vivo = false
     }
   }, [aplicarResultado])
+
+  // A lixeira sai da vida do painel: contas, pátio e Vendidas usam só as
+  // ativas. Assim nenhuma aba precisa repetir essa regra.
+  const ativas = useMemo(() => (motos === null ? null : motosAtivas(motos)), [motos])
+  const naLixeira = useMemo(() => (motos === null ? null : motosNaLixeira(motos)), [motos])
 
   function avisar(novo: Feedback) {
     setFeedback(novo)
@@ -129,33 +152,123 @@ export function Admin() {
     avisar({ tipo: 'ok', texto: eraNova ? 'Moto adicionada ao estoque.' : 'Alterações salvas.' })
   }
 
+  /** Excluir no Estoque agora é reversível: a moto vai para a Lixeira. */
   function pedirExclusao(moto: Motorcycle) {
     setConfirmacao({
       titulo: 'Excluir moto',
-      descricao: `"${moto.marca} ${moto.modelo} ${moto.ano}" sai do site e do painel. As fotos também são removidas e não é possível desfazer.`,
-      rotuloConfirmar: 'Excluir',
-      rotuloOcupado: 'Excluindo...',
+      descricao: `Tem certeza que deseja excluir a moto "${moto.marca} ${moto.modelo} ${moto.ano}"? Ela será encaminhada para a Lixeira, em Configurações, e pode ser restaurada depois.`,
+      rotuloConfirmar: 'Sim',
+      rotuloCancelar: 'Não',
+      rotuloOcupado: 'Movendo...',
       onConfirmar: async () => {
         setExcluindo(true)
-        const r = await excluirMoto(moto.id)
+        const r = await moverParaLixeira(moto.id)
         setExcluindo(false)
         setConfirmacao(null)
         if (!r.ok) {
-          avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível excluir a moto.' })
+          avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível mover a moto para a lixeira.' })
           return
         }
-        await concluirAcao(`${moto.marca} ${moto.modelo} foi excluída do estoque.`)
+        await concluirAcao(`${moto.marca} ${moto.modelo} foi para a Lixeira em Configurações.`)
       },
     })
   }
 
+  async function restaurarDaLixeira(moto: Motorcycle) {
+    const r = await restaurarMoto(moto.id)
+    if (!r.ok) {
+      avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível restaurar a moto.' })
+      return
+    }
+    const destino = moto.status === 'vendida' ? 'Vendidas' : 'o estoque'
+    await concluirAcao(`${moto.marca} ${moto.modelo} voltou para ${destino}.`)
+  }
+
+  function pedirExclusaoDefinitiva(moto: Motorcycle) {
+    setConfirmacao({
+      titulo: 'Apagar de vez',
+      descricao: `"${moto.marca} ${moto.modelo} ${moto.ano}" e as fotos serão removidas do banco e do armazenamento. Não dá para restaurar depois.`,
+      rotuloConfirmar: 'Apagar de vez',
+      rotuloOcupado: 'Apagando...',
+      onConfirmar: async () => {
+        setExcluindo(true)
+        const r = await excluirMotoDefinitivamente(moto.id)
+        setExcluindo(false)
+        setConfirmacao(null)
+        if (!r.ok) {
+          avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível apagar a moto.' })
+          return
+        }
+        await concluirAcao(`${moto.marca} ${moto.modelo} foi apagada de vez.`)
+      },
+    })
+  }
+
+  function pedirEsvaziarLixeira() {
+    const alvo = naLixeira ?? []
+    if (alvo.length === 0) return
+    setConfirmacao({
+      titulo: 'Esvaziar a lixeira',
+      descricao: `${alvo.length === 1 ? 'A moto na lixeira será apagada' : `As ${alvo.length} motos na lixeira serão apagadas`} de vez, junto com as fotos. Não dá para restaurar depois.`,
+      rotuloConfirmar: 'Esvaziar lixeira',
+      rotuloOcupado: 'Apagando...',
+      onConfirmar: async () => {
+        setExcluindo(true)
+        const r = await excluirMotosDefinitivamente(alvo.map((moto) => moto.id))
+        setExcluindo(false)
+        setConfirmacao(null)
+        if (!r.ok) {
+          avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível esvaziar a lixeira.' })
+          return
+        }
+        await concluirAcao('A lixeira foi esvaziada.')
+      },
+    })
+  }
+
+  /** Venda lançada para uma moto (null = nunca registrada). */
+  const vendaDaMoto = useCallback(
+    (motoId: string) => vendas.find((venda) => venda.motoId === motoId) ?? null,
+    [vendas],
+  )
+
+  /** Clique em "Comprou…" na aba Vendidas. */
+  function abrirVenda(moto: Motorcycle) {
+    setVendaAberta({ moto, venda: vendaDaMoto(moto.id) })
+  }
+
   /** Atalho de status: vender, reativar ou marcar como indisponível. */
   async function alterarStatus(moto: Motorcycle, status: MotorcycleStatus) {
+    const eraVendida = moto.status === 'vendida'
     const r = await atualizarStatus(moto.id, status)
     if (!r.ok) {
       avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível alterar o status.' })
       return
     }
+
+    // Vender: a moto sai do pátio primeiro e o painel pergunta quem
+    // comprou em seguida. Cancelar o diálogo não devolve a moto — só
+    // deixa a venda sem lançamento, que pode ser feito depois em Vendidas.
+    if (status === 'vendida') {
+      await concluirAcao(`${moto.marca} ${moto.modelo} saiu do pátio e já está em Vendidas.`)
+      setVendaAberta({ moto, venda: vendaDaMoto(moto.id) })
+      return
+    }
+
+    // Voltou pro pátio: a venda continua no histórico com a foto dos
+    // dados do dia, só sem apontar para a moto à venda de novo.
+    if (eraVendida) {
+      const motivoDesvinculo = await desvincularVenda(moto.id)
+      if (motivoDesvinculo) {
+        await recarregar()
+        avisar({
+          tipo: 'erro',
+          texto: `A moto voltou ao pátio, mas a venda não foi desvinculada: ${motivoDesvinculo}`,
+        })
+        return
+      }
+    }
+
     const texto: Record<MotorcycleStatus, string> = {
       disponivel: `${moto.marca} ${moto.modelo} está disponível de novo.`,
       indisponivel: `${moto.marca} ${moto.modelo} foi marcada como indisponível.`,
@@ -254,6 +367,15 @@ export function Admin() {
                     aria-hidden="true"
                   />
                   <span className="flex-1 truncate">{rotulo}</span>
+                  {id === 'configuracoes' && (naLixeira?.length ?? 0) > 0 ? (
+                    <span
+                      title={`${naLixeira?.length} na lixeira`}
+                      className="min-w-5 rounded-full bg-claro/10 px-1.5 py-0.5 text-center text-[11px] leading-none text-steel-300"
+                    >
+                      {naLixeira?.length}
+                      <span className="sr-only"> na lixeira</span>
+                    </span>
+                  ) : null}
                 </button>
               )
             })}
@@ -362,7 +484,13 @@ export function Admin() {
                     }`}
                   >
                     <Settings className="size-4 shrink-0 text-steel-500" aria-hidden="true" />
-                    Configurações
+                    <span className="flex-1 text-left">Configurações</span>
+                    {(naLixeira?.length ?? 0) > 0 ? (
+                      <span className="min-w-5 rounded-full bg-claro/10 px-1.5 py-0.5 text-center text-[11px] leading-none text-steel-300">
+                        {naLixeira?.length}
+                        <span className="sr-only"> na lixeira</span>
+                      </span>
+                    ) : null}
                   </button>
                   <button
                     type="button"
@@ -386,7 +514,7 @@ export function Admin() {
         <main className="mx-auto w-full max-w-[105rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9">
           {aba === 'estoque' ? (
             <EstoqueTab
-              motos={motos}
+              motos={ativas}
               erro={erro}
               busca={busca}
               onBusca={setBusca}
@@ -401,15 +529,27 @@ export function Admin() {
           ) : null}
           <div className={aba === 'vendidas' ? '' : 'hidden'}>
             <VendidasTab
-              motos={motos ?? []}
+              motos={ativas ?? []}
+              vendas={vendas}
               onEditar={editarVendida}
+              onRegistrarVenda={abrirVenda}
               onIrParaEstoque={() => trocarAba('estoque')}
             />
           </div>
           <div className={aba === 'publicacoes' ? '' : 'hidden'}>
             <PublicacoesTab onFeedback={avisar} />
           </div>
-          {aba === 'configuracoes' ? <ConfiguracoesTab /> : null}
+          {aba === 'configuracoes' ? (
+            <ConfiguracoesTab
+              lixeira={naLixeira}
+              erroLixeira={erro}
+              onRestaurarDaLixeira={restaurarDaLixeira}
+              onApagarDeVez={pedirExclusaoDefinitiva}
+              onEsvaziarLixeira={pedirEsvaziarLixeira}
+              onIrParaEstoque={() => trocarAba('estoque')}
+              onRecarregar={recarregar}
+            />
+          ) : null}
         </main>
       </div>
 
@@ -420,7 +560,8 @@ export function Admin() {
         aria-label="Navegação do painel"
         // Com o formulário aberto, a barra de salvar/artefato do
         // formulário ocupa o rodapé — a navegação sai de cena para
-        // as duas faixas não brigarem pelo mesmo espaço.
+        // as duas faixas não brigarem pelo mesmo espaço. As ações de
+        // publicação são diálogos, que já cobrem a barra com o backdrop.
         className={
           editando
             ? 'hidden'
@@ -464,6 +605,16 @@ export function Admin() {
         pedido={confirmacao}
         onFechar={() => setConfirmacao(null)}
         ocupado={excluindo}
+      />
+
+      <DialogoRegistrarVenda
+        moto={vendaAberta?.moto ?? null}
+        venda={vendaAberta?.venda ?? null}
+        onFechar={() => setVendaAberta(null)}
+        onSalvo={(texto) => {
+          setVendaAberta(null)
+          avisar({ tipo: 'ok', texto })
+        }}
       />
 
       <Toast feedback={feedback} onFechar={() => setFeedback(null)} acimaDaBarra />

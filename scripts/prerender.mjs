@@ -19,6 +19,8 @@
  */
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { precoPareceIncompleto, precoRequerConfirmacao } from '../src/lib/format.ts'
+import { fichaDeReferencia } from '../src/data/fichasModelo.ts'
 
 // O Vite carrega o .env sozinho, mas este script é executado pelo Node
 // puro. Sem isto, o build local nunca veria as chaves do Supabase e cairia
@@ -41,14 +43,51 @@ const SITE_TS = path.join(ROOT, 'src', 'data', 'site.ts')
  * catálogo estático, que é o mesmo fallback do site em runtime.
  */
 async function motosDoBanco(url, key) {
-  const resposta = await fetch(
-    `${url}/rest/v1/motorcycles?select=*,motorcycle_images(src,alt,posicao)&status=eq.disponivel`,
-    {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    },
-  )
-  if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`)
-  return resposta.json()
+  // Colunas explícitas: o build não precisa (nem deve) baixar custo_compra,
+  // que é dado interno do painel. O runtime do catálogo continua com `*`
+  // porque o admin usa o mesmo select para calcular lucro.
+  const colunas = [
+    'id',
+    'slug',
+    'marca',
+    'modelo',
+    'ano',
+    'preco',
+    'preco_antes',
+    'em_promocao',
+    'quilometragem',
+    'cilindrada',
+    'categoria',
+    'descricao',
+    'especificacoes',
+    'status',
+    'created_at',
+    'updated_at',
+  ]
+  const buscar = async (lista) => {
+    const resposta = await fetch(
+      `${url}/rest/v1/motorcycles?select=${lista.join(',')},motorcycle_images(src,alt,posicao)&status=eq.disponivel`,
+      {
+        headers: { apikey: key, Authorization: `Bearer ${key}` },
+      },
+    )
+    if (!resposta.ok) {
+      const detalhe = await resposta.text()
+      throw new Error(`HTTP ${resposta.status}: ${detalhe.slice(0, 160)}`)
+    }
+    return resposta.json()
+  }
+
+  try {
+    // A coluna da lixeira pode não existir em bancos que ainda não
+    // aplicaram a migração 20260101000008; nesse caso a consulta acima
+    // recebe 42703 e repetimos sem ela, como o catálogo em runtime.
+    return await buscar([...colunas, 'lixeira_em'])
+  } catch (erro) {
+    if (!/lixeira_em/i.test(erro.message)) throw erro
+    console.warn('AVISO: lixeira_em ausente no banco — consultando sem a coluna.')
+    return buscar(colunas)
+  }
 }
 
 /**
@@ -91,7 +130,9 @@ function absoluta(base, src) {
 
 /** Só fichas que ainda podem aparecer no site. */
 function publicaveis(lista) {
-  return (lista ?? []).filter((m) => m?.slug && m?.status === 'disponivel')
+  return (lista ?? []).filter(
+    (m) => m?.slug && m?.status === 'disponivel' && !m?.lixeira_em,
+  )
 }
 
 /**
@@ -116,35 +157,140 @@ function dataDePublicacao(moto) {
   return `${moto.ano}-03-15`
 }
 
+function kmTexto(valor) {
+  if (valor == null || valor === '') return 'Km a confirmar'
+  return `${Number(valor).toLocaleString('pt-BR')} km`
+}
+
+function textoDeApoio(moto) {
+  const cilindrada = moto.cilindrada ? `, ${moto.cilindrada} cc` : ''
+  const km =
+    moto.quilometragem != null
+      ? ` O odômetro marca ${kmTexto(moto.quilometragem)}.`
+      : ''
+  return `${moto.marca} ${moto.modelo} ${moto.ano}${cilindrada}, cadastrada no estoque da DG Motos em Belo Horizonte.${km} Fale com a loja para conferir o estado, a documentação e as condições de pagamento.`
+}
+
+/**
+ * Descrição editorial da ficha: a da loja manda; sem ela, entra a ficha
+ * pública da linha; sem nenhuma das duas, um texto só com dados do
+ * cadastro. É o mesmo critério da página em React.
+ */
+function descricaoDe(moto) {
+  const daLoja = String(moto.descricao ?? '').trim()
+  if (daLoja) {
+    return daLoja
+      .split(/\n{2,}/)
+      .map((paragrafo) => paragrafo.trim())
+      .filter(Boolean)
+  }
+  return fichaDeReferencia(moto)?.descricao ?? [textoDeApoio(moto)]
+}
+
+function statusLongo(status) {
+  if (status === 'disponivel') return 'Disponível no pátio'
+  if (status === 'vendida') return 'Vendida'
+  return 'Indisponível no momento'
+}
+
+/** Grupos da ficha: primeiro a unidade, depois a referência da linha. */
+function gruposDe(moto) {
+  const especificacoes = (moto.especificacoes ?? []).filter(
+    (spec) => spec?.label?.trim() && spec?.value?.trim(),
+  )
+  const itens = [
+    { label: 'Ano', value: String(moto.ano) },
+    { label: 'Quilometragem', value: kmTexto(moto.quilometragem) },
+    ...(moto.cilindrada ? [{ label: 'Cilindrada', value: `${moto.cilindrada} cc` }] : []),
+    { label: 'Categoria', value: moto.categoria },
+    { label: 'Situação', value: statusLongo(moto.status) },
+  ]
+
+  const rotulos = new Set(itens.map((item) => item.label.toLocaleLowerCase('pt-BR')))
+  for (const spec of especificacoes) {
+    const chave = spec.label.toLocaleLowerCase('pt-BR')
+    if (rotulos.has(chave)) continue
+    itens.push({ label: spec.label, value: spec.value })
+    rotulos.add(chave)
+  }
+
+  return [
+    { titulo: 'Esta unidade', itens },
+    ...(fichaDeReferencia(moto)?.grupos ?? []),
+  ]
+}
+
 function fichaDe(moto, base) {
   const titulo = `${moto.marca} ${moto.modelo} ${moto.ano}`
-  const preco = Number(moto.preco ?? 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  })
+  const precoNumero = Number(moto.preco ?? 0)
+  const precoIncompleto = precoPareceIncompleto(precoNumero)
+  const precoEmConferencia =
+    precoIncompleto || precoRequerConfirmacao(precoNumero)
+  const precoTexto = precoIncompleto
+    ? 'Preço sob consulta'
+    : precoNumero.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+  const precoNota = precoIncompleto
+    ? 'O valor desta unidade está em conferência na loja. Fale com a equipe para confirmar.'
+    : precoRequerConfirmacao(precoNumero)
+      ? 'Valor cadastrado. Confirme o preço com a loja antes de negociar.'
+      : ''
   const url = `${base}/moto/${moto.slug}`
-  const descricao = moto.descricao ?? ''
+  const paragrafos = descricaoDe(moto)
+  const descricao = paragrafos.join(' ')
   const fotos = fotosDe(moto)
+  const referencia = fichaDeReferencia(moto)
+  const lead =
+    referencia?.resumo ??
+    `${moto.categoria} ${moto.ano}${
+      moto.quilometragem != null ? ` com ${kmTexto(moto.quilometragem)}` : ''
+    } no pátio da DG Motos, em Belo Horizonte.`
+  const anoCilindrada = [
+    String(moto.ano),
+    moto.categoria,
+    moto.cilindrada ? `${moto.cilindrada} cc` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
-  const specs = (moto.especificacoes ?? [])
-    .filter((s) => s?.label && s?.value)
-    .map((s) => `<div><dt>${escapar(s.label)}</dt><dd>${escapar(s.value)}</dd></div>`)
-    .join('')
+  const gruposHtml = gruposDe(moto)
+    .map((grupo) => {
+      const itens = grupo.itens.filter(
+        (item) => item?.label?.trim() && item?.value?.trim(),
+      )
+      if (itens.length === 0) return ''
+      const linhas = itens
+        .map(
+          (item) =>
+            `<div><dt>${escapar(item.label)}</dt><dd>${escapar(item.value)}</dd></div>`,
+        )
+        .join('')
+      return `<section><h2>${escapar(grupo.titulo)}</h2><dl class="especificacoes">${linhas}</dl></section>`
+    })
+    .filter(Boolean)
+    .join('\n  ')
 
   return {
     url,
     titulo,
-    preco,
+    preco: precoTexto,
+    precoNumero,
+    precoPublicavel: !precoEmConferencia,
     descricao,
     fotos: fotos.map((i) => absoluta(base, i.src)),
-    resumo: `${moto.marca} ${moto.modelo} ${moto.ano} seminova na DG Motos, Belo Horizonte. ${preco}.`,
+    resumo: `${titulo}${moto.quilometragem != null ? ` com ${kmTexto(moto.quilometragem)}` : ''} na DG Motos, em Belo Horizonte. ${precoTexto}.`,
     conteudo: `<article class="prerender">
   <h1>${escapar(titulo)}</h1>
-  <p class="preco">${escapar(preco)}</p>
-  <p class="ano">Ano ${escapar(moto.ano)}${moto.cilindrada ? ` · ${escapar(moto.cilindrada)} cc` : ''}${moto.quilometragem != null ? ` · ${escapar(Number(moto.quilometragem).toLocaleString('pt-BR'))} km` : ''}</p>
-  <p class="descricao">${escapar(descricao)}</p>
-  ${specs ? `<dl class="especificacoes">${specs}</dl>` : ''}
+  <p class="ano">${escapar(anoCilindrada)}</p>
+  <p class="preco">${escapar(precoTexto)}</p>
+  ${precoNota ? `<p>${escapar(precoNota)}</p>` : ''}
+  <p class="resumo">${escapar(lead)}</p>
+  ${paragrafos.map((paragrafo) => `<p class="descricao">${escapar(paragrafo)}</p>`).join('\n  ')}
+  ${gruposHtml}
   <p><a href="/contato">Falar com a loja</a></p>
 </article>`,
   }
@@ -206,24 +352,31 @@ async function run() {
       vehicleModelDate: String(moto.ano),
       mileageFromOdometer:
         moto.quilometragem != null
-          ? { '@type': 'QuantitativeValue', value: moto.quilometragem, unitCode: 'KMT' }
+          ? {
+              '@type': 'QuantitativeValue',
+              value: Number(moto.quilometragem),
+              unitCode: 'KMT',
+            }
           : undefined,
       vehicleEngine: moto.cilindrada
         ? { '@type': 'EngineSpecification', engineDisplacement: `${moto.cilindrada} cc` }
         : undefined,
       image: ficha.fotos,
       description: ficha.descricao,
-      offers: {
-        '@type': 'Offer',
-        price: moto.preco,
-        priceCurrency: 'BRL',
-        availability:
-          moto.status === 'disponivel'
-            ? 'https://schema.org/InStock'
-            : 'https://schema.org/SoldOut',
-        itemCondition: 'https://schema.org/UsedCondition',
-        seller: { '@id': `${base}/#loja` },
-      },
+      // Sem preço confiável não há Offer — mesmo critério de schema.ts.
+      offers: ficha.precoPublicavel
+        ? {
+            '@type': 'Offer',
+            price: ficha.precoNumero,
+            priceCurrency: 'BRL',
+            availability:
+              moto.status === 'disponivel'
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/SoldOut',
+            itemCondition: 'https://schema.org/UsedCondition',
+            seller: { '@id': `${base}/#loja` },
+          }
+        : undefined,
     }
 
     const html = template

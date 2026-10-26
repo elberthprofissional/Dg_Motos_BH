@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { RootLayout } from './components/layout/RootLayout'
 import { Entrada } from './pages/Entrada'
 import { AuthProvider } from './hooks/useAuth'
+import { VendasProvider } from './hooks/vendasContexto'
 import { RotaAdmin } from './pages/AdminGuard'
 
 // Páginas divididas em chunks próprios: só o que o visitante realmente
@@ -60,7 +61,12 @@ export default function App() {
             path="/admin"
             element={
               <RotaAdmin>
-                <Admin />
+                {/* Contexto de vendas só existe dentro do painel: o
+                    histórico com comprador e telefone nunca é carregado
+                    na vitrine. */}
+                <VendasProvider>
+                  <Admin />
+                </VendasProvider>
               </RotaAdmin>
             }
           />

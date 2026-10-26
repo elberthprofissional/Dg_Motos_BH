@@ -49,6 +49,8 @@ interface LinhaCatalogo {
   status: string
   created_at?: string | null
   updated_at?: string | null
+  /** Só existe depois da migração 0008 (lixeira). */
+  lixeira_em?: string | null
   motorcycle_images?: LinhaImagem[] | null
 }
 
@@ -98,6 +100,7 @@ export function linhaParaMotos(linha: LinhaCatalogo): Motorcycle {
     status: linha.status as MotorcycleStatus,
     criadoEm: linha.created_at ?? undefined,
     atualizadoEm: linha.updated_at ?? undefined,
+    lixeiraEm: linha.lixeira_em ?? null,
   }
 }
 
@@ -116,10 +119,16 @@ const SELECT_MOTO = '*, motorcycle_images(src, alt, posicao)'
  * Busca o catálogo completo.
  *
  * Motos vendidas e indisponíveis vêm junto de propósito: o dono precisa
- * vê-las no admin para poder reativar. Quem filtra é a página pública,
- * em filtrarMotos().
+ * vê-las no admin para poder reativar. Quem filtra o que pode aparecer
+ * na vitrine é filtrarMotos().
+ *
+ * A lixeira fica de fora por padrão — inclusive para o dono autenticado,
+ * que veria tudo se dependesse só do RLS. O painel pede
+ * `incluirLixeira: true`.
  */
-export async function buscarCatalogo(): Promise<ResultadoCatalogo> {
+export async function buscarCatalogo(
+  opcoes: { incluirLixeira?: boolean } = {},
+): Promise<ResultadoCatalogo> {
   const sb = getSupabase()
   if (!sb) {
     return { motos: [], doBanco: false, erro: 'Supabase não configurado neste deploy.' }
@@ -135,8 +144,12 @@ export async function buscarCatalogo(): Promise<ResultadoCatalogo> {
       return { motos: [], doBanco: false, erro: error.message }
     }
 
+    const motos = ((data ?? []) as LinhaCatalogo[])
+      .map(linhaParaMotos)
+      .filter((moto) => opcoes.incluirLixeira || !moto.lixeiraEm)
+
     return {
-      motos: ((data ?? []) as LinhaCatalogo[]).map(linhaParaMotos),
+      motos,
       doBanco: true,
       erro: null,
     }
@@ -302,24 +315,74 @@ export async function salvarMoto(
   return erroImagens ? { ok: false, erro: erroImagens } : { ok: true, erro: null }
 }
 
+/** Erro de banco sem a coluna da lixeira vira instrução, não stack trace. */
+function mensagemLixeira(error: { code?: string; message: string }): string {
+  if (error.code === '42703' || /lixeira_em/i.test(error.message)) {
+    return 'A coluna da lixeira ainda não existe no banco. Rode a migração 20260101000008_lixeira_do_estoque.sql no SQL Editor do Supabase.'
+  }
+  return error.message
+}
+
 /**
- * Exclui a moto e limpa os arquivos dela no Storage.
+ * Tira a moto do site e do pátio sem apagar nada: a ficha e as fotos
+ * continuam no banco até o dono restaurar ou apagar de vez na Lixeira.
  *
- * As linhas de `motorcycle_images` caem sozinhas (on delete cascade), mas
- * os arquivos no bucket NÃO — por isso buscamos as fotos antes e apagamos
- * cada uma. Sem isso, o bucket acumularia lixo a cada moto removida.
+ * O status original é preservado de propósito — restaurar devolve a moto
+ * ao lugar de onde ela saiu (pátio ou Vendidas).
  */
-export async function excluirMoto(id: string): Promise<{ ok: boolean; erro: string | null }> {
+export async function moverParaLixeira(
+  id: string,
+): Promise<{ ok: boolean; erro: string | null }> {
   const sb = getSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
+
+  const { error } = await sb
+    .from('motorcycles')
+    .update({ lixeira_em: new Date().toISOString() })
+    .eq('id', id)
+
+  return error ? { ok: false, erro: mensagemLixeira(error) } : { ok: true, erro: null }
+}
+
+/** Devolve a moto ao estoque/Vendidas, mantendo o status que ela tinha. */
+export async function restaurarMoto(
+  id: string,
+): Promise<{ ok: boolean; erro: string | null }> {
+  const sb = getSupabase()
+  if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
+
+  const { error } = await sb.from('motorcycles').update({ lixeira_em: null }).eq('id', id)
+
+  return error ? { ok: false, erro: mensagemLixeira(error) } : { ok: true, erro: null }
+}
+
+/**
+ * Apaga de vez as motos indicadas e limpa os arquivos delas no Storage.
+ *
+ * Só remove linhas que estejam na lixeira: o filtro protege contra um
+ * clique errado em uma moto ativa. As linhas de `motorcycle_images` caem
+ * sozinhas (on delete cascade), mas os arquivos no bucket NÃO — por isso
+ * buscamos as fotos antes e apagamos cada uma. Sem isso, o bucket
+ * acumularia lixo a cada exclusão definitiva.
+ */
+export async function excluirMotosDefinitivamente(
+  ids: string[],
+): Promise<{ ok: boolean; erro: string | null }> {
+  const sb = getSupabase()
+  if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
+  if (ids.length === 0) return { ok: true, erro: null }
 
   const { data: fotos } = await sb
     .from('motorcycle_images')
     .select('src')
-    .eq('motorcycle_id', id)
+    .in('motorcycle_id', ids)
 
-  const { error } = await sb.from('motorcycles').delete().eq('id', id)
-  if (error) return { ok: false, erro: error.message }
+  const { error } = await sb
+    .from('motorcycles')
+    .delete()
+    .in('id', ids)
+    .not('lixeira_em', 'is', null)
+  if (error) return { ok: false, erro: mensagemLixeira(error) }
 
   const caminhos = (fotos ?? [])
     .map((f: { src?: string }) => (f.src ? caminhoDeBucket(f.src) : null))
@@ -330,6 +393,13 @@ export async function excluirMoto(id: string): Promise<{ ok: boolean; erro: stri
   }
 
   return { ok: true, erro: null }
+}
+
+/** Apaga uma única moto da lixeira (atalho do caso mais comum). */
+export async function excluirMotoDefinitivamente(
+  id: string,
+): Promise<{ ok: boolean; erro: string | null }> {
+  return excluirMotosDefinitivamente([id])
 }
 
 /**

@@ -5,7 +5,8 @@
 --   0000 cria_esquema_inicial · 0001 seguranca_rls_e_storage ·
 --   0002 dados_iniciais_estoque · 0003 corrige_estrutura_estoque ·
 --   0004 configuracoes_da_loja · 0005 promocoes_do_estoque ·
---   0006 registro_de_vendas · 0007 publicacoes_de_entregas.
+--   0006 registro_de_vendas · 0007 publicacoes_de_entregas ·
+--   0008 lixeira_do_estoque.
 -- O bloco de demo é opcional — cria 5 motos de demonstração.
 -- O bloco final conserta banco que já tinha uma tabela `motorcycles`
 -- incompleta e cria a config global da loja (site_settings).
@@ -449,8 +450,10 @@ create policy "sales_dono_remove"
 
 create table if not exists public.entregas (
   id uuid primary key default gen_random_uuid(),
-  moto text not null check (length(btrim(moto)) > 0),
-  foto_path text,
+  moto_id uuid references public.motorcycles (id) on delete set null,
+  moto_nome text not null check (length(btrim(moto_nome)) > 0),
+  fotos jsonb not null default '[]'::jsonb
+    check (jsonb_typeof(fotos) = 'array'),
   legenda text,
   nome_cliente text,
   entregue_em date,
@@ -461,13 +464,18 @@ create table if not exists public.entregas (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint entrega_publicada_autorizada check (
-    status <> 'publicada' or (foto_path is not null and autorizacao_publicacao)
+    status <> 'publicada'
+    or (jsonb_array_length(fotos) >= 1 and autorizacao_publicacao)
   )
 );
 
 create index if not exists idx_entregas_publicadas_ordem
   on public.entregas (ordem, entregue_em desc)
   where status = 'publicada';
+
+create index if not exists idx_entregas_moto
+  on public.entregas (moto_id)
+  where moto_id is not null;
 
 drop trigger if exists trg_entregas_updated_at on public.entregas;
 create trigger trg_entregas_updated_at
@@ -544,3 +552,60 @@ create policy "entregas_admin_fotos_remocao"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'entregas');
+
+-- ============================================================
+-- 0008: lixeira do estoque (lixeira_do_estoque)
+-- ============================================================
+-- Excluir passa a ser reversível: a moto sai da vitrine e do pátio,
+-- mas fica no painel até restaurar ou apagar de vez.
+
+alter table public.motorcycles
+  add column if not exists lixeira_em timestamptz;
+
+comment on column public.motorcycles.lixeira_em is
+  'Quando a moto foi movida para a lixeira. NULL = ativa no painel.';
+
+create index if not exists idx_motorcycles_lixeira_em
+  on public.motorcycles (lixeira_em)
+  where lixeira_em is not null;
+
+drop policy if exists "catalogo publico" on public.motorcycles;
+create policy "catalogo publico"
+  on public.motorcycles for select
+  to anon
+  using (lixeira_em is null);
+
+drop policy if exists "catalogo admin leitura" on public.motorcycles;
+create policy "catalogo admin leitura"
+  on public.motorcycles for select
+  to authenticated
+  using (true);
+
+drop policy if exists "imagens publicas" on public.motorcycle_images;
+create policy "imagens publicas"
+  on public.motorcycle_images for select
+  to anon
+  using (
+    exists (
+      select 1
+      from public.motorcycles m
+      where m.id = motorcycle_images.motorcycle_id
+        and m.lixeira_em is null
+    )
+  );
+
+drop policy if exists "imagens admin leitura" on public.motorcycle_images;
+create policy "imagens admin leitura"
+  on public.motorcycle_images for select
+  to authenticated
+  using (true);
+
+-- ============================================================
+-- 0009: EDIÇÃO DE VENDAS
+-- ============================================================
+drop policy if exists "sales_dono_atualiza" on public.sales;
+create policy "sales_dono_atualiza"
+  on public.sales for update
+  to authenticated
+  using (true)
+  with check (true);

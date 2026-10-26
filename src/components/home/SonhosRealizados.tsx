@@ -43,10 +43,10 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
           <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
             <div className="min-w-0">
               <h2 id="sonhos-titulo" className="titulo text-texto">
-                Sonhos realizados
+                Sonhos <span className="text-marca">realizados</span>
               </h2>
               <p className="mt-3 max-w-[46ch] text-sm leading-relaxed text-texto-2 sm:text-base">
-                Entregas reais com autorização de quem comprou.
+                Mais do que uma compra: um sonho realizado.
               </p>
             </div>
           </header>

@@ -14,11 +14,14 @@ import {
   gravarConfigNoBanco,
   lerConfig,
   lerConfigDoBanco,
+  whatsappUrlCom,
 } from '../../lib/configLoja'
 import type { ConfigLoja } from '../../lib/configLoja'
 import { buildMapsRouteUrl } from '../../lib/maps'
+import type { Motorcycle } from '../../types'
 import { InstagramIcon } from '../ui/InstagramIcon'
 import { LinhaInstalarApp, PainelInstalarApp } from './InstalarApp'
+import { LixeiraSecao } from './LixeiraSecao'
 import { Toast } from '../ui/Toast'
 import type { Feedback } from '../ui/Toast'
 
@@ -38,7 +41,7 @@ import type { Feedback } from '../ui/Toast'
  * no topo — os dois layouts leem dos mesmos dados e do mesmo `conteudo`.
  */
 
-type Secao = 'contato' | 'instagram' | 'endereco' | 'horarios' | 'app'
+type Secao = 'contato' | 'instagram' | 'endereco' | 'horarios' | 'lixeira' | 'app'
 
 interface DescricaoSecao {
   id: Secao
@@ -46,9 +49,9 @@ interface DescricaoSecao {
   /** Frase curta que explica o que a seção controla. */
   descricao: string
   /** Resumo do valor atual, exibido sob o título na lista e no nav. */
-  resumo: (c: ConfigLoja) => string
+  resumo: (c: ConfigLoja, naLixeira: number) => string
   icone: ComponentType<{ className?: string }>
-  grupo: 'loja' | 'atendimento' | 'app'
+  grupo: 'loja' | 'atendimento' | 'estoque' | 'app'
 }
 
 const SECOES: DescricaoSecao[] = [
@@ -88,6 +91,18 @@ const SECOES: DescricaoSecao[] = [
     grupo: 'atendimento',
   },
   {
+    id: 'lixeira',
+    rotulo: 'Lixeira',
+    descricao:
+      'Motos excluídas do estoque: restaure para voltar ao pátio ou apague de vez.',
+    resumo: (_c, naLixeira) =>
+      naLixeira === 0
+        ? 'Vazia'
+        : `${naLixeira} ${naLixeira === 1 ? 'moto excluída' : 'motos excluídas'}`,
+    icone: Trash2,
+    grupo: 'estoque',
+  },
+  {
     id: 'app',
     rotulo: 'Instalar o aplicativo',
     descricao: 'Acesse o painel como um app, em tela cheia, direto do celular.',
@@ -100,6 +115,7 @@ const SECOES: DescricaoSecao[] = [
 const GRUPOS: { id: DescricaoSecao['grupo']; titulo: string }[] = [
   { id: 'loja', titulo: 'Loja' },
   { id: 'atendimento', titulo: 'Atendimento' },
+  { id: 'estoque', titulo: 'Estoque' },
   { id: 'app', titulo: 'Aplicativo' },
 ]
 
@@ -136,7 +152,26 @@ function AcoesSecao({ onSalvar }: { onSalvar: () => void }) {
   )
 }
 
-export function ConfiguracoesTab() {
+interface ConfiguracoesTabProps {
+  /** Motos na lixeira; `null` enquanto o estoque carrega. */
+  lixeira: Motorcycle[] | null
+  erroLixeira: string | null
+  onRestaurarDaLixeira: (moto: Motorcycle) => void
+  onApagarDeVez: (moto: Motorcycle) => void
+  onEsvaziarLixeira: () => void
+  onIrParaEstoque: () => void
+  onRecarregar: () => void
+}
+
+export function ConfiguracoesTab({
+  lixeira,
+  erroLixeira,
+  onRestaurarDaLixeira,
+  onApagarDeVez,
+  onEsvaziarLixeira,
+  onIrParaEstoque,
+  onRecarregar,
+}: ConfiguracoesTabProps) {
   // A config nasce do storage: o componente é remontado a cada troca de
   // aba, então não há posição defasada entre abas.
   const [config, setConfig] = useState<ConfigLoja>(() => lerConfig())
@@ -200,6 +235,7 @@ export function ConfiguracoesTab() {
           <Campo
             id="cfg-whatsapp"
             label="WhatsApp da loja"
+            dica="Só números, com DDI e DDD. É o número que abre os botões de WhatsApp do site."
           >
             <input
               id="cfg-whatsapp"
@@ -210,6 +246,19 @@ export function ConfiguracoesTab() {
               onChange={(e) => set('whatsapp', e.target.value.replace(/\D/g, '') || null)}
             />
           </Campo>
+          {whatsappUrlCom(config) ? (
+            <p className="text-etiqueta text-steel-500">
+              Testar o número:{' '}
+              <a
+                href={whatsappUrlCom(config, 'Olá! Estou testando o botão do site da DG Motos.') ?? '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-steel-300 underline decoration-white/20 underline-offset-2 hover:text-paper"
+              >
+                abrir conversa no WhatsApp →
+              </a>
+            </p>
+          ) : null}
           <AcoesSecao onSalvar={salvar} />
         </fieldset>
       )
@@ -350,13 +399,29 @@ export function ConfiguracoesTab() {
             </span>
             Adicionar faixa de horário
           </button>
+          <AcoesSecao onSalvar={salvar} />
         </fieldset>
+      )
+    }
+
+    if (id === 'lixeira') {
+      return (
+        <LixeiraSecao
+          motos={lixeira}
+          erro={erroLixeira}
+          onRestaurar={onRestaurarDaLixeira}
+          onApagarDeVez={onApagarDeVez}
+          onEsvaziar={onEsvaziarLixeira}
+          onIrParaEstoque={onIrParaEstoque}
+          onRecarregar={onRecarregar}
+        />
       )
     }
 
     return <PainelInstalarApp />
   }
 
+  const totalLixeira = lixeira?.length ?? 0
   const ativa = SECOES.find((s) => s.id === secao) ?? null
   // No desktop nunca há "nada selecionado": sem escolha, abre a primeira
   // seção. No mobile `null` significa o hub (lista) — comportamento
@@ -403,6 +468,12 @@ export function ConfiguracoesTab() {
                             }`}
                           />
                           <span className="min-w-0 flex-1 truncate">{s.rotulo}</span>
+                          {s.id === 'lixeira' && totalLixeira > 0 ? (
+                            <span className="min-w-5 rounded-full bg-claro/10 px-1.5 py-0.5 text-center text-[11px] leading-none text-steel-300">
+                              {totalLixeira}
+                              <span className="sr-only"> na lixeira</span>
+                            </span>
+                          ) : null}
                         </button>
                       )
                     })}
@@ -419,7 +490,7 @@ export function ConfiguracoesTab() {
           <div className="max-w-4xl">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-paper">{ativaDesktop.rotulo}</h3>
-              {temAlteracoes ? (
+              {temAlteracoes && ativaDesktop.id !== 'lixeira' ? (
                 <span
                   role="status"
                   className="rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-etiqueta font-medium text-warn"
@@ -497,7 +568,9 @@ export function ConfiguracoesTab() {
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-paper">{s.rotulo}</span>
-                  <span className="block truncate text-xs text-steel-500">{s.resumo(config)}</span>
+                  <span className="block truncate text-xs text-steel-500">
+                    {s.resumo(config, totalLixeira)}
+                  </span>
                 </span>
                 <ChevronRight
                   className="size-4 shrink-0 text-steel-600 transition-colors group-hover:text-paper"

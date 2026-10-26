@@ -5,6 +5,8 @@ export interface PedidoConfirmacao {
   descricao: string
   rotuloConfirmar: string
   onConfirmar: () => void | Promise<void>
+  /** Texto do botão de recusa (padrão: "Cancelar"). */
+  rotuloCancelar?: string
   /**
    * Tom visual. `perigo` (padrão) é o carimbo para ações destrutivas
    * (excluir). `neutro` é para confirmações inofensivas — sair, descartar
@@ -92,7 +94,7 @@ export function DialogoConfirmacao({
               onClick={onFechar}
               className="foco-painel inline-flex h-11 items-center px-3 text-sm font-medium text-steel-400 transition-colors hover:text-paper"
             >
-              Cancelar
+              {pedido.rotuloCancelar ?? 'Cancelar'}
             </button>
             <button
               type="button"

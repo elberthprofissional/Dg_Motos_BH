@@ -557,23 +557,6 @@
      a composição aprovada, em Lato. O catálogo e o estoque não
      usam esta classe.
      ============================================================ */
-  .galeria-lightbox {
-    width: 100vw;
-    max-width: none;
-    height: 100svh;
-    max-height: none;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: #080706;
-    color: var(--cor-texto);
-    overscroll-behavior: contain;
-  }
-
-  .galeria-lightbox::backdrop {
-    background: rgba(5, 4, 3, 0.94);
-  }
-
   @media (min-width: 1024px) {
     .cartaz {
       font-family: var(--font-cartaz);
@@ -1658,6 +1641,347 @@
       z-index: 2;
       background-color: var(--cor-fundo);
     }
+  }
+
+  /* ============================================================
+     PUBLICAÇÕES — o mural de fotos
+     ============================================================
+     A tela é um rolo de fotos: todas as imagens das entregas
+     lado a lado, sem pasta, data ou capa. Fora das fotos, só
+     tipografia e régua — nenhum cartão com sombra ou moldura.
+     ============================================================ */
+  .publicacoes-pagina {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .publicacoes-cabecalho {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .publicacoes-titulo-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px 16px;
+  }
+
+  .publicacoes-h2 {
+    margin: 0;
+    color: var(--cor-texto);
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  @media (min-width: 640px) {
+    .publicacoes-h2 {
+      font-size: 26px;
+    }
+  }
+
+  .publicacoes-subtitulo {
+    margin: 4px 0 0;
+    max-width: 62ch;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  /* Pendências: uma linha de serviço, não um painel de KPI. */
+  .publicacoes-pendentes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px 16px;
+    border-top: 1px solid var(--cor-borda-forte);
+    border-bottom: 1px solid var(--cor-borda);
+    padding: 2px 0;
+  }
+
+  .publicacoes-pendentes-texto {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    padding: 11px 0;
+    color: var(--cor-texto);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .publicacoes-pendentes-texto .publicacoes-ponto {
+    margin-top: 7px;
+  }
+
+  .publicacoes-pendentes-motivo {
+    color: var(--cor-texto-2);
+  }
+
+  .publicacoes-pendentes-acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    margin-left: auto;
+    padding: 0 2px;
+    color: var(--cor-texto);
+    font-size: 13px;
+    font-weight: 600;
+    transition: color 0.15s ease;
+  }
+
+  .publicacoes-pendentes-acao:hover {
+    color: var(--cor-marca-texto);
+  }
+
+  @media (max-width: 639px) {
+    .publicacoes-pendentes-acao {
+      width: 100%;
+      margin-left: 0;
+      padding-bottom: 8px;
+    }
+  }
+
+  .publicacoes-ponto {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background-color: currentColor;
+  }
+
+  .publicacoes-ponto--rascunho {
+    background-color: var(--cor-alerta);
+  }
+
+  /* Mural: fotos soltas lado a lado, sem pasta, como o rolo do celular. */
+  .publicacoes-fotos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 640px) {
+    .publicacoes-fotos {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 4px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .publicacoes-fotos {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+  }
+
+  .publicacoes-foto {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: var(--cor-painel);
+    color: var(--cor-texto);
+  }
+
+  .publicacoes-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition:
+      transform 0.3s ease,
+      opacity 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    .publicacoes-foto:hover img {
+      transform: scale(1.03);
+      opacity: 0.88;
+    }
+  }
+
+  /* Apagar: canto superior direito, 44px (alvo de toque) e com o fundo
+     escuro do ícone para não sumir sobre foto clara. No celular já
+     aparece; no desktop só quando o mouse chega na foto. */
+  .publicacoes-foto-apagar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    color: var(--cor-texto-2);
+    transition:
+      color 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  .publicacoes-foto-apagar:hover {
+    color: var(--cor-marca);
+  }
+
+  .publicacoes-foto-apagar:disabled {
+    cursor: wait;
+    opacity: 0.4;
+  }
+
+  @media (hover: hover) and (min-width: 640px) {
+    .publicacoes-foto-apagar {
+      opacity: 0;
+    }
+
+    .publicacoes-foto:hover .publicacoes-foto-apagar,
+    .publicacoes-foto:focus-within .publicacoes-foto-apagar {
+      opacity: 1;
+    }
+  }
+
+  .publicacoes-foto-vazia {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-content: center;
+    justify-items: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto-3);
+    font-size: 11px;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .publicacoes-foto--esqueleto {
+    background-color: var(--cor-painel-2);
+    cursor: default;
+  }
+
+  /* Vazio: a moldura da prova continua de pé, com os quadros numerados. */
+  .publicacoes-vazio {
+    display: grid;
+    gap: 18px;
+    padding: 16px;
+    background-color: var(--cor-painel);
+  }
+
+  @media (min-width: 768px) {
+    .publicacoes-vazio {
+      grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+      align-items: center;
+      gap: 28px;
+      padding: 20px;
+    }
+  }
+
+  .publicacoes-vazio-prova {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2px;
+    height: 112px;
+  }
+
+  @media (min-width: 640px) {
+    .publicacoes-vazio-prova {
+      height: 144px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .publicacoes-vazio-prova {
+      height: 176px;
+    }
+  }
+
+  .publicacoes-vazio-quadro {
+    display: grid;
+    place-items: center;
+    border: 1px dashed var(--cor-borda-forte);
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto-3);
+    font-size: 11px;
+  }
+
+  .publicacoes-vazio-titulo {
+    margin: 0;
+    color: var(--cor-texto);
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .publicacoes-vazio-descricao {
+    margin: 6px 0 0;
+    max-width: 46ch;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  /* Erro e aviso: a mesma régua do painel, sem caixa de dashboard. */
+  .publicacoes-erro {
+    padding: 20px;
+    background-color: var(--cor-painel);
+  }
+
+  .publicacoes-erro-titulo {
+    margin: 0;
+    color: var(--cor-texto);
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .publicacoes-erro-texto {
+    margin: 6px 0 0;
+    max-width: 60ch;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .publicacoes-aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 16px;
+    border-left: 2px solid var(--cor-alerta);
+    background-color: var(--cor-painel);
+    padding: 4px 12px;
+  }
+
+  .publicacoes-aviso p {
+    margin: 0;
+    padding: 8px 0;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .publicacoes-aviso strong {
+    color: var(--cor-alerta);
+    font-weight: 600;
   }
 
   .painel-secao {

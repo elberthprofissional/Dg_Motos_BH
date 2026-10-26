@@ -8,19 +8,32 @@ interface AreaUploadFotoProps {
   resumo?: string
   /** Depois que já existem fotos, vira uma linha curta de "adicionar". */
   compacto?: boolean
+  /**
+   * `bloco` (padrão) é a área com borda tracejada, que também aceita
+   * arrastar arquivo; `botao` é o botão redondo do cabeçalho, para
+   * quando a ação fica ao lado do título.
+   */
+  variante?: 'bloco' | 'botao'
+  /** Rótulo principal ("Nova publicação", "Upload foto"...). */
+  rotulo?: string
+  /** Classe extra no elemento externo (largura no cabeçalho). */
+  className?: string
   onEscolher: () => void
   onTirarFoto: () => void
   onArquivos: (arquivos: FileList) => void
 }
 
 /**
- * Retângulo único de upload. No desktop abre o seletor; no toque abre
- * uma folha curta com galeria e câmera, sem depender do menu nativo.
+ * Entrada única de foto do painel. No desktop abre o seletor; no toque
+ * abre uma folha curta com galeria e câmera, sem depender do menu nativo.
  */
 export function AreaUploadFoto({
   enviando,
   resumo,
   compacto = false,
+  variante = 'bloco',
+  rotulo,
+  className,
   onEscolher,
   onTirarFoto,
   onArquivos,
@@ -51,6 +64,81 @@ export function AreaUploadFoto({
     folhaRef.current?.close()
   }
 
+  const folha = temCamera ? (
+    <dialog
+      ref={folhaRef}
+      className="dialogo dialogo-folha"
+      aria-labelledby={tituloId}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) e.currentTarget.close()
+      }}
+    >
+      <div className="px-5 pt-3 pb-4">
+        <div aria-hidden="true" className="mx-auto h-1 w-10 bg-line-forte" />
+        <div className="mt-4 flex items-start justify-between gap-4">
+          <div>
+            <h2 id={tituloId} className="font-display text-lg font-semibold text-paper">
+              Adicionar foto
+            </h2>
+            <p className="mt-1 text-xs text-steel-400">Escolha da galeria ou tire na hora.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => folhaRef.current?.close()}
+            aria-label="Fechar"
+            className="foco-painel grid size-10 shrink-0 place-items-center border border-line text-steel-400 transition-colors hover:border-line-forte hover:text-paper"
+          >
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            ref={galeriaRef}
+            type="button"
+            onClick={escolherDaGaleria}
+            className="foco-painel flex min-h-24 flex-col items-center justify-center gap-2 border border-line-forte bg-painel-2 px-3 py-4 text-center transition-colors hover:border-brand-400/60 hover:bg-painel-3"
+          >
+            <Images className="size-5 text-brand-400" aria-hidden="true" />
+            <span className="text-sm font-semibold text-paper">Escolher foto</span>
+            <span className="text-[11px] text-steel-500">Da galeria</span>
+          </button>
+          <button
+            type="button"
+            onClick={tirarFoto}
+            className="foco-painel flex min-h-24 flex-col items-center justify-center gap-2 border border-line-forte bg-painel-2 px-3 py-4 text-center transition-colors hover:border-brand-400/60 hover:bg-painel-3"
+          >
+            <Camera className="size-5 text-brand-400" aria-hidden="true" />
+            <span className="text-sm font-semibold text-paper">Tirar foto</span>
+            <span className="text-[11px] text-steel-500">Abrir a câmera</span>
+          </button>
+        </div>
+      </div>
+    </dialog>
+  ) : null
+
+  if (variante === 'botao') {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={abrirSeletor}
+          disabled={enviando}
+          aria-haspopup={temCamera ? 'dialog' : undefined}
+          aria-busy={enviando || undefined}
+          className={`foco-painel btn btn-primary min-h-11 gap-1.5 px-4 py-0 text-[13px] lg:min-h-9 ${className ?? ''}`}
+        >
+          {enviando ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <ImagePlus className="size-4" aria-hidden="true" />
+          )}
+          {enviando ? 'Enviando fotos…' : (rotulo ?? 'Nova publicação')}
+        </button>
+        {folha}
+      </>
+    )
+  }
+
   return (
     <>
       <div
@@ -66,7 +154,7 @@ export function AreaUploadFoto({
           setArrastando(false)
           if (!enviando) onArquivos(e.dataTransfer.files)
         }}
-        className={`border border-dashed bg-painel-2 transition-colors ${
+        className={`${className ?? ''} border border-dashed bg-painel-2 transition-colors ${
           arrastando ? 'border-brand-400 bg-brand-500/5' : 'border-line-forte'
         }`}
       >
@@ -89,7 +177,7 @@ export function AreaUploadFoto({
               ) : (
                 <ImagePlus className="size-4 text-brand-400" aria-hidden="true" />
               )}
-              {enviando ? 'Enviando fotos…' : 'Adicionar mais fotos'}
+              {enviando ? 'Enviando fotos…' : (rotulo ?? 'Adicionar mais fotos')}
             </>
           ) : (
             <>
@@ -97,7 +185,7 @@ export function AreaUploadFoto({
                 {enviando ? <Loader2 className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}
               </span>
               <span className="mt-1.5 text-sm font-semibold text-paper">
-                {enviando ? 'Enviando fotos…' : 'Upload foto'}
+                {enviando ? 'Enviando fotos…' : (rotulo ?? 'Upload foto')}
               </span>
               <span className="text-xs leading-snug text-steel-400">
                 {enviando
@@ -113,57 +201,7 @@ export function AreaUploadFoto({
         </button>
       </div>
 
-      {temCamera ? (
-        <dialog
-          ref={folhaRef}
-          className="dialogo dialogo-folha"
-          aria-labelledby={tituloId}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) e.currentTarget.close()
-          }}
-        >
-          <div className="px-5 pt-3 pb-4">
-            <div aria-hidden="true" className="mx-auto h-1 w-10 bg-line-forte" />
-            <div className="mt-4 flex items-start justify-between gap-4">
-              <div>
-                <h2 id={tituloId} className="font-display text-lg font-semibold text-paper">
-                  Adicionar foto
-                </h2>
-                <p className="mt-1 text-xs text-steel-400">Escolha da galeria ou tire na hora.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => folhaRef.current?.close()}
-                aria-label="Fechar"
-                className="foco-painel grid size-10 shrink-0 place-items-center border border-line text-steel-400 transition-colors hover:border-line-forte hover:text-paper"
-              >
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button
-                ref={galeriaRef}
-                type="button"
-                onClick={escolherDaGaleria}
-                className="foco-painel flex min-h-24 flex-col items-center justify-center gap-2 border border-line-forte bg-painel-2 px-3 py-4 text-center transition-colors hover:border-brand-400/60 hover:bg-painel-3"
-              >
-                <Images className="size-5 text-brand-400" aria-hidden="true" />
-                <span className="text-sm font-semibold text-paper">Escolher foto</span>
-                <span className="text-[11px] text-steel-500">Da galeria</span>
-              </button>
-              <button
-                type="button"
-                onClick={tirarFoto}
-                className="foco-painel flex min-h-24 flex-col items-center justify-center gap-2 border border-line-forte bg-painel-2 px-3 py-4 text-center transition-colors hover:border-brand-400/60 hover:bg-painel-3"
-              >
-                <Camera className="size-5 text-brand-400" aria-hidden="true" />
-                <span className="text-sm font-semibold text-paper">Tirar foto</span>
-                <span className="text-[11px] text-steel-500">Abrir a câmera</span>
-              </button>
-            </div>
-          </div>
-        </dialog>
-      ) : null}
+      {folha}
     </>
   )
 }

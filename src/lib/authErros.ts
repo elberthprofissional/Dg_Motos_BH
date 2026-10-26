@@ -5,7 +5,7 @@ import type { AuthError } from '@supabase/supabase-js'
  *
  * O Supabase responde HTTP 400 para várias causas diferentes (senha
  * errada, e-mail não confirmado, login por e-mail desativado). Mostrar
- * sempre "e-mail ou senha incorretos" deixava o dono sem saber o que
+ * sempre "e-mail ou senha inválidos" deixava o dono sem saber o que
  * fazer — e a causa mais comum aqui é o e-mail não confirmado, que só se
  * resolve no painel do Supabase.
  *
@@ -18,7 +18,7 @@ export function traduzirErroLogin(error: AuthError): string {
       return 'E-mail ainda não confirmado. Abra o e-mail de confirmação ou marque a conta como confirmada em Authentication → Users, no painel do Supabase.'
 
     case 'invalid_credentials':
-      return 'E-mail ou senha incorretos. Confira se o e-mail é o mesmo usado em Authentication → Users (o login não aceita e-mail com maiúsculas diferentes).'
+      return 'E-mail ou senha inválidos.'
 
     case 'email_address_invalid':
     case 'email_address_not_authorized':

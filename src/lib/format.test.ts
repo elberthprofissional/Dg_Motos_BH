@@ -145,10 +145,19 @@ describe('vehicleSchema', () => {
     expect(schema.model).toBe('CG 160 Start')
   })
 
-  it('não publica preço fora da faixa como oferta estruturada até confirmação', () => {
+  it('não publica oferta com preço fora da faixa até confirmação', () => {
     const schema = vehicleSchema({ ...bike, preco: 15000000 }) as Record<string, unknown>
-    const offer = schema.offers as Record<string, unknown>
-    expect(offer.price).toBeUndefined()
+    expect(schema.offers).toBeUndefined()
+  })
+
+  it('não publica oferta com preço provavelmente incompleto', () => {
+    const schema = vehicleSchema({ ...bike, preco: 27.9 }) as Record<string, unknown>
+    expect(schema.offers).toBeUndefined()
+  })
+
+  it('aceita a descrição editorial resolvida pela página', () => {
+    const schema = vehicleSchema(bike, 'Texto de referência da linha.') as Record<string, unknown>
+    expect(schema.description).toBe('Texto de referência da linha.')
   })
 
   it('marca motos seminovas como usadas', () => {

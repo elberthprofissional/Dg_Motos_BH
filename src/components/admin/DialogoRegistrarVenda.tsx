@@ -1,28 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
 import { useVendas } from '../../hooks/vendasContexto'
 import { formatPrice } from '../../lib/format'
-import { ROTULO_PAGAMENTO, type FormaPagamento, type Motorcycle, type VendaParaSalvar } from '../../types'
+import {
+  ROTULO_PAGAMENTO,
+  type FormaPagamento,
+  type Motorcycle,
+  type Venda,
+  type VendaParaSalvar,
+} from '../../types'
 
 const FORMAS = Object.keys(ROTULO_PAGAMENTO) as FormaPagamento[]
 
 /**
- * Diálogo "Registrar a venda".
+ * Diálogo da venda — "Registrar a venda" ou "Editar a venda".
  *
- * Abre quando o dono marca uma moto como vendida: em vez de trocar o
- * status silenciosamente, o painel pergunta quem comprou, como pagou e
- * por quanto. Cancelar sai sem gravar nada — a moto continua do jeito
- * que estava (nem status muda).
+ * Abre de dois jeitos: quando o dono marca uma moto como vendida (em
+ * vez de trocar o status silenciosamente, o painel pergunta quem
+ * comprou, como pagou e por quanto) e quando ele clica em "Comprou…"
+ * na aba Vendidas para corrigir um registro já lançado.
+ *
+ * Cancelar nunca desfaz o status da moto: a moto já saiu do pátio antes
+ * do diálogo abrir, então desistir aqui só deixa a venda sem lançamento.
  *
  * Valor já vem preenchido com o preço de anúncio (a venda costuma sair
  * pelo anunciado) e o custo com o que estiver cadastado na moto — os
- * dois seguem editáveis aqui dentro.
+ * dois seguem editáveis aqui dentro. Na correção, tudo vem da venda.
  */
 export function DialogoRegistrarVenda({
   moto,
+  venda,
   onFechar,
   onSalvo,
 }: {
   moto: Motorcycle | null
+  /** Venda já lançada para esta moto: o diálogo vira correção. */
+  venda: Venda | null
   onFechar: () => void
   /** Chamado após salvar com sucesso — mostra o toast no Admin. */
   onSalvo: (msg: string) => void
@@ -41,22 +53,31 @@ export function DialogoRegistrarVenda({
 
   // Moto nova no diálogo: campos reprovinos + abre o modal natively.
   const idAberto = moto?.id ?? null
+  const idVenda = venda?.id ?? null
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
     if (moto && !dialog.open) {
-      setValor(String(moto.preco))
-      setForma('pix')
-      setComprador('')
-      setTelefone('')
-      setCusto(moto.custoCompra ? String(moto.custoCompra) : '')
+      setValor(venda ? String(venda.valor) : String(moto.preco))
+      setForma(venda?.formaPagamento ?? 'pix')
+      setComprador(venda?.comprador ?? '')
+      setTelefone(venda?.telefone ?? '')
+      setCusto(
+        venda
+          ? venda.custo != null
+            ? String(venda.custo)
+            : ''
+          : moto.custoCompra
+            ? String(moto.custoCompra)
+            : '',
+      )
       setErro(null)
       dialog.showModal()
       campoValorRef.current?.select()
     } else if (!moto && dialog.open) {
       dialog.close()
     }
-  }, [moto, idAberto])
+  }, [moto, venda, idAberto, idVenda])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -89,7 +110,10 @@ export function DialogoRegistrarVenda({
 
     setOcupado(true)
     const dados: VendaParaSalvar = {
-      motoId: moto.id,
+      id: venda?.id,
+      // Na correção o vínculo original se mantém (pode ser nulo se a
+      // moto já voltou pro pátio); na criação, a própria moto.
+      motoId: venda ? venda.motoId : moto.id,
       marca: moto.marca,
       modelo: moto.modelo,
       ano: moto.ano,
@@ -107,7 +131,11 @@ export function DialogoRegistrarVenda({
       return
     }
     dialogRef.current?.close()
-    onSalvo(`Venda de ${moto.marca} ${moto.modelo} registrada — R$ ${valorNum.toFixed(2).replace('.', ',')}`)
+    onSalvo(
+      venda
+        ? 'Dados da venda atualizados.'
+        : `Venda de ${moto.marca} ${moto.modelo} registrada — R$ ${valorNum.toFixed(2).replace('.', ',')}`,
+    )
   }
 
   return (
@@ -125,11 +153,13 @@ export function DialogoRegistrarVenda({
           }}
         >
           <h2 id="dlg-venda-titulo" className="text-base font-semibold text-white">
-            Registrar a venda
+            {venda ? 'Editar a venda' : 'Registrar a venda'}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-            {moto.marca} {motomodelo(moto)} · anunciada por {formatPrice(moto.preco)}.
-            Os dados gravados aqui alimentam a aba Vendas e o cálculo de lucro.
+            {moto.marca} {motomodelo(moto)} · anunciada por {formatPrice(moto.preco)}.{' '}
+            {venda
+              ? 'Corrija quem comprou, o telefone, o pagamento ou o valor.'
+              : 'Os dados gravados aqui aparecem na aba Vendidas e no histórico de vendas.'}
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -212,14 +242,14 @@ export function DialogoRegistrarVenda({
               disabled={ocupado}
               className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-medium text-neutral-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
             >
-              Cancelar — só marcar vendida sem registrar
+              {venda ? 'Cancelar' : 'Cancelar — só marcar vendida sem registrar'}
             </button>
             <button
               type="submit"
               disabled={ocupado}
               className="inline-flex h-10 items-center rounded-xl bg-red-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:opacity-60"
             >
-              {ocupado ? 'Registrando...' : 'Registrar venda'}
+              {ocupado ? 'Salvando…' : venda ? 'Salvar alterações' : 'Registrar venda'}
             </button>
           </div>
         </form>

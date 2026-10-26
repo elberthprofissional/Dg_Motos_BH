@@ -14,22 +14,35 @@ export interface ResumoEstoque {
   valorTotal: number
 }
 
-/** Contagem e valor por status. */
+/** Motos que ainda vivem no painel — a lixeira não entra em conta. */
+export function motosAtivas(motos: Motorcycle[]): Motorcycle[] {
+  return motos.filter((moto) => !moto.lixeiraEm)
+}
+
+/** Motos na lixeira, da exclusão mais recente para a mais antiga. */
+export function motosNaLixeira(motos: Motorcycle[]): Motorcycle[] {
+  return motos
+    .filter((moto) => Boolean(moto.lixeiraEm))
+    .sort((a, b) => (b.lixeiraEm ?? '').localeCompare(a.lixeiraEm ?? ''))
+}
+
+/** Contagem e valor por status. Ignora o que está na lixeira. */
 export function resumirEstoque(motos: Motorcycle[]): ResumoEstoque {
-  const por = (status: MotorcycleStatus) => motos.filter((m) => m.status === status)
+  const vivas = motosAtivas(motos)
+  const por = (status: MotorcycleStatus) => vivas.filter((m) => m.status === status)
   const disponiveis = por('disponivel')
   const indisponiveis = por('indisponivel')
   const vendidas = por('vendida')
   const soma = (lista: Motorcycle[]) => lista.reduce((total, m) => total + m.preco, 0)
 
   return {
-    total: motos.length,
+    total: vivas.length,
     disponiveis: disponiveis.length,
     indisponiveis: indisponiveis.length,
     vendidas: vendidas.length,
     valorDisponivel: soma(disponiveis),
     valorEmEstoque: soma([...disponiveis, ...indisponiveis]),
-    valorTotal: soma(motos),
+    valorTotal: soma(vivas),
   }
 }
 

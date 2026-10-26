@@ -58,7 +58,7 @@ export function Marcas() {
   return (
     <section
       aria-labelledby="marcas-titulo"
-      className="border-y border-borda bg-painel py-5 sm:py-6"
+      className="border-t border-borda bg-painel py-5 sm:py-6"
     >
       {/* O título saiu da tela mas continua no sumário do leitor de
           tela: sem ele a faixa vira um bloco de imagens sem nome. */}

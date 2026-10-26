@@ -35,8 +35,10 @@ Abra o **SQL Editor** e execute as migrações numeradas de
 - `..._seguranca_rls_e_storage.sql` — RLS, políticas e o bucket público `motos`;
 - `..._dados_iniciais_estoque.sql` — (opcional) 5 motos de demonstração;
 - `..._configuracoes_da_loja.sql`, `..._promocoes_do_estoque.sql`,
-  `..._registro_de_vendas.sql` e `..._publicacoes_de_entregas.sql` —
-  configurações, promoções, histórico de vendas e a galeria de entregas.
+  `..._registro_de_vendas.sql`, `..._publicacoes_de_entregas.sql`,
+  `..._lixeira_do_estoque.sql` e `..._edicao_de_vendas.sql` — configurações,
+  promoções, histórico de vendas, a galeria de entregas, a lixeira do estoque e
+  a edição de quem comprou (aba **Vendidas**).
 
 ## 3. Ligar o projeto ao site
 
@@ -83,6 +85,18 @@ Entre em `/admin` e use a aba **Estoque**. No cadastro:
   o link já divulgado.
 - **Status**: `disponivel`, `indisponivel` ou `vendida`. Só as
   `disponivel` aparecem no site e no sitemap.
+
+### Lixeira do estoque
+
+Excluir uma moto no Estoque não apaga a ficha: ela vai para a seção
+**Lixeira**, dentro de **Configurações**, sai do site e das contas do
+pátio, e pode ser restaurada depois. O status original é mantido — uma
+vendida volta para **Vendidas**, uma disponível volta para o pátio.
+
+O **apagar de vez** fica na própria Lixeira, com confirmação, e remove a
+linha e as fotos do Storage sem volta. A lixeira depende da migração
+`20260101000008_lixeira_do_estoque.sql`; sem ela, o painel avisa ao tentar
+excluir.
 
 ### Evitar pausa por inatividade no plano Free
 
@@ -185,9 +199,10 @@ embaladas no JavaScript e ficam públicas para qualquer visitante.
 | Sintoma | Causa provável |
 | --- | --- |
 | `/admin` diz "Área restrita desativada" | `.env` ausente, ou build anterior ao `.env`. Refaça o build. |
-| Login diz "E-mail ou senha incorretos" | Usuário não criado em Authentication → Users, ou e-mail não confirmado. |
+| Login diz "E-mail ou senha inválidos" | Usuário não criado em Authentication → Users, ou e-mail não confirmado. |
 | Fotos não sobem | Bucket `motos` não criado (rode `..._seguranca_rls_e_storage.sql`) ou política de Storage faltando. |
 | `duplicate key` ao salvar | O sistema tenta sozinho o próximo endereço livre (`-2`, `-3`…). Se persistir, é outra restrição do banco: veja o erro completo no console. |
 | Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). A config da loja (aba Configurações) é exceção: vai para `site_settings` e vale na hora. |
+| Excluir moto pede uma migração | A coluna `lixeira_em` não existe no banco. Rode `20260101000008_lixeira_do_estoque.sql` no SQL Editor. |
 | Instalar o app não aparece | Precisa HTTPS e o manifest acessível. No iPhone/Safari não há prompt: use *Compartilhar → Adicionar à Tela de Início*. |
 | `npm run build` usa o catálogo antigo | Faltam as chaves no `.env` **no ambiente do build**, não só localmente. |

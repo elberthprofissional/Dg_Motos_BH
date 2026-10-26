@@ -5,6 +5,8 @@ import {
   filtrarEstoque,
   filtrarVendas,
   lucroPorMes,
+  motosAtivas,
+  motosNaLixeira,
   resumirEstoque,
   resumirVendas,
   tempoRelativo,
@@ -85,6 +87,30 @@ describe('resumirEstoque', () => {
     })
     expect(contarPorStatus(r, 'vendida')).toBe(1)
     expect(r.valorEmEstoque).toBe(r.valorDisponivel + 40000)
+  })
+
+  it('não conta nem soma o que está na lixeira', () => {
+    const lista: Motorcycle[] = [
+      base({ slug: 'a', status: 'disponivel', preco: 10000 }),
+      base({ slug: 'b', status: 'vendida', preco: 90000, lixeiraEm: '2026-10-20T12:00:00Z' }),
+    ]
+    const r = resumirEstoque(lista)
+    expect(r.total).toBe(1)
+    expect(r.vendidas).toBe(0)
+    expect(r.valorTotal).toBe(10000)
+  })
+})
+
+describe('lixeira', () => {
+  const lista: Motorcycle[] = [
+    base({ slug: 'ativa' }),
+    base({ slug: 'antiga', lixeiraEm: '2026-01-01T00:00:00Z' }),
+    base({ slug: 'recente', lixeiraEm: '2026-02-01T00:00:00Z' }),
+  ]
+
+  it('separa as ativas das excluídas', () => {
+    expect(motosAtivas(lista).map((m) => m.slug)).toEqual(['ativa'])
+    expect(motosNaLixeira(lista).map((m) => m.slug)).toEqual(['recente', 'antiga'])
   })
 })
 
