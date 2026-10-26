@@ -96,6 +96,9 @@ export function Footer() {
               </a>
             ) : null}
             {config.instagramUrl ? (
+              /* Sem o @ na frente: o handle só interessa a quem já está
+                  no perfil. Aqui o convite é a frase, e ela toda é o
+                  link — o ícone acompanha o texto. */
               <a
                 href={config.instagramUrl}
                 target="_blank"
@@ -103,7 +106,9 @@ export function Footer() {
                 className="inline-flex min-h-11 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto"
               >
                 <InstagramIcon className="size-4 shrink-0" aria-hidden="true" />
-                <span>{config.instagramHandle}</span>
+                <span className="underline decoration-texto-3/40 underline-offset-4 transition-colors hover:decoration-texto">
+                  Siga a gente no Instagram
+                </span>
               </a>
             ) : null}
           </div>

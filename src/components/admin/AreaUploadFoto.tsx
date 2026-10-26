@@ -167,7 +167,9 @@ export function AreaUploadFoto({
           className={
             compacto
               ? 'foco-painel flex min-h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium text-steel-300 transition-colors hover:bg-painel-3 hover:text-paper disabled:cursor-wait'
-              : 'foco-painel flex w-full flex-col items-center gap-1 px-4 py-6 text-center transition-colors hover:bg-painel-3 disabled:cursor-wait'
+              : // Retângulo baixo: ícone à esquerda e textos empilhados. A
+                // caixa alta de antes ocupava meia tela para pedir uma foto.
+                'foco-painel flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-painel-3 disabled:cursor-wait'
           }
         >
           {compacto ? (
@@ -181,21 +183,28 @@ export function AreaUploadFoto({
             </>
           ) : (
             <>
-              <span aria-hidden="true" className="grid size-10 place-items-center border border-line bg-night-950 text-brand-400">
+              <span
+                aria-hidden="true"
+                className="grid size-10 shrink-0 place-items-center border border-line bg-night-950 text-brand-400"
+              >
                 {enviando ? <Loader2 className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}
               </span>
-              <span className="mt-1.5 text-sm font-semibold text-paper">
-                {enviando ? 'Enviando fotos…' : (rotulo ?? 'Upload foto')}
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-paper">
+                  {enviando ? 'Enviando fotos…' : (rotulo ?? 'Upload foto')}
+                </span>
+                <span className="block text-xs leading-snug text-steel-400">
+                  {enviando
+                    ? 'Preparando as imagens antes de enviar.'
+                    : resumo ||
+                      (temCamera
+                        ? 'Escolher da galeria ou tirar na hora'
+                        : 'Clique para escolher ou arraste as fotos aqui')}
+                </span>
+                <span className="mt-0.5 block text-[11px] text-steel-500">
+                  JPG, PNG ou WebP · até 12 MB cada
+                </span>
               </span>
-              <span className="text-xs leading-snug text-steel-400">
-                {enviando
-                  ? 'Preparando as imagens antes de enviar.'
-                  : resumo ||
-                    (temCamera
-                      ? 'Escolher da galeria ou tirar na hora'
-                      : 'Clique para escolher ou arraste as fotos aqui')}
-              </span>
-              <span className="text-[11px] text-steel-500">JPG, PNG ou WebP · até 12 MB cada</span>
             </>
           )}
         </button>

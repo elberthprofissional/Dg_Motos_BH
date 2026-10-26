@@ -403,7 +403,7 @@ function ErroPublicacoes({ erro, onTentar }: { erro: string; onTentar: () => voi
         <summary className="cursor-pointer text-xs text-steel-500">Detalhe técnico</summary>
         <p className="mt-2 text-xs leading-relaxed break-words text-steel-500">{erro}</p>
         <p className="mt-2 text-xs leading-relaxed text-steel-500">
-          Se a tabela ainda não existe, aplique a migração 0007 descrita em supabase/README.md.
+          Se a tabela ainda não existe, aplique a migração 08 descrita em supabase/README.md.
         </p>
       </details>
     </section>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { ArrowRight, CircleAlert, LockKeyhole, Mail } from 'lucide-react'
+import { CircleAlert, LockKeyhole, Mail } from 'lucide-react'
 import { SenhaInput } from '../components/ui/SenhaInput'
 import { useAuth } from '../hooks/authContexto'
 
@@ -10,8 +10,9 @@ const ANO_ATUAL = new Date().getFullYear()
  * Tela de acesso do dono — split screen.
  *
  * No desktop a tela divide em duas colunas: a foto do pátio cobre a
- * metade esquerda inteira e o formulário vive direto no painel escuro
- * da direita, sem cartão flutuante. No celular a entrada é um cartão —
+ * metade esquerda inteira e o painel escuro da direita fica só com o
+ * formulário, centralizado — sem logo, manchete ou cartão flutuante
+ * (a marca já está na foto). No celular a entrada é um cartão —
  * foto de captação no topo, "Bem-vindo de volta" e os campos —
  * registrado num rodapé discreto de ©.
  *
@@ -81,8 +82,7 @@ export function AdminLogin() {
             Realizando Sonhos
           </p>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
-            Curadoria de motocicletas seminovas em Belo Horizonte.
-            Inspeção, laudo cautelar e negociação direta na loja.
+            Estoque, anúncios e vendas no mesmo lugar.
           </p>
         </div>
       </aside>
@@ -109,42 +109,51 @@ export function AdminLogin() {
         />
 
         <div className="relative mx-auto flex w-full max-w-[29rem] flex-1 flex-col justify-center px-6 pt-[max(1.25rem,env(safe-area-inset-top))] pb-6 sm:px-9 sm:pt-7 lg:max-w-none lg:px-16 lg:py-8">
-          {/* Logo — no celular ela abre a tela; no desktop fica no canto
-              superior, liberando o formulário para centralizar. */}
+          {/* Logo — só no celular, onde ela abre a tela. No desktop a
+              marca já está na foto do showroom, à esquerda. */}
           <Link
             to="/"
             aria-label="DG Motos BH — voltar à página inicial"
-            className="group mb-8 inline-flex w-fit items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto lg:absolute lg:top-10 lg:left-16 lg:mb-0"
+            className="group mb-8 inline-flex w-fit items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto lg:hidden"
           >
             <img
               src="/logo.webp"
               alt="DG Motos — Realizando Sonhos"
               width={112}
               height={112}
-              className="size-14 object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] lg:size-20 lg:drop-shadow-none"
+              className="size-14 object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]"
             />
-            <span className="border-l-2 border-marca pl-3 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] lg:pl-4 lg:drop-shadow-none">
-              <span className="block text-sm font-bold tracking-[0.16em] text-white uppercase lg:text-base lg:text-texto">
+            <span className="border-l-2 border-marca pl-3 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]">
+              <span className="block text-sm font-bold tracking-[0.16em] text-white uppercase">
                 DG Motos BH
               </span>
-              <span className="mt-0.5 block text-xs font-medium tracking-[0.12em] text-white/70 uppercase lg:mt-1 lg:text-texto-3">
+              <span className="mt-0.5 block text-xs font-medium tracking-[0.12em] text-white/70 uppercase">
                 Administração
               </span>
             </span>
           </Link>
 
           <div className="mx-auto flex w-full max-w-[29rem] flex-col items-stretch lg:max-w-md">
-            {/* Headline curta e o resto silêncio: o parágrafo de apoio é
-                conversa de vitrine — no celular a tela vai direto aos
-                campos, como um app. Na mesa ele volta. */}
-            <div className="mb-8 lg:mb-9">
-              <h1 className="max-w-[12ch] font-display text-[clamp(2.25rem,5vw,3.75rem)] leading-[0.98] font-bold tracking-[-0.04em] text-white lg:text-[2.5rem] xl:text-[2.75rem]">
-                Seu estoque.
-                <span className="block text-marca-texto">Seu negócio.</span>
+            {/* Headline só no celular, onde ela abre a tela como um app.
+                No desktop o painel fica só com o formulário — a manchete
+                continua no documento (leitor de tela e SEO), escondida
+                atrás de sr-only. */}
+            <div className="mb-8 lg:mb-0">
+              <h1 className="max-w-[12ch] font-display text-[clamp(2.25rem,5vw,3.75rem)] leading-[0.98] font-bold tracking-[-0.04em] text-white lg:sr-only">
+                Bem-vindo
+                <span className="block text-marca-texto">de volta.</span>
               </h1>
-              <p className="mt-4 hidden max-w-[42ch] text-base leading-relaxed text-neutral-300 sm:mt-5 sm:text-[17px] lg:block">
-                Acesse o painel para gerenciar as motos, atualizar anúncios e
-                acompanhar seu catálogo.
+            </div>
+
+            {/* Saudação do desktop: o cartaz da marca, centralizado
+                acima dos campos, com a linha de apoio embaixo. Só a
+                partir de lg — no celular a manchete já cumprimenta. */}
+            <div className="mb-7 hidden flex-col items-center text-center lg:flex">
+              <h2 className="cartaz text-[length:clamp(2.25rem,3.4vw,3.25rem)] text-white">
+                Bem-vindo de volta
+              </h2>
+              <p className="mt-3 text-sm text-neutral-400">
+                Faça login para continuar
               </p>
             </div>
 
@@ -223,13 +232,9 @@ export function AdminLogin() {
                   type="submit"
                   disabled={enviando || carregando || !email || !senha}
                   aria-busy={enviando || carregando}
-                  className="group flex min-h-14 w-full cursor-pointer items-center justify-between rounded-xl bg-marca px-5 text-base font-bold text-white transition-colors hover:bg-marca-viva focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto disabled:cursor-not-allowed disabled:bg-marca-forte disabled:text-white sm:px-6"
+                  className="flex min-h-14 w-full cursor-pointer items-center justify-center rounded-xl bg-marca px-5 text-base font-bold text-white transition-colors hover:bg-marca-viva focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marca-texto disabled:cursor-not-allowed disabled:bg-marca-forte disabled:text-white sm:px-6"
                 >
-                  <span>{enviando ? 'Acessando painel…' : 'Acessar painel'}</span>
-                  <ArrowRight
-                    className="size-5 transition-transform group-hover:translate-x-1"
-                    aria-hidden="true"
-                  />
+                  <span>{enviando ? 'Entrando…' : 'Entrar'}</span>
                 </button>
               </form>
             )}

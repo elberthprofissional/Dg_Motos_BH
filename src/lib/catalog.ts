@@ -36,10 +36,10 @@ interface LinhaCatalogo {
   modelo: string
   ano: number
   preco: number | string
-  /** Colunas da promoção; só existem depois da migração 0005 aplicar. */
+  /** Colunas da promoção; só existem depois da migração 06 aplicar. */
   em_promocao?: boolean | number | null
   preco_antes?: number | string | null
-  /** Dado do painel; só existe depois da migração 0006 aplicar. */
+  /** Dado do painel; só existe depois da migração 07 aplicar. */
   custo_compra?: number | string | null
   quilometragem: number | null
   cilindrada: number | null
@@ -49,7 +49,7 @@ interface LinhaCatalogo {
   status: string
   created_at?: string | null
   updated_at?: string | null
-  /** Só existe depois da migração 0008 (lixeira). */
+  /** Só existe depois da migração 09 (lixeira). */
   lixeira_em?: string | null
   motorcycle_images?: LinhaImagem[] | null
 }
@@ -275,7 +275,7 @@ export async function salvarMoto(
     em_promocao: dados.emPromocao,
     preco_antes: dados.precoAntes,
     // O formulário de moto não edita custo; quando não há valor, omitir
-    // evita quebrar o save em bancos que ainda não rodaram a migração 0006.
+    // evita quebrar o save em bancos que ainda não rodaram a migração 07.
     ...(dados.custoCompra != null ? { custo_compra: dados.custoCompra } : {}),
     status: dados.status,
   }
@@ -318,7 +318,7 @@ export async function salvarMoto(
 /** Erro de banco sem a coluna da lixeira vira instrução, não stack trace. */
 function mensagemLixeira(error: { code?: string; message: string }): string {
   if (error.code === '42703' || /lixeira_em/i.test(error.message)) {
-    return 'A coluna da lixeira ainda não existe no banco. Rode a migração 20260101000008_lixeira_do_estoque.sql no SQL Editor do Supabase.'
+    return 'A coluna da lixeira ainda não existe no banco. Rode a migração 09_lixeira_do_estoque.sql no SQL Editor do Supabase.'
   }
   return error.message
 }

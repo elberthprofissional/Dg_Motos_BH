@@ -19,7 +19,12 @@ import {
   restaurarMoto,
 } from '../lib/catalog'
 import type { MotoParaSalvar, ResultadoCatalogo } from '../lib/catalog'
-import { motosAtivas, motosNaLixeira } from '../lib/painel'
+import {
+  DIAS_NA_LIXEIRA,
+  motosAtivas,
+  motosNaLixeira,
+  motosVencidasNaLixeira,
+} from '../lib/painel'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
 import { useVendas } from '../hooks/vendasContexto'
@@ -134,6 +139,32 @@ export function Admin() {
   // ativas. Assim nenhuma aba precisa repetir essa regra.
   const ativas = useMemo(() => (motos === null ? null : motosAtivas(motos)), [motos])
   const naLixeira = useMemo(() => (motos === null ? null : motosNaLixeira(motos)), [motos])
+
+  // A lixeira tem prazo: passados 30 dias, a moto (e as fotos) saem de
+  // vez. A limpeza roda ao abrir o painel — é o único momento em que a
+  // sessão do dono tem permissão para apagar no banco e no Storage. A ref
+  // garante uma passada por montagem, mesmo com o catálogo recarregando.
+  const limpouLixeira = useRef(false)
+  useEffect(() => {
+    if (limpouLixeira.current || naLixeira === null) return
+    limpouLixeira.current = true
+
+    const vencidas = motosVencidasNaLixeira(naLixeira)
+    if (vencidas.length === 0) return
+
+    void (async () => {
+      const r = await excluirMotosDefinitivamente(vencidas.map((moto) => moto.id))
+      if (!r.ok) return
+      await recarregar()
+      avisar({
+        tipo: 'ok',
+        texto:
+          vencidas.length === 1
+            ? `Uma moto ficou ${DIAS_NA_LIXEIRA} dias na lixeira e foi apagada de vez.`
+            : `${vencidas.length} motos ficaram ${DIAS_NA_LIXEIRA} dias na lixeira e foram apagadas de vez.`,
+      })
+    })()
+  }, [naLixeira, recarregar])
 
   function avisar(novo: Feedback) {
     setFeedback(novo)
@@ -302,15 +333,12 @@ export function Admin() {
     })
   }
 
-  const rotuloAba = ABAS.find((a) => a.id === aba)?.rotulo ?? 'Painel'
-  const tituloTopbar = editando
-    ? editando.id
-      ? 'Editar moto'
-      : 'Nova moto'
-    : aba !== 'estoque'
-      ? rotuloAba
-      : ''
-  const topbarSemContexto = aba === 'estoque' && !editando
+  // A topbar não carrega título: o nome da seção já está no próprio
+  // conteúdo (Estoque, Vendidas, Configurações). No desktop ela só existe
+  // para abrigar a seta de volta enquanto o formulário de moto está
+  // aberto na aba Estoque; no celular carrega a marca e o avatar.
+  const editandoMoto = aba === 'estoque' && editando !== null
+  const topbarSemContexto = !editandoMoto
 
   return (
     <div className="flex min-h-dvh bg-fundo" data-tema="painel">
@@ -333,19 +361,13 @@ export function Admin() {
             <span className="relative grid size-10 shrink-0 place-items-center">
               <img src="/logo.webp" alt="" width={40} height={40} className="size-10 object-contain" />
             </span>
-            <span className="min-w-0">
-              <span className="block truncate font-display text-sm font-semibold tracking-[0.12em] text-paper uppercase">
-                DG Motos BH
-              </span>
-              <span className="mt-0.5 block text-xs leading-none text-steel-500">Painel da loja</span>
+            <span className="min-w-0 truncate font-display text-sm font-semibold tracking-[0.12em] text-paper uppercase">
+              DG Motos BH
             </span>
           </Link>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <p className="px-3 pb-2 text-xs font-medium text-steel-500">
-            Gerenciar
-          </p>
           <div className="space-y-0.5">
             {ABAS.map(({ id, rotulo, icone: Icone }) => {
               const ativa = aba === id
@@ -398,10 +420,10 @@ export function Admin() {
       {/* Conteúdo                                                     */}
       {/* ---------------------------------------------------------- */}
       <div className="flex min-w-0 flex-1 flex-col pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0 lg:pl-60">
-        {/* Topbar. Só carrega título quando há contexto a informar (edição
-            de moto, seção de configurações). Na listagem do estoque o
-            título é da própria página — repetir aqui era ruído. No celular
-            a marca ocupa o canto, já que a sidebar está escondida. */}
+        {/* Topbar sem título: no desktop ela só aparece com o formulário
+            de moto aberto, para abrigar a seta de volta. No celular fica
+            sempre, porque ali a marca e o avatar moram nela (a sidebar
+            está escondida). */}
         <header
           className={`sticky top-0 z-30 border-b border-line bg-night-950 ${
             topbarSemContexto ? 'lg:hidden' : ''
@@ -419,28 +441,23 @@ export function Admin() {
               </span>
             </Link>
 
-            {tituloTopbar ? (
-              <h1 className="min-w-0 flex-1 truncate text-center text-sm font-medium text-steel-500 lg:text-left">
-                {tituloTopbar}
-              </h1>
-            ) : (
-              <div className="flex-1" />
-            )}
-
-            {/* Com o formulário aberto, o "voltar" sobe pra topbar — mas
-                só na mesa. No celular a única saída é a seta do próprio
-                formulário no canto superior esquerdo: dois caminhos de
-                volta brigando é o que dá cara de adaptação mal feita. */}
-            {aba === 'estoque' && editando && (
+            {/* Com o formulário aberto, a volta mora aqui — só na mesa e
+                como seta seca, sem moldura: é a primeira coisa à esquerda
+                do título, onde o olho procura. No celular a topbar não
+                ganha seta; a saída continua sendo a do próprio formulário. */}
+            {editandoMoto && (
               <button
                 type="button"
                 onClick={() => setEditando(null)}
-                className="foco-painel hidden items-center gap-1.5 rounded-lg border border-line-forte px-3 py-1.5 text-xs font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper lg:inline-flex"
+                aria-label="Voltar ao estoque"
+                title="Voltar ao estoque"
+                className="foco-painel hidden size-10 shrink-0 cursor-pointer place-items-center text-steel-400 transition-colors hover:text-paper lg:grid"
               >
-                <ArrowLeft className="size-3.5" aria-hidden="true" />
-                Voltar ao estoque
+                <ArrowLeft className="size-5" strokeWidth={1.8} aria-hidden="true" />
               </button>
             )}
+
+            <div className="flex-1" />
 
             {/* Avatar da conta (só no celular): o caminho para Configurações
                 e Sair, que saíram da barra inferior. Desktop é sidebar. */}
@@ -466,9 +483,8 @@ export function Admin() {
                   aria-label="Conta"
                   className="absolute right-0 top-[3.25rem] z-50 w-52 overflow-hidden rounded-lg border border-line bg-sidebar shadow-xl shadow-black/40"
                 >
-                  <p className="border-b border-line px-4 pb-2.5 pt-3">
-                    <span className="block font-display text-sm font-semibold text-paper">DG Motos BH</span>
-                    <span className="mt-0.5 block text-xs text-steel-500">Painel da loja</span>
+                  <p className="border-b border-line px-4 py-3 font-display text-sm font-semibold text-paper">
+                    DG Motos BH
                   </p>
                   <button
                     type="button"
@@ -563,7 +579,7 @@ export function Admin() {
         // as duas faixas não brigarem pelo mesmo espaço. As ações de
         // publicação são diálogos, que já cobrem a barra com o backdrop.
         className={
-          editando
+          editandoMoto
             ? 'hidden'
             : 'safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-line bg-sidebar lg:hidden'
         }

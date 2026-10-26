@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { MessageCircle, Pencil, Tag } from 'lucide-react'
 import type { Motorcycle, Venda } from '../../types'
-import { ROTULO_PAGAMENTO } from '../../types'
 import { bikeTitle, formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 
@@ -20,12 +19,25 @@ function digitos(telefone: string): string {
   return telefone.replace(/\D/g, '')
 }
 
+/**
+ * Mensagem que já vai escrita na conversa.
+ *
+ * O registro da venda guarda só quem comprou e o telefone; o retorno
+ * disso é abrir o WhatsApp com o agradecimento pronto — o dono revisa
+ * e envia, sem digitar mensagem depois de cada venda.
+ */
+function mensagemVenda(moto: Motorcycle, comprador: string | null): string {
+  const primeiroNome = comprador?.trim().split(/\s+/)[0]
+  const saudacao = primeiroNome ? `Oi, ${primeiroNome}!` : 'Oi!'
+  return `${saudacao} Obrigado pela compra da ${bikeTitle(moto)} ${moto.ano}. Aqui é a DG Motos — qualquer coisa sobre documentação, revisão ou garantia, me chama por aqui.`
+}
+
 /** Link do comprador: Brasil assume 55, e sem DDD não há link. */
-function linkConversa(telefone: string): string | null {
+function linkConversa(telefone: string, mensagem: string): string | null {
   let numero = digitos(telefone)
   if (numero.length < 10) return null
   if (numero.length === 10 || numero.length === 11) numero = `55${numero}`
-  return `https://wa.me/${numero}`
+  return `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
 }
 
 /**
@@ -37,8 +49,8 @@ function linkConversa(telefone: string): string | null {
  * reativar a moto — e as fotos da entrega vivem na aba Publicações.
  *
  * Quem comprou é assunto desta aba: a linha "Comprou: …" abre o
- * diálogo para lançar ou corrigir a venda (comprador, telefone,
- * pagamento, valor), e o telefone vira link de WhatsApp direto.
+ * diálogo para lançar ou corrigir a venda (comprador e telefone), e o
+ * telefone vira link de WhatsApp já com a mensagem escrita.
  */
 export function VendidasTab({
   motos,
@@ -68,10 +80,8 @@ export function VendidasTab({
           <h2 id="vendidas-titulo" className="font-display text-3xl font-semibold text-paper sm:text-4xl">
             Vendidas
           </h2>
-          <p className="mt-2 max-w-[58ch] text-sm leading-relaxed text-steel-400">
-            Toda moto marcada como vendida no Estoque cai aqui. Toque em quem comprou para
-            corrigir os dados da venda — a ficha também segue editável, até para devolver a moto
-            ao pátio.
+          <p className="mt-2 max-w-[46ch] text-sm leading-relaxed text-steel-400">
+            Toda moto marcada como vendida no Estoque aparece aqui.
           </p>
         </div>
       </header>
@@ -103,7 +113,7 @@ export function VendidasTab({
           </button>
         </div>
       ) : (
-        <ul className="mt-2 divide-y divide-line border-b border-line">
+        <ul className="mt-3 space-y-3">
           {vendidas.map((moto) => {
             const ficha = [
               String(moto.ano),
@@ -113,114 +123,118 @@ export function VendidasTab({
 
             const venda = vendaDaMoto.get(moto.id)
             const telefone = venda?.telefone?.trim() ?? ''
-            const conversa = telefone ? linkConversa(telefone) : null
+            const conversa = telefone
+              ? linkConversa(telefone, mensagemVenda(moto, venda?.comprador ?? null))
+              : null
 
             return (
-              <li key={moto.id} className="flex flex-wrap items-center gap-4 py-4">
-                <div className="size-16 shrink-0 overflow-hidden bg-painel-2 sm:size-20">
-                  <img
-                    src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
-                    decoding="async"
-                    className="size-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null
-                      e.currentTarget.src = PLACEHOLDER_CARD
-                    }}
-                  />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-lg font-semibold text-paper" title={bikeTitle(moto)}>
-                    {bikeTitle(moto)}
-                  </p>
-                  <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-steel-400">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span aria-hidden="true" className="size-1.5 rounded-full bg-marca-texto" />
-                      Vendida
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <span>{ficha.join(' · ')}</span>
-                  </p>
-
-                  {/* Quem comprou: o botão lança ou corrige a venda, e o
-                      telefone fica como link do WhatsApp ao lado — nunca
-                      <a> dentro de <button>. */}
-                  <div className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1">
-                    {venda?.comprador ? (
-                      <button
-                        type="button"
-                        onClick={() => onRegistrarVenda(moto)}
-                        className="foco-painel group inline-flex min-h-9 max-w-full items-center gap-1.5 border border-line px-2 text-left text-xs text-steel-300 transition-colors hover:border-brand-400/60 hover:text-paper"
-                      >
-                        <Tag className="size-3.5 shrink-0 text-brand-400" aria-hidden="true" />
-                        <span className="truncate">
-                          Comprou:{' '}
-                          <span className="font-semibold text-paper group-hover:text-brand-300">
-                            {venda.comprador}
-                          </span>
-                        </span>
-                        <Pencil className="size-3 shrink-0 text-steel-500" aria-hidden="true" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => onRegistrarVenda(moto)}
-                        className="foco-painel inline-flex min-h-9 items-center gap-1.5 border border-dashed border-line-forte px-2 text-xs font-medium text-steel-400 transition-colors hover:border-brand-400/60 hover:text-paper"
-                      >
-                        <Tag className="size-3.5" aria-hidden="true" />
-                        Registrar quem comprou
-                      </button>
-                    )}
-
-                    {telefone ? (
-                      conversa ? (
-                        <a
-                          href={conversa}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={`Conversar com ${venda?.comprador ?? 'o comprador'} no WhatsApp`}
-                          className="foco-painel inline-flex min-h-9 items-center gap-1.5 px-1.5 text-xs text-steel-300 transition-colors hover:text-brand-300"
-                        >
-                          <MessageCircle className="size-3.5" aria-hidden="true" />
-                          {telefone}
-                        </a>
-                      ) : (
-                        <span className="inline-flex min-h-9 items-center gap-1.5 px-1.5 text-xs text-steel-300">
-                          <MessageCircle className="size-3.5" aria-hidden="true" />
-                          {telefone}
-                        </span>
-                      )
-                    ) : null}
-
-                    {venda ? (
-                      <span className="numeros text-[11px] text-steel-500">
-                        {ROTULO_PAGAMENTO[venda.formaPagamento]} · {formatPrice(venda.valor)} ·{' '}
-                        {new Date(venda.vendidaEm).toLocaleDateString('pt-BR')}
-                      </span>
-                    ) : null}
+              <li key={moto.id} className="border border-line bg-painel-2/30">
+                {/* Um retângulo por moto: é ele que separa uma venda da
+                    outra. Antes a lista era só um fio, e no celular a
+                    foto, o preço e os botões pareciam soltos. */}
+                <div className="flex gap-3 p-3 sm:gap-4 sm:p-4">
+                  <div className="size-20 shrink-0 overflow-hidden bg-painel-2 sm:size-24">
+                    <img
+                      src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
+                      alt=""
+                      aria-hidden="true"
+                      loading="lazy"
+                      decoding="async"
+                      className="size-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null
+                        e.currentTarget.src = PLACEHOLDER_CARD
+                      }}
+                    />
                   </div>
 
-                  <p className="numeros mt-1 text-sm font-semibold text-paper sm:hidden">
-                    {formatPrice(moto.preco)}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="truncate font-display text-base leading-tight font-semibold text-paper sm:text-lg"
+                      title={bikeTitle(moto)}
+                    >
+                      {bikeTitle(moto)}
+                    </p>
+                    <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-steel-400">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span aria-hidden="true" className="size-1.5 rounded-full bg-marca-texto" />
+                        Vendida
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>{ficha.join(' · ')}</span>
+                    </p>
+                    <p className="numeros mt-2 text-base font-semibold text-paper">
+                      {formatPrice(venda?.valor ?? moto.preco)}
+                    </p>
+                    {venda ? (
+                      <p className="numeros mt-0.5 text-[11px] text-steel-500">
+                        Registrada em {new Date(venda.vendidaEm).toLocaleDateString('pt-BR')}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
 
-                <span className="numeros hidden shrink-0 text-base font-semibold text-paper sm:block">
-                  {formatPrice(moto.preco)}
-                </span>
+                {/* Ações na base do card, dentro do mesmo retângulo:
+                    é a bancada do registro da venda. Quem comprou abre o
+                    diálogo; o telefone vira link do WhatsApp ao lado —
+                    nunca <a> dentro de <button>. */}
+                <div className="flex flex-wrap items-center gap-2 border-t border-line px-3 py-2.5">
+                  {venda?.comprador ? (
+                    <button
+                      type="button"
+                      onClick={() => onRegistrarVenda(moto)}
+                      className="foco-painel group inline-flex min-h-10 min-w-0 flex-1 basis-40 items-center gap-1.5 border border-line px-2.5 text-left text-xs text-steel-300 transition-colors hover:border-brand-400/60 hover:text-paper"
+                    >
+                      <Tag className="size-3.5 shrink-0 text-brand-400" aria-hidden="true" />
+                      <span className="truncate">
+                        Comprou:{' '}
+                        <span className="font-semibold text-paper group-hover:text-brand-300">
+                          {venda.comprador}
+                        </span>
+                      </span>
+                      <Pencil className="size-3 shrink-0 text-steel-500" aria-hidden="true" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onRegistrarVenda(moto)}
+                      className="foco-painel inline-flex min-h-10 min-w-0 flex-1 basis-40 items-center gap-1.5 border border-dashed border-line-forte px-2.5 text-xs font-medium text-steel-300 transition-colors hover:border-brand-400/60 hover:text-paper"
+                    >
+                      <Tag className="size-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">Registrar quem comprou</span>
+                    </button>
+                  )}
 
-                <button
-                  type="button"
-                  onClick={() => onEditar(moto)}
-                  className="foco-painel inline-flex min-h-10 shrink-0 items-center gap-2 border border-line-forte px-4 text-sm font-medium text-steel-300 transition-colors hover:border-claro/30 hover:text-paper"
-                  aria-label={`Editar ${bikeTitle(moto)}`}
-                >
-                  <Pencil className="size-3.5" aria-hidden="true" />
-                  Editar
-                </button>
+                  {telefone ? (
+                    conversa ? (
+                      <a
+                        href={conversa}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Conversar com ${venda?.comprador ?? 'o comprador'} no WhatsApp`}
+                        className="foco-painel inline-flex min-h-10 items-center gap-1.5 px-1.5 text-xs text-steel-300 transition-colors hover:text-brand-300"
+                      >
+                        <MessageCircle className="size-3.5" aria-hidden="true" />
+                        {telefone}
+                      </a>
+                    ) : (
+                      <span className="inline-flex min-h-10 items-center gap-1.5 px-1.5 text-xs text-steel-300">
+                        <MessageCircle className="size-3.5" aria-hidden="true" />
+                        {telefone}
+                      </span>
+                    )
+                  ) : null}
+
+                  <button
+                    type="button"
+                    onClick={() => onEditar(moto)}
+                    className="foco-painel ml-auto inline-flex min-h-10 shrink-0 items-center gap-2 border border-line-forte px-3.5 text-sm font-medium text-steel-300 transition-colors hover:border-claro/30 hover:text-paper"
+                    aria-label={`Editar ${bikeTitle(moto)}`}
+                  >
+                    <Pencil className="size-3.5" aria-hidden="true" />
+                    Editar
+                  </button>
+                </div>
               </li>
             )
           })}

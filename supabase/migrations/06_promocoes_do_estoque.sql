@@ -1,5 +1,5 @@
 -- ============================================================
--- 0005: promoção — em_promocao + preco_antes
+-- 06: promoção — em_promocao + preco_antes
 --   O antigo "destaque" vira PROMOÇÃO de verdade: a moto marcada
 --   ganha no site o selo circular de desconto e o preço "de → por",
 --   e sai na frente na vitrine (Home e estoque em "Relevância").

@@ -1,5 +1,5 @@
 -- ============================================================
--- 0006: VENDAS
+-- 07: VENDAS
 --   Registrar a venda no dia em que ela acontece: quando o dono
 --   marca uma moto como "vendida" no painel, o painel pergunta
 --   quem comprou, como pagou e por quanto. A aba "Vendas" do

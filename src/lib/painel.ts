@@ -26,6 +26,34 @@ export function motosNaLixeira(motos: Motorcycle[]): Motorcycle[] {
     .sort((a, b) => (b.lixeiraEm ?? '').localeCompare(a.lixeiraEm ?? ''))
 }
 
+/**
+ * Prazo da lixeira: passado esse tempo, a moto é apagada de vez.
+ * Vale só para o que está na lixeira — o estoque ativo não expira.
+ */
+export const DIAS_NA_LIXEIRA = 30
+
+/**
+ * Dias inteiros que faltam para a moto sair sozinha da lixeira.
+ * `0` = já venceu (apaga na próxima abertura do painel).
+ * `null` = sem data legível, então nunca expira por conta própria.
+ */
+export function diasAteApagar(moto: Motorcycle, agora = new Date()): number | null {
+  if (!moto.lixeiraEm) return null
+  const quando = Date.parse(moto.lixeiraEm)
+  if (!Number.isFinite(quando)) return null
+
+  const diasPassados = Math.floor((agora.getTime() - quando) / 86_400_000)
+  return Math.max(0, DIAS_NA_LIXEIRA - diasPassados)
+}
+
+/** Motos cujo prazo na lixeira venceu — é o que a limpeza automática apaga. */
+export function motosVencidasNaLixeira(
+  motos: Motorcycle[],
+  agora = new Date(),
+): Motorcycle[] {
+  return motosNaLixeira(motos).filter((moto) => diasAteApagar(moto, agora) === 0)
+}
+
 /** Contagem e valor por status. Ignora o que está na lixeira. */
 export function resumirEstoque(motos: Motorcycle[]): ResumoEstoque {
   const vivas = motosAtivas(motos)

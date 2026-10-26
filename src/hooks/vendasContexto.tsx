@@ -37,12 +37,12 @@ const VendasContexto = createContext<VendasContextoValor | null>(null)
 /**
  * Texto quando a edição de `sales` é recusada em silêncio.
  *
- * A política de UPDATE só existe desde a migração 0009: sem ela, o
+ * A política de UPDATE só existe desde a migração 10: sem ela, o
  * PostgREST devolve 0 linhas (ou `PGRST116` no `.single()`) sem erro
  * nenhum — e o painel mostraria "salvo" sem ter salvo nada.
  */
 const ERRO_EDICAO_VENDA =
-  'O banco recusou a alteração: aplique a migração 0009 (supabase/migrations/20260101000009_edicao_de_vendas.sql) no Supabase e tente de novo.'
+  'O banco recusou a alteração: aplique a migração 10 (supabase/migrations/10_edicao_de_vendas.sql) no Supabase e tente de novo.'
 
 /** Erro de escrita em `sales` traduzido para algo que dê para seguir. */
 function erroDeVenda(error: { code?: string; message: string }, acao: string): string {

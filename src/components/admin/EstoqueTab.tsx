@@ -16,7 +16,7 @@ import { motoParaFormulario } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
 import { filtrarEstoque, resumirEstoque } from '../../lib/painel'
 import type { FiltroEstoque } from '../../lib/painel'
-import { formatKm, formatPrice } from '../../lib/format'
+import { descontoPercentual, formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 import { CampoBusca } from '../ui/CampoBusca'
 import { Esqueleto } from '../ui/Esqueleto'
@@ -170,8 +170,8 @@ export function EstoqueTab({
 
   const total = motos === null ? 0 : noPatio.length
   const vistos = visiveis.length
-  // A contagem só aparece quando há filtro: em repouso ela repetia o
-  // "4 motos cadastradas" que já está no cabeçalho.
+  // A contagem só aparece quando há filtro: em repouso os indicadores
+  // logo abaixo já dizem quantas motos existem.
   const contagem =
     erroAtivo || motos === null
       ? ''
@@ -188,16 +188,16 @@ export function EstoqueTab({
           </button>
         </div>
 
-        <div className="estoque-resumo" aria-live="polite">
+        {/* A contagem saiu daqui: o total já está nos indicadores logo
+            abaixo (Disponíveis/Vendidas), e repetir "4 motos no pátio"
+            aqui só somava o mesmo número duas vezes. A faixa continua
+            montada para anunciar carregamento e erro — quando não tem
+            nada a dizer, ela some do layout. */}
+        <div className="estoque-resumo empty:hidden" aria-live="polite">
           {erroAtivo ? (
             <span className="estoque-resumo-total">Estoque indisponível</span>
           ) : motos === null ? (
             <span className="estoque-resumo-total">Abrir o pátio…</span>
-          ) : resumo ? (
-            <span className="estoque-resumo-total">
-              {resumo.disponiveis + resumo.indisponiveis}{' '}
-              {resumo.disponiveis + resumo.indisponiveis === 1 ? 'moto no pátio' : 'motos no pátio'}
-            </span>
           ) : null}
         </div>
       </header>
@@ -333,6 +333,9 @@ export function EstoqueTab({
           visiveis.map((moto) => {
             const ficha = fichaTecnica(moto)
             const vendida = moto.status === 'vendida'
+            // Mesmo selo que o cliente vê no site: no inventário é o que
+            // mostra, sem abrir a ficha, que aquela moto está com oferta.
+            const desconto = descontoPercentual(moto)
             return (
               <div key={moto.id} className="estoque-linha" role="row">
                 <div className="estoque-celula-veiculo" role="cell">
@@ -367,6 +370,15 @@ export function EstoqueTab({
                         </span>
                       ))}
                     </p>
+                    {desconto != null ? (
+                      <span className="mt-1.5 inline-flex items-center gap-1 bg-marca px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
+                        Oferta
+                        <span className="numeros" aria-hidden="true">
+                          −{desconto}%
+                        </span>
+                        <span className="sr-only"> {desconto}% de desconto</span>
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 

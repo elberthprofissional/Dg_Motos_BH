@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { motorcycles } from '../data/motorcycles'
 import {
   contarPorStatus,
+  diasAteApagar,
   filtrarEstoque,
   filtrarVendas,
   lucroPorMes,
   motosAtivas,
   motosNaLixeira,
+  motosVencidasNaLixeira,
   resumirEstoque,
   resumirVendas,
   tempoRelativo,
@@ -111,6 +113,32 @@ describe('lixeira', () => {
   it('separa as ativas das excluídas', () => {
     expect(motosAtivas(lista).map((m) => m.slug)).toEqual(['ativa'])
     expect(motosNaLixeira(lista).map((m) => m.slug)).toEqual(['recente', 'antiga'])
+  })
+
+  it('conta os dias que faltam para a exclusão automática', () => {
+    const agora = new Date('2026-02-11T12:00:00Z')
+    // 10 dias inteiros na lixeira → faltam 20 de 30.
+    expect(diasAteApagar(base({ slug: 'x', lixeiraEm: '2026-02-01T00:00:00Z' }), agora)).toBe(20)
+    // Fora da lixeira não expira.
+    expect(diasAteApagar(base({ slug: 'y' }), agora)).toBeNull()
+    // Data quebrada não vira prazo zero (senão apagaria o que não devia).
+    expect(diasAteApagar(base({ slug: 'z', lixeiraEm: 'ontem' }), agora)).toBeNull()
+  })
+
+  it('vence o prazo aos 30 dias, nunca antes', () => {
+    const cheia = base({ slug: 'cheia', lixeiraEm: '2026-02-08T00:00:00Z' }) // 30 dias
+    const vencida = base({ slug: 'vencida', lixeiraEm: '2026-02-01T00:00:00Z' }) // 37 dias
+    const noLimite = base({ slug: 'no-limite', lixeiraEm: '2026-02-09T00:00:00Z' }) // 29 dias
+    const agora = new Date('2026-03-10T00:00:00Z')
+
+    expect(diasAteApagar(cheia, agora)).toBe(0)
+    expect(diasAteApagar(noLimite, agora)).toBe(1)
+    expect(motosVencidasNaLixeira([cheia, vencida, noLimite], agora).map((m) => m.slug)).toEqual([
+      'cheia',
+      'vencida',
+    ])
+    // Um dia antes dos 30, nada é apagado.
+    expect(motosVencidasNaLixeira([cheia], new Date('2026-03-09T00:00:00Z'))).toHaveLength(0)
   })
 })
 

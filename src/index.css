@@ -2382,4 +2382,362 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
     overscroll-behavior: contain;
   }
+
+  /* ============================================================
+     CONFIGURAÇÕES — a mesa de ajustes (desktop)
+     Duas colunas: um índice que não rola junto (o mapa do que existe) e
+     a folha de edição à direita. Nada disto vale no celular: lá continua
+     a lista que abre a sub-tela, sem tocar em nenhuma regra daqui.
+     ============================================================ */
+  .conf-cabecalho {
+    margin-bottom: 1.75rem;
+  }
+
+  .conf-cabecalho h1 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-paper);
+  }
+
+  .conf-cabecalho p {
+    margin-top: 0.35rem;
+    max-width: 58ch;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--color-steel-400);
+  }
+
+  .conf-grade {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 2.5rem;
+    /* O painel tem a altura do seu conteúdo: esticar um formulário de um
+       campo até o pé da tela só cria um vazio grande com cara de erro. */
+    align-items: start;
+  }
+
+  .conf-rail {
+    position: sticky;
+    top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .conf-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    padding: 0.62rem 0.75rem;
+    border-left: 2px solid transparent;
+    text-align: left;
+    color: var(--color-steel-400);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .conf-item:hover {
+    background: rgb(255 255 255 / 0.03);
+    color: var(--color-paper);
+  }
+
+  .conf-item[aria-current='true'] {
+    border-left-color: var(--cor-marca);
+    background: var(--cor-painel-2);
+    color: var(--color-paper);
+  }
+
+  .conf-item-rotulo {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .conf-item-contagem {
+    min-width: 1.25rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.08);
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: center;
+    color: var(--color-steel-300);
+  }
+
+  .conf-painel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: 1px solid var(--cor-borda);
+    background: var(--cor-painel);
+  }
+
+  .conf-painel-topo {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.5rem 1.75rem;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .conf-painel-titulo {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-paper);
+  }
+
+  .conf-painel-desc {
+    margin-top: 0.3rem;
+    max-width: 62ch;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--color-steel-400);
+  }
+
+  .conf-painel-corpo {
+    padding: 1.75rem;
+  }
+
+  /* Um botão de salvar alinhado à direita fecha o formulário, em vez de
+     sobrar no canto esquerdo da folha. */
+  @media (min-width: 1024px) {
+    .conf-acoes {
+      justify-content: flex-end;
+    }
+  }
+
+  .conf-selo {
+    flex-shrink: 0;
+    padding: 0.25rem 0.55rem;
+    border: 1px solid color-mix(in srgb, var(--color-warn) 45%, transparent);
+    background: color-mix(in srgb, var(--color-warn) 12%, transparent);
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: var(--color-warn);
+  }
+
+  /* ============================================================
+     LIXEIRA — o que saiu do pátio e ainda dá para recuperar
+     A linha é uma ficha: foto, nome, para onde volta, prazo restante e
+     preço. No celular empilha em dois blocos (foto+dados, ações); no
+     desktop o preço ganha coluna própria e as ações encostam à direita.
+     ============================================================ */
+  .lixo-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.35rem 1rem;
+  }
+
+  .lixo-contagem {
+    font-size: 0.875rem;
+    color: var(--color-steel-400);
+  }
+
+  .lixo-prazo-nota {
+    font-size: 11px;
+    color: var(--color-steel-500);
+  }
+
+  .lixo-lista {
+    margin-top: 1rem;
+    border-top: 1px solid var(--cor-borda);
+  }
+
+  .lixo-item {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    grid-template-areas:
+      'foto info'
+      'acoes acoes';
+    gap: 0.875rem;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .lixo-foto {
+    grid-area: foto;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--cor-painel-2);
+  }
+
+  .lixo-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .lixo-info {
+    grid-area: info;
+    min-width: 0;
+  }
+
+  .lixo-nome {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--color-paper);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lixo-ficha {
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--color-steel-400);
+  }
+
+  .lixo-datas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.4rem;
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--color-steel-500);
+  }
+
+  .lixo-datas .lixo-urgente {
+    color: var(--color-warn);
+  }
+
+  .lixo-preco {
+    display: none;
+    grid-area: preco;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-paper);
+    text-align: right;
+  }
+
+  .lixo-preco-mobile {
+    margin-top: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-paper);
+  }
+
+  .lixo-acoes {
+    grid-area: acoes;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .lixo-restaurar {
+    flex: 1;
+  }
+
+  .lixo-apagar {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid color-mix(in srgb, var(--cor-marca) 45%, transparent);
+    color: var(--color-marca-texto);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .lixo-apagar:hover {
+    background: var(--cor-marca);
+    color: #fff;
+  }
+
+  .lixo-estado {
+    margin-top: 1rem;
+    padding: 3rem 1.25rem;
+    border: 1px solid var(--cor-borda);
+    background: var(--cor-painel-2);
+    text-align: center;
+  }
+
+  .lixo-estado-titulo {
+    margin-top: 0.75rem;
+    font-weight: 500;
+    color: var(--color-paper);
+  }
+
+  .lixo-estado-texto {
+    margin: 0.5rem auto 0;
+    max-width: 48ch;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--color-steel-400);
+  }
+
+  .lixo-estado .btn {
+    margin-top: 1.25rem;
+  }
+
+  .lixo-esvaziar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid color-mix(in srgb, var(--cor-marca) 32%, var(--cor-borda));
+    background: color-mix(in srgb, var(--cor-marca) 6%, transparent);
+  }
+
+  .lixo-esvaziar-titulo {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-paper);
+  }
+
+  .lixo-esvaziar-texto {
+    margin-top: 0.2rem;
+    max-width: 54ch;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--color-steel-400);
+  }
+
+  @media (min-width: 1024px) {
+    .lixo-item {
+      grid-template-columns: 5rem minmax(0, 1fr) 9rem auto;
+      grid-template-areas: 'foto info preco acoes';
+      gap: 1.25rem;
+      padding: 1.125rem 0;
+    }
+
+    .lixo-preco {
+      display: block;
+    }
+
+    .lixo-preco-mobile {
+      display: none;
+    }
+
+    .lixo-acoes {
+      justify-content: flex-end;
+    }
+
+    .lixo-restaurar {
+      flex: none;
+    }
+  }
 }

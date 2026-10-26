@@ -80,7 +80,7 @@ async function motosDoBanco(url, key) {
 
   try {
     // A coluna da lixeira pode não existir em bancos que ainda não
-    // aplicaram a migração 20260101000008; nesse caso a consulta acima
+    // aplicaram a migração 09; nesse caso a consulta acima
     // recebe 42703 e repetimos sem ela, como o catálogo em runtime.
     return await buscar([...colunas, 'lixeira_em'])
   } catch (erro) {

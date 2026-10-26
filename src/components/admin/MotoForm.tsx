@@ -174,14 +174,12 @@ export function MotoForm({
     currency: 'BRL',
     maximumFractionDigits: 0,
   })
-  const precoAntesFormatado =
-    form.emPromocao && form.precoAntes != null
-      ? form.precoAntes.toLocaleString('pt-BR', {
-          style: 'currency',
-          currency: 'BRL',
-          maximumFractionDigits: 0,
-        })
-      : '—'
+  // Mesmo cálculo do selo do card (descontoPercentual), aqui a partir do
+  // formulário: só aparece com "de" maior que o "por".
+  const desconto =
+    form.emPromocao && form.precoAntes != null && form.precoAntes > form.preco && form.preco > 0
+      ? Math.round((1 - form.preco / form.precoAntes) * 100)
+      : null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -241,9 +239,6 @@ export function MotoForm({
           </span>
           <ChevronDown className="size-4 shrink-0 text-steel-500" aria-hidden="true" />
         </button>
-        <p className="mt-1.5 text-xs text-steel-500">
-          As marcas do seu estoque aparecem primeiro; marca diferente dá para digitar lá dentro.
-        </p>
         <SeletorMarca
           aberto={escolhendoMarca}
           onFechar={() => setEscolhendoMarca(false)}
@@ -301,31 +296,79 @@ export function MotoForm({
           <option value="vendida">Vendida</option>
         </select>
       </div>
-      <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-steel-300">
-        <input
-          type="checkbox"
-          checked={form.emPromocao}
-          onChange={(e) => set('emPromocao', e.target.checked)}
-          className="size-5 accent-brand-500"
-        />
-        Em promoção (ganha selo de desconto e sai na frente no site)
-      </label>
-      {form.emPromocao && (
-        <div>
-          <label htmlFor="f-preco-antes" className="field-label">
-            Preço de referência "de" (R$)
-          </label>
-          <CampoPreco
-            id="f-preco-antes"
-            valor={form.precoAntes}
-            onChange={(valor) => set('precoAntes', valor)}
-            placeholder="Ex.: 24.900"
+      {/* Caixa do desconto: promoção é um modo do anúncio, então vive
+          fechada até o dono ligar. Ligada, mostra o par "de / por" do
+          jeito que o cliente lê no site — o "por" é o preço de venda já
+          informado acima, aqui só como espelho, sem segundo estado. */}
+      <div className="border border-line bg-night-900/30">
+        <label className="flex cursor-pointer items-start justify-between gap-4 px-4 py-3.5">
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-paper">Desconto</span>
+            <span className="mt-0.5 block text-xs leading-relaxed text-steel-400">
+              Anuncia com preço de/por e selo de oferta no site.
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            checked={form.emPromocao}
+            onChange={(e) => set('emPromocao', e.target.checked)}
+            aria-describedby="f-desconto-ajuda"
+            className="peer sr-only"
           />
-          <p className="mt-1 text-etiqueta text-steel-500">
-            O site mostra: de {precoAntesFormatado} por {porFormatado}.
-          </p>
-        </div>
-      )}
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 block h-6 w-11 shrink-0 border p-0.5 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-400 ${
+              form.emPromocao ? 'border-marca bg-marca' : 'border-line-forte bg-painel-2'
+            }`}
+          >
+            <span
+              className={`block size-5 transition-transform ${
+                form.emPromocao ? 'translate-x-5 bg-white' : 'bg-steel-500'
+              }`}
+            />
+          </span>
+        </label>
+
+        {form.emPromocao && (
+          <div className="border-t border-line px-4 py-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="f-preco-antes" className="field-label">
+                  De (preço cheio)
+                </label>
+                <CampoPreco
+                  id="f-preco-antes"
+                  valor={form.precoAntes}
+                  onChange={(valor) => set('precoAntes', valor)}
+                  placeholder="Ex.: 24.900"
+                />
+              </div>
+              <div>
+                <span className="field-label">Por (o preço de venda)</span>
+                <p className="numeros flex min-h-12 items-center border border-line/60 bg-painel-2 px-4 text-sm text-paper">
+                  {form.preco > 0 ? porFormatado : '—'}
+                </p>
+                <p className="mt-1.5 text-xs text-steel-500">
+                  Vem do preço de venda acima.
+                </p>
+              </div>
+            </div>
+
+            {desconto != null ? (
+              <p id="f-desconto-ajuda" className="mt-3 flex flex-wrap items-center gap-2 text-xs text-steel-400">
+                <span className="bg-marca px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
+                  −{desconto}%
+                </span>
+                <span>Selo de oferta no card do site, na ficha e na lista do estoque.</span>
+              </p>
+            ) : (
+              <p id="f-desconto-ajuda" className="mt-3 text-xs leading-relaxed text-steel-500">
+                Informe um "de" maior que o "por" — abaixo disso o site mostra o preço sem selo.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </Secao>,
 
     /* ------------------------------------------------ 3. Ficha técnica */
@@ -414,50 +457,30 @@ export function MotoForm({
     </Secao>,
   ]
 
-  // A cor do status em texto puro: sem cápsula, sem borda — o ponto
-  // e a palavra bastam numa tela de trabalho.
-  const corStatus: Record<MotorcycleStatus, string> = {
-    disponivel: 'text-ok',
-    indisponivel: 'text-alerta',
-    vendida: 'text-marca-texto',
-  }
-  const rotuloStatus: Record<MotorcycleStatus, string> = {
-    disponivel: 'Disponível',
-    indisponivel: 'Indisponível',
-    vendida: 'Vendida',
-  }
-
   return (
     <form onSubmit={handleSubmit} noValidate className="mx-auto max-w-4xl space-y-5">
       {/* ================= Cabeçalho do formulário =========================
           No celular, UMA seta no canto superior esquerdo — a topbar não
-          duplica "Voltar". O nome acompanha a digitação em tempo real e
-          o status comercial fica em texto puro com o ponto da cor. */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <button
-            type="button"
-            onClick={onCancelar}
-            aria-label="Voltar ao estoque"
-            className="foco-painel grid size-11 shrink-0 cursor-pointer place-items-center border border-line bg-painel-2 text-steel-300 transition-colors hover:border-line-forte hover:text-paper"
-          >
-            <ArrowLeft className="size-5" strokeWidth={1.8} aria-hidden="true" />
-          </button>
-          <div className="min-w-0">
-            <h1 className="truncate text-xl font-bold text-paper">
-              {form.modelo.trim() || 'Nova Moto'}
-            </h1>
-            <p className="text-xs text-steel-500">
-              {id ? 'Editando moto do estoque' : 'Nova moto para o estoque'}
-            </p>
-          </div>
-        </div>
-        <span
-          className={`inline-flex w-fit shrink-0 items-center gap-2 text-xs font-semibold ${corStatus[form.status]}`}
+          duplica "Voltar". O nome acompanha a digitação em tempo real.
+          Sem selo de status aqui: o campo Status, logo abaixo, já diz
+          tudo — repetir o mesmo dado no topo era ruído. */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onCancelar}
+          aria-label="Voltar ao estoque"
+          className="foco-painel -ml-2 grid size-11 shrink-0 cursor-pointer place-items-center text-steel-300 transition-colors hover:text-paper lg:hidden"
         >
-          <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
-          {rotuloStatus[form.status]}
-        </span>
+          <ArrowLeft className="size-5" strokeWidth={1.8} aria-hidden="true" />
+        </button>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold text-paper">
+            {form.modelo.trim() || 'Nova Moto'}
+          </h1>
+          <p className="text-xs text-steel-500">
+            {id ? 'Editando moto do estoque' : 'Nova moto para o estoque'}
+          </p>
+        </div>
       </div>
 
       {erro && (

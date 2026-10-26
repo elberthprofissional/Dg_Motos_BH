@@ -37,6 +37,11 @@ import { formatPrice } from '../lib/format'
  * No celular a coluna vira uma folha de tela cheia (um <dialog>
  * nativo, com foco preso e Esc de graça). A folha abre pelo botão na
  * pelo botão flutuante, sempre disponível.
+ *
+ * A coluna cresce dentro do <main>: num pátio curto (poucas motos), a
+ * sobra de altura fica entre o resultado e a esteira de marcas, e a
+ * esteira continua encostada no rodapé — como na Home, onde o conteúdo
+ * é longo demais para sobrar espaço.
  */
 export function Estoque() {
   const { motos } = useCatalogo()
@@ -207,8 +212,8 @@ export function Estoque() {
   const totalDisponiveis = motos.filter((moto) => moto.status === 'disponivel').length
 
   return (
-<div className="pt-cabecalho">
-        <section className="bg-fundo pt-2 pb-6 sm:pt-3 sm:pb-8">
+<div className="flex grow flex-col pt-cabecalho">
+        <section className="grow bg-fundo pt-2 pb-6 sm:pt-3 sm:pb-8">
           <div className="container-site">
 
           {/* Resultado */}

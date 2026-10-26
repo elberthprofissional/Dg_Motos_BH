@@ -1,30 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { useVendas } from '../../hooks/vendasContexto'
-import { formatPrice } from '../../lib/format'
-import {
-  ROTULO_PAGAMENTO,
-  type FormaPagamento,
-  type Motorcycle,
-  type Venda,
-  type VendaParaSalvar,
-} from '../../types'
-
-const FORMAS = Object.keys(ROTULO_PAGAMENTO) as FormaPagamento[]
+import { bikeTitle, formatPrice } from '../../lib/format'
+import { PLACEHOLDER_CARD } from '../../lib/placeholder'
+import { campoLinha } from './campoLinha'
+import type { Motorcycle, Venda, VendaParaSalvar } from '../../types'
 
 /**
  * Diálogo da venda — "Registrar a venda" ou "Editar a venda".
  *
- * Abre de dois jeitos: quando o dono marca uma moto como vendida (em
- * vez de trocar o status silenciosamente, o painel pergunta quem
- * comprou, como pagou e por quanto) e quando ele clica em "Comprou…"
- * na aba Vendidas para corrigir um registro já lançado.
+ * Abre quando o dono marca uma moto como vendida e quando ele clica em
+ * "Comprou…" na aba Vendidas para corrigir o registro.
  *
- * Cancelar nunca desfaz o status da moto: a moto já saiu do pátio antes
- * do diálogo abrir, então desistir aqui só deixa a venda sem lançamento.
+ * Pergunta só o que a loja ainda não sabe: quem levou e o telefone. O
+ * valor é o preço do anúncio e o custo é o `custoCompra` já cadastrado
+ * na ficha — pedir os dois de novo era digitar o mesmo número duas
+ * vezes, e nenhuma tela mostrava faturamento para justificar o esforço.
+ * Se um dia entrar um relatório de lucro, os campos continuam no banco:
+ * a venda já nasce com valor e custo, só não os pergunta aqui.
  *
- * Valor já vem preenchido com o preço de anúncio (a venda costuma sair
- * pelo anunciado) e o custo com o que estiver cadastado na moto — os
- * dois seguem editáveis aqui dentro. Na correção, tudo vem da venda.
+ * Cancelar nunca desfaz o status da moto: ela já saiu do pátio antes do
+ * diálogo abrir, então desistir aqui só deixa a venda sem lançamento.
  */
 export function DialogoRegistrarVenda({
   moto,
@@ -41,13 +36,10 @@ export function DialogoRegistrarVenda({
 }) {
   const { salvarVenda } = useVendas()
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const campoValorRef = useRef<HTMLInputElement>(null)
+  const campoNomeRef = useRef<HTMLInputElement>(null)
 
-  const [valor, setValor] = useState('')
-  const [forma, setForma] = useState<FormaPagamento>('pix')
   const [comprador, setComprador] = useState('')
   const [telefone, setTelefone] = useState('')
-  const [custo, setCusto] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -58,22 +50,11 @@ export function DialogoRegistrarVenda({
     const dialog = dialogRef.current
     if (!dialog) return
     if (moto && !dialog.open) {
-      setValor(venda ? String(venda.valor) : String(moto.preco))
-      setForma(venda?.formaPagamento ?? 'pix')
       setComprador(venda?.comprador ?? '')
       setTelefone(venda?.telefone ?? '')
-      setCusto(
-        venda
-          ? venda.custo != null
-            ? String(venda.custo)
-            : ''
-          : moto.custoCompra
-            ? String(moto.custoCompra)
-            : '',
-      )
       setErro(null)
       dialog.showModal()
-      campoValorRef.current?.select()
+      campoNomeRef.current?.focus()
     } else if (!moto && dialog.open) {
       dialog.close()
     }
@@ -91,20 +72,9 @@ export function DialogoRegistrarVenda({
     if (!moto || ocupado) return
     setErro(null)
 
-    // Valor vem do input text para permitir vírgula decimal; tiramos
-    // os pontos de milhar antes de converter. Números <= 0 não fazem
-    // sentido num registro de venda.
-    const parseReal = (texto: string) =>
-      Number(texto.replace(/\./g, '').replace(',', '.'))
-    const valorNum = parseReal(valor)
-    if (!Number.isFinite(valorNum) || valorNum <= 0) {
-      setErro('Informe o valor da venda (ex.: 15900 ou 15.900,00).')
-      return
-    }
-    const custoTexto = custo.trim()
-    const custoNum = custoTexto ? parseReal(custoTexto) : null
-    if (custoNum != null && (!Number.isFinite(custoNum) || custoNum < 0)) {
-      setErro('O custo de compra, se informado, tem que ser um valor válido.')
+    const nome = comprador.trim()
+    if (!nome) {
+      setErro('Anote o nome de quem comprou — é ele que aparece na aba Vendidas.')
       return
     }
 
@@ -117,11 +87,13 @@ export function DialogoRegistrarVenda({
       marca: moto.marca,
       modelo: moto.modelo,
       ano: moto.ano,
-      valor: valorNum,
-      formaPagamento: forma,
-      comprador: comprador.trim() || null,
+      // Valor, custo e pagamento não passam por aqui: na correção herdam
+      // o que a venda já guardava; numa venda nova saem da ficha da moto.
+      valor: venda ? venda.valor : moto.preco,
+      formaPagamento: venda ? venda.formaPagamento : 'outra',
+      comprador: nome,
       telefone: telefone.trim() || null,
-      custo: custoNum,
+      custo: venda ? venda.custo : (moto.custoCompra ?? null),
     }
     const erroSalvar = await salvarVenda(dados)
     setOcupado(false)
@@ -132,133 +104,128 @@ export function DialogoRegistrarVenda({
     }
     dialogRef.current?.close()
     onSalvo(
-      venda
-        ? 'Dados da venda atualizados.'
-        : `Venda de ${moto.marca} ${moto.modelo} registrada — R$ ${valorNum.toFixed(2).replace('.', ',')}`,
+      venda ? 'Dados da venda atualizados.' : `Venda de ${bikeTitle(moto)} registrada para ${nome}.`,
     )
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="dialogo"
-      aria-labelledby="dlg-venda-titulo"
-    >
+    <dialog ref={dialogRef} className="dialogo" aria-labelledby="dlg-venda-titulo">
       {moto && (
         <form
-          className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-6 sm:p-7"
+          className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto"
           onSubmit={(e) => {
             e.preventDefault()
             void aoConfirmar()
           }}
         >
-          <h2 id="dlg-venda-titulo" className="text-base font-semibold text-white">
-            {venda ? 'Editar a venda' : 'Registrar a venda'}
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-            {moto.marca} {motomodelo(moto)} · anunciada por {formatPrice(moto.preco)}.{' '}
-            {venda
-              ? 'Corrija quem comprou, o telefone, o pagamento ou o valor.'
-              : 'Os dados gravados aqui aparecem na aba Vendidas e no histórico de vendas.'}
-          </p>
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <label className="admin-campo">
-              <span className="admin-campo-rotulo">Valor da venda (R$)</span>
-              <input
-                ref={campoValorRef}
-                type="text"
-                inputMode="decimal"
-                value={valor}
-                onChange={(e) => setValor(e.target.value)}
-                className="admin-campo-input"
-                placeholder="15900"
-                autoFocus
+          {/* Cabeçalho com a moto: a foto é a mesma da linha da aba
+              Vendidas, então o dono confere de qual moto se trata antes
+              de digitar qualquer coisa. */}
+          <header className="flex items-center gap-3 border-b border-line px-5 py-4 sm:px-6">
+            <div className="size-12 shrink-0 overflow-hidden bg-painel-2">
+              <img
+                src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
+                alt=""
+                aria-hidden="true"
+                className="size-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null
+                  e.currentTarget.src = PLACEHOLDER_CARD
+                }}
               />
-            </label>
-
-            <label className="admin-campo">
-              <span className="admin-campo-rotulo">Forma de pagamento</span>
-              <select
-                value={forma}
-                onChange={(e) => setForma(e.target.value as FormaPagamento)}
-                className="admin-campo-input"
+            </div>
+            <div className="min-w-0">
+              <h2
+                id="dlg-venda-titulo"
+                className="font-display text-lg leading-tight font-semibold text-paper"
               >
-                {FORMAS.map((f) => (
-                  <option key={f} value={f}>
-                    {ROTULO_PAGAMENTO[f]}
-                  </option>
-                ))}
-              </select>
-            </label>
+                {venda ? 'Editar a venda' : 'Registrar a venda'}
+              </h2>
+              <p id="dlg-venda-resumo" className="mt-1 text-sm text-steel-400 sm:truncate">
+                {bikeTitle(moto)} {moto.ano} · {formatPrice(venda ? venda.valor : moto.preco)}
+              </p>
+            </div>
+          </header>
 
-            <label className="admin-campo">
-              <span className="admin-campo-rotulo">Nome do comprador</span>
-              <input
-                type="text"
-                value={comprador}
-                onChange={(e) => setComprador(e.target.value)}
-                className="admin-campo-input"
-                placeholder="Quem levou a moto"
-              />
-            </label>
+          <div className="px-5 py-5 sm:px-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="venda-comprador" className="field-label">
+                  Nome de quem comprou
+                </label>
+                <input
+                  id="venda-comprador"
+                  ref={campoNomeRef}
+                  type="text"
+                  value={comprador}
+                  onChange={(e) => setComprador(e.target.value)}
+                  className={campoLinha}
+                  placeholder="Quem levou a moto"
+                  autoComplete="name"
+                />
+              </div>
 
-            <label className="admin-campo">
-              <span className="admin-campo-rotulo">Telefone de contato</span>
-              <input
-                type="tel"
-                value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-                className="admin-campo-input"
-                placeholder="(31) 9 9999-9999"
-              />
-            </label>
-
-            <label className="admin-campo admin-campo-largo">
-              <span className="admin-campo-rotulo">
-                Custo de compra da moto ( quanto a loja pagou) — opcional
-              </span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={custo}
-                onChange={(e) => setCusto(e.target.value)}
-                className="admin-campo-input"
-                placeholder="Se não souber, deixe vazio: a venda entra no faturamento mas não no lucro."
-              />
-            </label>
-          </div>
-
-          {erro && (
-            <p className="mt-4 text-sm text-red-400" role="alert">
-              {erro}
+              <div>
+                <label htmlFor="venda-telefone" className="field-label">
+                  Telefone
+                </label>
+                <input
+                  id="venda-telefone"
+                  type="tel"
+                  value={telefone}
+                  onChange={(e) => setTelefone(e.target.value)}
+                  className={`${campoLinha} numeros`}
+                  placeholder="(31) 9 9999-9999"
+                  autoComplete="tel"
+                  aria-describedby="venda-telefone-ajuda"
+                />
+              </div>
+            </div>
+            {/* O retorno do telefone: sem isso não parece valer preencher. */}
+            <p id="venda-telefone-ajuda" className="mt-3 text-xs leading-relaxed text-steel-500">
+              O telefone vira link de WhatsApp na aba Vendidas, com a mensagem de agradecimento já
+              escrita. Opcional.
             </p>
-          )}
 
-          <div className="mt-6 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => dialogRef.current?.close()}
-              disabled={ocupado}
-              className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-medium text-neutral-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
-            >
-              {venda ? 'Cancelar' : 'Cancelar — só marcar vendida sem registrar'}
-            </button>
-            <button
-              type="submit"
-              disabled={ocupado}
-              className="inline-flex h-10 items-center rounded-xl bg-red-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:opacity-60"
-            >
-              {ocupado ? 'Salvando…' : venda ? 'Salvar alterações' : 'Registrar venda'}
-            </button>
+            {erro && (
+              <p
+                role="alert"
+                className="mt-4 border-l-2 border-marca bg-night-900 px-3 py-2.5 text-sm leading-relaxed text-brand-400"
+              >
+                {erro}
+              </p>
+            )}
           </div>
+
+          <footer className="border-t border-line px-5 py-4 sm:px-6">
+            {/* Consequência do cancelar em uma linha própria: o texto
+                longo no lugar do rótulo do botão esticava a barra e
+                não cabia ao lado das duas ações. */}
+            <p className="text-xs leading-relaxed text-steel-500">
+              {venda
+                ? 'Cancelar mantém a venda como está.'
+                : 'Cancelar mantém a moto vendida, sem lançar a venda.'}
+            </p>
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => dialogRef.current?.close()}
+                disabled={ocupado}
+                className="foco-painel inline-flex h-11 items-center px-3 text-sm font-medium text-steel-400 transition-colors hover:text-paper disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={ocupado}
+                className="foco-painel inline-flex h-11 items-center bg-marca px-5 text-sm font-semibold text-white transition-colors hover:bg-marca-forte disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {ocupado ? 'Salvando…' : venda ? 'Salvar alterações' : 'Registrar venda'}
+              </button>
+            </div>
+          </footer>
         </form>
       )}
     </dialog>
   )
-}
-
-/** "Titan 150" — pega modelo + ano p/ o subtítulo. */
-function motomodelo(m: Motorcycle): string {
-  return `${m.modelo} ${m.ano}`
 }

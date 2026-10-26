@@ -5,40 +5,42 @@ em `migrations/` é aplicado uma vez, na ordem do nome.
 
 | Arquivo | O que faz |
 | --- | --- |
-| `20260101000000_cria_esquema_inicial.sql` | Cria `motorcycles` e `motorcycle_images`, índices e o trigger de `updated_at`. |
-| `20260101000001_seguranca_rls_e_storage.sql` | Liga o RLS, cria as políticas e o bucket público `motos` no Storage. |
-| `20260101000002_dados_iniciais_estoque.sql` | Insere 5 motos de **demonstração** (só quando a tabela está vazia). |
-| `20260101000003_corrige_estrutura_estoque.sql` | **Corrige um banco incompleto** (sem `status` / sem `motorcycle_images`). Rode se o `/admin` aparecer vazio. Idempotente. |
-| `20260101000004_configuracoes_da_loja.sql` | Configurações públicas editáveis da loja. |
-| `20260101000005_promocoes_do_estoque.sql` | Campos de preço promocional do estoque. |
-| `20260101000006_registro_de_vendas.sql` | Histórico privado de vendas. |
-| `20260101000007_publicacoes_de_entregas.sql` | Cria os registros de entregas, publicação moderada e fotos privadas para “Sonhos realizados”. |
-| `20260101000008_lixeira_do_estoque.sql` | Cria a lixeira do estoque (`lixeira_em`) e impede que motos excluídas sejam lidas pela chave pública. |
-| `20260101000009_edicao_de_vendas.sql` | Libera o `update` em `sales`: correção de venda em **Vendidas** e desvinculação ao reativar a moto. |
+| `01_cria_esquema_inicial.sql` | Cria `motorcycles` e `motorcycle_images`, índices e o trigger de `updated_at`. |
+| `02_seguranca_rls_e_storage.sql` | Liga o RLS, cria as políticas e o bucket público `motos` no Storage. |
+| `03_dados_iniciais_estoque.sql` | Insere 5 motos de **demonstração** (só quando a tabela está vazia). |
+| `04_corrige_estrutura_estoque.sql` | **Corrige um banco incompleto** (sem `status` / sem `motorcycle_images`). Rode se o `/admin` aparecer vazio. Idempotente. |
+| `05_configuracoes_da_loja.sql` | Configurações públicas editáveis da loja. |
+| `06_promocoes_do_estoque.sql` | Campos de preço promocional do estoque. |
+| `07_registro_de_vendas.sql` | Histórico privado de vendas. |
+| `08_publicacoes_de_entregas.sql` | Cria os registros de entregas, publicação moderada e fotos privadas para “Sonhos realizados”. |
+| `09_lixeira_do_estoque.sql` | Cria a lixeira do estoque (`lixeira_em`) e impede que motos excluídas sejam lidas pela chave pública. |
+| `10_edicao_de_vendas.sql` | Libera o `update` em `sales`: correção de venda em **Vendidas** e desvinculação ao reativar a moto. |
 
 ## Como aplicar
 
 Não há CLI do Supabase configurada: as migrações são aplicadas pelo painel.
 
 1. Abra o projeto em <https://supabase.com/dashboard> → **SQL Editor**.
-2. Cole o conteúdo de `migrations/20260101000000_cria_esquema_inicial.sql` e execute.
-3. Repita com `20260101000001_seguranca_rls_e_storage.sql`.
-4. Opcional: rode `20260101000002_dados_iniciais_estoque.sql` para começar com o estoque de
+2. Cole o conteúdo de `migrations/01_cria_esquema_inicial.sql` e execute.
+3. Repita com `02_seguranca_rls_e_storage.sql`.
+4. Opcional: rode `03_dados_iniciais_estoque.sql` para começar com o estoque de
    demonstração. Se preferir cadastrar tudo pelo `/admin`, pule este passo.
 
-Em um projeto já atualizado até vendas, execute `migrations/20260101000007_publicacoes_de_entregas.sql`
+Em um projeto já atualizado até vendas, execute `migrations/08_publicacoes_de_entregas.sql`
 para habilitar a aba **Publicações** e a galeria "Sonhos realizados". Em um
 projeto novo, aplique as migrações numeradas em ordem; o seed 0002 é opcional.
 
-A migração 0008 é necessária para a seção **Lixeira**, dentro de
+A migração 09 é necessária para a seção **Lixeira**, dentro de
 **Configurações**. Sem ela, excluir uma moto mostra um aviso pedindo a migração
-em vez de mover a ficha. A lixeira não
-apaga nada: apenas marca `lixeira_em`, esconde a moto da vitrine e a mantém
-disponível no painel para restaurar. O apagar definitivo continua sendo uma
-ação separada, com confirmação, e remove as fotos do Storage.
+em vez de mover a ficha. Excluir não apaga na hora: apenas marca `lixeira_em`,
+esconde a moto da vitrine e a mantém disponível no painel para restaurar. O
+prazo é de **30 dias** — a cada abertura do painel, o que venceu é apagado de
+vez, com as fotos do Storage. A limpeza roda no navegador do dono porque é ele
+quem tem permissão de apagar; o site público nunca apaga nada. O apagar
+definitivo manual continua na própria seção, com confirmação.
 
-A migração 0009 liga a edição de vendas: sem ela, o RLS de `sales` só aceita
-insert/delete e o painel avisa "aplique a migração 0009" em vez de fingir que
+A migração 10 liga a edição de vendas: sem ela, o RLS de `sales` só aceita
+insert/delete e o painel avisa "aplique a migração 10" em vez de fingir que
 salvou. É ela que permite corrigir quem comprou em **Vendidas** (linha
 "Comprou: …") e desvincular a venda quando a moto volta pro pátio — nesse caso
 o registro fica no histórico, só sem apontar para a moto ativa. Comprador,
@@ -48,7 +50,7 @@ telefone e valores continuam sem política para `anon`: o site público não lê
 Os scripts são idempotentes (`create ... if not exists`, `drop policy if
 exists`), então rodar de novo não quebra nem duplica.
 
-A migração 0007 cria a tabela `entregas` e o bucket privado `entregas` no
+A migração 08 cria a tabela `entregas` e o bucket privado `entregas` no
 Storage. Rascunhos e fotos não publicadas ficam acessíveis só pela sessão do
 admin. A galeria lê apenas registros publicados. O painel não tem tela de
 edição: no mural, **Nova publicação** sobe as fotos e a publicação já nasce no
@@ -73,7 +75,7 @@ tabela `motorcycles` antiga (sem a coluna `status`) e nenhuma
 `motorcycle_images`. Como `create table if not exists` **não** altera
 tabela existente, reaplicar o esquema inicial não resolve.
 
-Nesse caso, rode `20260101000003_corrige_estrutura_estoque.sql`: ele adiciona a
+Nesse caso, rode `04_corrige_estrutura_estoque.sql`: ele adiciona a
 coluna que falta, cria a tabela de imagens com a FK e religa as fotos das
 5 motos — sem apagar nada.
 

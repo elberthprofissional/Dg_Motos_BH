@@ -5,7 +5,7 @@
 -- uma versão ANTIGA do schema (sem a coluna `status`) e a tabela
 -- `motorcycle_images` nunca foi criada. Como `create table if not exists`
 -- não altera tabela já existente, reaplicar o esquema inicial
--- (`20260101000000_cria_esquema_inicial.sql`) não conserta.
+-- (`01_cria_esquema_inicial.sql`) não conserta.
 --
 -- Sintoma: o painel /admin mostra "Nenhuma moto no estoque" (a consulta
 -- com join falha) enquanto a home mostra as motos (usa o fallback estático).

@@ -93,10 +93,16 @@ Excluir uma moto no Estoque não apaga a ficha: ela vai para a seção
 pátio, e pode ser restaurada depois. O status original é mantido — uma
 vendida volta para **Vendidas**, uma disponível volta para o pátio.
 
-O **apagar de vez** fica na própria Lixeira, com confirmação, e remove a
-linha e as fotos do Storage sem volta. A lixeira depende da migração
-`20260101000008_lixeira_do_estoque.sql`; sem ela, o painel avisa ao tentar
-excluir.
+A moto fica na lixeira por **30 dias**, contados da exclusão. Cada linha mostra
+quanto falta (`sai em 4 dias`) e, quando o prazo vence, ela é apagada de vez —
+linha e fotos do Storage. Essa limpeza roda ao abrir o painel: é o momento em
+que a sessão do dono tem permissão para apagar, e o site público nunca apaga
+nada. Se o painel ficar semanas sem ser aberto, nada se perde: o que venceu sai
+na primeira visita.
+
+O **apagar de vez** também fica na própria Lixeira, com confirmação, para quem
+não quer esperar. A lixeira depende da migração `09_lixeira_do_estoque.sql`;
+sem ela, o painel avisa ao tentar excluir.
 
 ### Evitar pausa por inatividade no plano Free
 
@@ -139,7 +145,7 @@ O contato, o Instagram, o endereço e os horários saem de
 `src/data/site.ts` (padrão de fábrica). A aba **Configurações** deixa o
 dono editar isso e salvar. Com o Supabase configurado, o valor vai para a
 tabela pública `site_settings` (migração
-`20260101000004_configuracoes_da_loja.sql`) e passa a valer para todos os
+`05_configuracoes_da_loja.sql`) e passa a valer para todos os
 visitantes na hora, sem novo build. O `localStorage` fica como cache e
 fallback quando o banco não responde.
 
@@ -203,6 +209,6 @@ embaladas no JavaScript e ficam públicas para qualquer visitante.
 | Fotos não sobem | Bucket `motos` não criado (rode `..._seguranca_rls_e_storage.sql`) ou política de Storage faltando. |
 | `duplicate key` ao salvar | O sistema tenta sozinho o próximo endereço livre (`-2`, `-3`…). Se persistir, é outra restrição do banco: veja o erro completo no console. |
 | Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). A config da loja (aba Configurações) é exceção: vai para `site_settings` e vale na hora. |
-| Excluir moto pede uma migração | A coluna `lixeira_em` não existe no banco. Rode `20260101000008_lixeira_do_estoque.sql` no SQL Editor. |
+| Excluir moto pede uma migração | A coluna `lixeira_em` não existe no banco. Rode `09_lixeira_do_estoque.sql` no SQL Editor. |
 | Instalar o app não aparece | Precisa HTTPS e o manifest acessível. No iPhone/Safari não há prompt: use *Compartilhar → Adicionar à Tela de Início*. |
 | `npm run build` usa o catálogo antigo | Faltam as chaves no `.env` **no ambiente do build**, não só localmente. |

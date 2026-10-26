@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react'
 import type { ComponentType, ReactNode } from 'react'
 import {
   ArrowLeft,
@@ -48,10 +48,9 @@ interface DescricaoSecao {
   rotulo: string
   /** Frase curta que explica o que a seção controla. */
   descricao: string
-  /** Resumo do valor atual, exibido sob o título na lista e no nav. */
+  /** Resumo do valor atual, exibido sob o título na lista do celular. */
   resumo: (c: ConfigLoja, naLixeira: number) => string
   icone: ComponentType<{ className?: string }>
-  grupo: 'loja' | 'atendimento' | 'estoque' | 'app'
 }
 
 const SECOES: DescricaoSecao[] = [
@@ -61,7 +60,6 @@ const SECOES: DescricaoSecao[] = [
     descricao: 'WhatsApp e telefone que aparecem nos botões do site.',
     resumo: (c) => (c.whatsapp ? `WhatsApp ${c.whatsapp}` : 'Sem WhatsApp definido'),
     icone: MessageCircle,
-    grupo: 'loja',
   },
   {
     id: 'instagram',
@@ -69,7 +67,6 @@ const SECOES: DescricaoSecao[] = [
     descricao: 'O @ que o site usa no cabeçalho, rodapé e fichas.',
     resumo: (c) => c.instagramHandle || 'Sem perfil definido',
     icone: InstagramIcon,
-    grupo: 'loja',
   },
   {
     id: 'endereco',
@@ -77,7 +74,6 @@ const SECOES: DescricaoSecao[] = [
     descricao: 'Rua, cidade e o link do mapa usados na página de contato.',
     resumo: (c) => c.enderecoRua || 'Sem endereço definido',
     icone: MapPin,
-    grupo: 'loja',
   },
   {
     id: 'horarios',
@@ -88,19 +84,17 @@ const SECOES: DescricaoSecao[] = [
         ? 'Nenhum horário cadastrado'
         : `${c.horarios.length} ${c.horarios.length === 1 ? 'faixa' : 'faixas'}`,
     icone: Clock,
-    grupo: 'atendimento',
   },
   {
     id: 'lixeira',
     rotulo: 'Lixeira',
     descricao:
-      'Motos excluídas do estoque: restaure para voltar ao pátio ou apague de vez.',
+      'Motos excluídas do estoque: restaure para voltar ao pátio. O que ficar 30 dias aqui é apagado de vez.',
     resumo: (_c, naLixeira) =>
       naLixeira === 0
         ? 'Vazia'
         : `${naLixeira} ${naLixeira === 1 ? 'moto excluída' : 'motos excluídas'}`,
     icone: Trash2,
-    grupo: 'estoque',
   },
   {
     id: 'app',
@@ -108,15 +102,7 @@ const SECOES: DescricaoSecao[] = [
     descricao: 'Acesse o painel como um app, em tela cheia, direto do celular.',
     resumo: () => 'App instalável neste aparelho',
     icone: Smartphone,
-    grupo: 'app',
   },
-]
-
-const GRUPOS: { id: DescricaoSecao['grupo']; titulo: string }[] = [
-  { id: 'loja', titulo: 'Loja' },
-  { id: 'atendimento', titulo: 'Atendimento' },
-  { id: 'estoque', titulo: 'Estoque' },
-  { id: 'app', titulo: 'Aplicativo' },
 ]
 
 function Campo({
@@ -144,12 +130,35 @@ function Campo({
 /** Botões de salvar/restaurar no pé de cada seção. */
 function AcoesSecao({ onSalvar }: { onSalvar: () => void }) {
   return (
-    <div className="flex flex-wrap gap-3 border-t border-line pt-5">
+    <div className="conf-acoes flex flex-wrap gap-3 border-t border-line pt-5">
       <button type="button" onClick={onSalvar} className="btn btn-primary h-11 sm:h-auto">
         Salvar
       </button>
     </div>
   )
+}
+
+const CONSULTA_MESA = '(min-width: 1024px)'
+
+function assinarTelaDeMesa(avisar: () => void) {
+  const consulta = window.matchMedia(CONSULTA_MESA)
+  consulta.addEventListener('change', avisar)
+  return () => consulta.removeEventListener('change', avisar)
+}
+
+function lerTelaDeMesa() {
+  return window.matchMedia(CONSULTA_MESA).matches
+}
+
+/**
+ * `true` em tela de mesa — o mesmo corte do `lg:` do Tailwind.
+ *
+ * Os dois arranjos desta aba são bem diferentes, então só um é montado.
+ * Manter os dois no DOM escondia um pelo CSS e duplicava cada campo (e os
+ * ids deles): o rótulo do desktop apontava para a cópia invisível.
+ */
+function useTelaDeMesa(): boolean {
+  return useSyncExternalStore(assinarTelaDeMesa, lerTelaDeMesa, () => false)
 }
 
 interface ConfiguracoesTabProps {
@@ -174,6 +183,7 @@ export function ConfiguracoesTab({
 }: ConfiguracoesTabProps) {
   // A config nasce do storage: o componente é remontado a cada troca de
   // aba, então não há posição defasada entre abas.
+  const mesa = useTelaDeMesa()
   const [config, setConfig] = useState<ConfigLoja>(() => lerConfig())
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   // `null` = lista/hub (celular) ou nada selecionado (desktop abre o primeiro).
@@ -432,80 +442,72 @@ export function ConfiguracoesTab({
   /* DESKTOP: navegação secundária + painel                               */
   /* ==================================================================== */
   const desktop = (
-    <div className="hidden lg:block">
-      <div className="mt-2 flex gap-10">
-        {/* Navegação secundária: subordinada à sidebar — mais leve, sem
-            caixa própria, só divisores sutis e o fio vermelho no ativo. */}
-        <nav aria-label="Seções de configuração" className="w-64 shrink-0">
-          <div className="space-y-6">
-            {GRUPOS.filter((g) => g.id !== 'app').map((grupo) => {
-              const itens = SECOES.filter((s) => s.grupo === grupo.id)
-              if (itens.length === 0) return null
-              return (
-                <div key={grupo.id}>
-                  <p className="px-3 pb-1.5 text-xs font-medium text-steel-500">
-                    {grupo.titulo}
-                  </p>
-                  <div className="space-y-0.5 border-l border-line">
-                    {itens.map((s) => {
-                      const selecionada = ativaDesktop.id === s.id
-                      const Icone = s.icone
-                      return (
-                        <button
-                          key={s.id}
-                          type="button"
-                          onClick={() => setSecao(s.id)}
-                          aria-current={selecionada ? 'true' : undefined}
-                          className={`foco-painel relative flex w-full items-center gap-3 rounded-r-lg py-2.5 pr-3 pl-3 text-left text-sm transition-colors ${
-                            selecionada
-                              ? 'font-medium text-paper before:absolute before:inset-y-0 before:-left-px before:w-px before:bg-brand-500'
-                              : 'text-steel-400 hover:bg-claro/[0.03] hover:text-paper'
-                          }`}
-                        >
-                          <Icone
-                            className={`size-4 shrink-0 ${
-                              selecionada ? 'text-steel-300' : 'text-steel-500'
-                            }`}
-                          />
-                          <span className="min-w-0 flex-1 truncate">{s.rotulo}</span>
-                          {s.id === 'lixeira' && totalLixeira > 0 ? (
-                            <span className="min-w-5 rounded-full bg-claro/10 px-1.5 py-0.5 text-center text-[11px] leading-none text-steel-300">
-                              {totalLixeira}
-                              <span className="sr-only"> na lixeira</span>
-                            </span>
-                          ) : null}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+    <div>
+      <header className="conf-cabecalho">
+        <h1>Configurações</h1>
+        <p>
+          O que aparece nos botões, no rodapé e na página de contato do site. Cada seção salva por
+          si e vale na hora.
+        </p>
+      </header>
+
+      <div className="conf-grade">
+        {/* Índice fixo: uma lista só, sem cabeçalhos de grupo. */}
+        <nav className="conf-rail" aria-label="Seções de configuração">
+          {SECOES.filter((s) => s.id !== 'app').map((s) => {
+            const selecionada = ativaDesktop.id === s.id
+            const Icone = s.icone
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSecao(s.id)}
+                aria-current={selecionada ? 'true' : undefined}
+                className="conf-item foco-painel"
+              >
+                <Icone className="size-4 shrink-0" aria-hidden="true" />
+                <span className="conf-item-rotulo">{s.rotulo}</span>
+                {s.id === 'lixeira' && totalLixeira > 0 ? (
+                  <span className="conf-item-contagem">
+                    {totalLixeira}
+                    <span className="sr-only"> na lixeira</span>
+                  </span>
+                ) : null}
+              </button>
+            )
+          })}
         </nav>
 
-        {/* Painel de edição: título, descrição e formulário. Largura
-            máxima generosa para não virar coluna estreita no centro. */}
-        <div className="min-w-0 flex-1">
-          <div className="max-w-4xl">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold text-paper">{ativaDesktop.rotulo}</h3>
-              {temAlteracoes && ativaDesktop.id !== 'lixeira' ? (
-                <span
-                  role="status"
-                  className="rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-etiqueta font-medium text-warn"
-                >
-                  Alterações não salvas
-                </span>
-              ) : null}
+        {/* Folha de edição: um painel só, com cabeçalho fixo por seção. */}
+        <section className="conf-painel" aria-labelledby="conf-secao-titulo">
+          <div className="conf-painel-topo">
+            <div className="min-w-0">
+              <h2 id="conf-secao-titulo" className="conf-painel-titulo">
+                {ativaDesktop.rotulo}
+              </h2>
+              <p className="conf-painel-desc">{ativaDesktop.descricao}</p>
             </div>
-            <p className="mt-1 text-sm text-steel-500">{ativaDesktop.descricao}</p>
-            <div className="mt-6">{conteudo(ativaDesktop.id)}</div>
+            {temAlteracoes && ativaDesktop.id !== 'lixeira' ? (
+              <span role="status" className="conf-selo">
+                Alterações não salvas
+              </span>
+            ) : null}
           </div>
-        </div>
+          <div className="conf-painel-corpo">{conteudo(ativaDesktop.id)}</div>
+        </section>
       </div>
     </div>
   )
+
+  /* Mesa: só este arranjo é montado (nada de cópia escondida no DOM). */
+  if (mesa) {
+    return (
+      <>
+        {desktop}
+        <Toast feedback={feedback} onFechar={() => setFeedback(null)} />
+      </>
+    )
+  }
 
   /* ==================================================================== */
   /* CELULAR / TABLET: lista compacta → sub-tela com "voltar"             */
@@ -513,7 +515,7 @@ export function ConfiguracoesTab({
   if (ativa) {
     return (
       <>
-        <div className="mx-auto max-w-2xl space-y-5 lg:hidden">
+        <div className="mx-auto max-w-2xl space-y-5">
           <div className="flex items-start gap-3">
             <button
               type="button"
@@ -531,9 +533,6 @@ export function ConfiguracoesTab({
           {conteudo(ativa.id)}
         </div>
 
-        {/* No desktop o mesmo estado mostra a navegação + painel. */}
-        {desktop}
-
         <Toast feedback={feedback} onFechar={() => setFeedback(null)} />
       </>
     )
@@ -541,11 +540,10 @@ export function ConfiguracoesTab({
 
   return (
     <>
-      {/* Hub mobile: lista de seções. No desktop é escondido em favor do
-          layout de duas colunas — uma navegação lateral basta. */}
-      <div className="mx-auto max-w-2xl lg:hidden">
+      {/* Hub mobile: lista de seções, com o valor atual de cada uma. */}
+      <div className="mx-auto max-w-2xl">
         <header>
-          <h2 className="painel-h1">Configurações</h2>
+          <h1 className="painel-h1">Configurações</h1>
           <p className="mt-1.5 text-sm text-steel-500">
             Toque numa seção para editar. Tudo o que aparece nos botões e no
             rodapé do site nasce daqui.
@@ -582,8 +580,6 @@ export function ConfiguracoesTab({
           <LinhaInstalarApp />
         </div>
       </div>
-
-      {desktop}
 
       <Toast feedback={feedback} onFechar={() => setFeedback(null)} />
     </>

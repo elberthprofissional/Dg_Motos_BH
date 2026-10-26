@@ -1,5 +1,5 @@
 -- ============================================================
--- 0009: EDIÇÃO DE VENDAS
+-- 10: EDIÇÃO DE VENDAS
 --
 --   Até aqui o painel só inseria e apagava vendas: a política de
 --   `sales` não tinha `update`, então corrigir o nome ou o telefone

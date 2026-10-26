@@ -2,18 +2,18 @@
 -- DG MOTOS — aplicar todas as migrações de uma vez
 -- ============================================================
 -- Ordem (mesma dos arquivos numerados):
---   0000 cria_esquema_inicial · 0001 seguranca_rls_e_storage ·
---   0002 dados_iniciais_estoque · 0003 corrige_estrutura_estoque ·
---   0004 configuracoes_da_loja · 0005 promocoes_do_estoque ·
---   0006 registro_de_vendas · 0007 publicacoes_de_entregas ·
---   0008 lixeira_do_estoque.
+--   01 cria_esquema_inicial · 02 seguranca_rls_e_storage ·
+--   03 dados_iniciais_estoque · 04 corrige_estrutura_estoque ·
+--   05 configuracoes_da_loja · 06 promocoes_do_estoque ·
+--   07 registro_de_vendas · 08 publicacoes_de_entregas ·
+--   09 lixeira_do_estoque · 10 edicao_de_vendas.
 -- O bloco de demo é opcional — cria 5 motos de demonstração.
 -- O bloco final conserta banco que já tinha uma tabela `motorcycles`
 -- incompleta e cria a config global da loja (site_settings).
 -- ============================================================
 
 -- ============================================================
--- 0000: estrutura do catálogo (cria_esquema_inicial)
+-- 01: estrutura do catálogo (cria_esquema_inicial)
 --   motorcycles       → a moto (dados comerciais e técnicos)
 --   motorcycle_images → relação 1:N das fotos, com ordem (posicao)
 -- ============================================================
@@ -86,7 +86,7 @@ create trigger trg_motos_updated_at
   for each row execute function public.touch_updated_at();
 
 -- ============================================================
--- 0001: RLS e Storage (seguranca_rls_e_storage)
+-- 02: RLS e Storage (seguranca_rls_e_storage)
 --   Leitura do catálogo ...... liberada (a vitrine precisa)
 --   Escrita no catálogo ...... apenas usuário autenticado (o dono)
 --   Upload/remoção de foto ... apenas usuário autenticado
@@ -176,7 +176,7 @@ create policy "dono apaga foto"
   using (bucket_id = 'motos');
 
 -- ============================================================
--- 0002: estoque de demonstração (dados_iniciais_estoque — OPCIONAL)
+-- 03: estoque de demonstração (dados_iniciais_estoque — OPCIONAL)
 --   5 motos de demonstração. Preço/ano/descrição precisam ser
 --   confirmados pelo proprietário (ver docs/PENDENCIAS-CLIENTE.md).
 --   Só insere quando a tabela está vazia.
@@ -233,7 +233,7 @@ join (values
 ) as img(slug, src, alt, posicao) on img.slug = n.slug;
 
 -- ============================================================
--- 0003: correção de banco incompleto (corrige_estrutura_estoque)
+-- 04: correção de banco incompleto (corrige_estrutura_estoque)
 -- ============================================================
 -- Se `motorcycles` já existia sem a coluna `status` (create table if not
 -- exists não altera tabela existente) e/ou `motorcycle_images` não existia,
@@ -297,7 +297,7 @@ where not exists (
 );
 
 -- ============================================================
--- 0004: configurações globais da loja (configuracoes_da_loja)
+-- 05: configurações globais da loja (configuracoes_da_loja)
 --   WhatsApp, Instagram, endereço e horários editáveis pelo dono
 --   em /admin → Configurações, sem rebuild. A vitrine lê daqui
 --   (src/lib/configLoja.ts) com fallback para src/data/site.ts.
@@ -365,7 +365,7 @@ values (
 on conflict (key) do nothing;
 
 -- ============================================================
--- 0005: promoção — em_promocao + preco_antes (promocoes_do_estoque)
+-- 06: promoção — em_promocao + preco_antes (promocoes_do_estoque)
 --   O antigo "destaque" vira promoção: selo de desconto e preço
 --   "de → por" no site, e a moto sai na frente da vitrine.
 -- ============================================================
@@ -396,7 +396,7 @@ alter table public.motorcycles drop column if exists destaque;
 drop index if exists public.idx_motos_destaque;
 
 -- ============================================================
--- 0006: vendas — histórico de vendas + custo de compra (registro_de_vendas).
+-- 07: vendas — histórico de vendas + custo de compra (registro_de_vendas).
 --   Quando o dono marca uma
 --   moto como vendida, o painel registra quem comprou, como pagou
 --   e por quanto; a aba "Vendas" lista e soma o lucro.
@@ -445,7 +445,7 @@ create policy "sales_dono_remove"
   using (true);
 
 -- ============================================================
--- 0007: entregas e publicações da Home (publicacoes_de_entregas)
+-- 08: entregas e publicações da Home (publicacoes_de_entregas)
 -- ============================================================
 
 create table if not exists public.entregas (
@@ -554,7 +554,7 @@ create policy "entregas_admin_fotos_remocao"
   using (bucket_id = 'entregas');
 
 -- ============================================================
--- 0008: lixeira do estoque (lixeira_do_estoque)
+-- 09: lixeira do estoque (lixeira_do_estoque)
 -- ============================================================
 -- Excluir passa a ser reversível: a moto sai da vitrine e do pátio,
 -- mas fica no painel até restaurar ou apagar de vez.
@@ -601,7 +601,7 @@ create policy "imagens admin leitura"
   using (true);
 
 -- ============================================================
--- 0009: EDIÇÃO DE VENDAS
+-- 10: EDIÇÃO DE VENDAS
 -- ============================================================
 drop policy if exists "sales_dono_atualiza" on public.sales;
 create policy "sales_dono_atualiza"

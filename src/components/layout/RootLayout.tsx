@@ -24,7 +24,9 @@ export function RootLayout() {
           resto da vitrine lá. */}
       <CatalogoProvider>
         <Header />
-        <main id="conteudo" tabIndex={-1} className="flex-1 focus:outline-none">
+        {/* Coluna: a página pode crescer para ocupar a sobra de altura
+            (páginas curtas) e empurrar o último bloco até o rodapé. */}
+        <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col focus:outline-none">
           <Outlet />
         </main>
         <Footer />

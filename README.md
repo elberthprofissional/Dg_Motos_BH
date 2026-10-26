@@ -42,11 +42,11 @@ as dependências na primeira vez e abre o navegador.
 
 ```
 supabase/
-  migrations/       0000 cria_esquema_inicial, 0001 seguranca_rls_e_storage,
-                    0002 dados_iniciais_estoque, 0003 corrige_estrutura_estoque,
-                    0004 configuracoes_da_loja, 0005 promocoes_do_estoque,
-                    0006 registro_de_vendas, 0007 publicacoes_de_entregas,
-                    0008 lixeira_do_estoque, 0009 edicao_de_vendas
+  migrations/       01 cria_esquema_inicial, 02 seguranca_rls_e_storage,
+                    03 dados_iniciais_estoque, 04 corrige_estrutura_estoque,
+                    05 configuracoes_da_loja, 06 promocoes_do_estoque,
+                    07 registro_de_vendas, 08 publicacoes_de_entregas,
+                    09 lixeira_do_estoque, 10 edicao_de_vendas
                     (aplicar em ordem pelo SQL Editor)
 docs/
   SUPABASE.md       passo a passo do painel do dono
