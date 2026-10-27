@@ -17,20 +17,23 @@ no Supabase Free e ajuda a reduzir o risco de o projeto pausar por inatividade.
   estoque e não usa a chave `service_role`.
 - Frequência: `17 */6 * * *` — quatro vezes por dia.
 
-## O que falta fazer na Cloudflare
+## Configuração concluída (27/10/2026)
 
-1. Entrar ou criar uma conta gratuita na Cloudflare.
-2. Abrir **Workers & Pages** e criar o Worker
-   `dg-motos-supabase-keepalive`.
-3. Publicar nele o conteúdo de
-   `cloudflare/supabase-keepalive/worker.js`.
-4. Nas configurações do Worker, em **Settings → Variables and Secrets**,
-   cadastrar estes dois valores como *secrets*:
-   - `SUPABASE_URL`: Project URL do projeto Supabase.
-   - `SUPABASE_ANON_KEY`: chave anon/publishable do Supabase.
-5. Em **Settings → Triggers → Cron Triggers**, cadastrar:
-   `17 */6 * * *`
-6. Depois da primeira execução, abrir **Logs** e conferir que não houve erro.
+- Worker `dg-motos-supabase`, publicado de
+  `cloudflare/supabase-keepalive/` com `npx wrangler deploy`.
+- Secrets `SUPABASE_URL` e `SUPABASE_ANON_KEY` cadastrados no Worker.
+- Cron `17 */6 * * *` registrado pelo próprio deploy.
+- Handler agendado testado: HTTP 200 contra o Supabase.
+
+Para republicar depois de mudar o Worker:
+
+```sh
+cd cloudflare/supabase-keepalive
+npx wrangler deploy
+```
+
+Depois da primeira execução automática, conferir **Logs** no painel da
+Cloudflare.
 
 **Nunca cadastrar a chave `service_role` no Worker.** Se alguma variável
 estiver faltando, conferir os nomes acima e publicar o Worker novamente.

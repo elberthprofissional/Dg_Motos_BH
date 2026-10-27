@@ -7,6 +7,10 @@ dist-ssr
 !.env.example
 preview.log
 
+# credenciais e cache locais do Wrangler/Cloudflare
+.wrangler/
+.dev.vars
+
 # artefatos locais de skills, CLIs e inspecao temporaria
 .agents/
 .taste-skill/

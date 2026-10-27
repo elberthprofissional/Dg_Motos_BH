@@ -154,13 +154,18 @@ não usa a chave `service_role`.
 Para configurar uma vez:
 
 1. Crie uma conta gratuita na Cloudflare e abra **Workers & Pages**.
-2. Crie um Worker chamado `dg-motos-supabase-keepalive` e publique o
-   conteúdo de `cloudflare/supabase-keepalive/worker.js`.
+2. Crie um Worker chamado `dg-motos-supabase` e publique o
+   conteúdo de `cloudflare/supabase-keepalive/worker.js`. Pelo terminal,
+   de dentro de `cloudflare/supabase-keepalive/`, isso é `npx wrangler login`
+   e `npx wrangler deploy`.
 3. Em **Settings → Variables and Secrets**, adicione como *secrets*
    `SUPABASE_URL` (Project URL) e `SUPABASE_ANON_KEY` (anon/publishable
-   key). Nunca use a chave `service_role`.
+   key). Nunca use a chave `service_role`. Pelo terminal:
+   `npx wrangler secret put SUPABASE_URL` e
+   `npx wrangler secret put SUPABASE_ANON_KEY`.
 4. Em **Settings → Triggers → Cron Triggers**, adicione
-   `17 */6 * * *` (quatro execuções por dia).
+   `17 */6 * * *` (quatro execuções por dia). O `wrangler.toml` já traz
+   esse agendamento, então o `deploy` o registra sozinho.
 5. Confira **Logs** depois da primeira execução agendada. Uma falha aparece
    no log com o código HTTP retornado pela Supabase.
 
