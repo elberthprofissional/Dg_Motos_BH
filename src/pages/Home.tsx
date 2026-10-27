@@ -199,8 +199,11 @@ export function Home() {
           proporção dela, sem recorte. O alt descreve o texto
           embutido — é o que leitores de tela e o Google leem.
           Sem card, sem moldura: sangra de ponta a ponta. */}
-      <section aria-label="Troca de motos — avaliação da sua moto usada" className="bg-fundo py-8 sm:py-10 lg:py-14">
-        <div className="relative w-full">
+      <section aria-label="Troca de motos — avaliação da sua moto usada" className="bg-fundo pt-4 pb-0 sm:pt-6 lg:py-8">
+        {/* Desktop: a arte volta para dentro do container, com acabamento
+            de card — largura inteira na resolução grande ficava esquisita.
+            O recorte vertical preserva o texto e a moto da arte. */}
+        <div className="relative w-full lg:overflow-hidden lg:rounded-2xl lg:border lg:border-borda">
           <picture className="block w-full">
             <source srcSet={trocaNova} type="image/webp" />
             <img
@@ -210,7 +213,7 @@ export function Home() {
               height={554}
               loading="lazy"
               decoding="async"
-              className="h-auto w-full"
+              className="h-auto w-full lg:h-[clamp(20rem,38vw,28rem)] lg:object-cover"
             />
           </picture>
         </div>
