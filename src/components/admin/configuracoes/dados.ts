@@ -1,4 +1,5 @@
 import { formatPrice } from '../../../lib/format'
+import { DIAS_SEMANA, lerSemana } from '../../../lib/horarios'
 import type { ConfigLoja } from '../../../lib/configLoja'
 
 /**
@@ -90,12 +91,20 @@ export function errosDaSecao(secao: SecaoConfig, config: ConfigLoja): Record<str
   }
 
   if (secao === 'horarios') {
-    const incompleta = config.horarios.some(
-      (horario) => !horario.dias.trim() || !horario.horas.trim(),
-    )
-    if (incompleta) {
-      erros.horarios =
-        'Cada faixa precisa de dias e de horário. Preencha ou remova a linha em branco.'
+    const semana = lerSemana(config.horarios)
+    if (semana) {
+      const indice = semana.findIndex((dia) => dia.aberto && (!dia.abre || !dia.fecha))
+      if (indice >= 0) {
+        erros.horarios = `Informe a abertura e o fechamento de ${DIAS_SEMANA[indice].nome}.`
+      }
+    } else {
+      const incompleta = config.horarios.some(
+        (horario) => !horario.dias.trim() || !horario.horas.trim(),
+      )
+      if (incompleta) {
+        erros.horarios =
+          'Cada faixa precisa de dias e de horário. Preencha ou remova a linha em branco.'
+      }
     }
   }
 
@@ -178,6 +187,15 @@ export function primeiroCampoInvalido(secao: SecaoConfig, config: ConfigLoja): s
     if (!config.enderecoRua.trim()) return 'cfg-endereco-rua'
     if (!config.enderecoCidadeUf.trim()) return 'cfg-endereco-cidade'
     return null
+  }
+
+  const semana = lerSemana(config.horarios)
+  if (semana) {
+    const indice = semana.findIndex((dia) => dia.aberto && (!dia.abre || !dia.fecha))
+    if (indice < 0) return null
+    return !semana[indice].abre
+      ? `cfg-horario-abre-${indice}`
+      : `cfg-horario-fecha-${indice}`
   }
 
   const indice = config.horarios.findIndex(

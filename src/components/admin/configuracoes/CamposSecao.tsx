@@ -1,8 +1,10 @@
 import { AlertCircle, Plus, Trash2 } from 'lucide-react'
 import type { ConfigLoja } from '../../../lib/configLoja'
+import { lerSemana, semanaParaFaixas } from '../../../lib/horarios'
 import { Campo } from './Campo'
 import { errosDaSecao } from './dados'
 import type { SecaoConfig } from './dados'
+import { EditorSemana } from './EditorSemana'
 
 interface CamposSecaoProps {
   id: SecaoConfig
@@ -129,6 +131,19 @@ export function CamposSecao({
   }
 
   const erroHorarios = erroDe('horarios')
+  const semana = lerSemana(config.horarios)
+
+  if (semana) {
+    return (
+      <EditorSemana
+        semana={semana}
+        erro={erroHorarios}
+        onMudar={(nova) => definir('horarios', semanaParaFaixas(nova))}
+        marcarTocado={() => marcarTocado('horarios')}
+      />
+    )
+  }
+
   const descricaoHorarios = erroHorarios ? 'cfg-horarios-dica cfg-horarios-erro' : 'cfg-horarios-dica'
 
   return (
@@ -141,6 +156,10 @@ export function CamposSecao({
       >
         <p id="cfg-horarios-titulo" className="mesa-campo-rotulo">
           Faixas de atendimento
+        </p>
+        <p className="mesa-campo-dica">
+          Os horários salvos estão em um formato livre que não dá para separar por dia. Ajuste
+          abaixo; quando as faixas usarem dias e horas reconhecíveis, o editor por dia volta.
         </p>
 
         {config.horarios.length === 0 ? (

@@ -116,8 +116,8 @@ export function SaidaSecao({ id, config }: { id: SecaoConfig; config: ConfigLoja
           </p>
         ) : (
           <div className="mesa-saida-placa">
-            {config.horarios.map((horario, indice) => (
-              <div className="mesa-saida-horario" key={indice}>
+            {faixas.map((horario, indice) => (
+              <div className="mesa-saida-horario" key={`${horario.dias}-${horario.horas}-${indice}`}>
                 <span>{horario.dias.trim() || 'Dia a definir'}</span>
                 <span className="numeros">{horario.horas.trim() || 'Horário a definir'}</span>
               </div>

@@ -2829,6 +2829,88 @@
     height: 2.75rem;
   }
 
+  .mesa-semana {
+    margin-top: 0.1rem;
+    border: 1px solid var(--cor-borda);
+    background: var(--cor-fundo);
+  }
+
+  .mesa-dia {
+    display: grid;
+    grid-template-columns: 3.1rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .mesa-dia:last-child {
+    border-bottom: 0;
+  }
+
+  .mesa-dia-nome {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--color-steel-300);
+  }
+
+  .mesa-dia[data-aberto='false'] .mesa-dia-nome {
+    color: var(--color-steel-600);
+  }
+
+  .mesa-dia-faixa {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .mesa-dia-faixa .mesa-entrada {
+    width: 100%;
+    min-width: 0;
+    height: 2.5rem;
+    padding: 0 0.45rem;
+    font-size: 0.8125rem;
+    color-scheme: dark;
+  }
+
+  .mesa-dia-ate {
+    font-size: 0.75rem;
+    color: var(--color-steel-500);
+  }
+
+  .mesa-dia-fechado {
+    font-size: 0.8125rem;
+    color: var(--color-steel-500);
+  }
+
+  .mesa-dia-alternar {
+    min-height: 2.5rem;
+    padding: 0 0.65rem;
+    border: 1px solid var(--cor-borda);
+    background: transparent;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-steel-300);
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .mesa-dia-alternar:hover {
+    border-color: var(--cor-marca);
+    background: color-mix(in srgb, var(--cor-marca) 8%, transparent);
+    color: var(--color-paper);
+  }
+
+  .mesa-dia-alternar:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+
   .mesa-remover {
     display: grid;
     place-items: center;
