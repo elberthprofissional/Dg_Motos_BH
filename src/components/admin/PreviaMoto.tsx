@@ -95,6 +95,20 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
 
   const endereco = `${SITE_URL.replace(/^https?:\/\//, '')}/moto/${moto.slug}`
 
+  /* Resumo técnico do topo: quem é a moto em quatro dados. Um valor
+     que a loja ainda não cadastrou trava o tom de "confirmado" —
+     entra mais claro, como remissão, e não como dado. */
+  const resumoTecnico: { rotulo: string; valor: string; incerto?: boolean }[] = [
+    { rotulo: 'Ano', valor: String(moto.ano) },
+    { rotulo: 'Quilometragem', valor: formatKm(moto.quilometragem) },
+    { rotulo: 'Categoria', valor: moto.categoria },
+    {
+      rotulo: 'Cilindrada',
+      valor: moto.cilindrada ? `${moto.cilindrada} cc` : 'A confirmar',
+      incerto: !moto.cilindrada,
+    },
+  ]
+
   return (
     <section className="mx-auto flex w-full max-w-[76rem] flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-5">
@@ -113,9 +127,11 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
             <p className="font-sans text-[11px] font-semibold tracking-[0.14em] text-steel-500 uppercase">
               Prévia no site
             </p>
+            {/* No celular o título quebra em vez de truncar: saber qual
+                moto é vale mais que economizar duas linhas. */}
             <h1
               id="previa-titulo"
-              className="mt-1 truncate font-display text-xl font-semibold text-paper sm:text-2xl"
+              className="mt-1 break-words font-display text-xl font-semibold text-paper sm:truncate sm:text-2xl"
             >
               {titulo} · {moto.ano}
             </h1>
@@ -166,9 +182,14 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
           </span>
         </div>
 
-        <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] lg:items-center lg:gap-10 xl:gap-14">
-            <div className="order-last min-w-0 lg:order-none">
+        <div className="px-4 py-5 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
+          {/* No celular a ordem conta: primeiro o anúncio em texto (o que
+              é, quanto custa), depois a foto — contida, sem dominar a
+              página — e por último as fichas. No desktop a composição
+              aprovada fica intocada: texto e ficha à esquerda, foto à
+              direita, os dois no mesmo eixo. */}
+          <div className="flex flex-col gap-7 sm:gap-8 lg:grid lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] lg:items-center lg:gap-10 xl:gap-14">
+            <div className="order-1 min-w-0">
               <p className="text-[11px] font-semibold tracking-[0.14em] text-texto-3 uppercase">
                 {moto.categoria} · {moto.ano}
               </p>
@@ -224,23 +245,22 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
               </div>
 
               <dl className="mt-6 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
-                {[
-                  ['Ano', String(moto.ano)],
-                  ['Quilometragem', formatKm(moto.quilometragem)],
-                  ['Categoria', moto.categoria],
-                  ['Cilindrada', moto.cilindrada ? `${moto.cilindrada} cc` : 'A confirmar'],
-                ].map(([rotulo, valorItem]) => (
-                  <div key={rotulo}>
-                    <dt className="text-[11px] leading-none text-texto-3">{rotulo}</dt>
-                    <dd className="numeros mt-1.5 text-sm leading-none font-semibold text-texto">
-                      {valorItem}
+                {resumoTecnico.map((item) => (
+                  <div key={item.rotulo}>
+                    <dt className="text-[11px] leading-none text-texto-3">{item.rotulo}</dt>
+                    <dd
+                      className={`numeros mt-1.5 text-sm leading-none ${
+                        item.incerto ? 'font-medium text-texto-3' : 'font-semibold text-texto'
+                      }`}
+                    >
+                      {item.valor}
                     </dd>
                   </div>
                 ))}
               </dl>
             </div>
 
-            <div className="order-first min-w-0 lg:order-none lg:h-[26rem] xl:h-[30rem]">
+            <div className="order-2 min-w-0 lg:h-[26rem] xl:h-[30rem]">
               <aside aria-label={`Fotos de ${titulo} ${moto.ano}`} className="h-full">
                 <BikeGallery
                   key={moto.id}
@@ -252,11 +272,15 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
             </div>
           </div>
 
+          {/* Nada de sobre nem ficha: nem a régua que dividia fica. */}
+          {paragrafos.length === 0 && !temFicha ? null : (
           <div
             className={`mt-10 grid gap-9 border-t border-borda pt-9 ${
-              temFicha ? 'lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12' : ''
+              paragrafos.length > 0 && temFicha ? 'lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12' : ''
             }`}
           >
+            {/* Prévia segue a página: sem texto escrito, sem bloco. */}
+            {paragrafos.length > 0 ? (
             <section aria-labelledby="previa-sobre">
               <h2
                 id="previa-sobre"
@@ -287,6 +311,7 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
                 </p>
               ) : null}
             </section>
+            ) : null}
 
             {temFicha ? (
               <section aria-labelledby="previa-ficha">
@@ -313,6 +338,7 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
               </section>
             ) : null}
           </div>
+          )}
         </div>
       </div>
 
@@ -322,11 +348,14 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
           site e para o painel.
         </p>
 
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Cada ação ocupa a linha que precisa e as duas compartilham a
+            largura no celular — botão de 44px de altura, label nunca
+            cortado. A exclusão mantém o carimbo vermelho do painel. */}
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <button
             type="button"
             onClick={onVender}
-            className="foco-painel inline-flex h-10 items-center gap-2 border border-line px-4 text-sm font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper"
+            className="foco-painel inline-flex h-11 w-full items-center justify-center gap-2 border border-line px-4 text-sm font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper sm:h-10 sm:w-auto"
           >
             <CircleDollarSign className="size-4" strokeWidth={1.8} aria-hidden="true" />
             Marcar como vendida
@@ -334,7 +363,7 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
           <button
             type="button"
             onClick={onExcluir}
-            className="foco-painel inline-flex h-10 items-center gap-2 border border-marca/35 px-4 text-sm font-medium text-marca-texto transition-colors hover:border-marca/60 hover:bg-marca/10"
+            className="foco-painel inline-flex h-11 w-full items-center justify-center gap-2 border border-marca/35 px-4 text-sm font-medium text-marca-texto transition-colors hover:border-marca/60 hover:bg-marca/10 sm:h-10 sm:w-auto"
           >
             <Trash2 className="size-4" strokeWidth={1.8} aria-hidden="true" />
             Excluir moto

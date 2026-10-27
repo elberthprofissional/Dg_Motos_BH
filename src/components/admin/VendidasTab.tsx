@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { MessageCircle, Pencil, Tag } from 'lucide-react'
+import { ArchiveRestore, MessageCircle, Pencil, Tag } from 'lucide-react'
 import type { Motorcycle, Venda } from '../../types'
 import { bikeTitle, formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
@@ -11,6 +11,8 @@ interface VendidasTabProps {
   onEditar: (moto: Motorcycle) => void
   /** Clique em "Comprou…" — abre o diálogo para lançar ou corrigir. */
   onRegistrarVenda: (moto: Motorcycle) => void
+  /** Vendeu por engano: devolve a moto ao pátio sem sair da aba. */
+  onReativar: (moto: Motorcycle) => void
   onIrParaEstoque: () => void
 }
 
@@ -57,6 +59,7 @@ export function VendidasTab({
   vendas,
   onEditar,
   onRegistrarVenda,
+  onReativar,
   onIrParaEstoque,
 }: VendidasTabProps) {
   const vendidas = useMemo(
@@ -225,10 +228,23 @@ export function VendidasTab({
                     )
                   ) : null}
 
+                  {/* Vendeu por engano? A saída fica aqui, na linha da
+                      própria moto: volta ao estoque e a venda anterior
+                      fica no histórico, desvinculada. */}
+                  <button
+                    type="button"
+                    onClick={() => onReativar(moto)}
+                    className="foco-painel ml-auto inline-flex min-h-10 shrink-0 items-center gap-2 border border-line px-3.5 text-sm font-medium text-steel-300 transition-colors hover:border-brand-400/60 hover:text-brand-300"
+                    aria-label={`Devolver ${bikeTitle(moto)} ao estoque`}
+                    title="Devolver ao estoque"
+                  >
+                    <ArchiveRestore className="size-3.5" aria-hidden="true" />
+                    Devolver ao estoque
+                  </button>
                   <button
                     type="button"
                     onClick={() => onEditar(moto)}
-                    className="foco-painel ml-auto inline-flex min-h-10 shrink-0 items-center gap-2 border border-line-forte px-3.5 text-sm font-medium text-steel-300 transition-colors hover:border-claro/30 hover:text-paper"
+                    className="foco-painel inline-flex min-h-10 shrink-0 items-center gap-2 border border-line-forte px-3.5 text-sm font-medium text-steel-300 transition-colors hover:border-claro/30 hover:text-paper"
                     aria-label={`Editar ${bikeTitle(moto)}`}
                   >
                     <Pencil className="size-3.5" aria-hidden="true" />

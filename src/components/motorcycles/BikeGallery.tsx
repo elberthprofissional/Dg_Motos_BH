@@ -92,9 +92,10 @@ export function BikeGallery({
       className={`relative shrink-0 cursor-pointer overflow-hidden bg-painel-2 transition-[opacity,border-color] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco ${
         app
           ? 'w-14 rounded-lg border-2'
-          : `w-12 border-b-2 sm:w-14 ${
-              preencherAltura ? 'lg:w-16 lg:rounded-sm' : 'lg:w-20 lg:rounded-lg lg:border-2'
-            }`
+          : preencherAltura
+            ? /* Prévia do painel: cartão redondo no celular, fileira fina na mesa. */
+              'w-14 rounded-lg border-2 lg:w-16 lg:rounded-sm'
+            : `w-12 border-b-2 sm:w-14 lg:w-20 lg:rounded-lg lg:border-2`
       } ${
         i === indice
           ? 'border-marca opacity-100'
@@ -122,9 +123,11 @@ export function BikeGallery({
         className={
           app
             ? 'relative mx-4 aspect-[4/3] shrink-0 overflow-hidden rounded-2xl border border-neutral-800 bg-painel-2'
-            : `relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-painel-2 sm:aspect-[4/3] ${
+            : `relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-painel-2 ${
                 preencherAltura
-                  ? 'lg:aspect-auto lg:min-h-0 lg:flex-1 lg:shrink'
+                  ? /* Prévia: no celular 4:3 contendo a moto inteira;
+                        na mesa o palco acompanha a coluna como sempre. */
+                    'lg:aspect-auto lg:min-h-0 lg:flex-1 lg:shrink'
                   : 'lg:aspect-[4/3] lg:rounded-2xl lg:border lg:border-borda-forte lg:shadow-2xl lg:shadow-black/60'
               }`
         }
@@ -160,8 +163,15 @@ export function BikeGallery({
             loading={i === 0 ? 'eager' : 'lazy'}
             fetchPriority={i === 0 ? 'high' : 'auto'}
             decoding="async"
-            className={`absolute inset-0 size-full object-cover object-center transition-opacity duration-500 motion-reduce:transition-none ${
-              preencherAltura ? '' : 'lg:object-contain'
+            className={`absolute inset-0 size-full object-center transition-opacity duration-500 motion-reduce:transition-none ${
+              /* A escolha de fit é consciente: na prévia mobile a moto
+                  inteira dentro do palco (contain) — as fotos são
+                  retrato e o recorte comia para-brasa e rodas; na
+                  vitrine a partir de lg o palco é maior que a foto e
+                  contain mostra tudo sem moldura. */
+              preencherAltura
+                ? 'object-contain lg:object-cover'
+                : 'object-cover lg:object-contain'
             } ${i === indice ? 'opacity-100' : 'opacity-0'}`}
             onError={(event) => {
               event.currentTarget.src = PLACEHOLDER_CARD
@@ -192,10 +202,11 @@ export function BikeGallery({
           </div>
         ) : (
           <div
-            className={`flex shrink-0 items-center justify-between gap-4 bg-fundo px-3 py-3 ${
+            className={`flex shrink-0 items-center justify-between gap-4 ${
               preencherAltura
-                ? 'lg:border-t lg:border-borda lg:bg-painel'
-                : 'lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:pb-2'
+                ? /* Faixa colada no palco no celular, fileira na mesa. */
+                  'bg-fundo py-2.5 lg:border-t lg:border-borda lg:bg-painel lg:px-3 lg:py-3'
+                : 'bg-fundo px-3 py-3 lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:pb-2'
             }`}
           >
             <div className={`flex w-full min-w-0 overflow-x-auto ${preencherAltura ? 'gap-2' : 'gap-2 lg:gap-3'}`}>

@@ -322,6 +322,31 @@ export function Admin() {
 
   /** Atalho de status: vender, reativar ou marcar como indisponível. */
   async function alterarStatus(moto: Motorcycle, status: MotorcycleStatus) {
+    // Vender: o dono confirma antes — a moto sai do site na hora, e
+    // o clique errado acontecia sem freio. Errar ainda vira nada:
+    // em Vendidas a moto volta com "Devolver ao estoque".
+    if (status === 'vendida') {
+      setConfirmacao({
+        titulo: 'Marcar como vendida',
+        descricao: `"${moto.marca} ${moto.modelo} ${moto.ano}" sai do estoque e vai para a aba Vendidas. Se foi clique errado, dá para reverter lá mesmo, com "Devolver ao estoque".`,
+        rotuloConfirmar: 'Marcar como vendida',
+        rotuloOcupado: 'Marcando...',
+        tom: 'neutro',
+        onConfirmar: async () => {
+          const r = await atualizarStatus(moto.id, 'vendida')
+          setConfirmacao(null)
+          if (!r.ok) {
+            avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível alterar o status.' })
+            return
+          }
+          if (previaId) navigate('/admin')
+          await concluirAcao(`${moto.marca} ${moto.modelo} saiu do pátio e já está em Vendidas.`)
+          setVendaAberta({ moto, venda: vendaDaMoto(moto.id) })
+        },
+      })
+      return
+    }
+
     const eraVendida = moto.status === 'vendida'
     const r = await atualizarStatus(moto.id, status)
     if (!r.ok) {
@@ -329,15 +354,8 @@ export function Admin() {
       return
     }
 
-    // Vender: a moto sai do pátio primeiro e o painel pergunta quem
-    // comprou em seguida. Cancelar o diálogo não devolve a moto — só
-    // deixa a venda sem lançamento, que pode ser feito depois em Vendidas.
-    if (status === 'vendida') {
-      if (previaId) navigate('/admin')
-      await concluirAcao(`${moto.marca} ${moto.modelo} saiu do pátio e já está em Vendidas.`)
-      setVendaAberta({ moto, venda: vendaDaMoto(moto.id) })
-      return
-    }
+    // Vender sai antes, pelo diálogo de confirmação. Aqui só chegam
+    // reativação e indisponibilidade.
 
     // Voltou pro pátio: a venda continua no histórico com a foto dos
     // dados do dia, só sem apontar para a moto à venda de novo.
@@ -593,7 +611,18 @@ export function Admin() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[105rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9">
+        {/* O respiro embaixo é estrutura, não remendo: a barra de abas é
+            fixa no celular, então o conteúdo paga a altura dela (64px
+            + área segura) para nada terminar escondido sob a barra.
+            Com o formulário aberto a barra sai de cena e o respiro
+            também — quem reserve espaço é a barra dele. */}
+        <main
+          className={`mx-auto w-full max-w-[105rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9 ${
+            editandoMoto
+              ? ''
+              : 'pb-[calc(5.75rem_+_env(safe-area-inset-bottom,0px))] lg:pb-9'
+          }`}
+        >
           {/* O Estoque continua montado (escondido) durante a prévia:
               busca, ordem e filtros estão intactos quando o dono volta. */}
           <div className={aba === 'estoque' && previaId === null ? '' : 'hidden'}>
@@ -618,6 +647,7 @@ export function Admin() {
               onEditar={editarVendida}
               onRegistrarVenda={abrirVenda}
               onIrParaEstoque={() => trocarAba('estoque')}
+              onReativar={(moto) => void alterarStatus(moto, 'disponivel')}
             />
           </div>
           <div className={aba === 'publicacoes' ? '' : 'hidden'}>
@@ -700,20 +730,24 @@ export function Admin() {
         <div className="grid grid-cols-3">
           {ABAS_CELLULAR.map(({ id, rotulo, icone: Icone }) => {
             const ativa = aba === id
+            // Um item da barra: 64px de área de toque, rótulo no mínimo
+            // legível da casa (13px) e indicador superior no ativo. A
+            // área segura do aparelho fica na própria .safe-bottom da
+            // nav — o botão paga só o seu respiro.
             return (
               <button
                 key={id}
                 type="button"
                 onClick={() => trocarAba(id)}
                 aria-current={ativa ? 'page' : undefined}
-                className={`foco-painel relative flex min-h-[3.75rem] flex-col items-center justify-center gap-1.5 py-2 transition-colors ${
+                className={`foco-painel relative flex min-h-[4rem] flex-1 flex-col items-center justify-center gap-1 pb-3 pt-2 transition-colors ${
                   ativa ? 'text-paper' : 'text-steel-500'
                 }`}
               >
                 {ativa && (
                   <span
                     aria-hidden="true"
-                    className="absolute top-0 h-[2px] w-8 bg-brand-500"
+                    className="absolute top-0 h-[2px] w-9 bg-brand-500"
                   />
                 )}
                 <span className="relative">
@@ -723,7 +757,7 @@ export function Admin() {
                     aria-hidden="true"
                   />
                 </span>
-                <span className="text-xs leading-none font-medium">{rotulo}</span>
+                <span className="text-[13px] leading-none font-medium">{rotulo}</span>
               </button>
             )
           })}
