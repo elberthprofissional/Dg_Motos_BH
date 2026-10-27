@@ -162,19 +162,10 @@ function kmTexto(valor) {
   return `${Number(valor).toLocaleString('pt-BR')} km`
 }
 
-function textoDeApoio(moto) {
-  const cilindrada = moto.cilindrada ? `, ${moto.cilindrada} cc` : ''
-  const km =
-    moto.quilometragem != null
-      ? ` O odômetro marca ${kmTexto(moto.quilometragem)}.`
-      : ''
-  return `${moto.marca} ${moto.modelo} ${moto.ano}${cilindrada}, cadastrada no estoque da DG Motos em Belo Horizonte.${km} Fale com a loja para conferir o estado, a documentação e as condições de pagamento.`
-}
-
 /**
- * Descrição editorial da ficha: a da loja manda; sem ela, entra a ficha
- * pública da linha; sem nenhuma das duas, um texto só com dados do
- * cadastro. É o mesmo critério da página em React.
+ * Descrição editorial da ficha: a da loja manda; sem ela, entra a
+ * ficha pública da linha; sem nenhuma das duas, nada no lugar de
+ * quem não falou. É o mesmo critério da página em React.
  */
 function descricaoDe(moto) {
   const daLoja = String(moto.descricao ?? '').trim()
@@ -184,7 +175,7 @@ function descricaoDe(moto) {
       .map((paragrafo) => paragrafo.trim())
       .filter(Boolean)
   }
-  return fichaDeReferencia(moto)?.descricao ?? [textoDeApoio(moto)]
+  return fichaDeReferencia(moto)?.descricao ?? []
 }
 
 function statusLongo(status) {
@@ -362,7 +353,7 @@ async function run() {
         ? { '@type': 'EngineSpecification', engineDisplacement: `${moto.cilindrada} cc` }
         : undefined,
       image: ficha.fotos,
-      description: ficha.descricao,
+      description: ficha.descricao || undefined,
       // Sem preço confiável não há Offer — mesmo critério de schema.ts.
       offers: ficha.precoPublicavel
         ? {

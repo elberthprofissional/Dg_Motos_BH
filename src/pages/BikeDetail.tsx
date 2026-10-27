@@ -272,6 +272,9 @@ export function BikeDetail() {
           ))}
         </dl>
 
+        {/* Sem texto da loja e sem ficha da linha, o bloco nem existe:
+            nada no lugar de um sobre que ninguém escreveu. */}
+        {paragrafos.length > 0 ? (
         <section
           aria-labelledby="sobre-mobile-titulo"
           className="mx-4 mt-6 rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4"
@@ -292,6 +295,7 @@ export function BikeDetail() {
             ))}
           </div>
         </section>
+        ) : null}
       </div>
 
       {/* ============================================================
@@ -428,11 +432,16 @@ export function BikeDetail() {
         </aside>
       </div>
 
+      {/* O cartão só fica de pé com matéria dentro: destaque da linha
+          ou texto da loja. Sem os dois, nem a borda aparecem — vazio
+          ele virava um retângulo órfão na página. */}
+      {destaques.length > 0 || paragrafos.length > 0 || temFicha ? (
       <div
         className={`hidden px-4 sm:block lg:mx-auto lg:w-full lg:max-w-7xl lg:px-6 lg:pb-0 ${
           temFicha ? 'pb-16' : ''
         }`}
       >
+        {destaques.length > 0 || paragrafos.length > 0 ? (
         <div className="max-w-[42rem] lg:mt-12 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-x-12 lg:rounded-2xl lg:border lg:border-borda lg:bg-painel/40 lg:p-8 xl:gap-x-16 xl:p-10">
           {destaques.length > 0 ? (
             <Revelar
@@ -467,29 +476,35 @@ export function BikeDetail() {
             </Revelar>
           ) : null}
 
-          <Revelar
-            as="section"
-            aria-labelledby="sobre-titulo"
-            className={`mt-16 lg:mt-0 lg:border-t lg:border-borda lg:pt-8 ${
-              semDestaques ? 'lg:col-span-2' : ''
-            }`}
-          >
-            {semDestaques ? (
-              <div className="lg:grid lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-x-12 xl:gap-x-16">
-                {tituloSobre}
-                {textoSobre}
-              </div>
-            ) : (
-              <>
-                {tituloSobre}
-                {textoSobre}
-              </>
-            )}
+          {/* Sem descrição escrita, a seção inteira sai da página: o
+              título “Sobre esta moto” não dita conversa de ninguém. */}
+          {paragrafos.length > 0 ? (
+            <Revelar
+              as="section"
+              aria-labelledby="sobre-titulo"
+              className={`mt-16 lg:mt-0 lg:border-t lg:border-borda lg:pt-8 ${
+                semDestaques ? 'lg:col-span-2' : ''
+              }`}
+            >
+              {semDestaques ? (
+                <div className="lg:grid lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-x-12 xl:gap-x-16">
+                  {tituloSobre}
+                  {textoSobre}
+                </div>
+              ) : (
+                <>
+                  {tituloSobre}
+                  {textoSobre}
+                </>
+              )}
 
-            {notaSobre}
-          </Revelar>
+              {notaSobre}
+            </Revelar>
+          ) : null}
         </div>
+        ) : null}
       </div>
+      ) : null}
 
       {/* ============================================================
           FICHA DE PAPEL
