@@ -274,13 +274,13 @@ export function ConfiguracoesTab({
   function statusDaSecao(id: Secao): {
     texto: string
     tom: 'ok' | 'pendente' | 'erro' | 'neutro'
-  } {
+  } | null {
     if (sincronizando) return { texto: 'Lendo o banco…', tom: 'neutro' }
     if (salvando === id) return { texto: 'Salvando…', tom: 'neutro' }
     if (secaoSuja(id, config, salvo)) return { texto: 'Alterações não salvas', tom: 'pendente' }
     if (falhaBanco) return { texto: 'Salvo só neste aparelho', tom: 'erro' }
     if (ultimoSalvoEm) return { texto: `Salvo às ${ultimoSalvoEm}`, tom: 'ok' }
-    return { texto: 'Sem alterações', tom: 'neutro' }
+    return null
   }
 
   function renderSecao(id: Secao): ReactNode {
@@ -342,12 +342,12 @@ export function ConfiguracoesTab({
         </div>
         {secaoAtiva === 'lixeira' ? (
           <span className="mesa-selo">Área de risco</span>
-        ) : (
+        ) : status ? (
           <span className="mesa-estado" data-tom={status.tom}>
             <span className="mesa-ponto" aria-hidden="true" />
             {status.texto}
           </span>
-        )}
+        ) : null}
       </div>
     )
   }
@@ -360,7 +360,6 @@ export function ConfiguracoesTab({
     <div className="mesa">
       <header className="mesa-topo">
         <div className="mesa-topo-texto">
-          <p className="mesa-kicker">Painel da loja</p>
           <h1 className="mesa-titulo">Configurações</h1>
           <p className="mesa-sub">
             O contato, o perfil e o endereço que o site publica. A Lixeira fica no fim: é
@@ -477,7 +476,6 @@ export function ConfiguracoesTab({
   ) : (
     <div className="mx-auto max-w-2xl">
       <header className="mesa-mobile-topo">
-        <p className="mesa-mobile-kicker">Painel da loja</p>
         <h1 className="painel-h1">Configurações</h1>
         <p className="mesa-mobile-sub">
           Escolha um bloco para editar. Cada um salva por si — o que aparece nos botões e no
