@@ -61,7 +61,7 @@ function dadosDe(post: EntregaRegistro, ordem = post.ordem): EntregaParaSalvar {
  * Não existe tela de edição: o mural é a única superfície. Ele é um
  * "rolo de fotos" — todas as entregas lado a lado, sem pasta — e
  * cada quadro carrega o seu próprio apagar. Para entrar com foto
- * nova, "Nova publicação" abre a folha de galeria/câmera, as fotos
+ * nova, "Adicionar foto" abre a folha de galeria/câmera, as fotos
  * sobem e a publicação já nasce no ar.
  */
 export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
@@ -258,7 +258,7 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
           <AreaUploadFoto
             {...entrada}
             variante="botao"
-            rotulo="Nova publicação"
+            rotulo="Adicionar foto"
             className="w-full sm:w-auto"
           />
         </div>
@@ -294,7 +294,7 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
       )}
 
       {/* Os dois inputs nativos ficam fora da árvore de acessibilidade:
-          o controle real é o botão "Nova publicação". */}
+          o controle real é o botão "Adicionar foto". */}
       <input
         ref={arquivoRef}
         type="file"
@@ -458,7 +458,7 @@ function VazioPublicacoes({
         <div className="mt-4">
           <AreaUploadFoto
             enviando={enviando}
-            rotulo="Nova publicação"
+            rotulo="Adicionar foto"
             resumo="Escolher da galeria ou tirar na hora"
             onEscolher={onEscolher}
             onTirarFoto={onTirarFoto}

@@ -6,6 +6,7 @@ import { BotoesFlutuantes } from '../ui/BotoesFlutuantes'
 import { useScrollToTop } from '../../hooks/useScroll'
 import { CatalogoContexto } from '../../hooks/useCatalogo'
 import type { EstadoCatalogo } from '../../hooks/useCatalogo'
+import { SiteConfigProvider } from '../../hooks/SiteConfigProvider'
 import { buscarCatalogo } from '../../lib/catalog'
 import { supabaseConfigured } from '../../lib/supabase'
 import { motorcycles as catalogoEstatico } from '../../data/motorcycles'
@@ -19,21 +20,23 @@ export function RootLayout() {
         Pular para o conteúdo
       </a>
 
-      {/* O provedor abraça o cabeçalho: a barra de cima mostra quantas
-          motos estão no estoque agora, e isso vem do mesmo lugar que o
-          resto da vitrine lá. */}
-      <CatalogoProvider>
-        <Header />
-        {/* Coluna: a página pode crescer para ocupar a sobra de altura
-            (páginas curtas) e empurrar o último bloco até o rodapé. */}
-        <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col focus:outline-none">
-          <Outlet />
-        </main>
-        <Footer />
-        {/* Botões fixos só na vitrine: as rotas de admin ficam fora
-            deste layout e levam a tela limpa, sem CTA de loja. */}
-        <BotoesFlutuantes />
-      </CatalogoProvider>
+      {/* A config é lida uma vez para a vitrine inteira; o catálogo faz
+          o mesmo por conta própria. Ambos abraçam o cabeçalho, o miolo
+          e o rodapé. */}
+      <SiteConfigProvider>
+        <CatalogoProvider>
+          <Header />
+          {/* Coluna: a página pode crescer para ocupar a sobra de altura
+              (páginas curtas) e empurrar o último bloco até o rodapé. */}
+          <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col focus:outline-none">
+            <Outlet />
+          </main>
+          <Footer />
+          {/* Botões fixos só na vitrine: as rotas de admin ficam fora
+              deste layout e levam a tela limpa, sem CTA de loja. */}
+          <BotoesFlutuantes />
+        </CatalogoProvider>
+      </SiteConfigProvider>
     </div>
   )
 }

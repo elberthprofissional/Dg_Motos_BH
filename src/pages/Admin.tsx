@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   CircleDollarSign,
@@ -29,6 +29,7 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
 import { useVendas } from '../hooks/vendasContexto'
 import { EstoqueTab } from '../components/admin/EstoqueTab'
+import { PreviaMoto } from '../components/admin/PreviaMoto'
 import { ConfiguracoesTab } from '../components/admin/ConfiguracoesTab'
 import { VendidasTab } from '../components/admin/VendidasTab'
 import { PublicacoesTab } from '../components/admin/PublicacoesTab'
@@ -89,6 +90,13 @@ export function Admin() {
   const contaRef = useRef<HTMLDivElement>(null)
   const { vendas, desvincularVenda } = useVendas()
 
+  // A prévia tem endereço próprio (/admin/estoque/:id): recarregar ou
+  // voltar pelo navegador devolve o dono à mesma tela.
+  const navigate = useNavigate()
+  const params = useParams()
+  const subrota = params['*'] ?? ''
+  const previaId = /^estoque\/([^/]+)\/?$/.exec(subrota)?.[1] ?? null
+
   usePageMeta('Painel | DG Motos', 'Área restrita do proprietário.')
 
   // Menu do avatar (celular): fecha com Esc e clique fora — o painel
@@ -139,6 +147,49 @@ export function Admin() {
   // ativas. Assim nenhuma aba precisa repetir essa regra.
   const ativas = useMemo(() => (motos === null ? null : motosAtivas(motos)), [motos])
   const naLixeira = useMemo(() => (motos === null ? null : motosNaLixeira(motos)), [motos])
+
+  const motoDaPrevia = useMemo(
+    () =>
+      previaId === null || ativas === null
+        ? null
+        : (ativas.find((moto) => moto.id === previaId) ?? null),
+    [previaId, ativas],
+  )
+
+  // Rota desconhecida dentro do painel volta para a mesa de estoque.
+  useEffect(() => {
+    if (subrota && previaId === null) navigate('/admin', { replace: true })
+  }, [subrota, previaId, navigate])
+
+  // A prévia só existe enquanto a moto está no pátio. Se ela sair por
+  // outro caminho (outra aba, lixeira), o dono volta para a lista em
+  // vez de ficar numa tela vazia.
+  const previaOrfa = previaId !== null && motos !== null && motoDaPrevia === null
+  useEffect(() => {
+    if (!previaOrfa) return
+    avisar({ tipo: 'erro', texto: 'Essa moto não está mais no estoque.' })
+    navigate('/admin', { replace: true })
+  }, [previaOrfa, navigate])
+
+  // Abrir a prévia começa do topo; voltar devolve a lista à posição em
+  // que estava (o Estoque continua montado por baixo). O `instant`
+  // ignora o scroll suave global — animar aqui faria a tela "escorrer"
+  // sozinha logo depois do clique, e o carregamento das fotos ainda
+  // cancelava o destino no meio do caminho.
+  const rolagemAntesDaPrevia = useRef(0)
+  const jaAbriuPrevia = useRef(false)
+  useEffect(() => {
+    if (previaId !== null) {
+      rolagemAntesDaPrevia.current = window.scrollY
+      jaAbriuPrevia.current = true
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      return
+    }
+    if (jaAbriuPrevia.current) {
+      jaAbriuPrevia.current = false
+      window.scrollTo({ top: rolagemAntesDaPrevia.current, behavior: 'instant' })
+    }
+  }, [previaId])
 
   // A lixeira tem prazo: passados 30 dias, a moto (e as fotos) saem de
   // vez. A limpeza roda ao abrir o painel — é o único momento em que a
@@ -200,6 +251,7 @@ export function Admin() {
           avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível mover a moto para a lixeira.' })
           return
         }
+        if (previaId) navigate('/admin')
         await concluirAcao(`${moto.marca} ${moto.modelo} foi para a Lixeira em Configurações.`)
       },
     })
@@ -281,6 +333,7 @@ export function Admin() {
     // comprou em seguida. Cancelar o diálogo não devolve a moto — só
     // deixa a venda sem lançamento, que pode ser feito depois em Vendidas.
     if (status === 'vendida') {
+      if (previaId) navigate('/admin')
       await concluirAcao(`${moto.marca} ${moto.modelo} saiu do pátio e já está em Vendidas.`)
       setVendaAberta({ moto, venda: vendaDaMoto(moto.id) })
       return
@@ -310,6 +363,19 @@ export function Admin() {
 
   function trocarAba(proxima: Aba) {
     setAba(proxima)
+    if (previaId) navigate('/admin')
+  }
+
+  /** Volta da prévia para a lista, preservando busca e ordem. */
+  function voltarAoEstoque() {
+    setAba('estoque')
+    navigate('/admin')
+  }
+
+  /** Editar na prévia é editar a moto: abre a ficha no Estoque. */
+  function editarDaPrevia(moto: Motorcycle) {
+    setEditando({ id: moto.id, dados: motoParaFormulario(moto) })
+    voltarAoEstoque()
   }
 
   /** Editar uma vendida é editar a moto: abre a ficha no Estoque. */
@@ -528,7 +594,9 @@ export function Admin() {
         </header>
 
         <main className="mx-auto w-full max-w-[105rem] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9">
-          {aba === 'estoque' ? (
+          {/* O Estoque continua montado (escondido) durante a prévia:
+              busca, ordem e filtros estão intactos quando o dono volta. */}
+          <div className={aba === 'estoque' && previaId === null ? '' : 'hidden'}>
             <EstoqueTab
               motos={ativas}
               erro={erro}
@@ -542,7 +610,7 @@ export function Admin() {
               onRecarregar={recarregar}
               onIrParaVendidas={() => trocarAba('vendidas')}
             />
-          ) : null}
+          </div>
           <div className={aba === 'vendidas' ? '' : 'hidden'}>
             <VendidasTab
               motos={ativas ?? []}
@@ -565,6 +633,51 @@ export function Admin() {
               onIrParaEstoque={() => trocarAba('estoque')}
               onRecarregar={recarregar}
             />
+          ) : null}
+
+          {previaId !== null ? (
+            motoDaPrevia ? (
+              <PreviaMoto
+                moto={motoDaPrevia}
+                onVoltar={voltarAoEstoque}
+                onEditar={() => editarDaPrevia(motoDaPrevia)}
+                onVender={() => void alterarStatus(motoDaPrevia, 'vendida')}
+                onExcluir={() => pedirExclusao(motoDaPrevia)}
+              />
+            ) : motos === null && !erro ? (
+              <div role="status" className="flex min-h-[45vh] items-center justify-center">
+                <span className="sr-only">Abrindo a prévia</span>
+                <span
+                  aria-hidden="true"
+                  className="size-8 animate-spin rounded-full border-2 border-claro/15 border-t-brand-500"
+                />
+              </div>
+            ) : (
+              <div className="mx-auto max-w-md py-20">
+                <h2 className="font-display text-xl font-semibold text-paper">
+                  Não deu para abrir a prévia agora
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-steel-400">
+                  {erro ?? 'Essa moto não está mais no estoque.'}
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void recarregar()}
+                    className="estoque-btn-primario"
+                  >
+                    Tentar novamente
+                  </button>
+                  <button
+                    type="button"
+                    onClick={voltarAoEstoque}
+                    className="foco-painel inline-flex h-10 items-center border border-line px-4 text-sm font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper"
+                  >
+                    Voltar ao estoque
+                  </button>
+                </div>
+              </div>
+            )
           ) : null}
         </main>
       </div>

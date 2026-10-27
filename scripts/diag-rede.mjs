@@ -1,4 +1,6 @@
 /** Diagnóstico temporário: status das chamadas ao Supabase. */
+import { resolverPendente } from './lib/cdp.mjs'
+
 const CDP = 'http://127.0.0.1:9222'
 const v = await (await fetch(`${CDP}/json/version`)).json()
 const ws = new WebSocket(v.webSocketDebuggerUrl)
@@ -7,11 +9,8 @@ const pend = new Map()
 const ls = []
 ws.addEventListener('message', (e) => {
   const m = JSON.parse(e.data)
-  if (m.id && pend.has(m.id)) {
-    const p = pend.get(m.id)
-    pend.delete(m.id)
-    m.error ? p.reject(new Error(JSON.stringify(m.error))) : p.resolve(m.result)
-  } else if (m.method) for (const l of ls) l(m)
+  if (resolverPendente(pend, m)) return
+  if (m.method) for (const l of ls) l(m)
 })
 await new Promise((r) => ws.addEventListener('open', r, { once: true }))
 const send = (method, params = {}, sessionId) =>

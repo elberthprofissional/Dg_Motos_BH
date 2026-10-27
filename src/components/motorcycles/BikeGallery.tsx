@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react'
 import type { MotorcycleImage } from '../../types'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
@@ -6,6 +6,10 @@ import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 interface BikeGalleryProps {
   imagens: MotorcycleImage[]
   titulo: string
+  /** Mantém o palco preenchendo a altura do contêiner (prévia do admin). */
+  preencherAltura?: boolean
+  /** Vitrine de app: foto 4:3 em cartão e faixa de miniaturas solta. */
+  variante?: 'padrao' | 'app'
 }
 
 const PLACEHOLDER = { src: PLACEHOLDER_CARD, alt: 'Foto ainda não disponível' }
@@ -18,12 +22,19 @@ const PLACEHOLDER = { src: PLACEHOLDER_CARD, alt: 'Foto ainda não disponível' 
  * logo abaixo do preço. As miniaturas ficam numa faixa sólida, sem
  * véu de vidro, e a foto pode abrir inteira num <dialog> nativo.
  */
-export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
+export function BikeGallery({
+  imagens,
+  titulo,
+  preencherAltura = false,
+  variante = 'padrao',
+}: BikeGalleryProps) {
   const lista = imagens.length > 0 ? imagens : [PLACEHOLDER]
   const [ativa, setAtiva] = useState(0)
   const [ampliada, setAmpliada] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const botaoAmpliarRef = useRef<HTMLButtonElement>(null)
+  const idFoto = useId()
+  const app = variante === 'app'
 
   const total = lista.length
   const indice = ativa % total
@@ -70,12 +81,74 @@ export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
     botaoAmpliarRef.current?.focus()
   }
 
+  const miniaturas = lista.map((img, i) => (
+    <button
+      key={`${img.src}-miniatura-${i}`}
+      type="button"
+      aria-pressed={i === indice}
+      aria-controls={idFoto}
+      aria-label={`Ver ${altDe(img, i)}`}
+      onClick={() => setAtiva(i)}
+      className={`relative shrink-0 cursor-pointer overflow-hidden bg-painel-2 transition-[opacity,border-color] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco ${
+        app
+          ? 'w-14 rounded-lg border-2'
+          : `w-12 border-b-2 sm:w-14 ${
+              preencherAltura ? 'lg:w-16 lg:rounded-sm' : 'lg:w-20 lg:rounded-lg lg:border-2'
+            }`
+      } ${
+        i === indice
+          ? 'border-marca opacity-100'
+          : 'border-transparent opacity-50 hover:opacity-85'
+      }`}
+      style={{ aspectRatio: '3 / 4' }}
+    >
+      <img
+        src={img.src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="size-full object-cover object-center"
+        onError={(event) => {
+          event.currentTarget.src = PLACEHOLDER_CARD
+        }}
+      />
+    </button>
+  ))
+
   return (
     <div role="group" aria-label={`Fotos de ${titulo}`} className="flex h-full flex-col">
       <div
-        id="foto-principal"
-        className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-painel-2 sm:aspect-[4/3] lg:aspect-auto lg:min-h-0 lg:flex-1 lg:shrink"
+        id={idFoto}
+        className={
+          app
+            ? 'relative mx-4 aspect-[4/3] shrink-0 overflow-hidden rounded-2xl border border-neutral-800 bg-painel-2'
+            : `relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-painel-2 sm:aspect-[4/3] ${
+                preencherAltura
+                  ? 'lg:aspect-auto lg:min-h-0 lg:flex-1 lg:shrink'
+                  : 'lg:aspect-[4/3] lg:rounded-2xl lg:border lg:border-borda-forte lg:shadow-2xl lg:shadow-black/60'
+              }`
+        }
       >
+        {!preencherAltura ? (
+          <>
+            <img
+              src={atual.src}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 hidden size-full scale-110 object-cover object-center opacity-25 blur-2xl lg:block"
+              onError={(event) => {
+                event.currentTarget.style.display = 'none'
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 hidden bg-fundo/30 lg:block"
+            />
+          </>
+        ) : null}
+
         {lista.map((img, i) => (
           <img
             key={`${img.src}-${i}`}
@@ -88,8 +161,8 @@ export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
             fetchPriority={i === 0 ? 'high' : 'auto'}
             decoding="async"
             className={`absolute inset-0 size-full object-cover object-center transition-opacity duration-500 motion-reduce:transition-none ${
-              i === indice ? 'opacity-100' : 'opacity-0'
-            }`}
+              preencherAltura ? '' : 'lg:object-contain'
+            } ${i === indice ? 'opacity-100' : 'opacity-0'}`}
             onError={(event) => {
               event.currentTarget.src = PLACEHOLDER_CARD
             }}
@@ -100,7 +173,11 @@ export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
           ref={botaoAmpliarRef}
           type="button"
           onClick={abrirAmpliada}
-          className="absolute top-3 right-3 z-10 inline-flex h-11 items-center gap-2 bg-fundo/90 px-3 text-sm font-semibold text-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco"
+          className={
+            app
+              ? 'absolute top-3 right-3 z-10 grid size-10 place-items-center rounded-full bg-neutral-950/70 text-white backdrop-blur-md transition-colors hover:bg-marca focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
+              : 'absolute top-3 right-3 z-10 inline-flex h-11 items-center gap-2 bg-fundo/90 px-3 text-sm font-semibold text-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
+          }
           aria-label={`Ampliar foto de ${titulo}`}
         >
           <Maximize2 className="size-[18px]" aria-hidden="true" />
@@ -109,41 +186,27 @@ export function BikeGallery({ imagens, titulo }: BikeGalleryProps) {
       </div>
 
       {total > 1 ? (
-        <div className="flex shrink-0 items-center justify-between gap-4 bg-fundo px-3 py-3">
-          <div className="flex w-full min-w-0 gap-2 overflow-x-auto">
-            {lista.map((img, i) => (
-              <button
-                key={`${img.src}-miniatura-${i}`}
-                type="button"
-                aria-pressed={i === indice}
-                aria-controls="foto-principal"
-                aria-label={`Ver ${altDe(img, i)}`}
-                onClick={() => setAtiva(i)}
-                className={`relative w-12 shrink-0 cursor-pointer overflow-hidden border-b-2 bg-painel-2 transition-[opacity,border-color] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco sm:w-14 lg:w-16 ${
-                  i === indice
-                    ? 'border-marca opacity-100'
-                    : 'border-transparent opacity-50 hover:opacity-85'
-                }`}
-                style={{ aspectRatio: '3 / 4' }}
-              >
-                <img
-                  src={img.src}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className="size-full object-cover object-center"
-                  onError={(event) => {
-                    event.currentTarget.src = PLACEHOLDER_CARD
-                  }}
-                />
-              </button>
-            ))}
+        app ? (
+          <div className="flex w-full min-w-0 shrink-0 gap-2 overflow-x-auto px-4 py-2">
+            {miniaturas}
           </div>
+        ) : (
+          <div
+            className={`flex shrink-0 items-center justify-between gap-4 bg-fundo px-3 py-3 ${
+              preencherAltura
+                ? 'lg:border-t lg:border-borda lg:bg-painel'
+                : 'lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:pb-2'
+            }`}
+          >
+            <div className={`flex w-full min-w-0 overflow-x-auto ${preencherAltura ? 'gap-2' : 'gap-2 lg:gap-3'}`}>
+              {miniaturas}
+            </div>
 
-          <p className="numeros hidden shrink-0 text-sm leading-none text-texto-3 sm:block">
-            {indice + 1} / {total}
-          </p>
-        </div>
+            <p className="numeros hidden shrink-0 text-sm leading-none text-texto-3 sm:block">
+              {indice + 1} / {total}
+            </p>
+          </div>
+        )
       ) : null}
 
       <p className="sr-only" aria-live="polite">

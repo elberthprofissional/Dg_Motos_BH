@@ -1,15 +1,9 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { getSupabase } from '../lib/supabase'
-import { resumirVendas, type ResumoVendas } from '../lib/painel'
+import { resumirVendas } from '../lib/painel'
 import type { Venda, VendaParaSalvar } from '../types'
+import { VendasContexto } from './vendasContexto'
 
 /**
  * Estado das vendas no painel.
@@ -17,22 +11,6 @@ import type { Venda, VendaParaSalvar } from '../types'
  * Carrega uma vez quando o Admin monta; salvar/excluir atualiza a lista
  * em memória. A aba Vendidas e o diálogo da venda leem daqui.
  */
-interface VendasContextoValor {
-  vendas: Venda[]
-  resumo: ResumoVendas
-  carregando: boolean
-  erro: string | null
-  /** Salva (insere ou corrige) e devolve erro para o diálogo mostrar. */
-  salvarVenda: (dados: VendaParaSalvar) => Promise<string | null>
-  excluirVenda: (id: string) => Promise<string | null>
-  /**
-   * Desvincula a venda de uma moto que voltou pro pátio. O registro
-   * fica no histórico — só deixa de apontar para a moto ativa.
-   */
-  desvincularVenda: (motoId: string) => Promise<string | null>
-}
-
-const VendasContexto = createContext<VendasContextoValor | null>(null)
 
 /**
  * Texto quando a edição de `sales` é recusada em silêncio.
@@ -81,20 +59,17 @@ function linhaParaVenda(l: LinhaVenda): Venda {
 }
 
 export function VendasProvider({ children }: { children: ReactNode }) {
-  const [vendas, setVendas] = useState<Venda[]>([])
-  const [carregando, setCarregando] = useState(true)
-  const [erro, setErro] = useState<string | null>(null)
-
   const sb = getSupabase()
+  const [vendas, setVendas] = useState<Venda[]>([])
+  const [carregando, setCarregando] = useState<boolean>(() => Boolean(sb))
+  const [erro, setErro] = useState<string | null>(() =>
+    sb ? null : 'Supabase não configurado neste deploy.',
+  )
 
   useEffect(() => {
-    let vivo = true
-    if (!sb) {
-      setCarregando(false)
-      setErro('Supabase não configurado neste deploy.')
-      return
-    }
+    if (!sb) return
 
+    let vivo = true
     sb.from('sales')
       .select('*')
       .order('vendida_em', { ascending: false })
@@ -191,11 +166,5 @@ export function VendasProvider({ children }: { children: ReactNode }) {
     [vendas, resumo, carregando, erro, salvarVenda, excluirVenda, desvincularVenda],
   )
 
-  return <VendasContexto.Provider value={valor}>{children}</VendasContexto.Provider>
-}
-
-export function useVendas(): VendasContextoValor {
-  const ctx = useContext(VendasContexto)
-  if (!ctx) throw new Error('useVendas deve ser usado dentro de VendasProvider')
-  return ctx
+  return <VendasContexto value={valor}>{children}</VendasContexto>
 }

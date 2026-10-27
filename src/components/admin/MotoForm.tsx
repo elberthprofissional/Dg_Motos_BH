@@ -61,11 +61,17 @@ function CampoPreco({
   valor,
   onChange,
   placeholder,
+  dicaVazia = 'Digite 23.000 ou 23 mil — o campo entende os dois.',
+  previa,
 }: {
   id: string
   valor: number | null
   onChange: (valor: number | null) => void
   placeholder?: string
+  /** Texto de ajuda enquanto o campo está vazio. */
+  dicaVazia?: string
+  /** Como o valor lido aparece; o padrão confirma o preço do site. */
+  previa?: (valor: number) => string
 }) {
   const [texto, setTexto] = useState(() => textoInicial(valor))
   const numero = parseNumeroBR(texto)
@@ -101,12 +107,12 @@ function CampoPreco({
         className={`mt-1.5 text-xs ${invalido ? 'text-red-300' : incompleto ? 'text-alerta' : 'text-steel-500'}`}
       >
         {vazio
-          ? 'Digite 23.000 ou 23 mil — o campo entende os dois.'
+          ? dicaVazia
           : numero == null
             ? 'Não consegui ler esse valor. Use, por exemplo, 23.000,00.'
             : incompleto
-              ? `No site: ${formatPrice(numero)}. Faltou um zero?`
-              : `No site: ${formatPrice(numero)}.`}
+              ? `${previa ? previa(numero) : `No site: ${formatPrice(numero)}.`} Faltou um zero?`
+              : (previa ? previa(numero) : `No site: ${formatPrice(numero)}.`)}
       </p>
     </>
   )
@@ -312,7 +318,6 @@ export function MotoForm({
             type="checkbox"
             checked={form.emPromocao}
             onChange={(e) => set('emPromocao', e.target.checked)}
-            aria-describedby="f-desconto-ajuda"
             className="peer sr-only"
           />
           <span
@@ -341,6 +346,8 @@ export function MotoForm({
                   valor={form.precoAntes}
                   onChange={(valor) => set('precoAntes', valor)}
                   placeholder="Ex.: 24.900"
+                  dicaVazia="O preço sem desconto — só ele ganha o selo de oferta."
+                  previa={(numero) => `De ${formatPrice(numero)}.`}
                 />
               </div>
               <div>
@@ -355,17 +362,17 @@ export function MotoForm({
             </div>
 
             {desconto != null ? (
-              <p id="f-desconto-ajuda" className="mt-3 flex flex-wrap items-center gap-2 text-xs text-steel-400">
+              <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-steel-400">
                 <span className="bg-marca px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
                   −{desconto}%
                 </span>
                 <span>Selo de oferta no card do site, na ficha e na lista do estoque.</span>
               </p>
-            ) : (
-              <p id="f-desconto-ajuda" className="mt-3 text-xs leading-relaxed text-steel-500">
-                Informe um "de" maior que o "por" — abaixo disso o site mostra o preço sem selo.
+            ) : form.precoAntes != null ? (
+              <p className="mt-3 text-xs leading-relaxed text-steel-500">
+                O "de" precisa ser maior que o "por" — abaixo disso o site mostra o preço sem selo.
               </p>
-            )}
+            ) : null}
           </div>
         )}
       </div>

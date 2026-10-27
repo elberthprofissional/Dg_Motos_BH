@@ -14,7 +14,7 @@ interface AreaUploadFotoProps {
    * quando a ação fica ao lado do título.
    */
   variante?: 'bloco' | 'botao'
-  /** Rótulo principal ("Nova publicação", "Upload foto"...). */
+  /** Rótulo principal ("Adicionar foto", "Upload foto"...). */
   rotulo?: string
   /** Classe extra no elemento externo (largura no cabeçalho). */
   className?: string
@@ -132,7 +132,7 @@ export function AreaUploadFoto({
           ) : (
             <ImagePlus className="size-4" aria-hidden="true" />
           )}
-          {enviando ? 'Enviando fotos…' : (rotulo ?? 'Nova publicação')}
+          {enviando ? 'Enviando fotos…' : (rotulo ?? 'Adicionar foto')}
         </button>
         {folha}
       </>

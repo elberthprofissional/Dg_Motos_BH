@@ -7,15 +7,16 @@ import { usePageMeta } from '../hooks/usePageMeta'
 import { useJsonLd } from '../hooks/useJsonLd'
 import { autoDealerSchema } from '../lib/schema'
 import { BikeCard } from '../components/motorcycles/BikeCard'
-import { WhatsAppCTA } from '../components/motorcycles/WhatsAppCTA'
 import { Revelar } from '../components/ui/Revelar'
 import { Marcas } from '../components/home/MarcasProcuradas'
 import { LIMITE_MURAL, SonhosRealizados } from '../components/home/SonhosRealizados'
 import { useEntregasPublicadas } from '../hooks/useEntregasPublicadas'
-import { buildDefaultMessage } from '../lib/format'
-import heroDesktop from '../assets/hero/home-desktop.webp'
-import heroMobile from '../assets/hero/home-mobile.webp'
-import trocaDesktop from '../assets/troca/banner-desktop.webp'
+// Em public/ para a URL ser a mesma do preload em index.html.
+const heroDesktop = '/hero/home-desktop.webp'
+// No celular o hero é uma arte única do dono, com o texto dentro da
+// própria imagem — nada de texto HTML por cima.
+const heroMobile = '/hero/home-mobile-texto.webp'
+import trocaNova from '../assets/troca/troca-nova.webp'
 
 /**
  * Página inicial — a bancada da loja.
@@ -47,18 +48,19 @@ export function Home() {
     [motos],
   )
 
-  // A vitrine mostra o patio inteiro: as motos EM PROMOCAO primeiro
-  // (é a oferta do dia — o selo circular e o "de → por" ficam visíveis),
-  // depois as demais. Sem mais que isso — a página mostra o que existe,
-  // e o estoque completo tem a lista.
+  // A vitrine é comercial: só as 4 primeiras motos do pátio (as EM
+  // PROMOÇÃO vêm primeiro, para o selo e o "de → por" abrirem a
+  // fileira). O resto do estoque fica na página completa, que não
+  // passa por este corte.
   const patio = useMemo(() => {
     const emPromocao = disponiveis.filter((m) => m.emPromocao)
     const foraDaPromo = disponiveis.filter((m) => !m.emPromocao)
-    return [...emPromocao, ...foraDaPromo].slice(0, 10)
+    return [...emPromocao, ...foraDaPromo].slice(0, 4)
   }, [disponiveis])
   return (
     <>
       <section data-hero className="overflow-hidden bg-fundo pt-cabecalho">
+        {/* No celular a seção ocupa o primeiro ecrã inteiro. */}
         <div className="relative isolate flex flex-col overflow-hidden bg-fundo lg:h-[min(42rem,calc(100svh-4.25rem))] lg:min-h-[34rem]">
           <picture className="absolute inset-0 hidden lg:block" aria-hidden="true">
             <source srcSet={heroDesktop} type="image/webp" />
@@ -80,7 +82,26 @@ export function Home() {
             aria-hidden="true"
           />
 
-          <div className="container-site relative z-10 flex flex-1 flex-col pt-5 pb-6 sm:pt-8 sm:pb-8 lg:justify-end lg:py-12 xl:py-14">
+          {/* Celular: hero é só a arte do dono — o texto mora dentro
+              da imagem e nada por cima reprime. A arte é larga (texto à
+              esquerda, moto à direita), então ela aparece inteira, na
+              proporção dela, sem recorte. No desktop, a foto é o palco
+              e o texto HTML fica. */}
+          <div className="relative w-full lg:hidden">
+            <picture className="block w-full">
+              <source srcSet={heroMobile} type="image/webp" />
+              <img
+                src={heroMobile}
+                alt="Motos seminovas em Belo Horizonte"
+                width={1280}
+                height={480}
+                fetchPriority="high"
+                decoding="async"
+                className="h-auto w-full"
+              />
+            </picture>
+          </div>
+          <div className="container-site relative z-10 hidden flex-1 flex-col pt-6 pb-0 sm:pt-8 sm:pb-0 lg:flex lg:justify-end lg:py-12 xl:py-14">
             <div className="hero-texto max-w-[18rem] sm:max-w-[24rem] lg:max-w-[46rem] xl:max-w-[54rem]">
               {/* A cidade e a loja já estão no título e no cabeçalho:
                   a etiqueta acima só empurrava o texto para baixo. */}
@@ -121,22 +142,7 @@ export function Home() {
               </div>
             </div>
 
-            {/* No celular a moto sobe para logo depois do botão: um
-                cartão próprio, sem véu por cima, para a imagem aparecer
-                inteira no primeiro ecrã. No desktop ela é o próprio
-                palco da faixa. */}
-            <div className="relative mt-5 h-60 w-full overflow-hidden rounded-2xl border border-borda bg-painel-2 sm:mt-6 sm:h-64 lg:hidden">
-              <img
-                src={heroMobile}
-                alt=""
-                width={1280}
-                height={428}
-                fetchPriority="high"
-                decoding="async"
-                className="size-full object-cover object-right"
-              />
-            </div>
-
+            {/* No desktop a moto é o próprio palco da faixa. */}
           </div>
         </div>
       </section>
@@ -160,7 +166,7 @@ export function Home() {
           </div>
 
           {patio.length > 0 ? (
-            <div className="mt-6 grid grid-cols-1 gap-6 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
               {patio.map((bike, i) => (
                 <Revelar key={bike.id} atraso={i * 45}>
                   <BikeCard bike={bike} priority={i < 2} />
@@ -185,57 +191,28 @@ export function Home() {
       <SonhosRealizados entregas={entregas} />
 
       {/* ============================================================
-          TROCA — um card escuro com a conversa e a moto
+          TROCA — a arte do dono vale a seção inteira
           ============================================================
-          O bloco inteiro vive na mesma chapa: texto à esquerda, foto à
-          direita com vinheta e brilho vermelho suave. No celular os
-          campos empilham — primeiro a conversa, depois a imagem. */}
-      <section
-        aria-labelledby="troca-titulo"
-        className="bg-fundo py-8 sm:py-10 lg:bg-[#0b0a09] lg:py-20 xl:py-24"
-      >
-        <div className="container-site">
-          <div className="overflow-hidden rounded-2xl border border-borda bg-painel lg:grid lg:grid-cols-12 lg:items-center lg:gap-10 lg:rounded-3xl lg:border-neutral-800 lg:bg-neutral-900/40 lg:p-8 lg:backdrop-blur-md xl:p-12">
-            <div className="px-6 py-8 sm:px-9 sm:py-10 lg:col-span-5 lg:flex lg:flex-col lg:justify-center lg:px-0 lg:py-4">
-              <h2
-                id="troca-titulo"
-                className="cartaz display titulo-troca max-w-[18ch] text-3xl text-balance text-texto sm:text-4xl lg:max-w-none lg:text-[length:clamp(2.9rem,4.7vw,4.75rem)] lg:leading-[0.86]"
-              >
-                Sua próxima moto
-                <br className="hidden lg:block" /> começa com a sua.
-              </h2>
-              <p className="corpo mt-4 max-w-[46ch] text-texto-2 lg:mt-6 lg:max-w-[38ch] lg:text-neutral-300">
-                Avaliamos sua moto usada com transparência para facilitar a realização do seu próximo negócio.
-              </p>
-              <div className="mt-7 lg:mt-9">
-                <WhatsAppCTA
-                  message={buildDefaultMessage()}
-                  label="Avaliar minha moto"
-                  className="h-12 w-full rounded-xl px-6 text-sm font-bold shadow-lg shadow-marca/25 sm:w-auto lg:h-14 lg:px-8 lg:text-base"
-                />
-              </div>
-            </div>
-
-            <div className="relative aspect-[16/9] w-full overflow-hidden border-t border-borda bg-neutral-950 lg:col-span-7 lg:aspect-[4/3] lg:min-h-[26rem] lg:rounded-2xl lg:border-0 xl:min-h-[30rem]">
-              <img
-                src={trocaDesktop}
-                alt=""
-                width={1760}
-                height={648}
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 size-full object-cover object-center lg:object-[68%_50%]"
-              />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 hidden shadow-[inset_0_0_120px_40px_rgba(10,9,8,0.6)] lg:block"
-              />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_68%_50%,rgba(217,31,38,0.18),transparent_60%)] mix-blend-screen lg:block"
-              />
-            </div>
-          </div>
+          Mesmo esquema do hero: o texto mora dentro da imagem
+          ("Sua moto vale aqui / usamos na troca") e nada por cima
+          reprime. A arte é larga, então aparece inteira, na
+          proporção dela, sem recorte. O alt descreve o texto
+          embutido — é o que leitores de tela e o Google leem.
+          Sem card, sem moldura: sangra de ponta a ponta. */}
+      <section aria-label="Troca de motos — avaliação da sua moto usada" className="bg-fundo py-8 sm:py-10 lg:py-14">
+        <div className="relative w-full">
+          <picture className="block w-full">
+            <source srcSet={trocaNova} type="image/webp" />
+            <img
+              src={trocaNova}
+              alt="Sua moto vale aqui, usamos na troca: avaliação justa e transparente"
+              width={1280}
+              height={554}
+              loading="lazy"
+              decoding="async"
+              className="h-auto w-full"
+            />
+          </picture>
         </div>
       </section>
 

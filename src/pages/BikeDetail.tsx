@@ -14,9 +14,10 @@ import {
   precoPareceIncompleto,
   precoRequerConfirmacao,
 } from '../lib/format'
+import { descricaoDe } from '../lib/ficha'
 import { fichaDeReferencia, type GrupoFicha } from '../data/fichasModelo'
-import { SITE } from '../data/site'
 import { BikeGallery } from '../components/motorcycles/BikeGallery'
+import { BikeCard } from '../components/motorcycles/BikeCard'
 import { IconeWhatsapp } from '../components/ui/IconeWhatsapp'
 import { Button } from '../components/ui/Button'
 import { Revelar } from '../components/ui/Revelar'
@@ -41,31 +42,6 @@ function statusLongo(status: MotorcycleStatus): string {
   if (status === 'disponivel') return 'Disponível no pátio'
   if (status === 'vendida') return 'Vendida'
   return 'Indisponível no momento'
-}
-
-/**
- * Texto de apoio quando a unidade não tem descrição nem ficha de linha.
- * Só afirma o que está cadastrado — nada sobre estado, revisão ou dono.
- */
-function textoDeApoio(bike: Motorcycle): string {
-  const km =
-    bike.quilometragem != null
-      ? ` O odômetro marca ${formatKm(bike.quilometragem)}.`
-      : ''
-  const cilindrada = bike.cilindrada ? `, ${bike.cilindrada} cc` : ''
-  return `${bikeTitle(bike)} ${bike.ano}${cilindrada}, cadastrada no estoque da DG Motos em Belo Horizonte.${km} Fale com a loja para conferir o estado, a documentação e as condições de pagamento.`
-}
-
-function descricaoDe(bike: Motorcycle): string[] {
-  const daLoja = bike.descricao.trim()
-  if (daLoja) {
-    return daLoja
-      .split(/\n{2,}/)
-      .map((paragrafo) => paragrafo.trim())
-      .filter(Boolean)
-  }
-
-  return fichaDeReferencia(bike)?.descricao ?? [textoDeApoio(bike)]
 }
 
 function metaDescricaoDe(bike: Motorcycle): string {
@@ -146,22 +122,19 @@ export function BikeDetail() {
   const usandoReferencia = !descricaoDaLoja && referencia != null
   const paragrafos = descricao
   const destaques = referencia?.destaques ?? []
-  const fotoContato = bike.imagens[bike.imagens.length - 1] ?? bike.imagens[0]
 
   const precoIncompleto = precoPareceIncompleto(bike.preco)
   const precoParaConfirmar = precoRequerConfirmacao(bike.preco)
   const desconto = precoEmConferencia(bike.preco) ? null : descontoPercentual(bike)
   const valor = precoIncompleto ? 'Preço sob consulta' : formatPrice(bike.preco)
 
-  const lead = referencia
-    ? referencia.resumo
-    : `${bike.categoria} ${bike.ano}${
-        bike.quilometragem != null ? ` com ${formatKm(bike.quilometragem)}` : ''
-      } no pátio da DG Motos, em Belo Horizonte.`
-
   const especificacoesLoja = (bike.especificacoes ?? []).filter(
     (spec) => spec?.label?.trim() && spec?.value?.trim(),
   )
+
+  // Sem ficha da linha e sem nada escrito pela loja, o bloco inteiro
+  // sai da página: o que sobra é o resumo que o herói já mostra.
+  const temFicha = referencia != null || especificacoesLoja.length > 0
 
   const itensUnidade: MotorcycleSpec[] = [
     { label: 'Ano', value: String(bike.ano) },
@@ -209,132 +182,243 @@ export function BikeDetail() {
     .filter((m) => m.id !== bike.id && m.status === 'disponivel')
     .slice(0, 6)
 
+  const semDestaques = destaques.length === 0
+
+  const tituloSobre = (
+    <h2
+      id="sobre-titulo"
+      className="font-display text-2xl leading-tight font-semibold tracking-[-0.02em] text-texto"
+    >
+      {usandoReferencia && referencia
+        ? `Sobre a ${referencia.modelo}`
+        : 'Sobre esta moto'}
+    </h2>
+  )
+
+  const textoSobre = (
+    <div
+      className={`mt-6 max-w-[36rem] space-y-5 lg:max-w-[62ch] ${semDestaques ? 'lg:mt-1' : ''}`}
+    >
+      {paragrafos.map((paragrafo, indice) => (
+        <p
+          key={`${indice}-${paragrafo.slice(0, 24)}`}
+          className={`text-[1.0625rem] leading-[1.7] text-texto-2 ${
+            indice === 0
+              ? 'first-letter:float-left first-letter:mt-1 first-letter:mr-3 first-letter:font-display first-letter:text-[3.5rem] first-letter:leading-[0.75] first-letter:font-bold first-letter:text-marca-texto lg:first-letter:float-none lg:first-letter:mt-0 lg:first-letter:mr-0 lg:first-letter:font-sans lg:first-letter:text-[1.0625rem] lg:first-letter:leading-[1.7] lg:first-letter:font-normal lg:first-letter:text-texto-2'
+              : ''
+          }`}
+        >
+          {paragrafo}
+        </p>
+      ))}
+    </div>
+  )
+
+  const notaSobre =
+    usandoReferencia && referencia ? (
+      <p className="mt-6 text-sm leading-relaxed text-texto-3">
+        Texto e especificações da linha {referencia.modelo}. O estado desta
+        unidade é conferido com a loja.
+      </p>
+    ) : null
+
   return (
-    <div className="bg-fundo pt-cabecalho">
+    <div className="bg-fundo pt-cabecalho pb-24 sm:pb-0">
+      {/* ============================================================
+          VITRINE DE APP — celular
+
+          A foto abre a página, seguida das miniaturas e do título; as
+          especificações viram cartões e a descrição fecha o bloco. O
+          preço e o WhatsApp vivem na barra fixa do rodapé.
+          ============================================================ */}
+      <div className="block pb-6 sm:hidden">
+        <div className="relative">
+          <BikeGallery
+            key={`${bike.id}-app`}
+            variante="app"
+            imagens={bike.imagens}
+            titulo={`${titulo} ${bike.ano}`}
+          />
+          <Link
+            to="/estoque"
+            aria-label="Voltar ao estoque"
+            title="Voltar ao estoque"
+            className="absolute top-3 left-7 z-10 grid size-10 place-items-center rounded-full bg-neutral-950/70 text-white backdrop-blur-md transition-colors hover:bg-marca focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco"
+          >
+            <ArrowLeft className="size-5" aria-hidden="true" />
+          </Link>
+        </div>
+
+        <h1 className="mt-3 px-4 text-2xl font-black tracking-tight text-white uppercase">
+          {titulo}
+        </h1>
+
+        <dl className="mt-4 grid grid-cols-2 gap-2 px-4">
+          {[
+            ['Ano', String(bike.ano)],
+            ['Quilometragem', formatKm(bike.quilometragem)],
+            ['Categoria', bike.categoria],
+            ['Cilindrada', bike.cilindrada ? `${bike.cilindrada} cc` : 'A confirmar'],
+          ].map(([rotulo, valorItem]) => (
+            <div
+              key={rotulo}
+              className="rounded-xl border border-neutral-800 bg-neutral-900/80 p-3"
+            >
+              <dt className="text-xs leading-none font-medium text-neutral-400">{rotulo}</dt>
+              <dd className="numeros mt-1.5 text-sm leading-none font-bold text-white">
+                {valorItem}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        <section
+          aria-labelledby="sobre-mobile-titulo"
+          className="mx-4 mt-6 rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4"
+        >
+          <h2 id="sobre-mobile-titulo" className="text-base font-bold text-white">
+            {usandoReferencia && referencia
+              ? `Sobre a ${referencia.modelo}`
+              : 'Sobre esta moto'}
+          </h2>
+          <div className="mt-2 space-y-3">
+            {paragrafos.map((paragrafo, indice) => (
+              <p
+                key={`mobile-${indice}-${paragrafo.slice(0, 24)}`}
+                className="text-sm leading-relaxed text-neutral-300"
+              >
+                {paragrafo}
+              </p>
+            ))}
+          </div>
+        </section>
+      </div>
+
       {/* ============================================================
           PALCO PARTIDO
 
-          No desktop a foto fica presa ao lado da leitura do começo ao
-          fim do bloco — o pátio da DG como cenário fixo da ficha. No
-          celular a mesma galeria entra depois do preço e libera a
-          rolagem. Um só DOM: o CSS decide onde cada peça cai.
+          No desktop a foto vira a peça grande à esquerda e o painel de
+          compra acompanha a rolagem à direita, os dois na mesma bancada.
           ============================================================ */}
-      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1.06fr)_minmax(0,0.94fr)]">
-        <header className="px-[var(--margem)] pt-5 pb-6 sm:pt-8 sm:pb-10 lg:min-h-[calc(100svh-4.25rem)] lg:py-14 lg:pr-12 lg:pl-[max(2rem,calc((100vw-1760px)/2+2rem))] xl:pr-16">
-          <div className="max-w-[42rem]">
-            <div>
-              <Link
-                to="/estoque"
-                aria-label="Voltar ao estoque"
-                title="Voltar ao estoque"
-                className="grid size-11 -ml-2 place-items-center text-texto-2 transition-colors hover:text-texto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco"
-              >
-                <ArrowLeft className="size-5" aria-hidden="true" />
-              </Link>
-            </div>
-
-            <h1 className="mt-8 max-w-full font-display text-[clamp(2.75rem,5vw,4.75rem)] leading-[0.94] font-bold tracking-[-0.045em] break-words text-balance text-texto sm:mt-10">
-              {titulo}
-            </h1>
-
-            <p className="mt-4 max-w-[38ch] text-[1.0625rem] leading-[1.6] text-texto-2">
-              {lead}
-            </p>
-
-            <div className="mt-7">
-              {desconto != null ? (
-                <p className="numeros mb-1.5 text-sm text-texto-3">
-                  de {formatPrice(bike.precoAntes ?? bike.preco)}
-                </p>
-              ) : null}
-
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-                <p
-                  className={`font-display text-[clamp(2rem,3vw,2.5rem)] leading-none font-bold tracking-[-0.03em] ${
-                    precoIncompleto ? 'text-texto' : 'numeros text-marca-viva'
-                  }`}
+      <div className="hidden flex-col sm:flex lg:mx-auto lg:grid lg:w-full lg:max-w-7xl lg:grid-cols-12 lg:items-start lg:gap-10 lg:px-6 lg:py-8">
+        <div className="contents lg:sticky lg:top-24 lg:col-span-5 lg:flex lg:min-w-0 lg:flex-col lg:self-start">
+          <header className="order-1 px-4 pt-5 sm:pt-8 lg:order-none lg:px-0 lg:pt-0">
+            <div className="max-w-[42rem]">
+              <div>
+                <Link
+                  to="/estoque"
+                  aria-label="Voltar ao estoque"
+                  title="Voltar ao estoque"
+                  className="grid size-11 -ml-2 place-items-center text-texto-2 transition-colors hover:text-texto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco"
                 >
-                  {valor}
-                </p>
-
-                {desconto != null ? (
-                  <span className="numeros bg-marca px-2.5 py-1 font-sans text-sm font-bold text-white">
-                    −{desconto}%
-                  </span>
-                ) : null}
-
-                <p
-                  className={`inline-flex h-8 items-center px-3 text-sm font-semibold ${
-                    disponivel ? 'bg-marca text-white' : 'bg-painel-3 text-texto-2'
-                  }`}
-                >
-                  {rotuloStatus(bike.status)}
-                </p>
+                  <ArrowLeft className="size-5" aria-hidden="true" />
+                </Link>
               </div>
 
-              {precoIncompleto ? (
-                <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-texto-2">
-                  O valor desta unidade está em conferência na loja. Fale com a
-                  equipe para confirmar.
-                </p>
-              ) : precoParaConfirmar ? (
-                <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-texto-2">
-                  Valor cadastrado. Confirme o preço com a loja antes de negociar.
-                </p>
-              ) : null}
-            </div>
+              <h1 className="mt-8 max-w-full font-display text-[clamp(2.75rem,5vw,4.75rem)] leading-[0.94] font-bold tracking-[-0.045em] break-words text-balance text-texto sm:mt-10 lg:mt-6 lg:text-4xl lg:leading-[0.98] lg:font-extrabold lg:tracking-[-0.02em] lg:uppercase xl:text-5xl">
+                {titulo}
+              </h1>
 
-            <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
-              {[
-                ['Ano', String(bike.ano)],
-                ['Quilometragem', formatKm(bike.quilometragem)],
-                ['Categoria', bike.categoria],
-                ['Cilindrada', bike.cilindrada ? `${bike.cilindrada} cc` : 'A confirmar'],
-              ].map(([rotulo, valorItem]) => (
-                <div key={rotulo}>
-                  <dt className="text-sm leading-none text-texto-3">{rotulo}</dt>
-                  <dd className="numeros mt-2 text-[1.0625rem] leading-none font-semibold text-texto">
-                    {valorItem}
-                  </dd>
+              <div className="mt-7 lg:mt-5 lg:border-t lg:border-borda lg:pt-5">
+                {desconto != null ? (
+                  <p className="numeros mb-1.5 text-sm text-texto-3">
+                    de {formatPrice(bike.precoAntes ?? bike.preco)}
+                  </p>
+                ) : null}
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                  <p
+                    className={`font-display text-[clamp(2rem,3vw,2.5rem)] leading-none font-bold tracking-[-0.03em] lg:text-[3rem] lg:font-black xl:text-[3.25rem] ${
+                      precoIncompleto ? 'text-texto' : 'numeros text-marca-viva'
+                    }`}
+                  >
+                    {valor}
+                  </p>
+
+                  {desconto != null ? (
+                    <span className="numeros bg-marca px-2.5 py-1 font-sans text-sm font-bold text-white">
+                      −{desconto}%
+                    </span>
+                  ) : null}
+
+                  <p
+                    className={`inline-flex h-8 items-center px-3 text-sm font-semibold lg:hidden ${
+                      disponivel ? 'bg-marca text-white' : 'bg-painel-3 text-texto-2'
+                    }`}
+                  >
+                    {rotuloStatus(bike.status)}
+                  </p>
                 </div>
-              ))}
-            </dl>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              {waHref ? (
-                <a
-                  href={waHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm"
-                >
-                  <IconeWhatsapp className="size-[18px] shrink-0" />
-                  Falar no WhatsApp
-                </a>
-              ) : (
-                <Link
-                  to="/contato"
-                  className="btn btn-primary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm"
-                >
-                  <IconeWhatsapp className="size-[18px] shrink-0" />
-                  Falar com a loja
-                </Link>
-              )}
+                {precoIncompleto ? (
+                  <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-texto-2">
+                    O valor desta unidade está em conferência na loja. Fale com a
+                    equipe para confirmar.
+                  </p>
+                ) : precoParaConfirmar ? (
+                  <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-texto-2">
+                    Valor cadastrado. Confirme o preço com a loja antes de negociar.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </header>
 
+          <dl className="order-4 mt-8 mb-6 grid grid-cols-2 gap-x-6 gap-y-5 px-4 sm:mb-8 sm:grid-cols-4 lg:order-none lg:mt-6 lg:mb-0 lg:grid-cols-2 lg:gap-3 lg:rounded-xl lg:border lg:border-borda lg:bg-painel/60 lg:p-4 lg:backdrop-blur-md">
+            {[
+              ['Ano', String(bike.ano)],
+              ['Quilometragem', formatKm(bike.quilometragem)],
+              ['Categoria', bike.categoria],
+              ['Cilindrada', bike.cilindrada ? `${bike.cilindrada} cc` : 'A confirmar'],
+            ].map(([rotulo, valorItem]) => (
+              <div
+                key={rotulo}
+                className="lg:min-w-0 lg:rounded-lg lg:border lg:border-borda/70 lg:bg-fundo/40 lg:px-3.5 lg:py-3"
+              >
+                <dt className="text-sm leading-none text-texto-3">{rotulo}</dt>
+                <dd className="numeros mt-2 text-[1.0625rem] leading-none font-semibold text-texto">
+                  {valorItem}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="order-2 mt-5 flex flex-col gap-3 px-4 sm:flex-row lg:order-none lg:mt-6 lg:flex-col lg:gap-2.5 lg:px-0">
+            {waHref ? (
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm lg:h-auto lg:w-full lg:rounded-xl lg:bg-emerald-600 lg:py-4 lg:text-lg lg:font-bold lg:text-white lg:shadow-lg lg:shadow-emerald-950/40 lg:hover:bg-emerald-500 lg:hover:text-white"
+              >
+                <IconeWhatsapp className="size-[18px] shrink-0" />
+                Falar no WhatsApp
+              </a>
+            ) : (
+              <Link
+                to="/contato"
+                className="btn btn-primary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm lg:h-auto lg:w-full lg:rounded-xl lg:bg-emerald-600 lg:py-4 lg:text-lg lg:font-bold lg:text-white lg:shadow-lg lg:shadow-emerald-950/40 lg:hover:bg-emerald-500 lg:hover:text-white"
+              >
+                <IconeWhatsapp className="size-[18px] shrink-0" />
+                Falar com a loja
+              </Link>
+            )}
+
+            {temFicha ? (
               <a
                 href="#ficha"
-                className="btn btn-secondary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm"
+                className="btn btn-secondary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm lg:h-12 lg:w-full lg:rounded-xl lg:border-borda lg:text-texto-2"
               >
                 Ver ficha técnica
                 <ArrowDown className="size-4" aria-hidden="true" />
               </a>
-            </div>
+            ) : null}
           </div>
-        </header>
+        </div>
 
         <aside
           aria-label={`Fotos de ${titulo} ${bike.ano}`}
-          className="order-first lg:order-none lg:sticky lg:top-[4.25rem] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:h-[calc(100svh-4.25rem)] lg:self-start lg:overflow-hidden"
+          className="order-3 mt-8 px-4 lg:order-first lg:col-span-7 lg:mt-0 lg:w-full lg:px-0"
         >
           <BikeGallery
             key={bike.id}
@@ -342,79 +426,68 @@ export function BikeDetail() {
             titulo={`${titulo} ${bike.ano}`}
           />
         </aside>
+      </div>
 
-        <div className="px-[var(--margem)] pb-16 lg:pb-24 lg:pr-12 lg:pl-[max(2rem,calc((100vw-1760px)/2+2rem))] xl:pr-16">
-          <div className="max-w-[42rem]">
-            {destaques.length > 0 ? (
-              <Revelar
-                as="section"
-                aria-labelledby="destaques-titulo"
-                className="pt-4 sm:pt-6"
-              >
-                <h2
-                  id="destaques-titulo"
-                  className="font-display text-2xl leading-tight font-semibold tracking-[-0.02em] text-texto"
-                >
-                  A linha em três pontos
-                </h2>
-
-                <dl className="mt-8 space-y-8">
-                  {destaques.map((destaque) => (
-                    <div key={destaque.rotulo}>
-                      <dt>
-                        <span className="block font-display text-[1.75rem] leading-none font-semibold tracking-[-0.025em] text-texto">
-                          {destaque.valor}
-                        </span>
-                        <span className="mt-2 block text-sm font-medium text-texto">
-                          {destaque.rotulo}
-                        </span>
-                      </dt>
-                      <dd className="mt-2 text-[1.0625rem] leading-relaxed text-texto-2">
-                        {destaque.texto}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </Revelar>
-            ) : null}
-
+      <div
+        className={`hidden px-4 sm:block lg:mx-auto lg:w-full lg:max-w-7xl lg:px-6 lg:pb-0 ${
+          temFicha ? 'pb-16' : ''
+        }`}
+      >
+        <div className="max-w-[42rem] lg:mt-12 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-x-12 lg:rounded-2xl lg:border lg:border-borda lg:bg-painel/40 lg:p-8 xl:gap-x-16 xl:p-10">
+          {destaques.length > 0 ? (
             <Revelar
               as="section"
-              aria-labelledby="sobre-titulo"
-              className="mt-16"
+              aria-labelledby="destaques-titulo"
+              className="pt-4 sm:pt-6 lg:border-t lg:border-borda lg:pt-8"
             >
               <h2
-                id="sobre-titulo"
+                id="destaques-titulo"
                 className="font-display text-2xl leading-tight font-semibold tracking-[-0.02em] text-texto"
               >
-                {usandoReferencia && referencia
-                  ? `Sobre a ${referencia.modelo}`
-                  : 'Sobre esta moto'}
+                A linha em três pontos
               </h2>
 
-              <div className="mt-6 max-w-[36rem] space-y-5">
-                {paragrafos.map((paragrafo, indice) => (
-                  <p
-                    key={`${indice}-${paragrafo.slice(0, 24)}`}
-                    className={`text-[1.0625rem] leading-[1.7] text-texto-2 ${
-                      indice === 0
-                        ? 'first-letter:float-left first-letter:mt-1 first-letter:mr-3 first-letter:font-display first-letter:text-[3.5rem] first-letter:leading-[0.75] first-letter:font-bold first-letter:text-marca-texto'
-                        : ''
-                    }`}
-                  >
-                    {paragrafo}
-                  </p>
+              <dl className="mt-8 space-y-8 lg:mt-6 lg:space-y-6">
+                {destaques.map((destaque) => (
+                  <div key={destaque.rotulo}>
+                    <dt>
+                      <span className="block font-display text-[1.75rem] leading-none font-semibold tracking-[-0.025em] text-texto">
+                        {destaque.valor}
+                      </span>
+                      <span className="mt-2 block text-sm font-medium text-texto">
+                        {destaque.rotulo}
+                      </span>
+                    </dt>
+                    <dd className="mt-2 text-[1.0625rem] leading-relaxed text-texto-2">
+                      {destaque.texto}
+                    </dd>
+                  </div>
                 ))}
-              </div>
-
-              {usandoReferencia && referencia ? (
-                <p className="mt-6 text-sm leading-relaxed text-texto-3">
-                  Texto e especificações da linha {referencia.modelo}. O estado
-                  desta unidade é conferido com a loja.
-                </p>
-              ) : null}
+              </dl>
             </Revelar>
-          </div>
+          ) : null}
+
+          <Revelar
+            as="section"
+            aria-labelledby="sobre-titulo"
+            className={`mt-16 lg:mt-0 lg:border-t lg:border-borda lg:pt-8 ${
+              semDestaques ? 'lg:col-span-2' : ''
+            }`}
+          >
+            {semDestaques ? (
+              <div className="lg:grid lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-x-12 xl:gap-x-16">
+                {tituloSobre}
+                {textoSobre}
+              </div>
+            ) : (
+              <>
+                {tituloSobre}
+                {textoSobre}
+              </>
+            )}
+
+            {notaSobre}
+          </Revelar>
         </div>
       </div>
 
@@ -425,186 +498,98 @@ export function BikeDetail() {
           impressa apoiada na bancada. Primeiro o que é desta unidade;
           depois, quando existe, a referência pública da linha.
           ============================================================ */}
-      <section
-        id="ficha"
-        aria-labelledby="ficha-titulo"
-        className="scroll-mt-20 border-t-2 border-marca bg-[#f1f2f3] text-[#161513] sm:scroll-mt-[4.25rem]"
-      >
-        <div className="container-site py-16 lg:py-24">
-          <Revelar>
-            <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-              <h2
-                id="ficha-titulo"
-                className="font-display text-[3rem] leading-none font-bold tracking-[-0.04em]"
-              >
-                Ficha técnica
-              </h2>
-              <p className="numeros pb-1 text-sm font-semibold text-[#5d5952]">
-                {titulo} · {bike.ano}
-              </p>
-            </div>
-            <p className="mt-5 max-w-[54ch] text-[1.0625rem] leading-relaxed text-[#4f4b44]">
-              {introFicha}
-            </p>
-          </Revelar>
-
-          <div
-            className={`mt-12 grid gap-x-10 gap-y-12 sm:grid-cols-2 ${gradeGrupos}`}
-          >
-            {grupos.map((grupo, indiceGrupo) => {
-              const itens = grupo.itens.filter(
-                (item) => item?.label?.trim() && item?.value?.trim(),
-              )
-              if (itens.length === 0) return null
-
-              return (
-                <Revelar key={grupo.titulo} atraso={indiceGrupo * 70}>
-                  <div className="border-t-2 border-[#161513]/80 pt-4">
-                    <h3 className="font-display text-[1.0625rem] font-bold text-[#161513]">
-                      {grupo.titulo}
-                    </h3>
-
-                    <dl className="mt-4">
-                      {itens.map((item) => (
-                        <div key={item.label} className="py-2.5">
-                          <dt className="text-sm leading-snug text-[#6a655c]">
-                            {item.label}
-                          </dt>
-                          <dd className="numeros mt-1 text-[1.0625rem] leading-snug font-medium text-[#161513]">
-                            {item.value}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
-                </Revelar>
-              )
-            })}
-          </div>
-
-          <Revelar>
-            <p className="mt-14 max-w-[80ch] border-t-2 border-[#9e211b]/40 pt-5 text-sm leading-relaxed text-[#5d5952]">
-              {notaFicha}
-            </p>
-          </Revelar>
-        </div>
-      </section>
-
-      {/* ============================================================
-          CONTATO — a foto pequena é a única coisa clara no breu.
-          ============================================================ */}
-      <section aria-labelledby="contato-titulo" className="bg-painel">
-        <div className="container-site py-16 lg:py-24">
-          <div className="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-8">
-            <Revelar className="lg:col-span-6">
-              <h2 id="contato-titulo" className="sr-only">
-                Fale com a loja
-              </h2>
-              <p className="max-w-[17ch] font-display text-[clamp(2.25rem,3.4vw,3.25rem)] leading-[1.02] font-bold tracking-[-0.035em] text-texto">
-                Tire dúvidas e veja a moto de perto.
-              </p>
-              <p className="mt-5 max-w-[42ch] text-[1.0625rem] leading-relaxed text-texto-2">
-                Atendimento direto com a loja. Peça mais fotos e confirme o preço
-                desta unidade com a equipe.
-              </p>
-            </Revelar>
-
-            {fotoContato ? (
-              <Revelar className="lg:col-span-2" atraso={80}>
-                <img
-                  src={fotoContato.src}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  width={1200}
-                  height={1600}
-                  className="aspect-[16/9] w-full object-cover object-center lg:aspect-square"
-                  onError={(event) => {
-                    event.currentTarget.style.display = 'none'
-                  }}
-                />
-              </Revelar>
-            ) : null}
-
-            <Revelar className="lg:col-span-4" atraso={140}>
-              <div className="flex flex-col items-start gap-5">
-                {waHref ? (
-                  <a
-                    href={waHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-primary h-12 w-full gap-2.5 px-5 text-sm"
-                  >
-                    <IconeWhatsapp className="size-[18px] shrink-0" />
-                    Falar no WhatsApp
-                  </a>
-                ) : (
-                  <Link
-                    to="/contato"
-                    className="btn btn-primary h-12 w-full gap-2.5 px-5 text-sm"
-                  >
-                    <IconeWhatsapp className="size-[18px] shrink-0" />
-                    Falar com a loja
-                  </Link>
-                )}
-
-                <ul className="space-y-3">
-                  <li>
-                    <Link
-                      to="/estoque"
-                      className="inline-flex items-center gap-1.5 text-[1.0625rem] font-semibold text-texto underline decoration-borda-forte underline-offset-4 transition-colors hover:decoration-texto"
-                    >
-                      Ver outras motos do estoque
-                      <ArrowUpRight className="size-4" aria-hidden="true" />
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/contato"
-                      className="inline-flex items-center gap-1.5 text-[1.0625rem] font-semibold text-texto underline decoration-borda-forte underline-offset-4 transition-colors hover:decoration-texto"
-                    >
-                      Endereço e atendimento
-                      <ArrowUpRight className="size-4" aria-hidden="true" />
-                    </Link>
-                  </li>
-                </ul>
-
-                <p className="numeros text-sm text-texto-3">
-                  {SITE.endereco.bairro} · {SITE.cidade}, {SITE.estado}
+      {temFicha ? (
+        <section
+          id="ficha"
+          aria-labelledby="ficha-titulo"
+          className="scroll-mt-20 border-t-2 border-marca bg-[#f1f2f3] text-[#161513] sm:scroll-mt-[4.25rem] lg:mt-12"
+        >
+          <div className="container-site px-4 py-16 lg:max-w-7xl lg:px-6 lg:py-24">
+            <Revelar>
+              <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+                <h2
+                  id="ficha-titulo"
+                  className="font-display text-[3rem] leading-none font-bold tracking-[-0.04em]"
+                >
+                  Ficha técnica
+                </h2>
+                <p className="numeros pb-1 text-sm font-semibold text-[#5d5952]">
+                  {titulo} · {bike.ano}
                 </p>
               </div>
+              <p className="mt-5 max-w-[54ch] text-[1.0625rem] leading-relaxed text-[#4f4b44]">
+                {introFicha}
+              </p>
+            </Revelar>
+
+            <div
+              className={`mt-12 grid gap-x-10 gap-y-12 sm:grid-cols-2 ${gradeGrupos}`}
+            >
+              {grupos.map((grupo, indiceGrupo) => {
+                const itens = grupo.itens.filter(
+                  (item) => item?.label?.trim() && item?.value?.trim(),
+                )
+                if (itens.length === 0) return null
+
+                return (
+                  <Revelar key={grupo.titulo} atraso={indiceGrupo * 70}>
+                    <div className="border-t-2 border-[#161513]/80 pt-4">
+                      <h3 className="font-display text-[1.0625rem] font-bold text-[#161513]">
+                        {grupo.titulo}
+                      </h3>
+
+                      <dl className="mt-4">
+                        {itens.map((item) => (
+                          <div key={item.label} className="py-2.5">
+                            <dt className="text-sm leading-snug text-[#6a655c]">
+                              {item.label}
+                            </dt>
+                            <dd className="numeros mt-1 text-[1.0625rem] leading-snug font-medium text-[#161513]">
+                              {item.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  </Revelar>
+                )
+              })}
+            </div>
+
+            <Revelar>
+              <p className="mt-14 max-w-[80ch] border-t-2 border-[#9e211b]/40 pt-5 text-sm leading-relaxed text-[#5d5952]">
+                {notaFicha}
+              </p>
             </Revelar>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {/* ============================================================
-          OUTRAS MOTOS — lista de duas pontas, sem cartão: nome à
-          esquerda, preço à direita, do jeito de um índice de pátio.
+          OUTRAS MOTOS — no desktop, a mesma vitrine do catálogo em
+          quatro colunas; no celular, a lista compacta de sempre.
           ============================================================ */}
       {recomendadas.length > 0 ? (
-        <section aria-labelledby="outras-titulo" className="bg-fundo">
-          <div className="container-site py-16 lg:py-24">
-            <div className="grid gap-10 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:gap-16">
-              <div>
-                <div className="flex items-end justify-between gap-6 lg:block">
-                  <h2
-                    id="outras-titulo"
-                    className="max-w-[12ch] font-display text-[2rem] leading-[1.02] font-bold tracking-[-0.035em] text-texto lg:text-[2.5rem]"
-                  >
-                    Outras motos no pátio
-                  </h2>
-                  <Link
-                    to="/estoque"
-                    className="link-acao inline-flex shrink-0 items-center gap-1.5 lg:mt-7"
-                  >
-                    Ver estoque
-                    <ArrowUpRight className="size-4" aria-hidden="true" />
-                  </Link>
-                </div>
+        <section aria-labelledby="outras-titulo" className="mt-12 mb-16 bg-fundo">
+          <div className="container-site px-4 lg:max-w-7xl lg:px-6">
+            <div className="grid gap-10 lg:block">
+              <div className="flex items-end justify-between gap-6">
+                <h2
+                  id="outras-titulo"
+                  className="max-w-[12ch] font-display text-[2rem] leading-[1.02] font-bold tracking-[-0.035em] text-texto lg:text-[2.5rem]"
+                >
+                  Outras motos no pátio
+                </h2>
+                <Link
+                  to="/estoque"
+                  className="link-acao inline-flex shrink-0 items-center gap-1.5"
+                >
+                  Ver estoque
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
+                </Link>
               </div>
 
-              <ul className="space-y-1">
+              <ul className="space-y-1 lg:hidden">
                 {recomendadas.map((outra, indice) => {
                   const capa =
                     outra.imagens.find((imagem) => /vista lateral/i.test(imagem.alt)) ??
@@ -650,10 +635,55 @@ export function BikeDetail() {
                   )
                 })}
               </ul>
+
+              <div className="mt-8 hidden lg:grid lg:grid-cols-4 lg:gap-6">
+                {recomendadas.slice(0, 4).map((outra, indice) => (
+                  <Revelar key={outra.id} atraso={indice * 60} className="h-full">
+                    <BikeCard bike={outra} />
+                  </Revelar>
+                ))}
+              </div>
             </div>
           </div>
         </section>
       ) : null}
+
+      {/* ============================================================
+          BARRA DE CONVERSÃO — celular
+
+          Preço e WhatsApp sempre à mão, sem empurrar o conteúdo: a
+          página ganha respiro inferior (pb-24) para a última vitrine
+          não ficar escondida atrás da barra.
+          ============================================================ */}
+      <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-neutral-800 bg-neutral-950/95 px-4 py-3 backdrop-blur-md sm:hidden">
+        <p
+          className={`numeros min-w-0 truncate font-extrabold text-red-500 ${
+            precoIncompleto ? 'text-base' : 'text-xl'
+          }`}
+        >
+          {valor}
+        </p>
+
+        {waHref ? (
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-colors active:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco"
+          >
+            <IconeWhatsapp className="size-[18px] shrink-0" />
+            Falar no WhatsApp
+          </a>
+        ) : (
+          <Link
+            to="/contato"
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-colors active:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco"
+          >
+            <IconeWhatsapp className="size-[18px] shrink-0" />
+            Falar com a loja
+          </Link>
+        )}
+      </div>
     </div>
   )
 }

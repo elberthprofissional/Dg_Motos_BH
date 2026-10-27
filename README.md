@@ -56,13 +56,15 @@ src/
   lib/          funções puras: catálogo, filtros, formatação, schema.org,
                 config da loja, marcas, maps, supabase
   hooks/        useCatalogo, useAuth, useWhatsappLink, usePageMeta,
-                useJsonLd, useScroll, useInstalarPwa, contexto de config
+                useJsonLd, useScroll, useInstalarPwa, SiteConfigProvider,
+                VendasProvider e os contextos consumidos pela vitrine/painel
   components/
     layout/     Header, Footer, RootLayout
     home/       SonhosRealizados, GaleriaEntregasDesktop, MarcasProcuradas
     entregas/   CartaoEntrega, EsteiraFotos
     admin/      MotoForm, PhotoUploader, EstoqueTab, ConfiguracoesTab,
-                LixeiraSecao, InstalarApp, useInstalarApp, SeletorMarca
+                LixeiraSecao, InstalarApp, useInstalarApp, SeletorMarca,
+                configuracoes/ (campos, prévia e pé da mesa)
     motorcycles/ BikeCard, BikeFilters, BikeGallery, LinhaEstoque,
                 WhatsAppCTA
     ui/         Button, Badge, SectionHeading, EstadoVazio, Revelar,
@@ -77,6 +79,7 @@ public/
   marcas/                        logos dos fabricantes
   motos/                         fotos WebP do catálogo
 scripts/
+  lib/cdp.mjs             ponte CDP compartilhada pelas auditorias
   prerender.mjs           HTML estático das fichas + sitemap + robots
   auditar-navegador.mjs   auditoria de DOM/responsivo via CDP
   convert-images.mjs      fotos de img/ para WebP em public/
@@ -100,8 +103,29 @@ scripts/
   "Tenho interesse"; a página de estoque ganhou filtros em rascunho com
   "Aplicar" e "Limpar".
 
-Verificação desta rodada: `lint`, `typecheck`, 79 testes, `build` com
-prerender de 4 fichas e auditoria CDP sem transbordo, contraste baixo ou
+Verificação desta rodada: `lint`, `typecheck`, 109 testes, `build` com
+prerender de 9 fichas e auditoria CDP sem transbordo, contraste baixo ou
+imagem quebrada.
+
+## Rodada de manutenção (26/10/2026)
+
+- **`strict: true`** nos dois `tsconfig` — o app inteiro passa a contar
+  com `strictNullChecks` e afins, sem exceções locais.
+- **Configuração da loja virou provider** (`src/hooks/SiteConfigProvider.tsx`).
+  Antes, cada `useSiteConfig` (cabeçalho, rodapé, home, contato e o hook
+  de WhatsApp) disparava a própria consulta a `site_settings`; agora o
+  layout lê uma vez e distribui por contexto.
+- **Preload do LCP corrigido** — `index.html` injeta o preload de
+  `home-desktop.webp`/`home-mobile.webp` só quando a rota é `/`, então
+  painel, estoque e fichas não baixam uma imagem que não usam.
+- **`ConfiguracoesTab` dividido** em `src/components/admin/configuracoes/`
+  (regras puras, campos, prévia e pé). O orquestrador ficou com
+  o estado, a gravação e os arranjos desktop/celular.
+- **Lint sem avisos** — o tratador de mensagens CDP dos scripts de
+  auditoria foi extraído para `scripts/lib/cdp.mjs`.
+
+Verificação: `lint` sem avisos, `typecheck`, **109 testes** e `build` com
+prerender das fichas + auditoria CDP sem transbordo, contraste baixo ou
 imagem quebrada.
 
 ## Como o catálogo se comporta
@@ -157,7 +181,8 @@ novo build.
   organizadas por seção: `img/hero/` (home desktop e mobile, showroom),
   `img/troca/` (banner desktop e mobile), `img/login/` (entrada do painel) e
   `img/logo/`. Os assets que a vitrine importa vivem em `src/assets/` já em
-  WebP — `src/assets/hero/`, `src/assets/troca/` — e o Vite os serve com hash.
+  WebP — `src/assets/troca/` — e o Vite os serve com hash; os heros da home
+  ficam em `public/hero/` para a URL do preload não depender do hash.
   As fotos do catálogo convertidas ficam em `public/motos/` e os logos de
   marca em `public/marcas/`. O script `convert-images` lê `img/` inteiro
   (recursivo) e gera WebP/crops; faltando foto, entra o placeholder local. Os

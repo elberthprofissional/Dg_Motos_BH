@@ -6,8 +6,8 @@ import { useInstalarPwa } from '../../hooks/useInstalarPwa'
  *
  * Fica num módulo próprio (e não junto dos componentes) porque é um hook:
  * misturar hooks e componentes no mesmo arquivo quebra o Fast Refresh.
- * Desktop e mobile usam este mesmo estado — a lógica de instalação não se
- * duplica entre os dois layouts.
+ * O estado é montado no ConfiguracoesTab e alimenta o cartão do celular
+ * e o modal — a lógica de instalação não se duplica.
  */
 export interface EstadoInstalarApp {
   instalado: boolean

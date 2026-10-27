@@ -3,20 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/webp" href="/favicon.webp" />
-    <!-- Preload da foto do hero (LCP) -->
-    <link
-      rel="preload"
-      as="image"
-      type="image/webp"
-      href="/hero/showroom-2026-07-hd.webp"
-      fetchpriority="high"
-    />
+    <!-- Preload da foto de LCP da home. Ele é injetado aqui, e não como
+         <link> fixo, porque só a home usa a imagem — nas outras rotas
+         (painel, estoque, fichas) ela seria baixada à toa. As fotos
+         ficam em public/ para manter a URL estável entre dev e build. -->
+    <script>
+      if (location.pathname === '/') {
+        var preloadHero = document.createElement('link')
+        preloadHero.rel = 'preload'
+        preloadHero.as = 'image'
+        preloadHero.type = 'image/webp'
+        preloadHero.href = matchMedia('(min-width: 1024px)').matches
+          ? '/hero/home-desktop.webp'
+          : '/hero/home-mobile-texto.webp'
+        preloadHero.setAttribute('fetchpriority', 'high')
+        document.head.appendChild(preloadHero)
+      }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- PWA: app instalável (painel do dono). O manifest aponta
          start_url para /admin/login, então quem abre o app cai no
          login; o site no navegador segue abrindo no catálogo. -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="DG Motos" />

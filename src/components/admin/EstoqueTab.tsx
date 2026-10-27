@@ -4,7 +4,6 @@ import {
   ArchiveRestore,
   ArrowRight,
   CircleDollarSign,
-  Eye,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -352,9 +351,16 @@ export function EstoqueTab({
                     />
                   </div>
                   <div className="estoque-veiculo-texto">
-                    <p className="estoque-nome" title={`${moto.marca} ${moto.modelo}`}>
+                    {/* O nome é o link da linha inteira: o ::after dele
+                        cobre o cartão, então qualquer clique fora das
+                        ações abre a prévia. Menu e ícones ficam acima. */}
+                    <Link
+                      to={`/admin/estoque/${moto.id}`}
+                      className="estoque-nome estoque-nome-link"
+                      title={`Abrir a prévia de ${moto.marca} ${moto.modelo}`}
+                    >
                       {moto.marca} {moto.modelo}
-                    </p>
+                    </Link>
                     <p className="estoque-ficha">
                       {ficha.map((item, i) => (
                         <span key={i}>
@@ -421,17 +427,6 @@ export function EstoqueTab({
                         )}
                         {vendida ? 'Reativar moto' : 'Marcar como vendida'}
                       </button>
-                      <Link
-                        role="menuitem"
-                        to={`/moto/${moto.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="estoque-menu-item"
-                        onClick={() => setAcoesAbertas(null)}
-                      >
-                        <Eye className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                        Ver no site
-                      </Link>
                       <button
                         type="button"
                         role="menuitem"
@@ -483,16 +478,6 @@ export function EstoqueTab({
                         <CircleDollarSign className="size-4" strokeWidth={1.7} aria-hidden="true" />
                       )}
                     </button>
-                    <Link
-                      to={`/moto/${moto.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="estoque-acao"
-                      aria-label={`Ver ${moto.marca} ${moto.modelo} no site`}
-                      title="Ver no site"
-                    >
-                      <Eye className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                    </Link>
                     <button
                       type="button"
                       onClick={() => onEditando({ id: moto.id, dados: motoParaFormulario(moto) })}

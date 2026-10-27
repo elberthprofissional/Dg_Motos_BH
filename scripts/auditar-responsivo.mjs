@@ -4,6 +4,8 @@
  *
  *   node scripts/auditar-responsivo.mjs [largura...]
  */
+import { resolverPendente } from './lib/cdp.mjs'
+
 const CDP = process.env.CDP ?? 'http://127.0.0.1:9222'
 const BASE = process.env.BASE ?? 'http://localhost:5173'
 const LARGURAS = process.argv.slice(2).map(Number).filter(Boolean)
@@ -24,11 +26,8 @@ const pend = new Map()
 const listeners = []
 ws.addEventListener('message', (ev) => {
   const msg = JSON.parse(ev.data)
-  if (msg.id && pend.has(msg.id)) {
-    const { resolve, reject } = pend.get(msg.id)
-    pend.delete(msg.id)
-    msg.error ? reject(new Error(JSON.stringify(msg.error))) : resolve(msg.result)
-  } else if (msg.method) {
+  if (resolverPendente(pend, msg)) return
+  if (msg.method) {
     for (const l of listeners) l(msg)
   }
 })

@@ -11,8 +11,8 @@ import type { EstadoInstalarApp } from './useInstalarApp'
  * (Compartilhar → Adicionar à Tela). Quando já está instalado, o texto
  * muda para "instalado" em vez de sumir — o dono vê que está tudo certo.
  *
- * O estado vem de `useInstalarApp`; o gatilho fica em cada tela que
- * oferece a instalação (rail do desktop, lista do celular).
+ * O estado vem de `useInstalarApp`; o gatilho fica na lista de
+ * configurações do celular — no desktop não faz sentido instalar.
  * ============================================================
  */
 
