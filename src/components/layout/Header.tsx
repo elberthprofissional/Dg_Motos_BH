@@ -178,6 +178,8 @@ export function Header() {
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 placeholder="Buscar moto…"
+                aria-label="Buscar moto por marca, modelo ou ano"
+                enterKeyHint="search"
                 className="font-sans h-10 w-48 rounded-none border-0 bg-painel py-1.5 pr-3 pl-9 text-sm text-texto transition-[width,background-color] placeholder:text-texto-3 hover:bg-painel-2 focus:w-60 focus:bg-painel-2 focus:ring-2 focus:ring-marca/60 focus:outline-none xl:w-56 xl:focus:w-72"
               />
             </form>
@@ -249,7 +251,9 @@ export function Header() {
                   type="search"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  placeholder=" buscar moto por marca ou modelo..."
+                  placeholder="Buscar moto por marca ou modelo…"
+                  aria-label="Buscar moto por marca, modelo ou ano"
+                  enterKeyHint="search"
                   className="h-11 w-full rounded border border-borda-forte bg-fundo px-3 py-1.5 pl-9 text-base text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30"
                   style={{ fontSize: '16px' }}
                 />

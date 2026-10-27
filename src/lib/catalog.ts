@@ -39,8 +39,6 @@ interface LinhaCatalogo {
   /** Colunas da promoção; só existem depois da migração 06 aplicar. */
   em_promocao?: boolean | number | null
   preco_antes?: number | string | null
-  /** Dado do painel; só existe depois da migração 07 aplicar. */
-  custo_compra?: number | string | null
   quilometragem: number | null
   cilindrada: number | null
   categoria: string
@@ -86,8 +84,6 @@ export function linhaParaMotos(linha: LinhaCatalogo): Motorcycle {
     ano: Number(linha.ano),
     preco: Number(linha.preco),
     precoAntes: linha.preco_antes == null ? null : Number(linha.preco_antes),
-    custoCompra:
-      linha.custo_compra == null || linha.custo_compra === '' ? null : Number(linha.custo_compra),
     quilometragem: linha.quilometragem == null ? null : Number(linha.quilometragem),
     cilindrada: linha.cilindrada == null ? null : Number(linha.cilindrada),
     categoria: linha.categoria as MotorcycleCategory,
@@ -112,8 +108,27 @@ export interface ResultadoCatalogo {
   erro: string | null
 }
 
+/**
+ * Colunas lidas pela API.
+ *
+ * Lista explícita de propósito: `*` trazia `custo_compra` para qualquer
+ * visitante (a chave anon é pública). O custo agora só sai pela função
+ * `custo_da_moto`, que exige admin.
+ */
+const COLUNAS_MOTO =
+  'id, slug, marca, modelo, ano, preco, em_promocao, preco_antes, quilometragem, cilindrada, categoria, descricao, especificacoes, status, created_at, updated_at'
+
+const COLUNAS_IMAGENS = 'motorcycle_images(src, alt, posicao)'
+
 /** Select usado em toda leitura: a moto + as fotos já ordenadas. */
-const SELECT_MOTO = '*, motorcycle_images(src, alt, posicao)'
+const SELECT_MOTO = `${COLUNAS_MOTO}, lixeira_em, ${COLUNAS_IMAGENS}`
+
+/** Select para banco que ainda não rodou a migração 09 (sem lixeira). */
+const SELECT_MOTO_SEM_LIXEIRA = `${COLUNAS_MOTO}, ${COLUNAS_IMAGENS}`
+
+function colunaDaLixeiraAusente(error: { code?: string; message: string }): boolean {
+  return error.code === '42703' || /lixeira_em/i.test(error.message)
+}
 
 /**
  * Busca o catálogo completo.
@@ -135,10 +150,22 @@ export async function buscarCatalogo(
   }
 
   try {
-    const { data, error } = await sb
+    const primeira = await sb
       .from('motorcycles')
       .select(SELECT_MOTO)
       .order('ano', { ascending: false })
+
+    // Banco que ainda não rodou a migração 09: lê sem a coluna da
+    // lixeira em vez de deixar o painel inteiro sem catálogo.
+    const resposta =
+      primeira.error && colunaDaLixeiraAusente(primeira.error)
+        ? await sb
+            .from('motorcycles')
+            .select(SELECT_MOTO_SEM_LIXEIRA)
+            .order('ano', { ascending: false })
+        : primeira
+
+    const { data, error } = resposta
 
     if (error) {
       return { motos: [], doBanco: false, erro: error.message }
@@ -179,8 +206,6 @@ export interface MotoParaSalvar {
   emPromocao: boolean
   precoAntes: number | null
   status: MotorcycleStatus
-  /** Quanto a loja pagou; null = não informado (não entra no lucro). */
-  custoCompra?: number | null
 }
 
 /**
@@ -227,27 +252,31 @@ export function montarSlug(marca: string, modelo: string, ano: number): string {
 }
 
 /**
- * Substitui as fotos da moto.
+ * Substitui as fotos da moto numa única transação.
  *
- * Estratégia "apaga e regrava": o form manda a lista completa e ordenada,
- * então o estado final é sempre a lista enviada — sem risco de sobrar foto
- * órfã no banco. As linhas antigas caem por delete; os arquivos no Storage
- * saem depois do save, em `excluirFotosRemovidas`.
+ * O form manda a lista completa e ordenada; a função do banco apaga as
+ * linhas antigas e insere as novas juntas. Antes eram duas requisições:
+ * se a inserção falhasse no meio, a moto ficava sem foto nenhuma. Os
+ * arquivos no Storage saem depois do save, em `excluirFotosRemovidas`.
  */
 async function salvarImagens(motoId: string, imagens: { src: string; alt: string }[]) {
   const sb = getSupabase()!
-  await sb.from('motorcycle_images').delete().eq('motorcycle_id', motoId)
+  const { error } = await sb.rpc('salvar_imagens_da_moto', {
+    p_moto_id: motoId,
+    p_imagens: imagens.map(({ src, alt }) => ({ src, alt })),
+  })
 
-  if (imagens.length === 0) return null
+  if (!error) return null
 
-  const linhas = imagens.map((f, i) => ({
-    motorcycle_id: motoId,
-    src: f.src,
-    alt: f.alt,
-    posicao: i,
-  }))
-  const { error } = await sb.from('motorcycle_images').insert(linhas)
-  return error?.message ?? null
+  if (
+    error.code === 'PGRST202' ||
+    error.code === '42883' ||
+    /salvar_imagens_da_moto/i.test(error.message)
+  ) {
+    return 'O banco ainda não tem a rotina que grava as fotos. Rode a migração 11_seguranca_e_transacoes.sql no SQL Editor do Supabase.'
+  }
+
+  return error.message
 }
 
 export async function salvarMoto(
@@ -274,9 +303,6 @@ export async function salvarMoto(
     especificacoes: dados.especificacoes,
     em_promocao: dados.emPromocao,
     preco_antes: dados.precoAntes,
-    // O formulário de moto não edita custo; quando não há valor, omitir
-    // evita quebrar o save em bancos que ainda não rodaram a migração 07.
-    ...(dados.custoCompra != null ? { custo_compra: dados.custoCompra } : {}),
     status: dados.status,
   }
 
@@ -317,7 +343,7 @@ export async function salvarMoto(
 
 /** Erro de banco sem a coluna da lixeira vira instrução, não stack trace. */
 function mensagemLixeira(error: { code?: string; message: string }): string {
-  if (error.code === '42703' || /lixeira_em/i.test(error.message)) {
+  if (colunaDaLixeiraAusente(error)) {
     return 'A coluna da lixeira ainda não existe no banco. Rode a migração 09_lixeira_do_estoque.sql no SQL Editor do Supabase.'
   }
   return error.message
@@ -357,6 +383,31 @@ export async function restaurarMoto(
 }
 
 /**
+ * Lê o custo de compra de uma moto pelo RPC do painel.
+ *
+ * A coluna `custo_compra` não faz parte do select do catálogo (era
+ * legível por qualquer visitante). O diálogo de venda chama esta função
+ * para gravar o lucro no histórico.
+ */
+export async function buscarCustoCompra(motoId: string): Promise<number | null> {
+  const sb = getSupabase()
+  if (!sb) return null
+
+  const { data, error } = await sb.rpc('custo_da_moto', { p_moto_id: motoId })
+  if (error) throw new Error(error.message)
+  if (data == null || data === '') return null
+  const numero = Number(data)
+  return Number.isFinite(numero) ? numero : null
+}
+
+export interface ResultadoExclusao {
+  ok: boolean
+  erro: string | null
+  /** A exclusão funcionou, mas sobrou algo para o dono resolver. */
+  aviso?: string | null
+}
+
+/**
  * Apaga de vez as motos indicadas e limpa os arquivos delas no Storage.
  *
  * Só remove linhas que estejam na lixeira: o filtro protege contra um
@@ -364,41 +415,68 @@ export async function restaurarMoto(
  * sozinhas (on delete cascade), mas os arquivos no bucket NÃO — por isso
  * buscamos as fotos antes e apagamos cada uma. Sem isso, o bucket
  * acumularia lixo a cada exclusão definitiva.
+ *
+ * A resposta vai além de ok/erro: se o banco apagou mas o Storage
+ * recusou, ou se alguma linha deixou de estar na lixeira entre o clique
+ * e o delete, o dono recebe um aviso em vez de um falso "tudo certo".
  */
 export async function excluirMotosDefinitivamente(
   ids: string[],
-): Promise<{ ok: boolean; erro: string | null }> {
+): Promise<ResultadoExclusao> {
   const sb = getSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
   if (ids.length === 0) return { ok: true, erro: null }
 
-  const { data: fotos } = await sb
+  const { data: fotos, error: erroFotos } = await sb
     .from('motorcycle_images')
     .select('src')
     .in('motorcycle_id', ids)
+  if (erroFotos) {
+    return {
+      ok: false,
+      erro: `Não foi possível ler as fotos antes de apagar: ${erroFotos.message}`,
+    }
+  }
 
-  const { error } = await sb
+  const { data: apagadas, error } = await sb
     .from('motorcycles')
     .delete()
     .in('id', ids)
     .not('lixeira_em', 'is', null)
+    .select('id')
   if (error) return { ok: false, erro: mensagemLixeira(error) }
+
+  const apagadasIds = new Set(((apagadas ?? []) as { id: string }[]).map((linha) => linha.id))
+  if (apagadasIds.size === 0) {
+    return {
+      ok: false,
+      erro: 'Nenhuma moto foi apagada. Atualize o painel e tente de novo.',
+    }
+  }
+  const restantes = ids.filter((id) => !apagadasIds.has(id))
 
   const caminhos = (fotos ?? [])
     .map((f: { src?: string }) => (f.src ? caminhoDeBucket(f.src) : null))
     .filter((c): c is string => c !== null)
 
+  let aviso: string | null = null
   if (caminhos.length > 0) {
-    await sb.storage.from(BUCKET_FOTOS).remove(caminhos)
+    const { error: erroStorage } = await sb.storage.from(BUCKET_FOTOS).remove(caminhos)
+    if (erroStorage) {
+      aviso = `As fichas saíram do banco, mas ${caminhos.length} foto(s) ficaram no bucket "motos". Remova pelo painel do Supabase.`
+    }
   }
 
-  return { ok: true, erro: null }
+  if (restantes.length > 0) {
+    const texto = `${restantes.length} moto(s) já não estavam na lixeira e foram mantidas.`
+    aviso = aviso ? `${texto} ${aviso}` : texto
+  }
+
+  return { ok: true, erro: null, aviso }
 }
 
 /** Apaga uma única moto da lixeira (atalho do caso mais comum). */
-export async function excluirMotoDefinitivamente(
-  id: string,
-): Promise<{ ok: boolean; erro: string | null }> {
+export async function excluirMotoDefinitivamente(id: string): Promise<ResultadoExclusao> {
   return excluirMotosDefinitivamente([id])
 }
 
@@ -459,7 +537,6 @@ export function motoParaFormulario(m: Motorcycle): MotoParaSalvar {
     imagens: m.imagens,
     emPromocao: m.emPromocao,
     precoAntes: m.precoAntes,
-    custoCompra: m.custoCompra ?? null,
     status: m.status,
   }
 }

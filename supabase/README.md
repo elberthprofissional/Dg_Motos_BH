@@ -1,110 +1,95 @@
 # Banco de dados (Supabase)
 
-Este diretório guarda o schema em **migrações versionadas**. Cada arquivo
-em `migrations/` é aplicado uma vez, na ordem do nome.
+Este diretório guarda as migrações do Postgres. Elas são a fonte de
+verdade do esquema, das políticas RLS e das funções usadas pelo site.
 
-| Arquivo | O que faz |
-| --- | --- |
-| `01_cria_esquema_inicial.sql` | Cria `motorcycles` e `motorcycle_images`, índices e o trigger de `updated_at`. |
-| `02_seguranca_rls_e_storage.sql` | Liga o RLS, cria as políticas e o bucket público `motos` no Storage. |
-| `03_dados_iniciais_estoque.sql` | Insere 5 motos de **demonstração** (só quando a tabela está vazia). |
-| `04_corrige_estrutura_estoque.sql` | **Corrige um banco incompleto** (sem `status` / sem `motorcycle_images`). Rode se o `/admin` aparecer vazio. Idempotente. |
-| `05_configuracoes_da_loja.sql` | Configurações públicas editáveis da loja. |
-| `06_promocoes_do_estoque.sql` | Campos de preço promocional do estoque. |
-| `07_registro_de_vendas.sql` | Histórico privado de vendas. |
-| `08_publicacoes_de_entregas.sql` | Cria os registros de entregas, publicação moderada e fotos privadas para “Sonhos realizados”. |
-| `09_lixeira_do_estoque.sql` | Cria a lixeira do estoque (`lixeira_em`) e impede que motos excluídas sejam lidas pela chave pública. |
-| `10_edicao_de_vendas.sql` | Libera o `update` em `sales`: correção de venda em **Vendidas** e desvinculação ao reativar a moto. |
+## Ordem
+
+| # | Arquivo | O que faz |
+| - | --- | --- |
+| 01 | `01_cria_esquema_inicial.sql` | tabelas `motorcycles` e `motorcycle_images`, índices e trigger de `updated_at` |
+| 02 | `02_seguranca_rls_e_storage.sql` | RLS, políticas iniciais e bucket público `motos` |
+| 03 | `03_dados_iniciais_estoque.sql` | (opcional) 5 motos de demonstração |
+| 04 | `04_corrige_estrutura_estoque.sql` | conserta bancos criados com a tabela antiga |
+| 05 | `05_configuracoes_da_loja.sql` | tabela `site_settings` e o registro `loja` |
+| 06 | `06_promocoes_do_estoque.sql` | `em_promocao` e `preco_antes` |
+| 07 | `07_registro_de_vendas.sql` | `custo_compra` e a tabela `sales` |
+| 08 | `08_publicacoes_de_entregas.sql` | galeria de entregas e bucket privado `entregas` |
+| 09 | `09_lixeira_do_estoque.sql` | `lixeira_em` e leitura pública sem os itens da lixeira |
+| 10 | `10_edicao_de_vendas.sql` | edição de vendas já lançadas |
+| 11 | `11_seguranca_e_transacoes.sql` | lista de admins, grants por coluna e RPCs transacionais |
 
 ## Como aplicar
 
-Não há CLI do Supabase configurada: as migrações são aplicadas pelo painel.
+**Projeto novo:** abra o SQL Editor e execute `_aplicar-tudo.sql` uma
+vez. Ele contém as migrações 01–11 na ordem.
 
-1. Abra o projeto em <https://supabase.com/dashboard> → **SQL Editor**.
-2. Cole o conteúdo de `migrations/01_cria_esquema_inicial.sql` e execute.
-3. Repita com `02_seguranca_rls_e_storage.sql`.
-4. Opcional: rode `03_dados_iniciais_estoque.sql` para começar com o estoque de
-   demonstração. Se preferir cadastrar tudo pelo `/admin`, pule este passo.
+**Projeto que já está no ar:** execute só as migrações que faltam, em
+ordem. Se o banco está na 10, rode apenas a 11.
 
-Em um projeto já atualizado até vendas, execute `migrations/08_publicacoes_de_entregas.sql`
-para habilitar a aba **Publicações** e a galeria "Sonhos realizados". Em um
-projeto novo, aplique as migrações numeradas em ordem; o seed 0002 é opcional.
+> **A migração 11 é obrigatória para o código atual.** Sem ela, salvar
+> fotos falha com a mensagem "o banco ainda não tem a rotina que grava
+> as fotos" e a venda é registrada sem custo. Aplique a 11 **antes** de
+> publicar a versão nova do site.
 
-A migração 09 é necessária para a seção **Lixeira**, dentro de
-**Configurações**. Sem ela, excluir uma moto mostra um aviso pedindo a migração
-em vez de mover a ficha. Excluir não apaga na hora: apenas marca `lixeira_em`,
-esconde a moto da vitrine e a mantém disponível no painel para restaurar. O
-prazo é de **30 dias** — a cada abertura do painel, o que venceu é apagado de
-vez, com as fotos do Storage. A limpeza roda no navegador do dono porque é ele
-quem tem permissão de apagar; o site público nunca apaga nada. O apagar
-definitivo manual continua na própria seção, com confirmação.
+## Administradores
 
-A migração 10 liga a edição de vendas: sem ela, o RLS de `sales` só aceita
-insert/delete e o painel avisa "aplique a migração 10" em vez de fingir que
-salvou. É ela que permite corrigir quem comprou em **Vendidas** (linha
-"Comprou: …") e desvincular a venda quando a moto volta pro pátio — nesse caso
-o registro fica no histórico, só sem apontar para a moto ativa. Comprador,
-telefone e valores continuam sem política para `anon`: o site público não lê
-`sales`.
+A partir da 11, escrever no catálogo, ler vendas e gerenciar entregas
+não depende mais de "estar autenticado": é preciso estar em
+`public.admins`. A tabela não tem política nem grant — só o
+`service_role` (painel do Supabase) e as funções `security definer` a
+enxergam.
 
-Os scripts são idempotentes (`create ... if not exists`, `drop policy if
-exists`), então rodar de novo não quebra nem duplica.
+Ao rodar a 11, todas as contas que já existiam em `auth.users` são
+promovidas. Confira:
 
-A migração 08 cria a tabela `entregas` e o bucket privado `entregas` no
-Storage. Rascunhos e fotos não publicadas ficam acessíveis só pela sessão do
-admin. A galeria lê apenas registros publicados. O painel não tem tela de
-edição: no mural, **Nova publicação** sobe as fotos e a publicação já nasce no
-ar, e cada quadro carrega o seu próprio apagar (tirar a última foto arquiva a
-publicação). O banco continua exigindo foto e `autorizacao_publicacao`; é a
-coluna que o painel grava sempre como confirmada — a confirmação saiu da
-interface. O site recebe somente as fotos e a data — modelo da moto e nome do
-cliente não saem do painel.
-
-## Preços antigos gravados pela metade
-
-O campo de preço antigo convertia "23.000" em 23. O formulário novo lê o
-formato brasileiro, mas registros já salvos precisam ser corrigidos à mão.
-`diagnostico-precos.sql` lista as motos abaixo de R$ 1.000 e o formulário
-avisa ao salvar um preço abaixo desse piso.
-
-## Banco incompleto (painel vazio)
-
-Se a página inicial mostra as motos mas o painel `/admin` diz
-"Nenhuma moto no estoque", o banco provavelmente ficou pela metade: uma
-tabela `motorcycles` antiga (sem a coluna `status`) e nenhuma
-`motorcycle_images`. Como `create table if not exists` **não** altera
-tabela existente, reaplicar o esquema inicial não resolve.
-
-Nesse caso, rode `04_corrige_estrutura_estoque.sql`: ele adiciona a
-coluna que falta, cria a tabela de imagens com a FK e religa as fotos das
-5 motos — sem apagar nada.
-
-## Modelo de dados
-
-```
-motorcycles
-  id, slug (único), marca, modelo, ano, preco, quilometragem, cilindrada,
-  categoria, descricao, especificacoes (jsonb), destaque,
-  status ('disponivel' | 'vendida' | 'indisponivel'),
-  lixeira_em (NULL = ativa; data = na lixeira),
-  created_at, updated_at
-
-motorcycle_images
-  id, motorcycle_id (FK → motorcycles, on delete cascade),
-  src, alt, posicao, created_at
+```sql
+select a.user_id, u.email
+from public.admins a
+join auth.users u on u.id = a.user_id;
 ```
 
-As fotos ficam em tabela própria, e não num campo `jsonb`, para que possam
-ser reordenadas/removidas uma a uma e para que a exclusão da moto apague as
-linhas automaticamente (`on delete cascade`). Os arquivos do Storage, que o
-banco não apaga sozinho, são removidos pela aplicação ao excluir a moto.
+Se aparecer uma conta que não é do dono, remova:
 
-## Segurança
+```sql
+delete from public.admins where user_id = '<uuid>';
+```
 
-- Leitura do catálogo e das fotos: pública (a vitrine precisa).
-- Escrita nas duas tabelas e no bucket `motos`: só usuário autenticado.
-- A chave anônima é pública por design; quem protege o banco é o RLS.
+Se o dono for criado **depois** da 11, ele não entra sozinho. Cadastre-o
+em Authentication → Users e rode:
 
-Qualquer conta autenticada edita o catálogo. Com uma única conta (o dono)
-isso é suficiente. Para separar funcionários, veja a seção *Segurança* em
-[`../docs/SUPABASE.md`](../docs/SUPABASE.md).
+```sql
+insert into public.admins (user_id)
+select id from auth.users where email = 'email-do-dono@exemplo.com'
+on conflict (user_id) do nothing;
+```
+
+Para dar acesso a um funcionário, repita o `insert` com o e-mail dele.
+Para tirar o acesso, apague a linha em `public.admins` (a conta de login
+continua existindo, mas não escreve nem lê dados do painel).
+
+**Desligue o cadastro público** em Authentication → Sign In / Providers
+→ Email. A chave anon é pública; sem o cadastro desligado, qualquer
+pessoa cria uma conta. A lista de admins impede que essa conta escreva,
+mas ela ainda conseguiria autenticar — o ideal é fechar as duas portas.
+
+## Funções criadas na 11
+
+| Função | Quem pode chamar | Para quê |
+| --- | --- | --- |
+| `e_admin()` | `authenticated` | checagem usada pelas políticas |
+| `salvar_imagens_da_moto(uuid, jsonb)` | admin | substitui as fotos numa transação (delete + insert) |
+| `custo_da_moto(uuid)` | admin | lê `custo_compra`, que não sai mais no select público |
+
+## O que não vai para o cliente
+
+A `service_role` ignora RLS e **nunca** entra em `.env` nem em
+`VITE_*`: variáveis `VITE_` são embutidas no JavaScript. O site usa só
+a anon/publishable key. Toda a segurança mora nas migrações.
+
+## Manutenção
+
+O projeto Free pode ser pausado por inatividade. O Worker em
+[`cloudflare/supabase-keepalive/`](../cloudflare/supabase-keepalive/)
+faz uma leitura mínima a cada seis horas; o passo a passo está em
+[`docs/SUPABASE.md`](../docs/SUPABASE.md).

@@ -42,11 +42,13 @@ as dependências na primeira vez e abre o navegador.
 
 ```
 supabase/
+  README.md         como aplicar, admins e funções do banco
   migrations/       01 cria_esquema_inicial, 02 seguranca_rls_e_storage,
                     03 dados_iniciais_estoque, 04 corrige_estrutura_estoque,
                     05 configuracoes_da_loja, 06 promocoes_do_estoque,
                     07 registro_de_vendas, 08 publicacoes_de_entregas,
-                    09 lixeira_do_estoque, 10 edicao_de_vendas
+                    09 lixeira_do_estoque, 10 edicao_de_vendas,
+                    11 seguranca_e_transacoes
                     (aplicar em ordem pelo SQL Editor)
 docs/
   SUPABASE.md       passo a passo do painel do dono
@@ -103,7 +105,7 @@ scripts/
   "Tenho interesse"; a página de estoque ganhou filtros em rascunho com
   "Aplicar" e "Limpar".
 
-Verificação desta rodada: `lint`, `typecheck`, 109 testes, `build` com
+Verificação desta rodada: `lint`, `typecheck`, 115 testes, `build` com
 prerender de 9 fichas e auditoria CDP sem transbordo, contraste baixo ou
 imagem quebrada.
 
@@ -124,7 +126,7 @@ imagem quebrada.
 - **Lint sem avisos** — o tratador de mensagens CDP dos scripts de
   auditoria foi extraído para `scripts/lib/cdp.mjs`.
 
-Verificação: `lint` sem avisos, `typecheck`, **109 testes** e `build` com
+Verificação: `lint` sem avisos, `typecheck`, **115 testes** e `build` com
 prerender das fichas + auditoria CDP sem transbordo, contraste baixo ou
 imagem quebrada.
 
@@ -163,7 +165,9 @@ sem build.
 
 - **A chave anônima do Supabase é pública por design.** Ela fica no
   bundle; a segurança do banco depende das políticas RLS em
-  `supabase/migrations/`. A `service_role` nunca entra em `VITE_*`.
+  `supabase/migrations/`. Escrita e leitura do painel exigem estar em
+  `public.admins`; `custo_compra` e os dados pessoais das entregas não
+  são legíveis pelo anon. A `service_role` nunca entra em `VITE_*`.
 - **Sem número de WhatsApp, todo CTA cai para `/contato`.** O hook
   `useWhatsappLink()` (`src/hooks/useWhatsappLink.ts`) devolve `null`
   enquanto `WHATSAPP_NUMBER` for `null`, e os componentes degradam
@@ -218,12 +222,20 @@ O painel pode ser instalado como aplicativo no celular do dono:
 ## Antes de publicar
 
 1. `npm run build` e `npm test` precisam passar.
-2. Preencher `WHATSAPP_NUMBER` e confirmar Instagram/endereço em
+2. Aplicar a migração `11_seguranca_e_transacoes.sql` no SQL Editor e
+   confirmar que o dono está em `public.admins` (ver
+   `supabase/README.md`). Sem ela, salvar fotos e registrar venda
+   perdem funcionalidade.
+3. Preencher `WHATSAPP_NUMBER` e confirmar Instagram/endereço em
    `src/data/site.ts`.
-3. Conferir `SITE_URL` — o domínio está replicado em `index.html`
+4. Conferir `SITE_URL` — o domínio está replicado em `index.html`
    (Open Graph), `public/robots.txt` e `src/data/site.ts`.
-4. `public/_redirects` (Netlify/Cloudflare) e `vercel.json` já tratam o
-   fallback de SPA. Em Apache, configure o rewrite para `index.html`.
+5. Cadastrar `/admin/redefinir` em Authentication → URL Configuration →
+   Redirect URLs (recuperação de senha).
+6. `public/_redirects` (Netlify/Cloudflare) e `vercel.json` já tratam o
+   fallback de SPA; `vercel.json` e `public/_headers` trazem CSP e os
+   demais cabeçalhos de segurança. Em Apache, configure o rewrite para
+   `index.html` e replique os cabeçalhos no servidor.
 
 ## Pendências abertas
 

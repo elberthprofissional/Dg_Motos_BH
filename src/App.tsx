@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import type { ReactNode } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { RootLayout } from './components/layout/RootLayout'
 import { Entrada } from './pages/Entrada'
@@ -13,7 +14,9 @@ const BikeDetail = lazy(() => import('./pages/BikeDetail').then((m) => ({ defaul
 const Contato = lazy(() => import('./pages/Contato').then((m) => ({ default: m.Contato })))
 const NotFound = lazy(() => import('./pages/NotFound').then((m) => ({ default: m.NotFound })))
 
-// Painel do dono: fora do bundle público, junto com o SDK do Supabase.
+// Painel do dono: carregado sob demanda. O SDK do Supabase NÃO é
+// exclusivo do painel — catálogo e configurações da vitrine também o
+// usam —, então ele já vai no bundle inicial de qualquer forma.
 const Admin = lazy(() => import('./pages/Admin').then((m) => ({ default: m.Admin })))
 const AdminLogin = lazy(() => import('./pages/AdminLogin').then((m) => ({ default: m.AdminLogin })))
 const AdminEsqueci = lazy(() =>
@@ -35,43 +38,103 @@ function PageFallback() {
   )
 }
 
+/**
+ * Suspense por rota.
+ *
+ * Um Suspense único em volta de tudo trocava a página inteira pelo
+ * spinner durante o download do chunk: header e rodapé desapareciam e
+ * a navegação parecia recarregar. Preso à rota, só o miolo pisca.
+ */
+function Rota({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<PageFallback />}>{children}</Suspense>
+}
+
 export default function App() {
   return (
-    <Suspense fallback={<PageFallback />}>
-      <AuthProvider>
-        <Routes>
-          <Route element={<RootLayout />}>
-            {/* No app instalado "/" cai no login; no navegador, na
-                vitrine. Ver src/pages/Entrada.tsx. */}
-            <Route index element={<Entrada />} />
-            <Route path="estoque" element={<Estoque />} />
-            <Route path="moto/:slug" element={<BikeDetail />} />
-            <Route path="contato" element={<Contato />} />
-
-            <Route path="*" element={<NotFound />} />
-          </Route>
-
-          {/* Área restrita do proprietário. Fica fora do RootLayout de
-              propósito: um painel de gestão não deve exibir o menu da
-              vitrine nem o rodapé da loja. */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/esqueci" element={<AdminEsqueci />} />
-          <Route path="/admin/redefinir" element={<AdminRedefinir />} />
+    <AuthProvider>
+      <Routes>
+        <Route element={<RootLayout />}>
+          {/* No app instalado "/" cai no login; no navegador, na
+              vitrine. Ver src/pages/Entrada.tsx. */}
+          <Route index element={<Entrada />} />
           <Route
-            path="/admin/*"
+            path="estoque"
             element={
-              <RotaAdmin>
-                {/* Contexto de vendas só existe dentro do painel: o
-                    histórico com comprador e telefone nunca é carregado
-                    na vitrine. */}
-                <VendasProvider>
-                  <Admin />
-                </VendasProvider>
-              </RotaAdmin>
+              <Rota>
+                <Estoque />
+              </Rota>
             }
           />
-        </Routes>
-      </AuthProvider>
-    </Suspense>
+          <Route
+            path="moto/:slug"
+            element={
+              <Rota>
+                <BikeDetail />
+              </Rota>
+            }
+          />
+          <Route
+            path="contato"
+            element={
+              <Rota>
+                <Contato />
+              </Rota>
+            }
+          />
+
+          <Route
+            path="*"
+            element={
+              <Rota>
+                <NotFound />
+              </Rota>
+            }
+          />
+        </Route>
+
+        {/* Área restrita do proprietário. Fica fora do RootLayout de
+            propósito: um painel de gestão não deve exibir o menu da
+            vitrine nem o rodapé da loja. */}
+        <Route
+          path="/admin/login"
+          element={
+            <Rota>
+              <AdminLogin />
+            </Rota>
+          }
+        />
+        <Route
+          path="/admin/esqueci"
+          element={
+            <Rota>
+              <AdminEsqueci />
+            </Rota>
+          }
+        />
+        <Route
+          path="/admin/redefinir"
+          element={
+            <Rota>
+              <AdminRedefinir />
+            </Rota>
+          }
+        />
+        <Route
+          path="/admin/*"
+          element={
+            <RotaAdmin>
+              {/* Contexto de vendas só existe dentro do painel: o
+                  histórico com comprador e telefone nunca é carregado
+                  na vitrine. */}
+              <VendasProvider>
+                <Rota>
+                  <Admin />
+                </Rota>
+              </VendasProvider>
+            </RotaAdmin>
+          }
+        />
+      </Routes>
+    </AuthProvider>
   )
 }

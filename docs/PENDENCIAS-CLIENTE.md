@@ -35,18 +35,18 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 
 ## 4. Estoque (catálogo)
 
-- Hoje é seed/fallback: `src/data/motorcycles.ts`.
-- Com o Supabase configurado (ver `docs/SUPABASE.md`), o mesmo conteúdo
-  está no Postgres e passa a ser editável em `/admin` — sem tocar em
-  código.
-- Marca/modelo/ano/preço vieram do site atual:
+- Em produção, o catálogo vem do Supabase e é editado em `/admin → Estoque`.
+- `src/data/motorcycles.ts` é o **fallback**: entra quando o Supabase não
+  está configurado ou está fora do ar, e alimenta o prerender quando o build
+  roda sem chaves. Um catálogo vazio no banco é respeitado.
+- Os 5 registros do fallback vieram do site atual:
   - XRE 300 — 2021 — R$ 31.900
   - Fazer 150 — 2020 — R$ 13.900
   - Titan — 2022 — R$ 16.900
   - Lander — 2024 — R$ 26.900
   - Start — 2024 — R$ 16.900
-- **Quilometragem**: `null` em todas — o site mostra "Km a confirmar" até o
-  cliente passar os valores reais.
+- **Quilometragem**: `null` no fallback — o site mostra "Km a confirmar" até o
+  cliente passar os valores reais (vale também para o cadastro no painel).
 - Descrições e especificações são rascunho editorial; revisar antes de
   publicar (principalmente o câmbio da Start — o seed diz 4 marchas, mas a
   CG 160 usa 5 — e os detalhes da Lander).
@@ -57,28 +57,20 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 ## 5. Fotografias
 
 **RESOLVIDO (parcialmente):** o cliente enviou a pasta `img/` com 1 foto por
-moto + showroom + favicon. Elas foram convertidas para WebP e já estão no site.
+moto + showroom + logo. Elas foram convertidas para WebP e já estão no site.
 
+- Fontes em `img/`: `hero/` (home desktop e mobile), `login/` (entrada do
+  painel), `troca/` (banner desktop, mobile e arte da troca), `logo/` e
+  `marcas/`.
+- Consumo no site: `public/hero/` (heróis e showroom), `src/assets/troca/`
+  (arte da troca, com hash do Vite), `public/motos/` (catálogo) e
+  `public/marcas/` (logos).
 - Para converter/atualizar fotos: colocar os arquivos em `img/` (mesmos
-  nomes-base) e rodar `npm run convert-images`.
-- **Estado atual da fonte:** `img/` guarda `hero-desktop.png` (hero da home),
-  `troca.png` (banner de troca), `hero-login-noite.jpg` (entrada do painel),
-  `hero-showroom-2026-07.jfif`, `hero-showroom-2026-06.png` e `logo.webp`.
-  Nenhum original do catálogo está mais ali; os WebP já convertidos
-  continuam em `public/motos/<modelo>/` e no site. Para trocar a foto de uma
-  moto, reponha o arquivo em `img/` com o nome-base esperado
-  (`xre-300-2021`, `lander-2024`, `titan-2022`, `start-2024`,
-  `fazer-150-2020`) e rode `npm run convert-images`.
-- **Hero atual:** a home importa `img/hero-desktop.png` diretamente; o Vite
-  publica o arquivo com hash em `dist/assets/`. Já os arquivos
-  `public/hero/showroom-2026-07.webp` e `showroom-2026-07-hd.webp` atendem
-  Open Graph, JSON-LD e o preload do `index.html`. Ao trocar a foto da home,
-  substitua `img/hero-desktop.png` e rode o build; para atualizar também as
-  metatags, ajuste `index.html`, `src/lib/schema.ts` e a lista `HERO_FONTES`
-  em `scripts/convert-images.mjs`.
-- **Peso dos novos assets:** `hero-desktop.png` tem ~1,8 MB e `troca.png`
-  ~1,7 MB. Funcionam, mas o ideal antes de publicar é exportá-los em WebP
-  (ou AVIF) e reduzir a largura para o tamanho real de exibição.
+  nomes-base) e rodar `npm run convert-images`. Ao trocar o hero, ajuste
+  também `index.html`, `src/lib/schema.ts` e as listas do script.
+- Os WebP atuais são leves (home desktop ~31 KB, home mobile ~58 KB,
+  entrada do painel ~112 KB). Se um original novo for muito maior, exporte
+  em WebP/AVIF antes de colocar no site.
 - **Pendente:** o cliente enviou apenas **1 foto por moto** — o script gera
   2 recortes extras (02.webp, 03.webp) só para a galeria não ficar vazia.
   O ideal é receber 3–5 fotos reais por moto (frente, lateral, painel,
@@ -88,12 +80,9 @@ moto + showroom + favicon. Elas foram convertidas para WebP e já estão no site
 ## 6. Horários de atendimento
 
 - Arquivo: `src/data/site.ts` → `SITE.horarios`
-- Está `null`; a página de contato exibe aviso discreto até confirmar.
-
-## 7. Telefone fixo (opcional)
-
-- Arquivo: `src/data/site.ts` → `SITE.telefoneExibicao`
-- Exibir somente se o cliente tiver linha fixa e quiser publicá-la.
+- Preenchidos com **Seg a Sex, 9h–18h** e **Sáb, 9h–13h**. Confirmar com o
+  cliente antes de publicar; a edição também pode ser feita em
+  `/admin → Configurações`.
 
 ---
 
@@ -115,8 +104,8 @@ Sem Supabase, o caminho é pelo código:
 
 1. Abra `src/data/motorcycles.ts`.
 2. Cada moto é um objeto com `marca, modelo, ano, preco, quilometragem,
-   cilindrada, categoria, descricao, especificacoes, imagens, destaque,
-   status, slug`.
+   cilindrada, categoria, descricao, especificacoes, imagens, emPromocao,
+   precoAntes, status, slug`.
 3. Para **adicionar**: copie um bloco existente, mude `id`, `slug`
    (formato `marca-modelo-ano`) e os dados.
 4. Para **marcar como vendida**: `status: 'vendida'` (some do catálogo

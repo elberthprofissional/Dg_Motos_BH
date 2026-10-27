@@ -51,12 +51,6 @@ export interface Motorcycle {
   imagens: MotorcycleImage[]
   status: MotorcycleStatus
   /**
-   * Quanto a loja pagou na moto (dado do painel, nunca aparece no
-   * site). Alimenta o cálculo de lucro na aba Vendas. Opcional:
-   * sem custo, a moto não entra na conta de lucro — só no faturamento.
-   */
-  custoCompra?: number | null
-  /**
    * ISO do primeiro cadastro, preenchido só quando a moto vem do banco.
    * O fallback de `src/data/motorcycles.ts` não tem created_at — por isso
    * opcional, e por isso o painel nunca deve assumir que existe.

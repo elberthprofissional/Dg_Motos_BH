@@ -38,7 +38,13 @@ Abra o **SQL Editor** e execute as migrações numeradas de
   `..._registro_de_vendas.sql`, `..._publicacoes_de_entregas.sql`,
   `..._lixeira_do_estoque.sql` e `..._edicao_de_vendas.sql` — configurações,
   promoções, histórico de vendas, a galeria de entregas, a lixeira do estoque e
-  a edição de quem comprou (aba **Vendidas**).
+  a edição de quem comprou (aba **Vendidas**);
+- `..._seguranca_e_transacoes.sql` (**obrigatória**) — lista de
+  administradores, grants por coluna e as funções de fotos e custo.
+
+Em um projeto novo, `_aplicar-tudo.sql` executa tudo de uma vez. Em um
+projeto que já está no ar, rode só a migração 11 antes de publicar esta
+versão do site: o código novo chama as funções criadas nela.
 
 ## 3. Ligar o projeto ao site
 
@@ -58,15 +64,42 @@ falta alguma das duas chaves.
 ## 4. Criar o usuário do dono
 
 Em **Authentication → Users → Add user**, crie um e-mail e senha.
-Esse é o único login que entra no `/admin`. Se você criar mais contas,
-todas terão acesso ao catálogo (ver *Segurança* abaixo).
 
-**Importante — desligue o cadastro público.** O `/admin` não tem tela de
-cadastro, mas o Supabase libera `signUp` por padrão, e qualquer pessoa com
-a chave pública poderia criar uma conta. Em **Authentication → Sign In /
+A partir da migração 11, só quem está em `public.admins` gerencia o
+painel. Se a conta foi criada **antes** da 11, o seed da migração já a
+promoveu. Se foi criada depois, rode no SQL Editor:
+
+```sql
+insert into public.admins (user_id)
+select id from auth.users where email = 'email-do-dono@exemplo.com'
+on conflict (user_id) do nothing;
+```
+
+Para tirar o acesso de alguém, apague a linha correspondente em
+`public.admins`. Contas de funcionário seguem a mesma regra: cadastre o
+login e inclua o `user_id` na tabela.
+
+**Desligue o cadastro público.** O `/admin` não tem tela de cadastro,
+mas o Supabase libera `signUp` por padrão, e qualquer pessoa com a
+chave pública poderia criar uma conta. Em **Authentication → Sign In /
 Providers → Email**, desative **"Allow new users to sign up"** (ou
-*Enable email signups*). Assim, contas só nascem pelo painel do Supabase,
-criadas por você.
+*Enable email signups*). Com a lista de admins, uma conta estranha não
+escreve nem lê o painel — mas o ideal é fechar as duas portas.
+
+### Recuperação de senha
+
+O link "Esqueceu a senha?" usa o e-mail de recuperação do Supabase. Para
+ele funcionar, cadastre a URL de retorno em **Authentication → URL
+Configuration → Redirect URLs**:
+
+```
+https://dgmotos.com.br/admin/redefinir
+http://localhost:5173/admin/redefinir
+```
+
+Sem isso, o Supabase recusa o envio ou devolve o link para a home. O
+link expira e só pode ser usado uma vez; quando ele chega vencido, a
+tela de nova senha explica o motivo e oferece pedir outro.
 
 ## 5. Cadastrar as motos
 
@@ -181,19 +214,27 @@ desatualizado**, mesmo que o banco esteja correto.
 
 ## Segurança
 
-O que já está nas migrações:
+A chave anon é pública por design. O que protege o banco está nas
+migrações:
 
-- RLS ligado em `motorcycles` e `motorcycle_images`.
-- Leitura pública das duas tabelas (a vitrine precisa).
-- Escrita nas duas tabelas e no bucket `motos` só para `authenticated`.
+- **RLS ligado** em todas as tabelas do site.
+- **Colunas públicas, não tabelas inteiras.** A vitrine lê só as colunas
+  que mostra; `custo_compra` não sai em nenhum select. O painel usa a
+  função `custo_da_moto` quando precisa desse número.
+- **Entregas sem dado pessoal no anon.** O visitante recebe grant apenas
+  de `id`, `status`, `fotos`, `entregue_em` e `ordem`; nome do cliente,
+  legenda e nome da moto ficam restritos ao painel.
+- **Escrita só para administradores.** Catálogo, configurações, vendas,
+  entregas e Storage checam `public.admins` pela função `e_admin()`. Uma
+  conta autenticada que não esteja na lista não escreve nem lê o painel.
+- **A lista de admins não é exposta.** `public.admins` não tem grant nem
+  política: só o `service_role` e as funções `security definer` a leem.
+- **Fotos trocadas numa transação.** O delete e o insert das linhas de
+  `motorcycle_images` acontecem juntos; falha no meio não deixa a moto
+  sem foto.
 
-O ponto de atenção: **qualquer usuário autenticado edita o catálogo**.
-Se você usa uma única conta (o dono), está ok. Se algum dia criar conta
-de funcionário, essa pessoa também poderá alterar preços. Para travar,
-crie a tabela `profiles` com `is_admin` e troque as políticas de escrita
-por `exists (select 1 from profiles where id = auth.uid() and is_admin)`.
-O cadastro público de contas precisa ficar desligado (passo 4): sem isso,
-o passo "apenas usuário autenticado" perde valor.
+Desligar o cadastro público (passo 4) continua recomendado: a lista de
+admins impede o acesso, mas não impede a criação de contas.
 
 Nunca exponha a `service_role` em `VITE_*`: variáveis `VITE_` são
 embaladas no JavaScript e ficam públicas para qualquer visitante.
@@ -207,6 +248,10 @@ embaladas no JavaScript e ficam públicas para qualquer visitante.
 | `/admin` diz "Área restrita desativada" | `.env` ausente, ou build anterior ao `.env`. Refaça o build. |
 | Login diz "E-mail ou senha inválidos" | Usuário não criado em Authentication → Users, ou e-mail não confirmado. |
 | Fotos não sobem | Bucket `motos` não criado (rode `..._seguranca_rls_e_storage.sql`) ou política de Storage faltando. |
+| Salvar moto diz "o banco ainda não tem a rotina que grava as fotos" | Falta a migração `11_seguranca_e_transacoes.sql`. Rode-a e tente de novo. |
+| Painel diz que não há permissão ao salvar | A conta não está em `public.admins`. Veja o passo 4. |
+| Venda registrada sem custo | Falta a migração 11 (função `custo_da_moto`) ou a moto não tem `custo_compra` cadastrado. |
+| Link de recuperação abre "não é mais válido" | Link vencido/já usado, ou a URL `/admin/redefinir` não está em Redirect URLs (passo 4). |
 | `duplicate key` ao salvar | O sistema tenta sozinho o próximo endereço livre (`-2`, `-3`…). Se persistir, é outra restrição do banco: veja o erro completo no console. |
 | Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). A config da loja (aba Configurações) é exceção: vai para `site_settings` e vale na hora. |
 | Excluir moto pede uma migração | A coluna `lixeira_em` não existe no banco. Rode `09_lixeira_do_estoque.sql` no SQL Editor. |

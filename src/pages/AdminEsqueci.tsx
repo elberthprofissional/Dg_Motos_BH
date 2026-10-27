@@ -109,11 +109,15 @@ className="btn btn-primary mt-2 w-full"
 
 /**
  * Tela de nova senha — o dono chega aqui pelo link do e-mail de
- * recuperação. O Supabase detecta o token na URL e abre a sessão de
- * recuperação; `updateUser` troca a senha nela.
+ * recuperação. O Supabase detecta o token na URL (`detectSessionInUrl`)
+ * e abre a sessão de recuperação; `updateUser` troca a senha nela.
+ *
+ * Sem sessão (link vencido, já usado ou aberto noutro navegador) a tela
+ * explica o motivo e oferece pedir outro, em vez de deixar o dono
+ * digitando uma senha que o banco vai recusar.
  */
 export function AdminRedefinir() {
-  const { redefinirSenha, carregando } = useAuth()
+  const { redefinirSenha, carregando, sessao } = useAuth()
   const navigate = useNavigate()
   const [senha, setSenha] = useState('')
   const [confirmar, setConfirmar] = useState('')
@@ -121,6 +125,7 @@ export function AdminRedefinir() {
   const [salvando, setSalvando] = useState(false)
 
   const senhasDivergentes = confirmar.length > 0 && confirmar !== senha
+  const linkInvalido = !carregando && !sessao
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -162,49 +167,71 @@ export function AdminRedefinir() {
 
         <h1 className="etiqueta mt-8 text-center text-texto">Criar senha nova</h1>
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-3" noValidate>
-          <p className="text-center text-xs leading-relaxed text-steel-400">
-            Crie uma senha nova para o painel.
-          </p>
-
-          <SenhaInput
-            id="nova-senha"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            placeholder="Nova senha"
-            rotulo="Nova senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-          />
-          <SenhaInput
-            id="confirmar-senha"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            placeholder="Confirmar nova senha"
-            rotulo="Confirmar nova senha"
-            value={confirmar}
-            onChange={(e) => setConfirmar(e.target.value)}
-          />
-          {senhasDivergentes && (
-            <p className="text-xs text-steel-400">As senhas não coincidem.</p>
-          )}
-
-          {erro && (
-            <p role="alert" className="pt-1 text-center text-xs leading-relaxed text-brand-500">
-              {erro}
+        {linkInvalido ? (
+          <div className="mt-5 text-center">
+            <p className="text-sm leading-relaxed text-paper">
+              Este link de recuperação não é mais válido.
             </p>
-          )}
+            <p className="mt-3 text-xs leading-relaxed text-steel-400">
+              Links expiram e só podem ser usados uma vez. Peça um novo para o e-mail do painel.
+            </p>
+            <Link to="/admin/esqueci" className="btn btn-primary mt-6 w-full">
+              Pedir novo link
+            </Link>
+            <div className="pt-4">
+              <Link
+                to="/admin/login"
+                className="inline-block py-1 text-xs text-steel-400 transition-colors hover:text-paper"
+              >
+                Voltar para o login
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="mt-5 space-y-3" noValidate>
+            <p className="text-center text-xs leading-relaxed text-steel-400">
+              Crie uma senha nova para o painel.
+            </p>
 
-          <button
-            type="submit"
-            disabled={salvando || carregando || !senha || !confirmar}
-            className="btn btn-primary mt-2 w-full"
-          >
-            {salvando ? 'Salvando...' : 'Salvar senha'}
-          </button>
-        </form>
+            <SenhaInput
+              id="nova-senha"
+              autoComplete="new-password"
+              required
+              minLength={6}
+              placeholder="Nova senha"
+              rotulo="Nova senha"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+            />
+            <SenhaInput
+              id="confirmar-senha"
+              autoComplete="new-password"
+              required
+              minLength={6}
+              placeholder="Confirmar nova senha"
+              rotulo="Confirmar nova senha"
+              value={confirmar}
+              onChange={(e) => setConfirmar(e.target.value)}
+            />
+            {senhasDivergentes && (
+              <p className="text-xs text-steel-400">As senhas não coincidem.</p>
+            )}
+
+            {erro && (
+              <p role="alert" className="pt-1 text-center text-xs leading-relaxed text-brand-500">
+                {erro}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={salvando || carregando || !senha || !confirmar}
+              className="btn btn-primary mt-2 w-full"
+            >
+              {salvando ? 'Salvando...' : 'Salvar senha'}
+            </button>
+          </form>
+        )}
       </main>
     </div>
   )

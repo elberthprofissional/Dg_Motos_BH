@@ -37,15 +37,38 @@ const INDEX_HTML = path.join(DIST, 'index.html')
 const SITE_TS = path.join(ROOT, 'src', 'data', 'site.ts')
 
 /**
+ * CSS mínimo da ficha pré-renderizada.
+ *
+ * O HTML estático fica no `#root` até o React montar. Sem estilo, o
+ * visitante via um bloco de texto cru sobre fundo branco por um instante
+ * (o fio de luz que a página evita). Este bloco cobre só o artigo do
+ * prerender; o CSS completo assume no primeiro paint do React.
+ */
+const CRITICAL_CSS = `<style>
+html,body{margin:0;background:#0f0e0c;color:#ece7de}
+.prerender{max-width:42rem;margin:0 auto;padding:2rem 1.25rem;font-family:Lato,system-ui,sans-serif;line-height:1.6}
+.prerender h1{margin:0;font-size:1.75rem;line-height:1.2;color:#fff}
+.prerender h2{margin:1.75rem 0 .5rem;font-size:1.125rem;color:#fff}
+.prerender .ano,.prerender .resumo{color:#a8a198}
+.prerender .preco{margin:.75rem 0;font-size:1.5rem;font-weight:700;color:#f26d62}
+.prerender .descricao{color:#ece7de}
+.prerender .especificacoes{display:grid;gap:.5rem;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));margin:0}
+.prerender .especificacoes div{padding:.5rem 0;border-bottom:1px solid #2a2825}
+.prerender dt{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:#8e887e}
+.prerender dd{margin:0;color:#ece7de}
+.prerender a{color:#f26d62}
+</style>`
+
+/**
  * Lê as motos do Postgres pela API REST.
  *
  * Falha de rede não pode derrubar o build: nesse caso usamos o
  * catálogo estático, que é o mesmo fallback do site em runtime.
  */
 async function motosDoBanco(url, key) {
-  // Colunas explícitas: o build não precisa (nem deve) baixar custo_compra,
-  // que é dado interno do painel. O runtime do catálogo continua com `*`
-  // porque o admin usa o mesmo select para calcular lucro.
+  // Colunas explícitas: o build não precisa (nem deve) baixar
+  // custo_compra, dado interno do painel. O runtime usa a mesma lista —
+  // a migração 11 fecha o acesso à coluna para a API.
   const colunas = [
     'id',
     'slug',
@@ -378,6 +401,9 @@ async function run() {
       .replace(/<meta\s+property="og:description"[\s\S]*?\/>/, `<meta property="og:description" content="${resumo}" />`)
       .replace(/<meta\s+property="og:url"[\s\S]*?\/>/, `<meta property="og:url" content="${ficha.url}" />`)
       .replace(/<meta\s+property="og:image"[\s\S]*?\/>/, `<meta property="og:image" content="${escapar(imagem)}" />`)
+      // Sem estilo crítico, o conteúdo pré-renderizado pisca sem
+      // formatação entre o HTML e a montagem do React.
+      .replace('</head>', `${CRITICAL_CSS}</head>`)
       // Canonical fixo: sem ele o Google pode tratar a ficha como
       // duplicata da listagem de /estoque.
       .replace('</head>', `<link rel="canonical" href="${ficha.url}" /></head>`)

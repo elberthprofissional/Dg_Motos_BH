@@ -26,7 +26,10 @@ export function getSupabase(): SupabaseClient | null {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
+      // O link de recuperação chega com o token na URL (#access_token=
+      // ou ?code=). Sem detectar, /admin/redefinir abre sem sessão e a
+      // troca de senha falha.
+      detectSessionInUrl: true,
     },
   })
   return client

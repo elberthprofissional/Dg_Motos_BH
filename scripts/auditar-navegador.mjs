@@ -19,10 +19,29 @@
  *
  * Sai com código 1 se alguma checagem falhar — dá para pendurar em CI.
  */
+import { readFile } from 'node:fs/promises'
+
 const CDP = process.env.CDP ?? 'http://127.0.0.1:9222'
 const BASE = process.env.BASE ?? 'http://localhost:4173'
 
-const ROTAS = ['/', '/estoque', '/contato', '/moto/honda-xre-300-2021', '/admin/login']
+/**
+ * Primeira ficha do sitemap do build.
+ *
+ * O catálogo muda (o banco é editado pelo dono), então fixar um slug
+ * aqui fazia a auditoria morrer no dia em que aquela moto fosse vendida.
+ */
+async function primeiraFicha() {
+  try {
+    const xml = await readFile(new URL('../dist/sitemap.xml', import.meta.url), 'utf8')
+    const achado = xml.match(/<loc>[^<]*\/moto\/([^<]+)<\/loc>/)
+    return achado ? `/moto/${achado[1]}` : null
+  } catch {
+    return null
+  }
+}
+
+const FICHA = await primeiraFicha()
+const ROTAS = ['/', '/estoque', '/contato', ...(FICHA ? [FICHA] : []), '/admin/login']
 const VIEWPORTS = [
   { nome: 'desktop', width: 1440, height: 900, mobile: false },
   { nome: 'mobile', width: 390, height: 844, mobile: true },
@@ -114,7 +133,16 @@ const MEDICAO = `(() => {
 
   /* ---------- transbordo horizontal ----------
      Só o que passa da borda DIREITA transborda: elemento jogado para
-     fora à esquerda (o skip link, por exemplo) não cria rolagem. */
+     fora à esquerda (o skip link, por exemplo) não cria rolagem.
+     Conteúdo de esteira/marquee vive dentro de um ancestral com
+     overflow recortado: não empurra a página e não entra na lista. */
+  const recortado = (el) => {
+    for (let no = el.parentElement; no && no !== document.body; no = no.parentElement) {
+      if (getComputedStyle(no).overflowX === 'visible') continue
+      if (no.getBoundingClientRect().right <= vw + 1) return true
+    }
+    return false
+  }
   const over = []
   for (const el of document.querySelectorAll('body *')) {
     const r = el.getBoundingClientRect()
@@ -123,6 +151,7 @@ const MEDICAO = `(() => {
     const cs = getComputedStyle(el)
     if (cs.position === 'fixed') continue
     if (el.closest('[inert]')) continue
+    if (recortado(el)) continue
     over.push({
       tag: el.tagName,
       cls: String(el.className || '').slice(0, 70),
@@ -402,6 +431,7 @@ const ok = (nome, passou, detalhe = '') => {
         aberto: d.open,
         largura: Math.round(d.getBoundingClientRect().width),
         fundo: cs.backgroundColor,
+        fundoDaPagina: getComputedStyle(document.body).backgroundColor,
         focoDentro: d.contains(document.activeElement),
         bodyOverflow: document.body.style.overflow,
       }
@@ -409,7 +439,11 @@ const ok = (nome, passou, detalhe = '') => {
   )
   ok('menu: abre com showModal', aberto.aberto === true)
   ok('menu: ocupa a tela toda', aberto.largura === 390, 'largura=' + aberto.largura)
-  ok('menu: fundo preto', aberto.fundo === 'rgb(8, 8, 8)', aberto.fundo)
+  ok(
+    'menu: fundo opaco na cor da página',
+    aberto.fundo === aberto.fundoDaPagina,
+    `${aberto.fundo} vs ${aberto.fundoDaPagina}`,
+  )
   ok('menu: rolagem do fundo travada', aberto.bodyOverflow === 'hidden', aberto.bodyOverflow)
   ok('menu: foco dentro do diálogo', aberto.focoDentro)
 
@@ -516,35 +550,54 @@ const ok = (nome, passou, detalhe = '') => {
 }
 
 /* --- ficha da moto no celular --- */
-{
-  const { targetId, sessionId } = await abrir(BASE + '/moto/honda-xre-300-2021', 390, 844, true)
+if (FICHA) {
+  const { targetId, sessionId } = await abrir(BASE + FICHA, 390, 844, true)
 
   const ordem = await avaliar(
     sessionId,
     `(() => {
       const h1 = document.querySelector('main h1')
       const galeria = document.querySelector('main img')
-      const rH1 = h1.getBoundingClientRect()
-      const rImg = galeria.getBoundingClientRect()
-      const breadcrumb = document.querySelector('nav[aria-label="Navegação estrutural"]')
-      const alvos = [...breadcrumb.querySelectorAll('a')].map((a) => ({
-        txt: a.innerText.trim(),
-        h: Math.round(a.getBoundingClientRect().height),
-      }))
+      const voltar = document.querySelector('a[aria-label="Voltar ao estoque"]')
+      const acao = [...document.querySelectorAll('a')].find(
+        (a) =>
+          a.getBoundingClientRect().height > 0 &&
+          /whatsapp|falar com a loja/i.test(a.innerText),
+      )
+      let no = acao
+      let acaoFixa = false
+      while (no && no !== document.body) {
+        if (getComputedStyle(no).position === 'fixed') {
+          acaoFixa = true
+          break
+        }
+        no = no.parentElement
+      }
       return {
-        tituloAntesDaFoto: rH1.top < rImg.top,
-        alvos,
+        fotoAbre: !!galeria && !!h1 && galeria.getBoundingClientRect().top < h1.getBoundingClientRect().top,
+        tituloNaDobra: !!h1 && h1.getBoundingClientRect().top < window.innerHeight,
+        alvoVoltar: voltar ? Math.round(voltar.getBoundingClientRect().height) : 0,
+        alvoAcao: acao ? Math.round(acao.getBoundingClientRect().height) : 0,
+        acaoFixa,
       }
     })()`,
   )
-  ok('ficha: título e preço abrem a página antes da galeria', ordem.tituloAntesDaFoto)
+  ok('ficha: a foto abre a página no celular', ordem.fotoAbre)
+  ok('ficha: título ancora a ficha na primeira dobra', ordem.tituloNaDobra)
   ok(
-    'ficha: links do breadcrumb com alvo de toque ≥ 24 px',
-    ordem.alvos.every((a) => a.h >= 24),
-    JSON.stringify(ordem.alvos),
+    'ficha: voltar ao estoque com alvo de toque ≥ 40 px',
+    ordem.alvoVoltar >= 40,
+    `h=${ordem.alvoVoltar}`,
+  )
+  ok(
+    'ficha: preço e ação na barra fixa',
+    ordem.acaoFixa && ordem.alvoAcao >= 40,
+    `h=${ordem.alvoAcao} fixa=${ordem.acaoFixa}`,
   )
 
   await send('Target.closeTarget', { targetId })
+} else {
+  console.log('AVISO: sitemap sem fichas — pulando a auditoria da ficha da moto.')
 }
 
 /* --- teclado --- */
@@ -598,7 +651,9 @@ const ok = (nome, passou, detalhe = '') => {
 
 /* --- botões flutuantes --- */
 {
-  const { targetId, sessionId } = await abrir(BASE + '/', 390, 844, true)
+  // Os flutuantes só aparecem a partir de md; medir no celular daria
+  // altura zero e um "ok" sem significado.
+  const { targetId, sessionId } = await abrir(BASE + '/', 1024, 800, false)
 
   const topo = await avaliar(
     sessionId,
@@ -611,7 +666,8 @@ const ok = (nome, passou, detalhe = '') => {
         setaVisivel: seta ? getComputedStyle(seta).opacity !== '0' : null,
         contatoExiste: !!contato,
         contatoCor: contato ? getComputedStyle(contato).backgroundColor : null,
-        contatoRaio: contato ? getComputedStyle(contato).borderRadius : null,
+        contatoRaio: contato ? parseFloat(getComputedStyle(contato).borderRadius) : null,
+        contatoLado: contato ? contato.getBoundingClientRect().height : null,
       }
     })()`,
   )
@@ -620,13 +676,21 @@ const ok = (nome, passou, detalhe = '') => {
     'flutuantes: seta começa escondida e fora do Tab',
     topo.setaInert === true && topo.setaVisivel === false,
   )
-  ok('flutuantes: contato presente na vitrine', topo.contatoExiste)
+  ok(
+    'flutuantes: contato presente com alvo ≥ 44 px',
+    topo.contatoExiste && topo.contatoLado >= 44,
+    `lado=${topo.contatoLado}`,
+  )
   ok(
     'flutuantes: contato usa o verde do WhatsApp',
     topo.contatoCor === 'rgb(37, 211, 102)',
     topo.contatoCor,
   )
-  ok('flutuantes: canto reto no botão de contato', topo.contatoRaio === '0px', topo.contatoRaio)
+  ok(
+    'flutuantes: botão de contato circular',
+    topo.contatoRaio >= topo.contatoLado / 2,
+    `raio=${topo.contatoRaio} lado=${topo.contatoLado}`,
+  )
 
   await avaliar(
     sessionId,

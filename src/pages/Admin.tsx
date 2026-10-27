@@ -207,13 +207,11 @@ export function Admin() {
       const r = await excluirMotosDefinitivamente(vencidas.map((moto) => moto.id))
       if (!r.ok) return
       await recarregar()
-      avisar({
-        tipo: 'ok',
-        texto:
-          vencidas.length === 1
-            ? `Uma moto ficou ${DIAS_NA_LIXEIRA} dias na lixeira e foi apagada de vez.`
-            : `${vencidas.length} motos ficaram ${DIAS_NA_LIXEIRA} dias na lixeira e foram apagadas de vez.`,
-      })
+      const texto =
+        vencidas.length === 1
+          ? `Uma moto ficou ${DIAS_NA_LIXEIRA} dias na lixeira e foi apagada de vez.`
+          : `${vencidas.length} motos ficaram ${DIAS_NA_LIXEIRA} dias na lixeira e foram apagadas de vez.`
+      avisar({ tipo: r.aviso ? 'erro' : 'ok', texto: r.aviso ? `${texto} ${r.aviso}` : texto })
     })()
   }, [naLixeira, recarregar])
 
@@ -221,9 +219,11 @@ export function Admin() {
     setFeedback(novo)
   }
 
-  async function concluirAcao(texto: string) {
+  async function concluirAcao(texto: string, aviso?: string | null) {
     await recarregar()
-    avisar({ tipo: 'ok', texto })
+    // Aviso é sucesso parcial (fotos órfãs, linha que já não estava na
+    // lixeira): o dono precisa ver, então usa o canal de erro.
+    avisar(aviso ? { tipo: 'erro', texto: `${texto} ${aviso}` } : { tipo: 'ok', texto })
   }
 
   /** O formulário salvou (novo cadastro ou edição): recarrega o estoque. */
@@ -282,7 +282,7 @@ export function Admin() {
           avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível apagar a moto.' })
           return
         }
-        await concluirAcao(`${moto.marca} ${moto.modelo} foi apagada de vez.`)
+        await concluirAcao(`${moto.marca} ${moto.modelo} foi apagada de vez.`, r.aviso)
       },
     })
   }
@@ -304,7 +304,7 @@ export function Admin() {
           avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível esvaziar a lixeira.' })
           return
         }
-        await concluirAcao('A lixeira foi esvaziada.')
+        await concluirAcao('A lixeira foi esvaziada.', r.aviso)
       },
     })
   }

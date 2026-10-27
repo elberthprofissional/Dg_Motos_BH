@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useVendas } from '../../hooks/vendasContexto'
+import { buscarCustoCompra } from '../../lib/catalog'
 import { bikeTitle, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 import { campoLinha } from './campoLinha'
@@ -12,8 +13,9 @@ import type { Motorcycle, Venda, VendaParaSalvar } from '../../types'
  * "Comprou…" na aba Vendidas para corrigir o registro.
  *
  * Pergunta só o que a loja ainda não sabe: quem levou e o telefone. O
- * valor é o preço do anúncio e o custo é o `custoCompra` já cadastrado
- * na ficha — pedir os dois de novo era digitar o mesmo número duas
+ * valor é o preço do anúncio e o custo vem da ficha pela função
+ * `custo_da_moto` — a coluna não sai mais no select do catálogo, que é
+ * público. Pedir os dois de novo era digitar o mesmo número duas
  * vezes, e nenhuma tela mostrava faturamento para justificar o esforço.
  * Se um dia entrar um relatório de lucro, os campos continuam no banco:
  * a venda já nasce com valor e custo, só não os pergunta aqui.
@@ -79,6 +81,19 @@ export function DialogoRegistrarVenda({
     }
 
     setOcupado(true)
+
+    // Numa venda nova o custo vem da ficha pela função do painel. Se o
+    // banco ainda não tiver a migração 11, registra sem custo em vez de
+    // travar o lançamento.
+    let custoDaMoto: number | null = venda?.custo ?? null
+    if (!venda) {
+      try {
+        custoDaMoto = await buscarCustoCompra(moto.id)
+      } catch {
+        custoDaMoto = null
+      }
+    }
+
     const dados: VendaParaSalvar = {
       id: venda?.id,
       // Na correção o vínculo original se mantém (pode ser nulo se a
@@ -87,13 +102,13 @@ export function DialogoRegistrarVenda({
       marca: moto.marca,
       modelo: moto.modelo,
       ano: moto.ano,
-      // Valor, custo e pagamento não passam por aqui: na correção herdam
-      // o que a venda já guardava; numa venda nova saem da ficha da moto.
+      // Valor e pagamento não passam por aqui: na correção herdam o
+      // que a venda já guardava; numa venda nova saem da ficha da moto.
       valor: venda ? venda.valor : moto.preco,
       formaPagamento: venda ? venda.formaPagamento : 'outra',
       comprador: nome,
       telefone: telefone.trim() || null,
-      custo: venda ? venda.custo : (moto.custoCompra ?? null),
+      custo: custoDaMoto,
     }
     const erroSalvar = await salvarVenda(dados)
     setOcupado(false)

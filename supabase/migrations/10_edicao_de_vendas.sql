@@ -12,7 +12,7 @@
 --   moto que está à venda de novo.
 --
 --   Nada muda para o site: `sales` continua SEM política para anon.
---   Comprador, telefone e valores siguem saindo só do painel.
+--   Comprador, telefone e valores seguem saindo só do painel.
 -- ============================================================
 
 drop policy if exists "sales_dono_atualiza" on public.sales;
