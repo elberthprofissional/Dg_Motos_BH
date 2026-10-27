@@ -82,7 +82,7 @@ export function AdminLogin() {
             Realizando Sonhos
           </p>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
-            Estoque, anúncios e vendas no mesmo lugar.
+            Gerencie todo o seu negócio em um lugar só.
           </p>
         </div>
       </aside>

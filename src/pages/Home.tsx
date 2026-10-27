@@ -17,6 +17,9 @@ const heroDesktop = '/hero/home-desktop.webp'
 // própria imagem — nada de texto HTML por cima.
 const heroMobile = '/hero/home-mobile-texto.webp'
 import trocaNova from '../assets/troca/troca-nova.webp'
+// Desktop: a arte sem texto — o título escrito em HTML ocupa o lado
+// esquerdo escuro, com a moto limpa à direita.
+import bannerDesktop from '../assets/troca/banner-desktop.webp'
 
 /**
  * Página inicial — a bancada da loja.
@@ -193,18 +196,18 @@ export function Home() {
       {/* ============================================================
           TROCA — a arte do dono vale a seção inteira
           ============================================================
-          Mesmo esquema do hero: o texto mora dentro da imagem
-          ("Sua moto vale aqui / usamos na troca") e nada por cima
-          reprime. A arte é larga, então aparece inteira, na
-          proporção dela, sem recorte. O alt descreve o texto
-          embutido — é o que leitores de tela e o Google leem.
-          Sem card, sem moldura: sangra de ponta a ponta. */}
-      <section aria-label="Troca de motos — avaliação da sua moto usada" className="bg-fundo pt-4 pb-0 sm:pt-6 lg:py-8">
-        {/* Desktop: a arte volta para dentro do container, com acabamento
-            de card — largura inteira na resolução grande ficava esquisita.
-            O recorte vertical preserva o texto e a moto da arte. */}
+          Celular segue o esquema do hero: o texto mora dentro da
+          imagem ("Sua moto vale aqui / usamos na troca") e nada por
+          cima reprime. No desktop a arte é a versão limpa (sem texto):
+          o título é escrito aqui em código, sobre o lado escuro à
+          esquerda, e a moto fica intacta à direita. */}
+      {/* Sem respiro embaixo no desktop: o banner encosta na faixa de
+          marcas — espaço entre os dois abria uma tarja preta à toa. */}
+      <section aria-label="Troca de motos — avaliação da sua moto usada" className="bg-fundo pt-4 pb-0 sm:pt-6 lg:pt-8">
         <div className="relative w-full lg:overflow-hidden lg:rounded-2xl lg:border lg:border-borda">
-          <picture className="block w-full">
+          {/* Celular: arte única do dono, texto embutido. O alt descreve
+              o texto embutido — é o que leitores de tela e o Google leem. */}
+          <picture className="block w-full lg:hidden">
             <source srcSet={trocaNova} type="image/webp" />
             <img
               src={trocaNova}
@@ -213,9 +216,37 @@ export function Home() {
               height={554}
               loading="lazy"
               decoding="async"
-              className="h-auto w-full lg:h-[clamp(20rem,38vw,28rem)] lg:object-cover"
+              className="h-auto w-full"
             />
           </picture>
+
+          {/* Desktop: banner sem texto, com altura contida — na proporção
+              nativa ele virava um paralelepípedo na tela larga. O crop
+              vertical passa pela base, a moto continua inteira. */}
+          <div className="relative hidden lg:block">
+            <picture aria-hidden="true" className="block w-full">
+              <source srcSet={bannerDesktop} type="image/webp" />
+              <img
+                src={bannerDesktop}
+                alt=""
+                width={1760}
+                height={648}
+                loading="lazy"
+                decoding="async"
+                className="h-auto w-full lg:h-[clamp(19rem,26vw,27rem)] lg:object-cover"
+              />
+            </picture>
+
+            <div className="absolute inset-0 z-10 flex items-center">
+              <div className="container-site">
+                <div className="max-w-[40rem]">
+                  <p className="cartaz titulo-troca text-texto">Sua moto vale aqui</p>
+                  <p className="cartaz titulo-troca text-marca-viva">Usamos na troca</p>
+                  <p className="corpo mt-4 text-texto-2 lg:text-lg">Avaliação justa e transparente.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
