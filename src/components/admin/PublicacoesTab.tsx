@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, ImageOff, Trash2 } from 'lucide-react'
+import { ArrowRight, ExternalLink, ImageOff, Pencil, Trash2 } from 'lucide-react'
 import type { EntregaParaSalvar } from '../../lib/entregas'
 import {
   atualizarFotosEntrega,
@@ -13,6 +13,8 @@ import type { Feedback } from '../ui/Toast'
 import { DialogoConfirmacao } from '../ui/DialogoConfirmacao'
 import type { PedidoConfirmacao } from '../ui/DialogoConfirmacao'
 import { AreaUploadFoto } from './AreaUploadFoto'
+import { DialogoInfoEntrega } from './DialogoInfoEntrega'
+import type { InfoEntrega } from './DialogoInfoEntrega'
 
 interface PublicacoesTabProps {
   onFeedback: (feedback: Feedback) => void
@@ -39,18 +41,24 @@ function faltasDoRascunho(post: EntregaRegistro): string | null {
  * publicação sai confirmada (é o que o check `entrega_publicada_autorizada`
  * exige, junto de pelo menos uma foto).
  */
-function dadosDe(post: EntregaRegistro, ordem = post.ordem): EntregaParaSalvar {
+function dadosDe(
+  post: EntregaRegistro,
+  mudancas: Partial<EntregaParaSalvar> = {},
+): EntregaParaSalvar {
   return {
     id: post.id,
-    motoId: '',
-    motoNome: 'Publicação',
+    motoId: post.motoId,
+    // "Publicação" foi o nome genérico das versões antigas: agora é
+    // ausência de informação, não um modelo.
+    motoNome: post.motoNome === 'Publicação' ? '' : post.motoNome,
     fotos: post.fotos,
     legenda: post.legenda,
-    nomeCliente: '',
+    nomeCliente: post.nomeCliente,
     entregueEm: post.entregueEm,
     autorizacaoPublicacao: true,
     status: 'publicada',
-    ordem,
+    ordem: post.ordem,
+    ...mudancas,
   }
 }
 
@@ -58,11 +66,12 @@ function dadosDe(post: EntregaRegistro, ordem = post.ordem): EntregaParaSalvar {
  * ============================================================
  * PUBLICAÇÕES — o mural visto por dentro
  * ============================================================
- * Não existe tela de edição: o mural é a única superfície. Ele é um
- * "rolo de fotos" — todas as entregas lado a lado, sem pasta — e
- * cada quadro carrega o seu próprio apagar. Para entrar com foto
- * nova, "Adicionar foto" abre a folha de galeria/câmera, as fotos
- * sobem e a publicação já nasce no ar.
+ * O mural é a única superfície, mas agora ele se explica: cada foto
+ * carrega o modelo, a data e o cliente, e as ações (editar, ver no
+ * site, apagar) moram no próprio quadro. As fotos sobem e a
+ * publicação já nasce no ar; em seguida o diálogo de informações
+ * abre sozinho — modelo e cliente ficam só no painel, porque a
+ * galeria pública segue anônima.
  */
 export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
   const [posts, setPosts] = useState<EntregaRegistro[]>([])
@@ -72,6 +81,9 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
   const [publicando, setPublicando] = useState(false)
   const [removendo, setRemovendo] = useState(false)
   const [pedidoRemocao, setPedidoRemocao] = useState<PedidoConfirmacao | null>(null)
+  const [idEditando, setIdEditando] = useState<string | null>(null)
+  const [salvandoInfo, setSalvandoInfo] = useState(false)
+  const [erroInfo, setErroInfo] = useState<string | null>(null)
   const arquivoRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
 
@@ -119,6 +131,18 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
     )[0]
   }, [rascunhos])
 
+  const totalFotos = useMemo(
+    () => ativas.reduce((total, post) => total + post.fotos.length, 0),
+    [ativas],
+  )
+
+  // Só publicações visíveis abrem o diálogo: se a última foto for apagada,
+  // o registro é arquivado e o diálogo fecha junto.
+  const postEditando = useMemo(
+    () => ativas.find((post) => post.id === idEditando) ?? null,
+    [ativas, idEditando],
+  )
+
   const entrada = {
     enviando: criando,
     onEscolher: () => arquivoRef.current?.click(),
@@ -141,7 +165,9 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
       await salvarEntrega({
         id,
         motoId: '',
-        motoNome: 'Publicação',
+        // O nome é perguntado logo depois, no diálogo que abre sozinho:
+        // gravar "Publicação" aqui era inventar um modelo que não existe.
+        motoNome: '',
         fotos: paths,
         legenda: '',
         nomeCliente: '',
@@ -152,6 +178,8 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
       })
 
       await recarregar()
+      setErroInfo(null)
+      setIdEditando(id)
       onFeedback({
         tipo: 'ok',
         texto:
@@ -242,6 +270,41 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
     }
   }
 
+  function editarInfo(post: EntregaRegistro) {
+    setErroInfo(null)
+    setIdEditando(post.id)
+  }
+
+  /**
+   * Modelo, cliente e data são o que a foto conta. Grava só esses
+   * campos — status e fotos ficam como estavam, para editar os dados
+   * de um rascunho não publicá-lo sem querer.
+   */
+  async function salvarInfo(info: InfoEntrega) {
+    if (!postEditando) return
+    setSalvandoInfo(true)
+    setErroInfo(null)
+    try {
+      await salvarEntrega(
+        dadosDe(postEditando, {
+          motoNome: info.modelo,
+          nomeCliente: info.cliente,
+          entregueEm: info.data,
+          status: postEditando.status,
+        }),
+      )
+      await recarregar()
+      setIdEditando(null)
+      onFeedback({ tipo: 'ok', texto: 'Informações da entrega salvas.' })
+    } catch (e) {
+      setErroInfo(
+        e instanceof Error ? e.message : 'Não foi possível salvar as informações.',
+      )
+    } finally {
+      setSalvandoInfo(false)
+    }
+  }
+
   return (
     <section className="publicacoes-pagina mx-auto max-w-6xl" aria-labelledby="publicacoes-titulo">
       <header className="publicacoes-cabecalho">
@@ -251,7 +314,7 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
               Sonhos realizados
             </h2>
             <p className="publicacoes-subtitulo">
-              As fotos de entrega que aparecem na galeria do site.
+              Cada entrega vira foto no site. Aqui você dá nome à moto, ao cliente e à data.
             </p>
           </div>
 
@@ -262,6 +325,21 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
             className="w-full sm:w-auto"
           />
         </div>
+
+        {!carregando && ativas.length > 0 ? (
+          <dl className="publicacoes-contador" aria-label="Resumo do mural">
+            <div className="publicacoes-contador-item">
+              <dt className="publicacoes-contador-rotulo">Sonhos realizados</dt>
+              <dd className="publicacoes-contador-numero publicacoes-contador-numero--marca numeros">
+                {ativas.length}
+              </dd>
+            </div>
+            <div className="publicacoes-contador-item">
+              <dt className="publicacoes-contador-rotulo">Fotos no mural</dt>
+              <dd className="publicacoes-contador-numero numeros">{totalFotos}</dd>
+            </div>
+          </dl>
+        ) : null}
       </header>
 
       {carregando ? (
@@ -288,6 +366,7 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
               posts={ativas}
               removendo={removendo}
               onApagar={pedirRemocao}
+              onEditar={editarInfo}
             />
           )}
         </>
@@ -320,6 +399,14 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
         pedido={pedidoRemocao}
         onFechar={() => setPedidoRemocao(null)}
         ocupado={removendo}
+      />
+
+      <DialogoInfoEntrega
+        post={postEditando}
+        ocupado={salvandoInfo}
+        erro={erroInfo}
+        onFechar={() => setIdEditando(null)}
+        onSalvar={(info) => void salvarInfo(info)}
       />
     </section>
   )
@@ -373,14 +460,14 @@ function EsqueletoPublicacoes() {
   return (
     <div role="status" aria-live="polite" aria-busy="true">
       <span className="sr-only">Carregando publicações…</span>
-      <div className="publicacoes-fotos" aria-hidden="true">
+      <ul className="publicacoes-mosaico" aria-hidden="true">
         {Array.from({ length: 10 }, (_, quadro) => (
-          <span
+          <li
             key={quadro}
-            className="publicacoes-foto publicacoes-foto--esqueleto motion-safe:animate-pulse"
+            className="publicacoes-quadro motion-safe:animate-pulse"
           />
         ))}
-      </div>
+      </ul>
     </div>
   )
 }
@@ -474,56 +561,99 @@ function GaleriaPublicacoes({
   posts,
   removendo,
   onApagar,
+  onEditar,
 }: {
   posts: EntregaRegistro[]
   removendo: boolean
   onApagar: (post: EntregaRegistro, indice: number) => void
+  onEditar: (post: EntregaRegistro) => void
 }) {
   return (
-    <ul className="publicacoes-fotos">
+    <ul className="publicacoes-mosaico">
       {posts.flatMap((post) => {
         const data = dataCurta(post.entregueEm)
+        // "Publicação" era o nome genérico das versões antigas: é
+        // ausência de informação, não um modelo de moto.
+        const nome = post.motoNome === 'Publicação' ? '' : post.motoNome.trim()
+        const cliente = post.nomeCliente.trim()
         const total = Math.max(post.fotos.length, 1)
+        const descricao = nome ? `da ${nome}` : 'da entrega'
+        const legenda = data ? `${descricao}, em ${data}` : descricao
 
         return Array.from({ length: total }, (_, indice) => {
           const src = post.imagens[indice] ?? null
-          const legenda = data ? `da publicação de ${data}` : 'da publicação'
+          const semFoto = post.fotos.length === 0
           // Quadro de publicação sem foto não apaga imagem nenhuma:
           // ele tira a publicação do mural.
-          const rotuloApagar =
-            post.fotos.length === 0
-              ? `Tirar a publicação ${legenda} do mural`
-              : `Apagar a foto ${indice + 1} ${legenda}`
+          const rotuloApagar = semFoto
+            ? `Tirar a publicação ${legenda} do mural`
+            : `Apagar a foto ${indice + 1} ${legenda}`
 
           return (
-            <li key={`${post.id}-${indice}`} className="min-w-0">
-              <div className="publicacoes-foto">
-                {src ? (
-                  <img
-                    src={src}
-                    alt={`Foto ${indice + 1} ${legenda}`}
-                    width={960}
-                    height={1200}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <span className="publicacoes-foto-vazia" aria-hidden="true">
-                    <ImageOff className="size-5" />
-                    {post.fotos.length === 0 ? 'Sem fotos' : 'Foto indisponível'}
-                  </span>
-                )}
+            <li key={`${post.id}-${indice}`} className="publicacoes-quadro">
+              {src ? (
+                <img
+                  src={src}
+                  alt={`Foto ${indice + 1} ${legenda}`}
+                  width={960}
+                  height={1200}
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <span className="publicacoes-quadro-vazia" aria-hidden="true">
+                  <ImageOff className="size-5" />
+                  {semFoto ? 'Sem fotos' : 'Foto indisponível'}
+                </span>
+              )}
+
+              <span aria-hidden="true" className="publicacoes-quadro-sombra" />
+
+              <div className="publicacoes-quadro-info">
+                {post.status !== 'publicada' ? (
+                  <span className="publicacoes-quadro-fora">Fora do ar</span>
+                ) : null}
+                <p className="publicacoes-quadro-modelo">{nome || 'Entrega'}</p>
+                <p className="publicacoes-quadro-meta numeros">
+                  {data || 'Sem data'}
+                  {cliente ? ` · ${cliente}` : ''}
+                  {total > 1 ? ` · ${indice + 1}/${total}` : ''}
+                </p>
+              </div>
+
+              <div className="publicacoes-quadro-acoes">
+                <button
+                  type="button"
+                  onClick={() => onEditar(post)}
+                  aria-label={`Editar informações ${legenda}`}
+                  title="Editar informações"
+                  className="foco-painel publicacoes-quadro-acao"
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                </button>
+
+                {post.status === 'publicada' ? (
+                  <a
+                    href="/#sonhos"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Ver ${nome ? `a entrega da ${nome}` : 'a entrega'} no site`}
+                    title="Ver no site"
+                    className="foco-painel publicacoes-quadro-acao publicacoes-quadro-acao--site"
+                  >
+                    <ExternalLink className="size-4" aria-hidden="true" />
+                  </a>
+                ) : null}
 
                 <button
                   type="button"
                   onClick={() => onApagar(post, indice)}
                   disabled={removendo}
                   aria-label={rotuloApagar}
-                  className="foco-painel publicacoes-foto-apagar"
+                  title={semFoto ? 'Tirar do mural' : 'Apagar foto'}
+                  className="foco-painel publicacoes-quadro-acao publicacoes-quadro-acao--excluir"
                 >
-                  <span className="grid size-6 place-items-center bg-night-950/80">
-                    <Trash2 className="size-3.5" aria-hidden="true" />
-                  </span>
+                  <Trash2 className="size-4" aria-hidden="true" />
                 </button>
               </div>
             </li>
