@@ -93,10 +93,10 @@ function EsqueletoLixeira() {
  * Excluir no Estoque não apaga na hora: a moto perde o lugar na
  * vitrine e no pátio, mas a ficha e as fotos esperam aqui por 30 dias.
  *
- * A tela responde, nesta ordem: quantas motos e quanto valor estão
- * parados; qual é o prazo de cada uma; e como trazer de volta. O
- * esvaziar fica separado no fim, com o peso de área de risco — é a
- * única ação desta tela que não tem volta.
+ * A tela responde, nesta ordem: quantas motos estão guardadas; qual é
+ * o prazo de cada uma; e como trazer de volta. O esvaziar fica
+ * separado no fim, com o peso de área de risco — é a única ação desta
+ * tela que não tem volta.
  */
 export function LixeiraSecao({
   motos,
@@ -111,7 +111,6 @@ export function LixeiraSecao({
   const [recarregando, setRecarregando] = useState(false)
 
   const total = motos?.length ?? 0
-  const valorParado = (motos ?? []).reduce((soma, moto) => soma + moto.preco, 0)
   const ocupado = restaurandoId !== null
 
   async function restaurar(moto: Motorcycle) {
@@ -151,14 +150,6 @@ export function LixeiraSecao({
                 ? 'moto excluída'
                 : 'motos excluídas'}
           </span>
-        </div>
-
-        <div className="lixo-resumo-celula">
-          <span className="lixo-resumo-rotulo">Valor parado</span>
-          <span className="lixo-resumo-valor numeros">
-            {motos === null ? '—' : formatPrice(valorParado)}
-          </span>
-          <span className="lixo-resumo-nota">em motos fora do pátio</span>
         </div>
 
         <div className="lixo-resumo-celula lixo-resumo-celula--risco">

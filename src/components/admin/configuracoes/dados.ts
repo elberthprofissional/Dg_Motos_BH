@@ -1,4 +1,3 @@
-import { formatPrice } from '../../../lib/format'
 import { DIAS_SEMANA, lerSemana } from '../../../lib/horarios'
 import type { ConfigLoja } from '../../../lib/configLoja'
 
@@ -15,7 +14,7 @@ export interface DescricaoSecao {
   rotulo: string
   descricao: string
   campos: readonly (keyof ConfigLoja)[]
-  resumo: (config: ConfigLoja, naLixeira: number, valorLixeira: number) => string
+  resumo: (config: ConfigLoja, naLixeira: number) => string
   rotuloSalvar?: string
   mensagemSalva?: string
 }
@@ -258,10 +257,8 @@ export const SECOES: DescricaoSecao[] = [
     descricao:
       'Motos excluídas do estoque. Restaure para voltar ao pátio; o que ficar 30 dias aqui é apagado de vez, junto com as fotos.',
     campos: [],
-    resumo: (_config, naLixeira, valorLixeira) =>
-      naLixeira === 0
-        ? 'Vazia'
-        : `${naLixeira} ${naLixeira === 1 ? 'moto' : 'motos'} · ${formatPrice(valorLixeira)}`,
+    resumo: (_config, naLixeira) =>
+      naLixeira === 0 ? 'Vazia' : `${naLixeira} ${naLixeira === 1 ? 'moto' : 'motos'}`,
   },
 ]
 

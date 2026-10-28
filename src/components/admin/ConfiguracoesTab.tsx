@@ -97,9 +97,9 @@ export function ConfiguracoesTab({
   const voltarRef = useRef<HTMLButtonElement>(null)
 
   const totalLixeira = lixeira?.length ?? 0
-  const valorLixeira = (lixeira ?? []).reduce((total, moto) => total + moto.preco, 0)
   const secaoAtiva = secao ?? 'contato'
   const metaAtiva = metaDaSecao(secaoAtiva)
+  const indiceAtivo = SECOES.findIndex((bloco) => bloco.id === secaoAtiva) + 1
 
   const secoesSujas = SECOES.filter(
     (bloco) => bloco.id !== 'lixeira' && secaoSuja(bloco.id, config, salvo),
@@ -337,6 +337,7 @@ export function ConfiguracoesTab({
     return (
       <div className="mesa-folha-topo">
         <div className="mesa-folha-topo-texto">
+          <p className="mesa-folha-etapa">Bloco {String(indiceAtivo).padStart(2, '0')}</p>
           <h2 className="mesa-folha-titulo">{metaAtiva.rotulo}</h2>
           <p className="mesa-folha-desc">{metaAtiva.descricao}</p>
         </div>
@@ -360,12 +361,33 @@ export function ConfiguracoesTab({
     <div className="mesa">
       <header className="mesa-topo">
         <div className="mesa-topo-texto">
-          <h1 className="mesa-titulo">Configurações</h1>
+          <h1 className="mesa-titulo">
+            Configurações
+            <span className="mesa-titulo-ponto" aria-hidden="true">
+              .
+            </span>
+          </h1>
           <p className="mesa-sub">
             O contato, o perfil e o endereço que o site publica. A Lixeira fica no fim: é
             para onde vai uma moto excluída antes de sumir de vez.
           </p>
         </div>
+        <p className="mesa-topo-estado">
+          <span
+            className="mesa-ponto"
+            data-tom={
+              sincronizando ? 'neutro' : falhaBanco ? 'erro' : totalPendentes > 0 ? 'pendente' : 'ok'
+            }
+            aria-hidden="true"
+          />
+          {sincronizando
+            ? 'Lendo os valores publicados'
+            : falhaBanco
+              ? 'Banco sem confirmação'
+              : totalPendentes > 0
+                ? `${totalPendentes} ${totalPendentes === 1 ? 'bloco com edição pendente' : 'blocos com edição pendente'}`
+                : 'Tudo publicado'}
+        </p>
       </header>
 
       <div className="mesa-grade">
@@ -394,15 +416,28 @@ export function ConfiguracoesTab({
                   tabIndex={selecionada ? 0 : -1}
                   onClick={() => abrirSecao(bloco.id)}
                   onKeyDown={(evento) => aoTeclarAba(evento, indice)}
-                  className="mesa-nav-item"
+                  className={`mesa-nav-item ${bloco.id === 'lixeira' ? 'mesa-nav-item--perigo' : ''}`}
                 >
-                  <span className="mesa-nav-rotulo">
-                    {bloco.rotulo}
-                    {suja ? (
-                      <span className="mesa-nav-pendente" title="Alterações não salvas">
-                        <span className="sr-only">Alterações não salvas</span>
-                      </span>
-                    ) : null}
+                  <span className="mesa-nav-indice" aria-hidden="true">
+                    {String(indice + 1).padStart(2, '0')}
+                  </span>
+                  <span className="mesa-nav-texto">
+                    <span className="mesa-nav-rotulo">
+                      {bloco.rotulo}
+                      {suja ? (
+                        <span className="mesa-nav-pendente" title="Alterações não salvas">
+                          <span className="sr-only">Alterações não salvas</span>
+                        </span>
+                      ) : null}
+                    </span>
+                    <span
+                      className={`mesa-nav-valor ${bloco.id === 'lixeira' ? 'mesa-nav-valor--perigo' : ''}`}
+                      aria-hidden="true"
+                    >
+                      {bloco.id === 'lixeira'
+                        ? 'Área de risco'
+                        : bloco.resumo(salvo, totalLixeira)}
+                    </span>
                   </span>
                   {bloco.id === 'lixeira' && totalLixeira > 0 ? (
                     <span className="mesa-nav-contagem">
@@ -451,7 +486,9 @@ export function ConfiguracoesTab({
             <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="mesa-mobile-kicker">Configurações</p>
+            <p className="mesa-mobile-kicker">
+              Configurações · bloco {String(indiceAtivo).padStart(2, '0')}
+            </p>
             <h1 className="painel-h1">{metaAtiva.rotulo}</h1>
           </div>
         </div>
@@ -476,7 +513,12 @@ export function ConfiguracoesTab({
   ) : (
     <div className="mx-auto max-w-2xl">
       <header className="mesa-mobile-topo">
-        <h1 className="painel-h1">Configurações</h1>
+        <h1 className="painel-h1">
+          Configurações
+          <span className="mesa-titulo-ponto" aria-hidden="true">
+            .
+          </span>
+        </h1>
         <p className="mesa-mobile-sub">
           Escolha um bloco para editar. Cada um salva por si — o que aparece nos botões e no
           rodapé do site nasce daqui.
@@ -491,7 +533,7 @@ export function ConfiguracoesTab({
       </header>
 
       <div className="mesa-hub">
-        {SECOES.map((bloco) => {
+        {SECOES.map((bloco, indice) => {
           const suja = bloco.id !== 'lixeira' && secaoSuja(bloco.id, config, salvo)
 
           return (
@@ -499,8 +541,11 @@ export function ConfiguracoesTab({
               key={bloco.id}
               type="button"
               onClick={() => abrirSecao(bloco.id)}
-              className="mesa-hub-item"
+              className={`mesa-hub-item ${bloco.id === 'lixeira' ? 'mesa-hub-item--perigo' : ''}`}
             >
+              <span className="mesa-hub-indice" aria-hidden="true">
+                {String(indice + 1).padStart(2, '0')}
+              </span>
               <span className="min-w-0 flex-1">
                 <span className="mesa-hub-rotulo">
                   {bloco.rotulo}
@@ -511,7 +556,7 @@ export function ConfiguracoesTab({
                   ) : null}
                 </span>
                 <span className="mesa-hub-valor">
-                  {bloco.resumo(config, totalLixeira, valorLixeira)}
+                  {bloco.resumo(config, totalLixeira)}
                 </span>
               </span>
               <ChevronRight className="mesa-hub-seta size-4" aria-hidden="true" />

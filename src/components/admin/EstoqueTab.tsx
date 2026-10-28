@@ -64,6 +64,9 @@ function EsqueletoEstoque() {
               <Esqueleto className="mt-2 h-3 w-3/5" />
             </div>
           </div>
+          <div className="estoque-celula-situacao" role="cell">
+            <Esqueleto className="h-3 w-16" />
+          </div>
           <div className="estoque-celula-valor" role="cell">
             <Esqueleto className="h-3.5 w-24" />
           </div>
@@ -180,7 +183,12 @@ export function EstoqueTab({
     <div className="estoque-pagina">
       <header className="estoque-cabecalho-pagina">
         <div className="estoque-titulo-linha">
-          <h1 className="estoque-h1">Estoque</h1>
+          <h1 className="estoque-h1">
+            Estoque
+            <span className="estoque-h1-ponto" aria-hidden="true">
+              .
+            </span>
+          </h1>
           <button type="button" onClick={() => onEditando({})} className="estoque-btn-primario">
             <Plus className="size-4" strokeWidth={2.2} aria-hidden="true" />
             Cadastrar moto
@@ -204,8 +212,9 @@ export function EstoqueTab({
       {motos !== null && !erroAtivo && resumo ? (
         <section className="estoque-indicadores" aria-label="Resumo do estoque">
           <div className="estoque-indicador">
-            <span className="estoque-indicador-valor">{resumo.disponiveis}</span>
             <span className="estoque-indicador-rotulo">Disponíveis</span>
+            <span className="estoque-indicador-valor">{resumo.disponiveis}</span>
+            <span className="estoque-indicador-dica">no pátio, prontas para venda</span>
           </div>
           <button
             type="button"
@@ -213,15 +222,17 @@ export function EstoqueTab({
             className="estoque-indicador estoque-indicador-acao"
             aria-label={`Ver as ${resumo.vendidas} vendidas`}
           >
-            <span className="estoque-indicador-valor">{resumo.vendidas}</span>
-            <span className="estoque-indicador-rotulo inline-flex items-center gap-1.5">
+            <span className="estoque-indicador-rotulo">
               Vendidas
-              <ArrowRight className="size-3.5 text-texto-3" aria-hidden="true" />
+              <ArrowRight className="size-3.5" aria-hidden="true" />
             </span>
+            <span className="estoque-indicador-valor">{resumo.vendidas}</span>
+            <span className="estoque-indicador-dica">saíram do pátio — ver a aba</span>
           </button>
           <div className="estoque-indicador estoque-indicador-financeiro">
-            <span className="estoque-indicador-valor">{formatPrice(resumo.valorEmEstoque)}</span>
             <span className="estoque-indicador-rotulo">Valor em estoque</span>
+            <span className="estoque-indicador-valor">{formatPrice(resumo.valorEmEstoque)}</span>
+            <span className="estoque-indicador-dica">soma das motos no pátio</span>
           </div>
         </section>
       ) : null}
@@ -272,7 +283,12 @@ export function EstoqueTab({
         aria-busy={motos === null}
       >
         <div className="estoque-cabecalho" role="row">
-          <span role="columnheader">Veículo</span>
+          <span role="columnheader" className="estoque-col-veiculo">
+            Veículo
+          </span>
+          <span role="columnheader" className="estoque-col-situacao">
+            Situação
+          </span>
           <span role="columnheader" className="estoque-col-valor">
             Valor
           </span>
@@ -332,6 +348,12 @@ export function EstoqueTab({
           visiveis.map((moto) => {
             const ficha = fichaTecnica(moto)
             const vendida = moto.status === 'vendida'
+            const rotuloSituacao =
+              moto.status === 'disponivel'
+                ? 'Disponível'
+                : moto.status === 'indisponivel'
+                  ? 'Indisponível'
+                  : 'Vendida'
             // Mesmo selo que o cliente vê no site: no inventário é o que
             // mostra, sem abrir a ficha, que aquela moto está com oferta.
             const desconto = descontoPercentual(moto)
@@ -453,6 +475,13 @@ export function EstoqueTab({
                       </button>
                     </div>
                   ) : null}
+                </div>
+
+                <div className="estoque-celula-situacao" role="cell">
+                  <span className={`estoque-status estoque-status-${moto.status}`}>
+                    <span className="estoque-status-ponto" aria-hidden="true" />
+                    {rotuloSituacao}
+                  </span>
                 </div>
 
                 <div className="estoque-celula-valor" role="cell">
