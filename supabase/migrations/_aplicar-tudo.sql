@@ -7,7 +7,8 @@
 --   05 configuracoes_da_loja · 06 promocoes_do_estoque ·
 --   07 registro_de_vendas · 08 publicacoes_de_entregas ·
 --   09 lixeira_do_estoque · 10 edicao_de_vendas ·
---   11 seguranca_e_transacoes (admins, grants de coluna e RPCs).
+--   11 seguranca_e_transacoes (admins, grants de coluna e RPCs) ·
+--   12 seguranca_site_settings (leitura do site_settings por papel).
 -- O bloco de demo é opcional — cria 5 motos de demonstração.
 -- O bloco final conserta banco que já tinha uma tabela `motorcycles`
 -- incompleta e cria a config global da loja (site_settings).
@@ -975,3 +976,57 @@ $$;
 
 revoke all on function public.custo_da_moto(uuid) from public;
 grant execute on function public.custo_da_moto(uuid) to authenticated;
+
+-- ============================================================
+-- 12: SITE_SETTINGS — LEITURA RESTRITA AOS PAPEIS CERTOS
+-- ============================================================
+-- A migração 05 criou a política "site_settings_publico" para
+-- `anon, authenticated using (true)`, e a 11 apertou os grants por
+-- coluna — mas nunca derrubou essa política. O efeito residual: uma
+-- conta autenticada que NÃO está em public.admins lia a tabela
+-- inteira de configurações, incluindo `updated_by` (o UUID de quem
+-- editou por último).
+--
+-- A vitrine lê como `anon` (só key+value, pelos grants da 11); o
+-- painel lê como admin. Esta migração fecha o meio-termo: a política
+-- pública sai, e a leitura de `authenticated` passa a ter a mesma
+-- barra das políticas de escrita da 11 — public.e_admin().
+-- ============================================================
+
+-- A política da 05 saiu como estava: SELECT para anon E
+-- authenticated, usando (true).
+drop policy if exists "site_settings_publico" on public.site_settings;
+
+-- Vitrine: qualquer visitante lê as chaves públicas. Os grants da 11
+-- já limitam o anon a (key, value) — as colunas de metadado não saem.
+drop policy if exists "site_settings_leitura_publica" on public.site_settings;
+create policy "site_settings_leitura_publica"
+  on public.site_settings for select
+  to anon
+  using (true);
+
+-- Painel: mesma barra das políticas de escrita da 11. Quem está
+-- autenticado mas fora de public.admins não vê nenhuma linha.
+drop policy if exists "site_settings_leitura_admin" on public.site_settings;
+create policy "site_settings_leitura_admin"
+  on public.site_settings for select
+  to authenticated
+  using (public.e_admin());
+
+-- Cinto e suspensório: o anon não escreve em nenhuma tabela do
+-- esquema public. As políticas da RLS já barram; o revoke deixa isso
+-- explícito nos grants. Os grants de SELECT da vitrine ficam intactos.
+revoke insert, update, delete, truncate
+  on all tables in schema public
+  from anon;
+
+-- Relatório ao aplicar: quantos admins existem.
+do $$
+declare
+  n integer;
+begin
+  select count(*) into n from public.admins;
+  raise notice
+    'DG MOTOS 12: % administrador(es) em public.admins — se algum não for da loja, delete a linha (ver supabase/README.md).',
+    n;
+end $$;

@@ -40,11 +40,16 @@ Abra o **SQL Editor** e execute as migrações numeradas de
   promoções, histórico de vendas, a galeria de entregas, a lixeira do estoque e
   a edição de quem comprou (aba **Vendidas**);
 - `..._seguranca_e_transacoes.sql` (**obrigatória**) — lista de
-  administradores, grants por coluna e as funções de fotos e custo.
+  administradores, grants por coluna e as funções de fotos e custo;
+- `..._seguranca_site_settings.sql` — separa a leitura de
+  `site_settings` por papel: o visitante lê só `key`/`value`; a leitura
+  de `authenticated` passa a exigir `public.e_admin()`, fechando o
+  acesso de uma conta autenticada fora da lista de admins.
 
 Em um projeto novo, `_aplicar-tudo.sql` executa tudo de uma vez. Em um
-projeto que já está no ar, rode só a migração 11 antes de publicar esta
-versão do site: o código novo chama as funções criadas nela.
+projeto que já está no ar, rode a migração 11 (e a 12 em seguida) antes
+de publicar esta versão do site: o código novo chama as funções criadas
+na 11 e a 12 fecha a leitura indevida de `updated_by`.
 
 ## 3. Ligar o projeto ao site
 

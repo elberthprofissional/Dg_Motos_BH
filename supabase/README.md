@@ -18,19 +18,28 @@ verdade do esquema, das políticas RLS e das funções usadas pelo site.
 | 09 | `09_lixeira_do_estoque.sql` | `lixeira_em` e leitura pública sem os itens da lixeira |
 | 10 | `10_edicao_de_vendas.sql` | edição de vendas já lançadas |
 | 11 | `11_seguranca_e_transacoes.sql` | lista de admins, grants por coluna e RPCs transacionais |
+| 12 | `12_seguranca_site_settings.sql` | leitura de `site_settings` separada por papel (anon: só `key`+`value`; authenticated: só admin) |
 
 ## Como aplicar
 
 **Projeto novo:** abra o SQL Editor e execute `_aplicar-tudo.sql` uma
-vez. Ele contém as migrações 01–11 na ordem.
+vez. Ele contém as migrações 01–12 na ordem.
 
 **Projeto que já está no ar:** execute só as migrações que faltam, em
-ordem. Se o banco está na 10, rode apenas a 11.
+ordem. Se o banco está na 10, rode a 11 e depois a 12; se está na 11,
+rode só a 12.
 
 > **A migração 11 é obrigatória para o código atual.** Sem ela, salvar
 > fotos falha com a mensagem "o banco ainda não tem a rotina que grava
 > as fotos" e a venda é registrada sem custo. Aplique a 11 **antes** de
 > publicar a versão nova do site.
+
+> **A migração 12 fecha um vazamento de leitura.** A política da 05
+> deixava qualquer conta autenticada (mesmo fora de `public.admins`)
+> ler a tabela `site_settings` inteira, incluindo `updated_by`. A 12
+> derruba essa política e separa a leitura: o visitante vê só
+> `key`/`value`, o painel exige `e_admin()`. Rode junto com a 11 e
+> confira a lista de admins no `notice` final.
 
 ## Administradores
 
