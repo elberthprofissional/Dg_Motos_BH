@@ -21,10 +21,17 @@ import {
 import type { MotoParaSalvar, ResultadoCatalogo } from '../lib/catalog'
 import {
   DIAS_NA_LIXEIRA,
+  diasAteApagarDesde,
   motosAtivas,
   motosNaLixeira,
   motosVencidasNaLixeira,
 } from '../lib/painel'
+import {
+  apagarFotosDaLixeira,
+  buscarFotosNaLixeira,
+  restaurarFotoDaLixeira,
+} from '../lib/entregas'
+import type { FotoNaLixeira } from '../data/entregas'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { useAuth } from '../hooks/authContexto'
 import { useVendas } from '../hooks/vendasContexto'
@@ -76,6 +83,13 @@ export function Admin() {
   const [busca, setBusca] = useState('')
   const [motos, setMotos] = useState<Motorcycle[] | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+  // Lixeira de fotos do mural: carrega junto com o estoque e é a única
+  // lista que o painel precisa para a limpeza de 30 dias das fotos.
+  const [fotosLixeira, setFotosLixeira] = useState<FotoNaLixeira[] | null>(null)
+  const [erroFotosLixeira, setErroFotosLixeira] = useState<string | null>(null)
+  // Sobe quando a Lixeira devolve uma foto: a aba Publicações está
+  // montada por baixo e precisa recarregar sozinha.
+  const [revisaoPublicacoes, setRevisaoPublicacoes] = useState(0)
   const [editando, setEditando] = useState<{ id?: string; dados?: MotoParaSalvar } | null>(null)
   const [confirmacao, setConfirmacao] = useState<PedidoConfirmacao | null>(null)
   const [excluindo, setExcluindo] = useState(false)
@@ -133,6 +147,25 @@ export function Admin() {
     aplicarResultado(await buscarCatalogo({ incluirLixeira: true }))
   }, [aplicarResultado])
 
+  const recarregarFotosLixeira = useCallback(async () => {
+    try {
+      const lista = await buscarFotosNaLixeira()
+      setFotosLixeira(lista)
+      setErroFotosLixeira(null)
+    } catch (e) {
+      // Lista vazia mantém a lixeira utilizável (e a limpeza automática
+      // rodando); o dono vê o erro só no bloco de fotos.
+      setFotosLixeira([])
+      setErroFotosLixeira(
+        e instanceof Error ? e.message : 'Não foi possível abrir as fotos da lixeira.',
+      )
+    }
+  }, [])
+
+  const recarregarLixeira = useCallback(async () => {
+    await Promise.all([recarregar(), recarregarFotosLixeira()])
+  }, [recarregar, recarregarFotosLixeira])
+
   useEffect(() => {
     let vivo = true
     void buscarCatalogo({ incluirLixeira: true }).then((r) => {
@@ -143,10 +176,34 @@ export function Admin() {
     }
   }, [aplicarResultado])
 
+  useEffect(() => {
+    let vivo = true
+    void buscarFotosNaLixeira()
+      .then((lista) => {
+        if (!vivo) return
+        setFotosLixeira(lista)
+        setErroFotosLixeira(null)
+      })
+      .catch((e: unknown) => {
+        if (!vivo) return
+        // Lista vazia mantém a lixeira utilizável (e a limpeza automática
+        // rodando); o dono vê o erro só no bloco de fotos.
+        setFotosLixeira([])
+        setErroFotosLixeira(
+          e instanceof Error ? e.message : 'Não foi possível abrir as fotos da lixeira.',
+        )
+      })
+    return () => {
+      vivo = false
+    }
+  }, [])
+
   // A lixeira sai da vida do painel: contas, pátio e Vendidas usam só as
   // ativas. Assim nenhuma aba precisa repetir essa regra.
   const ativas = useMemo(() => (motos === null ? null : motosAtivas(motos)), [motos])
   const naLixeira = useMemo(() => (motos === null ? null : motosNaLixeira(motos)), [motos])
+  // O selo do menu conta motos e fotos: é o que o dono encontra ao abrir.
+  const totalNaLixeira = (naLixeira?.length ?? 0) + (fotosLixeira?.length ?? 0)
 
   const motoDaPrevia = useMemo(
     () =>
@@ -191,29 +248,71 @@ export function Admin() {
     }
   }, [previaId])
 
-  // A lixeira tem prazo: passados 30 dias, a moto (e as fotos) saem de
+  // A lixeira tem prazo: passados 30 dias, motos e fotos do mural saem de
   // vez. A limpeza roda ao abrir o painel — é o único momento em que a
   // sessão do dono tem permissão para apagar no banco e no Storage. A ref
-  // garante uma passada por montagem, mesmo com o catálogo recarregando.
+  // garante uma passada por montagem, mesmo com as listas recarregando.
   const limpouLixeira = useRef(false)
   useEffect(() => {
-    if (limpouLixeira.current || naLixeira === null) return
+    if (limpouLixeira.current || naLixeira === null || fotosLixeira === null) return
     limpouLixeira.current = true
 
-    const vencidas = motosVencidasNaLixeira(naLixeira)
-    if (vencidas.length === 0) return
+    const motosVencidas = motosVencidasNaLixeira(naLixeira)
+    const fotosVencidas = fotosLixeira.filter(
+      (foto) => diasAteApagarDesde(foto.apagadaEm) === 0,
+    )
+    if (motosVencidas.length === 0 && fotosVencidas.length === 0) return
 
     void (async () => {
-      const r = await excluirMotosDefinitivamente(vencidas.map((moto) => moto.id))
-      if (!r.ok) return
-      await recarregar()
-      const texto =
-        vencidas.length === 1
-          ? `Uma moto ficou ${DIAS_NA_LIXEIRA} dias na lixeira e foi apagada de vez.`
-          : `${vencidas.length} motos ficaram ${DIAS_NA_LIXEIRA} dias na lixeira e foram apagadas de vez.`
-      avisar({ tipo: r.aviso ? 'erro' : 'ok', texto: r.aviso ? `${texto} ${r.aviso}` : texto })
+      const partes: string[] = []
+      const avisos: string[] = []
+      let apagados = 0
+
+      if (motosVencidas.length > 0) {
+        const r = await excluirMotosDefinitivamente(motosVencidas.map((moto) => moto.id))
+        if (r.ok) {
+          partes.push(
+            motosVencidas.length === 1 ? 'uma moto' : `${motosVencidas.length} motos`,
+          )
+          apagados += motosVencidas.length
+          if (r.aviso) avisos.push(r.aviso)
+          await recarregar()
+        } else if (r.erro) {
+          avisos.push(r.erro)
+        }
+      }
+
+      if (fotosVencidas.length > 0) {
+        try {
+          const r = await apagarFotosDaLixeira(fotosVencidas)
+          partes.push(
+            fotosVencidas.length === 1
+              ? '1 foto do mural'
+              : `${fotosVencidas.length} fotos do mural`,
+          )
+          apagados += fotosVencidas.length
+          if (r.aviso) avisos.push(r.aviso)
+          await recarregarFotosLixeira()
+        } catch (e) {
+          avisos.push(
+            e instanceof Error ? e.message : 'As fotos vencidas não puderam ser apagadas.',
+          )
+        }
+      }
+
+      if (partes.length > 0) {
+        const texto = `O prazo de ${DIAS_NA_LIXEIRA} dias venceu: ${partes.join(' e ')} ${
+          apagados === 1 ? 'foi apagada' : 'foram apagadas'
+        } de vez.`
+        avisar({
+          tipo: avisos.length > 0 ? 'erro' : 'ok',
+          texto: avisos.length > 0 ? `${texto} ${avisos.join(' ')}` : texto,
+        })
+      } else if (avisos.length > 0) {
+        avisar({ tipo: 'erro', texto: avisos.join(' ') })
+      }
     })()
-  }, [naLixeira, recarregar])
+  }, [naLixeira, fotosLixeira, recarregar, recarregarFotosLixeira])
 
   function avisar(novo: Feedback) {
     setFeedback(novo)
@@ -287,24 +386,114 @@ export function Admin() {
     })
   }
 
+  /** A foto volta para a publicação de origem e o mural é recarregado. */
+  async function restaurarFotoExcluida(foto: FotoNaLixeira) {
+    try {
+      await restaurarFotoDaLixeira(foto.id)
+      await recarregarFotosLixeira()
+      setRevisaoPublicacoes((atual) => atual + 1)
+      avisar({ tipo: 'ok', texto: 'A foto voltou para o mural.' })
+    } catch (e) {
+      avisar({
+        tipo: 'erro',
+        texto: e instanceof Error ? e.message : 'Não foi possível restaurar a foto.',
+      })
+    }
+  }
+
+  function pedirApagarFoto(foto: FotoNaLixeira) {
+    setConfirmacao({
+      titulo: 'Apagar foto de vez',
+      descricao:
+        'A foto sai do mural, do site e do armazenamento. Não dá para restaurar depois.',
+      rotuloConfirmar: 'Apagar de vez',
+      rotuloOcupado: 'Apagando...',
+      onConfirmar: async () => {
+        setExcluindo(true)
+        try {
+          const r = await apagarFotosDaLixeira([foto])
+          await recarregarFotosLixeira()
+          avisar(
+            r.aviso
+              ? { tipo: 'erro', texto: `A foto foi apagada de vez. ${r.aviso}` }
+              : { tipo: 'ok', texto: 'A foto foi apagada de vez.' },
+          )
+        } catch (e) {
+          avisar({
+            tipo: 'erro',
+            texto: e instanceof Error ? e.message : 'Não foi possível apagar a foto.',
+          })
+        } finally {
+          setExcluindo(false)
+          setConfirmacao(null)
+        }
+      },
+    })
+  }
+
   function pedirEsvaziarLixeira() {
-    const alvo = naLixeira ?? []
-    if (alvo.length === 0) return
+    const motosAlvo = naLixeira ?? []
+    const fotosAlvo = fotosLixeira ?? []
+    if (motosAlvo.length + fotosAlvo.length === 0) return
+
+    const alvos: string[] = []
+    if (motosAlvo.length > 0) {
+      alvos.push(
+        motosAlvo.length === 1
+          ? 'a moto e as fotos dela'
+          : `as ${motosAlvo.length} motos e as fotos delas`,
+      )
+    }
+    if (fotosAlvo.length > 0) {
+      alvos.push(
+        fotosAlvo.length === 1 ? 'a foto do mural' : `as ${fotosAlvo.length} fotos do mural`,
+      )
+    }
+
     setConfirmacao({
       titulo: 'Esvaziar a lixeira',
-      descricao: `${alvo.length === 1 ? 'A moto na lixeira será apagada' : `As ${alvo.length} motos na lixeira serão apagadas`} de vez, junto com as fotos. Não dá para restaurar depois.`,
+      descricao: `Apaga de vez ${alvos.join(', ')}. Não dá para restaurar depois.`,
       rotuloConfirmar: 'Esvaziar lixeira',
       rotuloOcupado: 'Apagando...',
       onConfirmar: async () => {
         setExcluindo(true)
-        const r = await excluirMotosDefinitivamente(alvo.map((moto) => moto.id))
+        const avisos: string[] = []
+        let motosOk = true
+        let fotosOk = true
+
+        if (motosAlvo.length > 0) {
+          const r = await excluirMotosDefinitivamente(motosAlvo.map((moto) => moto.id))
+          motosOk = r.ok
+          if (r.erro) avisos.push(r.erro)
+          if (r.aviso) avisos.push(r.aviso)
+          if (r.ok) await recarregar()
+        }
+
+        if (fotosAlvo.length > 0) {
+          try {
+            const r = await apagarFotosDaLixeira(fotosAlvo)
+            if (r.aviso) avisos.push(r.aviso)
+            await recarregarFotosLixeira()
+          } catch (e) {
+            fotosOk = false
+            avisos.push(
+              e instanceof Error ? e.message : 'As fotos não puderam ser apagadas.',
+            )
+          }
+        }
+
         setExcluindo(false)
         setConfirmacao(null)
-        if (!r.ok) {
-          avisar({ tipo: 'erro', texto: r.erro ?? 'Não foi possível esvaziar a lixeira.' })
-          return
-        }
-        await concluirAcao('A lixeira foi esvaziada.', r.aviso)
+
+        const texto =
+          motosOk && fotosOk
+            ? 'A lixeira foi esvaziada.'
+            : 'A lixeira não foi esvaziada por completo.'
+        avisar(
+          avisos.length > 0
+            ? { tipo: 'erro', texto: `${texto} ${avisos.join(' ')}` }
+            : { tipo: 'ok', texto },
+        )
       },
     })
   }
@@ -473,12 +662,12 @@ export function Admin() {
                     aria-hidden="true"
                   />
                   <span className="flex-1 truncate">{rotulo}</span>
-                  {id === 'configuracoes' && (naLixeira?.length ?? 0) > 0 ? (
+                  {id === 'configuracoes' && totalNaLixeira > 0 ? (
                     <span
-                      title={`${naLixeira?.length} na lixeira`}
+                      title={`${totalNaLixeira} na lixeira`}
                       className="min-w-5 rounded-full bg-claro/10 px-1.5 py-0.5 text-center text-[11px] leading-none text-steel-300"
                     >
-                      {naLixeira?.length}
+                      {totalNaLixeira}
                       <span className="sr-only"> na lixeira</span>
                     </span>
                   ) : null}
@@ -585,9 +774,9 @@ export function Admin() {
                   >
                     <Settings className="size-4 shrink-0 text-steel-500" aria-hidden="true" />
                     <span className="flex-1 text-left">Configurações</span>
-                    {(naLixeira?.length ?? 0) > 0 ? (
+                    {totalNaLixeira > 0 ? (
                       <span className="min-w-5 rounded-full bg-claro/10 px-1.5 py-0.5 text-center text-[11px] leading-none text-steel-300">
-                        {naLixeira?.length}
+                        {totalNaLixeira}
                         <span className="sr-only"> na lixeira</span>
                       </span>
                     ) : null}
@@ -651,17 +840,25 @@ export function Admin() {
             />
           </div>
           <div className={aba === 'publicacoes' ? '' : 'hidden'}>
-            <PublicacoesTab onFeedback={avisar} />
+            <PublicacoesTab
+              onFeedback={avisar}
+              onFotoNaLixeira={() => void recarregarFotosLixeira()}
+              revisao={revisaoPublicacoes}
+            />
           </div>
           {aba === 'configuracoes' ? (
             <ConfiguracoesTab
               lixeira={naLixeira}
+              fotosLixeira={fotosLixeira}
               erroLixeira={erro}
+              erroFotosLixeira={erroFotosLixeira}
               onRestaurarDaLixeira={restaurarDaLixeira}
               onApagarDeVez={pedirExclusaoDefinitiva}
+              onRestaurarFoto={restaurarFotoExcluida}
+              onApagarFoto={pedirApagarFoto}
               onEsvaziarLixeira={pedirEsvaziarLixeira}
               onIrParaEstoque={() => trocarAba('estoque')}
-              onRecarregar={recarregar}
+              onRecarregar={recarregarLixeira}
             />
           ) : null}
 

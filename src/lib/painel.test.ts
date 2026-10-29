@@ -3,6 +3,7 @@ import { motorcycles } from '../data/motorcycles'
 import {
   contarPorStatus,
   diasAteApagar,
+  diasAteApagarDesde,
   filtrarEstoque,
   filtrarVendas,
   lucroPorMes,
@@ -139,6 +140,15 @@ describe('lixeira', () => {
     ])
     // Um dia antes dos 30, nada é apagado.
     expect(motosVencidasNaLixeira([cheia], new Date('2026-03-09T00:00:00Z'))).toHaveLength(0)
+  })
+
+  it('calcula o prazo de qualquer item com data de baixa', () => {
+    const agora = new Date('2026-02-11T12:00:00Z')
+    // Fotos do mural usam a mesma conta, a partir de `apagadaEm`.
+    expect(diasAteApagarDesde('2026-02-01T00:00:00Z', agora)).toBe(20)
+    expect(diasAteApagarDesde('2026-01-01T00:00:00Z', agora)).toBe(0)
+    expect(diasAteApagarDesde(null, agora)).toBeNull()
+    expect(diasAteApagarDesde('ontem', agora)).toBeNull()
   })
 })
 

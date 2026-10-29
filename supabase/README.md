@@ -19,15 +19,16 @@ verdade do esquema, das políticas RLS e das funções usadas pelo site.
 | 10 | `10_edicao_de_vendas.sql` | edição de vendas já lançadas |
 | 11 | `11_seguranca_e_transacoes.sql` | lista de admins, grants por coluna e RPCs transacionais |
 | 12 | `12_seguranca_site_settings.sql` | leitura de `site_settings` separada por papel (anon: só `key`+`value`; authenticated: só admin) |
+| 13 | `13_lixeira_fotos_entregas.sql` | fotos apagadas do mural ficam 30 dias na lixeira (`entregas_fotos_lixeira` + RPCs) e o post pode ficar sem nome |
 
 ## Como aplicar
 
 **Projeto novo:** abra o SQL Editor e execute `_aplicar-tudo.sql` uma
-vez. Ele contém as migrações 01–12 na ordem.
+vez. Ele contém as migrações 01–13 na ordem.
 
 **Projeto que já está no ar:** execute só as migrações que faltam, em
 ordem. Se o banco está na 10, rode a 11 e depois a 12; se está na 11,
-rode só a 12.
+rode só a 12; na 12, rode a 13.
 
 > **A migração 11 é obrigatória para o código atual.** Sem ela, salvar
 > fotos falha com a mensagem "o banco ainda não tem a rotina que grava
@@ -40,6 +41,11 @@ rode só a 12.
 > derruba essa política e separa a leitura: o visitante vê só
 > `key`/`value`, o painel exige `e_admin()`. Rode junto com a 11 e
 > confira a lista de admins no `notice` final.
+
+> **A migração 13 é obrigatória para apagar fotos do mural.** Sem ela,
+> a RPC que move a foto para a lixeira não existe e o botão de apagar
+> falha. A 13 também remove o check que exigia nome de modelo na
+> publicação — o painel novo grava posts só com foto.
 
 ## Administradores
 

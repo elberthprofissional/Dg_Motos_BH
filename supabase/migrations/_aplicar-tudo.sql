@@ -8,7 +8,8 @@
 --   07 registro_de_vendas · 08 publicacoes_de_entregas ·
 --   09 lixeira_do_estoque · 10 edicao_de_vendas ·
 --   11 seguranca_e_transacoes (admins, grants de coluna e RPCs) ·
---   12 seguranca_site_settings (leitura do site_settings por papel).
+--   12 seguranca_site_settings (leitura do site_settings por papel) ·
+--   13 lixeira_fotos_entregas (fotos do mural com 30 dias de volta).
 -- O bloco de demo é opcional — cria 5 motos de demonstração.
 -- O bloco final conserta banco que já tinha uma tabela `motorcycles`
 -- incompleta e cria a config global da loja (site_settings).
@@ -1030,3 +1031,151 @@ begin
     'DG MOTOS 12: % administrador(es) em public.admins — se algum não for da loja, delete a linha (ver supabase/README.md).',
     n;
 end $$;
+
+-- ============================================================
+-- 13: LIXEIRA DAS FOTOS DE ENTREGAS
+-- ============================================================
+-- Apagar uma foto no mural deixa de ser definitivo na hora: a foto
+-- sai do site e fica 30 dias na lixeira, como acontece com as motos.
+-- O arquivo só é removido do Storage na exclusão definitiva (ou no
+-- vencimento do prazo).
+
+alter table public.entregas
+  drop constraint if exists entregas_moto_nome_check;
+
+create table if not exists public.entregas_fotos_lixeira (
+  id uuid primary key default gen_random_uuid(),
+  entrega_id uuid not null references public.entregas (id) on delete cascade,
+  caminho text not null check (length(btrim(caminho)) > 0),
+  apagada_em timestamptz not null default now(),
+  constraint entregas_fotos_lixeira_caminho_unico unique (entrega_id, caminho)
+);
+
+create index if not exists idx_entregas_fotos_lixeira_apagada_em
+  on public.entregas_fotos_lixeira (apagada_em);
+
+alter table public.entregas_fotos_lixeira enable row level security;
+
+revoke all on table public.entregas_fotos_lixeira from anon;
+grant select, insert, delete on table public.entregas_fotos_lixeira to authenticated;
+
+drop policy if exists "entregas_fotos_lixeira_admin_leitura" on public.entregas_fotos_lixeira;
+create policy "entregas_fotos_lixeira_admin_leitura"
+  on public.entregas_fotos_lixeira for select
+  to authenticated
+  using (public.e_admin());
+
+drop policy if exists "entregas_fotos_lixeira_admin_criacao" on public.entregas_fotos_lixeira;
+create policy "entregas_fotos_lixeira_admin_criacao"
+  on public.entregas_fotos_lixeira for insert
+  to authenticated
+  with check (public.e_admin());
+
+drop policy if exists "entregas_fotos_lixeira_admin_remocao" on public.entregas_fotos_lixeira;
+create policy "entregas_fotos_lixeira_admin_remocao"
+  on public.entregas_fotos_lixeira for delete
+  to authenticated
+  using (public.e_admin());
+
+create or replace function public.mover_foto_entrega_para_lixeira(
+  p_entrega_id uuid,
+  p_caminho text
+)
+returns uuid
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_fotos jsonb;
+  v_restantes jsonb;
+  v_id uuid;
+begin
+  if not public.e_admin() then
+    raise exception 'Acesso restrito ao painel.' using errcode = '42501';
+  end if;
+
+  if coalesce(btrim(p_caminho), '') = '' then
+    raise exception 'Foto inválida.';
+  end if;
+
+  select fotos into v_fotos
+  from public.entregas
+  where id = p_entrega_id
+  for update;
+
+  if v_fotos is null then
+    raise exception 'Essa publicação não existe mais.';
+  end if;
+
+  if not (v_fotos ? p_caminho) then
+    raise exception 'Essa foto não está mais no mural.';
+  end if;
+
+  select coalesce(jsonb_agg(foto order by posicao), '[]'::jsonb)
+  into v_restantes
+  from jsonb_array_elements_text(v_fotos) with ordinality as t (foto, posicao)
+  where foto <> p_caminho;
+
+  insert into public.entregas_fotos_lixeira (entrega_id, caminho)
+  values (p_entrega_id, p_caminho)
+  returning id into v_id;
+
+  update public.entregas
+  set fotos = v_restantes,
+      status = case
+        when jsonb_array_length(v_restantes) = 0 then 'arquivada'
+        else status
+      end
+  where id = p_entrega_id;
+
+  return v_id;
+end;
+$$;
+
+revoke all on function public.mover_foto_entrega_para_lixeira(uuid, text) from public;
+grant execute on function public.mover_foto_entrega_para_lixeira(uuid, text) to authenticated;
+
+create or replace function public.restaurar_foto_da_lixeira(p_id uuid)
+returns void
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_foto public.entregas_fotos_lixeira;
+  v_autorizada boolean;
+begin
+  if not public.e_admin() then
+    raise exception 'Acesso restrito ao painel.' using errcode = '42501';
+  end if;
+
+  select * into v_foto
+  from public.entregas_fotos_lixeira
+  where id = p_id
+  for update;
+
+  if v_foto.id is null then
+    raise exception 'Essa foto já saiu da lixeira. Atualize o painel.';
+  end if;
+
+  select autorizacao_publicacao into v_autorizada
+  from public.entregas
+  where id = v_foto.entrega_id
+  for update;
+
+  if not found then
+    raise exception 'A publicação dessa foto não existe mais.';
+  end if;
+
+  update public.entregas
+  set fotos = fotos || to_jsonb(v_foto.caminho),
+      status = case when v_autorizada then 'publicada' else status end
+  where id = v_foto.entrega_id;
+
+  delete from public.entregas_fotos_lixeira where id = p_id;
+end;
+$$;
+
+revoke all on function public.restaurar_foto_da_lixeira(uuid) from public;
+grant execute on function public.restaurar_foto_da_lixeira(uuid) to authenticated;

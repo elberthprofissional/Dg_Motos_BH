@@ -1,4 +1,9 @@
-import type { EntregaPublicada, EntregaRegistro, StatusEntrega } from '../data/entregas'
+import type {
+  EntregaPublicada,
+  EntregaRegistro,
+  FotoNaLixeira,
+  StatusEntrega,
+} from '../data/entregas'
 import { BUCKET_ENTREGAS, getSupabase } from './supabase'
 
 interface LinhaEntrega {
@@ -13,6 +18,13 @@ interface LinhaEntrega {
   status: StatusEntrega
   ordem: number
   updated_at: string
+}
+
+interface LinhaFotoNaLixeira {
+  id: string
+  entrega_id: string
+  caminho: string
+  apagada_em: string
 }
 
 export interface EntregaParaSalvar {
@@ -129,6 +141,83 @@ export async function buscarEntregasPublicadas(limite?: number): Promise<Entrega
     }
   })
   return registros.filter((item): item is EntregaPublicada => item !== null)
+}
+
+/** Fotos que saíram do mural, da exclusão mais recente para a mais antiga. */
+export async function buscarFotosNaLixeira(): Promise<FotoNaLixeira[]> {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase não configurado neste deploy.')
+
+  const { data, error } = await sb
+    .from('entregas_fotos_lixeira')
+    .select('id,entrega_id,caminho,apagada_em')
+    .order('apagada_em', { ascending: false })
+
+  if (error) throw new Error(error.message)
+  const linhas = (data ?? []) as LinhaFotoNaLixeira[]
+  const urls = await assinarFotos(linhas.map((linha) => linha.caminho))
+  return linhas.map((linha) => ({
+    id: linha.id,
+    entregaId: linha.entrega_id,
+    caminho: linha.caminho,
+    url: urls.get(linha.caminho) ?? '',
+    apagadaEm: linha.apagada_em,
+  }))
+}
+
+/**
+ * Tira a foto do mural e deixa o arquivo guardado na lixeira.
+ *
+ * A RPC faz as duas escritas na mesma transação: não existe momento em
+ * que a foto sumiu da publicação sem estar na lixeira (ou vice-versa).
+ */
+export async function moverFotoParaLixeira(entregaId: string, caminho: string): Promise<void> {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase não configurado neste deploy.')
+  const { error } = await sb.rpc('mover_foto_entrega_para_lixeira', {
+    p_entrega_id: entregaId,
+    p_caminho: caminho,
+  })
+  if (error) throw new Error(error.message)
+}
+
+/** Devolve a foto à publicação de origem; ela volta ao ar se autorizada. */
+export async function restaurarFotoDaLixeira(id: string): Promise<void> {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase não configurado neste deploy.')
+  const { error } = await sb.rpc('restaurar_foto_da_lixeira', { p_id: id })
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Apaga de vez as fotos indicadas: saem da lixeira e do Storage.
+ *
+ * A linha sai primeiro. Se o Storage falhar, sobra um arquivo órfão —
+ * invisível para o site — e o dono recebe o aviso, em vez de a foto
+ * voltar para a lixeira pedindo para ser apagada outra vez.
+ */
+export async function apagarFotosDaLixeira(
+  fotos: FotoNaLixeira[],
+): Promise<{ aviso: string | null }> {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase não configurado neste deploy.')
+  if (fotos.length === 0) return { aviso: null }
+
+  const { error } = await sb
+    .from('entregas_fotos_lixeira')
+    .delete()
+    .in('id', fotos.map((foto) => foto.id))
+  if (error) throw new Error(error.message)
+
+  const { error: erroStorage } = await sb.storage
+    .from(BUCKET_ENTREGAS)
+    .remove(fotos.map((foto) => foto.caminho))
+  if (erroStorage) {
+    return {
+      aviso: `As fotos saíram da lixeira, mas ${fotos.length} arquivo(s) ficaram no bucket "entregas". Remova pelo painel do Supabase.`,
+    }
+  }
+  return { aviso: null }
 }
 
 export async function salvarEntrega(dados: EntregaParaSalvar): Promise<void> {
@@ -256,11 +345,4 @@ export async function enviarFotosEntrega(
     }
     throw e
   }
-}
-
-export async function removerFotosEntrega(paths: string[]): Promise<void> {
-  const sb = getSupabase()
-  if (!sb || paths.length === 0) return
-  const { error } = await sb.storage.from(BUCKET_ENTREGAS).remove(paths)
-  if (error) throw new Error(error.message)
 }

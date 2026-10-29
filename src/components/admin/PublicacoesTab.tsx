@@ -1,23 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, ExternalLink, ImageOff, Pencil, Trash2 } from 'lucide-react'
+import { ArrowRight, ImageOff, Trash2 } from 'lucide-react'
 import type { EntregaParaSalvar } from '../../lib/entregas'
 import {
   atualizarFotosEntrega,
   buscarEntregasAdmin,
   enviarFotosEntrega,
-  removerFotosEntrega,
+  moverFotoParaLixeira,
   salvarEntrega,
 } from '../../lib/entregas'
 import type { EntregaRegistro } from '../../data/entregas'
+import { DIAS_NA_LIXEIRA } from '../../lib/painel'
 import type { Feedback } from '../ui/Toast'
 import { DialogoConfirmacao } from '../ui/DialogoConfirmacao'
 import type { PedidoConfirmacao } from '../ui/DialogoConfirmacao'
 import { AreaUploadFoto } from './AreaUploadFoto'
-import { DialogoInfoEntrega } from './DialogoInfoEntrega'
-import type { InfoEntrega } from './DialogoInfoEntrega'
 
 interface PublicacoesTabProps {
   onFeedback: (feedback: Feedback) => void
+  /** Avisa o painel que a Lixeira ganhou uma foto (para recarregar lá). */
+  onFotoNaLixeira: () => void
+  /** Muda quando a Lixeira mexe nas fotos: obriga a recarregar o mural. */
+  revisao: number
 }
 
 const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
@@ -66,14 +69,16 @@ function dadosDe(
  * ============================================================
  * PUBLICAÇÕES — o mural visto por dentro
  * ============================================================
- * O mural é a única superfície, mas agora ele se explica: cada foto
- * carrega o modelo, a data e o cliente, e as ações (editar, ver no
- * site, apagar) moram no próprio quadro. As fotos sobem e a
- * publicação já nasce no ar; em seguida o diálogo de informações
- * abre sozinho — modelo e cliente ficam só no painel, porque a
- * galeria pública segue anônima.
+ * O mural é a única superfície: cada foto entra com a data do envio e,
+ * no quadro, a única manutenção é apagar. Quem comprou a moto fica no
+ * livro de saídas (aba Vendidas), não aqui. As fotos sobem e a
+ * publicação já nasce no ar.
  */
-export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
+export function PublicacoesTab({
+  onFeedback,
+  onFotoNaLixeira,
+  revisao,
+}: PublicacoesTabProps) {
   const [posts, setPosts] = useState<EntregaRegistro[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
@@ -81,9 +86,6 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
   const [publicando, setPublicando] = useState(false)
   const [removendo, setRemovendo] = useState(false)
   const [pedidoRemocao, setPedidoRemocao] = useState<PedidoConfirmacao | null>(null)
-  const [idEditando, setIdEditando] = useState<string | null>(null)
-  const [salvandoInfo, setSalvandoInfo] = useState(false)
-  const [erroInfo, setErroInfo] = useState<string | null>(null)
   const arquivoRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
 
@@ -106,7 +108,9 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
     let vivo = true
     void buscarEntregasAdmin()
       .then((resultado) => {
-        if (vivo) setPosts(resultado)
+        if (!vivo) return
+        setPosts(resultado)
+        setErro(null)
       })
       .catch((e: unknown) => {
         if (vivo) setErro(e instanceof Error ? e.message : 'Não foi possível carregar as publicações.')
@@ -117,7 +121,7 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
     return () => {
       vivo = false
     }
-  }, [])
+  }, [revisao])
 
   const ativas = useMemo(() => posts.filter((post) => post.status !== 'arquivada'), [posts])
 
@@ -134,13 +138,6 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
   const totalFotos = useMemo(
     () => ativas.reduce((total, post) => total + post.fotos.length, 0),
     [ativas],
-  )
-
-  // Só publicações visíveis abrem o diálogo: se a última foto for apagada,
-  // o registro é arquivado e o diálogo fecha junto.
-  const postEditando = useMemo(
-    () => ativas.find((post) => post.id === idEditando) ?? null,
-    [ativas, idEditando],
   )
 
   const entrada = {
@@ -178,8 +175,6 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
       })
 
       await recarregar()
-      setErroInfo(null)
-      setIdEditando(id)
       onFeedback({
         tipo: 'ok',
         texto:
@@ -200,25 +195,29 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
   }
 
   /**
-   * Apagar foto: primeiro o registro (a publicação sem foto nenhuma
-   * sai do mural como arquivada — e satisfaz o check do banco, que
-   * só exige fotos quando o status é "publicada"), depois o arquivo.
-   * Se o Storage falhar, sobra um arquivo órfão invisível: preferível
-   * a deixar a foto no mural depois de o dono pedir para tirar.
+   * Apagar foto agora é reversível: a RPC tira a foto do mural e deixa
+   * o arquivo guardado na Lixeira, em Configurações, por 30 dias. Se
+   * era a última, a publicação é arquivada e volta ao ar quando a foto
+   * for restaurada.
    *
-   * `caminho` vazio = publicação que nunca teve foto: aí não há
-   * arquivo para apagar, só o registro para arquivar.
+   * `caminho` vazio = publicação que nunca teve foto: aí não há arquivo
+   * para guardar, só o registro para arquivar.
    */
   async function removerFoto(post: EntregaRegistro, caminho: string) {
-    const restantes = caminho ? post.fotos.filter((foto) => foto !== caminho) : []
     setRemovendo(true)
     try {
-      await atualizarFotosEntrega(post.id, restantes)
-      if (caminho) await removerFotosEntrega([caminho]).catch(() => undefined)
+      if (caminho) {
+        await moverFotoParaLixeira(post.id, caminho)
+      } else {
+        await atualizarFotosEntrega(post.id, [])
+      }
       await recarregar()
+      if (caminho) onFotoNaLixeira()
       onFeedback({
         tipo: 'ok',
-        texto: restantes.length > 0 ? 'Foto apagada do mural.' : 'Publicação sem fotos saiu do mural.',
+        texto: caminho
+          ? `Foto apagada do mural e guardada na Lixeira por ${DIAS_NA_LIXEIRA} dias.`
+          : 'Publicação sem fotos saiu do mural.',
       })
     } catch (e) {
       onFeedback({
@@ -238,8 +237,8 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
       descricao: semFoto
         ? 'Esta publicação não tem nenhuma foto: ela sai do mural e do site. Não dá para desfazer.'
         : post.fotos.length === 1
-          ? 'É a única foto desta publicação: ela sai do mural, do site e do armazenamento, e a publicação é arquivada. Não dá para desfazer.'
-          : 'A foto sai do mural, do site e do armazenamento. Não dá para desfazer.',
+          ? `É a única foto desta publicação: ela sai do mural e do site e fica na Lixeira por ${DIAS_NA_LIXEIRA} dias. A publicação é arquivada até você restaurar.`
+          : `A foto sai do mural e do site e fica na Lixeira por ${DIAS_NA_LIXEIRA} dias — dá para restaurar.`,
       rotuloConfirmar: semFoto ? 'Tirar do mural' : 'Apagar',
       rotuloOcupado: semFoto ? 'Tirando…' : 'Apagando…',
       onConfirmar: async () => {
@@ -270,41 +269,6 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
     }
   }
 
-  function editarInfo(post: EntregaRegistro) {
-    setErroInfo(null)
-    setIdEditando(post.id)
-  }
-
-  /**
-   * Modelo, cliente e data são o que a foto conta. Grava só esses
-   * campos — status e fotos ficam como estavam, para editar os dados
-   * de um rascunho não publicá-lo sem querer.
-   */
-  async function salvarInfo(info: InfoEntrega) {
-    if (!postEditando) return
-    setSalvandoInfo(true)
-    setErroInfo(null)
-    try {
-      await salvarEntrega(
-        dadosDe(postEditando, {
-          motoNome: info.modelo,
-          nomeCliente: info.cliente,
-          entregueEm: info.data,
-          status: postEditando.status,
-        }),
-      )
-      await recarregar()
-      setIdEditando(null)
-      onFeedback({ tipo: 'ok', texto: 'Informações da entrega salvas.' })
-    } catch (e) {
-      setErroInfo(
-        e instanceof Error ? e.message : 'Não foi possível salvar as informações.',
-      )
-    } finally {
-      setSalvandoInfo(false)
-    }
-  }
-
   return (
     <section className="publicacoes-pagina mx-auto max-w-6xl" aria-labelledby="publicacoes-titulo">
       <header className="publicacoes-cabecalho">
@@ -314,7 +278,7 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
               Sonhos realizados
             </h2>
             <p className="publicacoes-subtitulo">
-              Cada entrega vira foto no site. Aqui você dá nome à moto, ao cliente e à data.
+              Cada entrega vira foto no site. A data entra sozinha, no dia do envio.
             </p>
           </div>
 
@@ -357,7 +321,6 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
               posts={ativas}
               removendo={removendo}
               onApagar={pedirRemocao}
-              onEditar={editarInfo}
             />
           )}
         </>
@@ -390,14 +353,6 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
         pedido={pedidoRemocao}
         onFechar={() => setPedidoRemocao(null)}
         ocupado={removendo}
-      />
-
-      <DialogoInfoEntrega
-        post={postEditando}
-        ocupado={salvandoInfo}
-        erro={erroInfo}
-        onFechar={() => setIdEditando(null)}
-        onSalvar={(info) => void salvarInfo(info)}
       />
     </section>
   )
@@ -552,12 +507,10 @@ function GaleriaPublicacoes({
   posts,
   removendo,
   onApagar,
-  onEditar,
 }: {
   posts: EntregaRegistro[]
   removendo: boolean
   onApagar: (post: EntregaRegistro, indice: number) => void
-  onEditar: (post: EntregaRegistro) => void
 }) {
   return (
     <ul className="publicacoes-mosaico">
@@ -566,7 +519,6 @@ function GaleriaPublicacoes({
         // "Publicação" era o nome genérico das versões antigas: é
         // ausência de informação, não um modelo de moto.
         const nome = post.motoNome === 'Publicação' ? '' : post.motoNome.trim()
-        const cliente = post.nomeCliente.trim()
         const total = Math.max(post.fotos.length, 1)
         const descricao = nome ? `da ${nome}` : 'da entrega'
         const legenda = data ? `${descricao}, em ${data}` : descricao
@@ -604,38 +556,10 @@ function GaleriaPublicacoes({
                 {post.status !== 'publicada' ? (
                   <span className="publicacoes-quadro-fora">Fora do ar</span>
                 ) : null}
-                <p className="publicacoes-quadro-modelo">{nome || 'Entrega'}</p>
-                <p className="publicacoes-quadro-meta numeros">
-                  {data || 'Sem data'}
-                  {cliente ? ` · ${cliente}` : ''}
-                  {total > 1 ? ` · ${indice + 1}/${total}` : ''}
-                </p>
+                <p className="publicacoes-quadro-meta numeros">{data || 'Sem data'}</p>
               </div>
 
               <div className="publicacoes-quadro-acoes">
-                <button
-                  type="button"
-                  onClick={() => onEditar(post)}
-                  aria-label={`Editar informações ${legenda}`}
-                  title="Editar informações"
-                  className="foco-painel publicacoes-quadro-acao"
-                >
-                  <Pencil className="size-4" aria-hidden="true" />
-                </button>
-
-                {post.status === 'publicada' ? (
-                  <a
-                    href="/#sonhos"
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Ver ${nome ? `a entrega da ${nome}` : 'a entrega'} no site`}
-                    title="Ver no site"
-                    className="foco-painel publicacoes-quadro-acao publicacoes-quadro-acao--site"
-                  >
-                    <ExternalLink className="size-4" aria-hidden="true" />
-                  </a>
-                ) : null}
-
                 <button
                   type="button"
                   onClick={() => onApagar(post, indice)}

@@ -40,3 +40,21 @@ export interface EntregaRegistro {
   ordem: number
   updatedAt: string
 }
+
+/**
+ * Foto que saiu do mural e espera na lixeira por 30 dias.
+ *
+ * O arquivo continua no bucket: só a exclusão definitiva (ou o fim do
+ * prazo) remove do Storage. Restaurar devolve a foto à publicação de
+ * origem, que é identificada por `entregaId`.
+ */
+export interface FotoNaLixeira {
+  id: string
+  entregaId: string
+  /** Caminho no bucket privado `entregas`. */
+  caminho: string
+  /** URL assinada para a miniatura do painel (1 dia). */
+  url: string
+  /** Quando a foto saiu do mural. */
+  apagadaEm: string
+}

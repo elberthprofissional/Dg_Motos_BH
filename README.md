@@ -21,7 +21,7 @@ restrita, que também se instala como app no celular.
 | Build      | Vite 8 (code-split por rota, prerender das fichas no build) |
 | Estilo     | Tailwind 4 + tokens próprios em `src/index.css`             |
 | Dados      | Supabase (`@supabase/supabase-js`) + RLS no banco           |
-| Qualidade  | oxlint, `tsc --strict`, Vitest (138 testes)                 |
+| Qualidade  | oxlint, `tsc --strict`, Vitest (143 testes)                 |
 | Entrega    | Vercel (produção); compatível com Netlify/Cloudflare Pages  |
 
 ## Rodando local
@@ -182,7 +182,7 @@ toque, foco de teclado, `dialog` do menu celular e mais — sai com código
 
 ```
 supabase/
-  migrations/     01..12 (esquema, RLS, vendas, entregas, lixeira…)
+  migrations/     01..13 (esquema, RLS, vendas, entregas, lixeira…)
                   + _aplicar-tudo.sql para aplicar de uma vez
 docs/
   SUPABASE.md         passo a passo do banco e do painel

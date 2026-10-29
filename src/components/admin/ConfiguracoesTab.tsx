@@ -9,6 +9,7 @@ import {
 } from '../../lib/configLoja'
 import type { ConfigLoja } from '../../lib/configLoja'
 import type { Motorcycle } from '../../types'
+import type { FotoNaLixeira } from '../../data/entregas'
 import { Toast } from '../ui/Toast'
 import type { Feedback } from '../ui/Toast'
 import { ModalInstalar } from './InstalarApp'
@@ -58,9 +59,14 @@ import type { Secao, SecaoConfig } from './configuracoes/dados'
 interface ConfiguracoesTabProps {
   /** Motos na lixeira; `null` enquanto o estoque carrega. */
   lixeira: Motorcycle[] | null
+  /** Fotos apagadas do mural; `null` enquanto a lista carrega. */
+  fotosLixeira: FotoNaLixeira[] | null
   erroLixeira: string | null
+  erroFotosLixeira: string | null
   onRestaurarDaLixeira: (moto: Motorcycle) => void | Promise<void>
   onApagarDeVez: (moto: Motorcycle) => void
+  onRestaurarFoto: (foto: FotoNaLixeira) => void | Promise<void>
+  onApagarFoto: (foto: FotoNaLixeira) => void
   onEsvaziarLixeira: () => void
   onIrParaEstoque: () => void
   onRecarregar: () => void | Promise<void>
@@ -68,9 +74,13 @@ interface ConfiguracoesTabProps {
 
 export function ConfiguracoesTab({
   lixeira,
+  fotosLixeira,
   erroLixeira,
+  erroFotosLixeira,
   onRestaurarDaLixeira,
   onApagarDeVez,
+  onRestaurarFoto,
+  onApagarFoto,
   onEsvaziarLixeira,
   onIrParaEstoque,
   onRecarregar,
@@ -96,7 +106,7 @@ export function ConfiguracoesTab({
   const abaRefs = useRef<(HTMLButtonElement | null)[]>([])
   const voltarRef = useRef<HTMLButtonElement>(null)
 
-  const totalLixeira = lixeira?.length ?? 0
+  const totalLixeira = (lixeira?.length ?? 0) + (fotosLixeira?.length ?? 0)
   const secaoAtiva = secao ?? 'contato'
   const metaAtiva = metaDaSecao(secaoAtiva)
 
@@ -288,9 +298,13 @@ export function ConfiguracoesTab({
         <div className="mesa-folha-corpo mesa-folha-corpo--lixo">
           <LixeiraSecao
             motos={lixeira}
+            fotos={fotosLixeira}
             erro={erroLixeira}
+            erroFotos={erroFotosLixeira}
             onRestaurar={onRestaurarDaLixeira}
             onApagarDeVez={onApagarDeVez}
+            onRestaurarFoto={onRestaurarFoto}
+            onApagarFoto={onApagarFoto}
             onEsvaziar={onEsvaziarLixeira}
             onIrParaEstoque={onIrParaEstoque}
             onRecarregar={onRecarregar}
@@ -440,9 +454,7 @@ export function ConfiguracoesTab({
                   {bloco.id === 'lixeira' && totalLixeira > 0 ? (
                     <span className="mesa-nav-contagem">
                       {totalLixeira}
-                      <span className="sr-only">
-                        {totalLixeira === 1 ? ' moto na lixeira' : ' motos na lixeira'}
-                      </span>
+                      <span className="sr-only"> na lixeira</span>
                     </span>
                   ) : null}
                 </button>

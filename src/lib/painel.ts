@@ -27,23 +27,34 @@ export function motosNaLixeira(motos: Motorcycle[]): Motorcycle[] {
 }
 
 /**
- * Prazo da lixeira: passado esse tempo, a moto é apagada de vez.
- * Vale só para o que está na lixeira — o estoque ativo não expira.
+ * Prazo da lixeira: passado esse tempo, motos e fotos do mural são
+ * apagadas de vez. Vale só para o que está na lixeira — o que está em
+ * uso não expira.
  */
 export const DIAS_NA_LIXEIRA = 30
 
 /**
- * Dias inteiros que faltam para a moto sair sozinha da lixeira.
+ * Dias inteiros que faltam para um item sair sozinho da lixeira.
  * `0` = já venceu (apaga na próxima abertura do painel).
  * `null` = sem data legível, então nunca expira por conta própria.
+ *
+ * Serve para motos e para as fotos do mural — os dois usam o mesmo prazo.
  */
-export function diasAteApagar(moto: Motorcycle, agora = new Date()): number | null {
-  if (!moto.lixeiraEm) return null
-  const quando = Date.parse(moto.lixeiraEm)
+export function diasAteApagarDesde(
+  quandoIso: string | null | undefined,
+  agora = new Date(),
+): number | null {
+  if (!quandoIso) return null
+  const quando = Date.parse(quandoIso)
   if (!Number.isFinite(quando)) return null
 
   const diasPassados = Math.floor((agora.getTime() - quando) / 86_400_000)
   return Math.max(0, DIAS_NA_LIXEIRA - diasPassados)
+}
+
+/** Prazo da moto na lixeira, a partir de `lixeiraEm`. */
+export function diasAteApagar(moto: Motorcycle, agora = new Date()): number | null {
+  return diasAteApagarDesde(moto.lixeiraEm, agora)
 }
 
 /** Motos cujo prazo na lixeira venceu — é o que a limpeza automática apaga. */

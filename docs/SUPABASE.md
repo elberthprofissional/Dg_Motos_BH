@@ -44,12 +44,17 @@ Abra o **SQL Editor** e execute as migrações numeradas de
 - `..._seguranca_site_settings.sql` — separa a leitura de
   `site_settings` por papel: o visitante lê só `key`/`value`; a leitura
   de `authenticated` passa a exigir `public.e_admin()`, fechando o
-  acesso de uma conta autenticada fora da lista de admins.
+  acesso de uma conta autenticada fora da lista de admins;
+- `..._lixeira_fotos_entregas.sql` — fotos apagadas do mural vão para
+  uma lixeira de 30 dias (`entregas_fotos_lixeira`), com as RPCs que
+  movem e restauram a foto dentro da publicação.
 
 Em um projeto novo, `_aplicar-tudo.sql` executa tudo de uma vez. Em um
 projeto que já está no ar, rode a migração 11 (e a 12 em seguida) antes
 de publicar esta versão do site: o código novo chama as funções criadas
-na 11 e a 12 fecha a leitura indevida de `updated_by`.
+na 11 e a 12 fecha a leitura indevida de `updated_by`. A 13 é o que
+permite apagar uma foto do mural sem perdê-la — sem ela, o botão de
+apagar retorna erro.
 
 ## 3. Ligar o projeto ao site
 

@@ -214,7 +214,6 @@ export function EstoqueTab({
           <div className="estoque-indicador">
             <span className="estoque-indicador-rotulo">Disponíveis</span>
             <span className="estoque-indicador-valor">{resumo.disponiveis}</span>
-            <span className="estoque-indicador-dica">no pátio, prontas para venda</span>
           </div>
           <button
             type="button"
@@ -227,12 +226,10 @@ export function EstoqueTab({
               <ArrowRight className="size-3.5" aria-hidden="true" />
             </span>
             <span className="estoque-indicador-valor">{resumo.vendidas}</span>
-            <span className="estoque-indicador-dica">saíram do pátio — ver a aba</span>
           </button>
           <div className="estoque-indicador estoque-indicador-financeiro">
             <span className="estoque-indicador-rotulo">Valor em estoque</span>
             <span className="estoque-indicador-valor">{formatPrice(resumo.valorEmEstoque)}</span>
-            <span className="estoque-indicador-dica">soma das motos no pátio</span>
           </div>
         </section>
       ) : null}
