@@ -405,12 +405,12 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Faixa do pátio: três números entre réguas, sem caixa de KPI. O
+  /* Faixa do pátio: dois números entre réguas, sem caixa de KPI. O
      rótulo miúdo em cima e o número condensado embaixo — o olho lê a
      loja, não um dashboard. */
   .estoque-indicadores {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     border-top: 1px solid var(--cor-borda-forte);
     border-bottom: 1px solid var(--cor-borda);
     background-color: transparent;
@@ -428,12 +428,7 @@
     padding-left: 0;
   }
 
-  .estoque-indicador:nth-child(2) {
-    border-left: 1px solid var(--cor-borda);
-  }
-
   .estoque-indicador-financeiro {
-    grid-column: 1 / -1;
     padding: 14px 0 16px;
     border-top: 1px solid var(--cor-borda);
   }
@@ -468,32 +463,6 @@
 
   .estoque-indicador-financeiro .estoque-indicador-valor {
     font-size: 30px;
-  }
-
-  /* O número de vendidas é o atalho para a aba onde elas vivem: a moto
-     sai do pátio, mas não some sem explicação. */
-  .estoque-indicador-acao {
-    text-align: left;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-  }
-
-  .estoque-indicador-acao .estoque-indicador-rotulo svg {
-    color: var(--cor-marca-texto);
-    transition: transform 0.15s ease;
-  }
-
-  .estoque-indicador-acao:hover {
-    background-color: color-mix(in srgb, var(--cor-texto) 3.5%, transparent);
-  }
-
-  .estoque-indicador-acao:hover .estoque-indicador-rotulo svg {
-    transform: translateX(2px);
-  }
-
-  .estoque-indicador-acao:focus-visible {
-    outline: 2px solid var(--cor-foco);
-    outline-offset: -2px;
   }
 
   /* ============================================================
@@ -1257,7 +1226,7 @@
 
   @media (min-width: 1024px) {
     .estoque-indicadores {
-      grid-template-columns: 1fr 1fr 1.6fr;
+      grid-template-columns: 1fr 1.6fr;
     }
 
     .estoque-indicador {
