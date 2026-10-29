@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { linhaParaMotos, montarSlug, motoParaFormulario, slugificar } from './catalog'
+import { linhaParaMotos, montarSlug, motoParaFormulario, proximoSlug, slugificar } from './catalog'
 import type { Motorcycle } from '../types'
 
 /**
@@ -140,6 +140,35 @@ describe('montarSlug', () => {
   it('usa a marca como prefixo quando o modelo é igual a ela', () => {
     // Evitaria "yamaha-yamaha-150-2020".
     expect(montarSlug('Yamaha', 'Yamaha', 2020)).toBe('yamaha-2020')
+  })
+})
+
+describe('proximoSlug', () => {
+  it('devolve o endereço base quando ninguém o usa', () => {
+    expect(proximoSlug('honda-cg-160-2023', [])).toBe('honda-cg-160-2023')
+  })
+
+  it('ganha -2 quando o base já existe', () => {
+    expect(proximoSlug('honda-cg-160-2023', ['honda-cg-160-2023'])).toBe('honda-cg-160-2023-2')
+  })
+
+  it('pega o sufixo mais alto, ignorando slugs de outra moto com o mesmo prefixo', () => {
+    // "...-fan" e "...-fan-2" são da moto Fan, não da CG: não entram na conta.
+    expect(
+      proximoSlug('honda-cg-160', [
+        'honda-cg-160',
+        'honda-cg-160-2',
+        'honda-cg-160-fan',
+        'honda-cg-160-fan-2',
+      ]),
+    ).toBe('honda-cg-160-3')
+  })
+
+  it('endereço ocupado por outra moto com o mesmo prefixo empurra o próximo', () => {
+    // "honda-cg-2020" pode ser CG modelo/ano 2020: para o helper é "unidade
+    // 2020" ocupada — o próximo ganha -2021. Na prática são >2000
+    // unidades do mesmo modelo; o compromisso é nunca devolver slug em uso.
+    expect(proximoSlug('honda-cg', ['honda-cg-2020'])).toBe('honda-cg-2021')
   })
 })
 

@@ -11,23 +11,21 @@ import {
   descontoPercentual,
   formatKm,
   formatPrice,
+  precoEmConferencia,
   precoPareceIncompleto,
   precoRequerConfirmacao,
+  resumoPublico,
 } from '../lib/format'
-import { descricaoDe } from '../lib/ficha'
-import { fichaDeReferencia, type GrupoFicha } from '../data/fichasModelo'
+import { descricaoDe, gruposDaFicha } from '../lib/ficha'
+import { fichaDeReferencia } from '../data/fichasModelo'
 import { BikeGallery } from '../components/motorcycles/BikeGallery'
 import { BikeCard } from '../components/motorcycles/BikeCard'
 import { IconeWhatsapp } from '../components/ui/IconeWhatsapp'
 import { Button } from '../components/ui/Button'
 import { Revelar } from '../components/ui/Revelar'
-import type { Motorcycle, MotorcycleSpec, MotorcycleStatus } from '../types'
+import type { Motorcycle, MotorcycleStatus } from '../types'
 
-/** Preço fora do anúncio público: valor incompleto ou alto demais. */
-function precoEmConferencia(preco: number): boolean {
-  return precoPareceIncompleto(preco) || precoRequerConfirmacao(preco)
-}
-
+/** Preço do anúncio compacto (lista de "outras motos"). */
 function precoDeLista(preco: number): string {
   return precoEmConferencia(preco) ? 'Sob consulta' : formatPrice(preco)
 }
@@ -38,16 +36,8 @@ function rotuloStatus(status: MotorcycleStatus): string {
   return 'Indisponível'
 }
 
-function statusLongo(status: MotorcycleStatus): string {
-  if (status === 'disponivel') return 'Disponível no pátio'
-  if (status === 'vendida') return 'Vendida'
-  return 'Indisponível no momento'
-}
-
 function metaDescricaoDe(bike: Motorcycle): string {
-  const km =
-    bike.quilometragem != null ? ` com ${formatKm(bike.quilometragem)}` : ''
-  return `${bikeTitle(bike)} ${bike.ano}${km} na DG Motos, em Belo Horizonte. ${precoDeLista(bike.preco)}.`
+  return `${resumoPublico(bike)} ${precoDeLista(bike.preco)}.`
 }
 
 export function BikeDetail() {
@@ -136,31 +126,7 @@ export function BikeDetail() {
   // sai da página: o que sobra é o resumo que o herói já mostra.
   const temFicha = referencia != null || especificacoesLoja.length > 0
 
-  const itensUnidade: MotorcycleSpec[] = [
-    { label: 'Ano', value: String(bike.ano) },
-    { label: 'Quilometragem', value: formatKm(bike.quilometragem) },
-    ...(bike.cilindrada
-      ? [{ label: 'Cilindrada', value: `${bike.cilindrada} cc` }]
-      : []),
-    { label: 'Situação', value: statusLongo(bike.status) },
-  ]
-
-  // Observações escritas pela loja para esta unidade entram na mesma
-  // coluna, sem repetir um rótulo que os dados do cadastro já cobrem.
-  const rotulosUnidade = new Set(
-    itensUnidade.map((item) => item.label.toLocaleLowerCase('pt-BR')),
-  )
-  for (const spec of especificacoesLoja) {
-    const chave = spec.label.toLocaleLowerCase('pt-BR')
-    if (rotulosUnidade.has(chave)) continue
-    itensUnidade.push(spec)
-    rotulosUnidade.add(chave)
-  }
-
-  const grupos: GrupoFicha[] = [
-    { titulo: 'Esta unidade', itens: itensUnidade },
-    ...(referencia?.grupos ?? []),
-  ]
+  const grupos = gruposDaFicha(bike)
 
   const gradeGrupos =
     grupos.length >= 4

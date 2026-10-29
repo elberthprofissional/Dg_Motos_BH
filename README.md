@@ -21,7 +21,7 @@ restrita, que também se instala como app no celular.
 | Build      | Vite 8 (code-split por rota, prerender das fichas no build) |
 | Estilo     | Tailwind 4 + tokens próprios em `src/index.css`             |
 | Dados      | Supabase (`@supabase/supabase-js`) + RLS no banco           |
-| Qualidade  | oxlint, `tsc --strict`, Vitest (143 testes)                 |
+| Qualidade  | oxlint, `tsc --strict`, Vitest (172 testes) + E2E de navegação |
 | Entrega    | Vercel (produção); compatível com Netlify/Cloudflare Pages  |
 
 ## Rodando local
@@ -55,6 +55,7 @@ variáveis, o app entra no modo catálogo estático.
 | `npm run typecheck`      | TypeScript sem emitir arquivos                        |
 | `npm test`               | Vitest (testes de `src/lib` e componentes)            |
 | `npm run auditar`        | Auditoria de navegador via CDP (Chrome na 9222)       |
+| `npm run e2e`            | E2E de navegação via CDP — rotas e guarda do `/admin`  |
 | `npm run convert-images` | Converte fotos de `img/` para WebP em `public/`       |
 | `npm run marcas`         | Baixa/converte logos das marcas para `public/marcas/` |
 | `npm run icones-pwa`     | Gera os ícones do app em `public/icons/`              |
@@ -175,7 +176,7 @@ Windows e Linux) e o hash tem de bater nos dois arquivos de cabeçalho:
 - **Keepalive do Supabase Free** — `cloudflare/` contém um Worker
   (publicado como `dg-motos-supabase`) que consulta o catálogo a cada
   6 horas para o projeto não pausar por inatividade. Detalhes em
-  `cloudfare.md` e `docs/SUPABASE.md`.
+  `cloudflare.md` e `docs/SUPABASE.md`.
 
 ## Identidade visual
 

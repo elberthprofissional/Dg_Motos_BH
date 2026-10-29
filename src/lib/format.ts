@@ -37,8 +37,20 @@ export function mesDaEntrega(valor?: string): string | null {
   return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(data)
 }
 
-export function bikeTitle(bike: Motorcycle): string {
+export function bikeTitle(bike: Pick<Motorcycle, 'marca' | 'modelo'>): string {
   return nomeExibicao(bike.marca, bike.modelo)
+}
+
+/**
+ * Descrição pública da moto, antes do preço: o mesmo texto no site e
+ * no HTML pré-renderizado. `bikeTitle` remove a marca repetida no nome
+ * do modelo, então as duas versões mostram o mesmo nome.
+ */
+export function resumoPublico(
+  bike: Pick<Motorcycle, 'marca' | 'modelo' | 'ano' | 'quilometragem'>,
+): string {
+  const km = bike.quilometragem != null ? ` com ${formatKm(bike.quilometragem)}` : ''
+  return `${bikeTitle(bike)} ${bike.ano}${km} na DG Motos, em Belo Horizonte.`
 }
 
 export function bikeModelName(bike: Motorcycle): string {
@@ -59,6 +71,11 @@ export function precoRequerConfirmacao(preco: number): boolean {
  */
 export function precoPareceIncompleto(preco: number): boolean {
   return !Number.isFinite(preco) || preco < 1_000
+}
+
+/** Preço fora do anúncio público: valor incompleto ou alto demais. */
+export function precoEmConferencia(preco: number): boolean {
+  return precoPareceIncompleto(preco) || precoRequerConfirmacao(preco)
 }
 
 /**

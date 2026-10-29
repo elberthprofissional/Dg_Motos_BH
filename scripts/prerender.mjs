@@ -24,7 +24,16 @@
  */
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { precoPareceIncompleto, precoRequerConfirmacao } from '../src/lib/format.ts'
+import {
+  bikeTitle,
+  formatKm,
+  formatPrice,
+  precoEmConferencia,
+  precoPareceIncompleto,
+  precoRequerConfirmacao,
+  resumoPublico,
+} from '../src/lib/format.ts'
+import { descricaoDe, gruposDaFicha } from '../src/lib/ficha.ts'
 import { fichaDeReferencia } from '../src/data/fichasModelo.ts'
 
 // O Vite carrega o .env sozinho, mas este script é executado pelo Node
@@ -184,73 +193,14 @@ function dataDePublicacao(moto) {
   return `${moto.ano}-03-15`
 }
 
-function kmTexto(valor) {
-  if (valor == null || valor === '') return 'Km a confirmar'
-  return `${Number(valor).toLocaleString('pt-BR')} km`
-}
-
-/**
- * Descrição editorial da ficha: a da loja manda; sem ela, entra a
- * ficha pública da linha; sem nenhuma das duas, nada no lugar de
- * quem não falou. É o mesmo critério da página em React.
- */
-function descricaoDe(moto) {
-  const daLoja = String(moto.descricao ?? '').trim()
-  if (daLoja) {
-    return daLoja
-      .split(/\n{2,}/)
-      .map((paragrafo) => paragrafo.trim())
-      .filter(Boolean)
-  }
-  return fichaDeReferencia(moto)?.descricao ?? []
-}
-
-function statusLongo(status) {
-  if (status === 'disponivel') return 'Disponível no pátio'
-  if (status === 'vendida') return 'Vendida'
-  return 'Indisponível no momento'
-}
-
-/** Grupos da ficha: primeiro a unidade, depois a referência da linha. */
-function gruposDe(moto) {
-  const especificacoes = (moto.especificacoes ?? []).filter(
-    (spec) => spec?.label?.trim() && spec?.value?.trim(),
-  )
-  const itens = [
-    { label: 'Ano', value: String(moto.ano) },
-    { label: 'Quilometragem', value: kmTexto(moto.quilometragem) },
-    ...(moto.cilindrada ? [{ label: 'Cilindrada', value: `${moto.cilindrada} cc` }] : []),
-    { label: 'Situação', value: statusLongo(moto.status) },
-  ]
-
-  const rotulos = new Set(itens.map((item) => item.label.toLocaleLowerCase('pt-BR')))
-  for (const spec of especificacoes) {
-    const chave = spec.label.toLocaleLowerCase('pt-BR')
-    if (rotulos.has(chave)) continue
-    itens.push({ label: spec.label, value: spec.value })
-    rotulos.add(chave)
-  }
-
-  return [
-    { titulo: 'Esta unidade', itens },
-    ...(fichaDeReferencia(moto)?.grupos ?? []),
-  ]
-}
-
 function fichaDe(moto, base) {
-  const titulo = `${moto.marca} ${moto.modelo} ${moto.ano}`
+  const titulo = `${bikeTitle(moto)} ${moto.ano}`
   const precoNumero = Number(moto.preco ?? 0)
   const precoIncompleto = precoPareceIncompleto(precoNumero)
-  const precoEmConferencia =
-    precoIncompleto || precoRequerConfirmacao(precoNumero)
+  const precoParaConferir = precoEmConferencia(precoNumero)
   const precoTexto = precoIncompleto
     ? 'Preço sob consulta'
-    : precoNumero.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
+    : formatPrice(precoNumero)
   const precoNota = precoIncompleto
     ? 'O valor desta unidade está em conferência na loja. Fale com a equipe para confirmar.'
     : precoRequerConfirmacao(precoNumero)
@@ -263,8 +213,8 @@ function fichaDe(moto, base) {
   const referencia = fichaDeReferencia(moto)
   const lead =
     referencia?.resumo ??
-    `${moto.marca} ${moto.modelo} ${moto.ano}${
-      moto.quilometragem != null ? ` com ${kmTexto(moto.quilometragem)}` : ''
+    `${bikeTitle(moto)} ${moto.ano}${
+      moto.quilometragem != null ? ` com ${formatKm(moto.quilometragem)}` : ''
     } no pátio da DG Motos, em Belo Horizonte.`
   const anoCilindrada = [
     String(moto.ano),
@@ -273,7 +223,7 @@ function fichaDe(moto, base) {
     .filter(Boolean)
     .join(' · ')
 
-  const gruposHtml = gruposDe(moto)
+  const gruposHtml = gruposDaFicha(moto)
     .map((grupo) => {
       const itens = grupo.itens.filter(
         (item) => item?.label?.trim() && item?.value?.trim(),
@@ -295,10 +245,10 @@ function fichaDe(moto, base) {
     titulo,
     preco: precoTexto,
     precoNumero,
-    precoPublicavel: !precoEmConferencia,
+    precoPublicavel: !precoParaConferir,
     descricao,
     fotos: fotos.map((i) => absoluta(base, i.src)),
-    resumo: `${titulo}${moto.quilometragem != null ? ` com ${kmTexto(moto.quilometragem)}` : ''} na DG Motos, em Belo Horizonte. ${precoTexto}.`,
+    resumo: `${resumoPublico(moto)} ${precoTexto}.`,
     conteudo: `<article class="prerender">
   <h1>${escapar(titulo)}</h1>
   <p class="ano">${escapar(anoCilindrada)}</p>
