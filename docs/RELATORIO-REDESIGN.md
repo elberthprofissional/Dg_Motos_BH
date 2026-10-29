@@ -4,6 +4,11 @@ Data: 21/10/2026
 Escopo: remake visual profundo da vitrine e alinhamento do painel do dono.
 Nenhum dado comercial foi inventado; nenhuma seção nova de conteúdo foi criada.
 
+> **Snapshot histórico.** Este relatório descreve o estado do redesign na
+> data acima (tipografia IBM Plex, 73 testes). A interface evoluiu depois —
+> a tipografia atual é Lato/Archivo e a suíte tem mais testes. Para o
+> estado vigente, consulte o `README.md` e o código.
+
 ---
 
 ## 1. Método
