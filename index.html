@@ -6,7 +6,10 @@
     <!-- Preload da foto de LCP da home. Ele é injetado aqui, e não como
          <link> fixo, porque só a home usa a imagem — nas outras rotas
          (painel, estoque, fichas) ela seria baixada à toa. As fotos
-         ficam em public/ para manter a URL estável entre dev e build. -->
+         ficam em public/ para manter a URL estável entre dev e build.
+         CSP: este script inline é liberado por hash em vercel.json e
+         public/_headers. Se o texto abaixo mudar, recalcule o sha256 e
+         atualize os dois arquivos. -->
     <script>
       if (location.pathname === '/') {
         var preloadHero = document.createElement('link')

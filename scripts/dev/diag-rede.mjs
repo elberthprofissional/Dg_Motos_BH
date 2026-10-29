@@ -1,5 +1,5 @@
 /** Diagnóstico temporário: status das chamadas ao Supabase. */
-import { resolverPendente } from './lib/cdp.mjs'
+import { resolverPendente } from '../lib/cdp.mjs'
 
 const CDP = 'http://127.0.0.1:9222'
 const v = await (await fetch(`${CDP}/json/version`)).json()

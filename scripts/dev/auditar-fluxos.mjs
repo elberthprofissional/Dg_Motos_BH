@@ -1,5 +1,5 @@
 /** Auditoria de fluxos: busca do cabeçalho e filtro por marca no estoque. */
-import { resolverPendente } from './lib/cdp.mjs'
+import { resolverPendente } from '../lib/cdp.mjs'
 
 const CDP = 'http://127.0.0.1:9222'
 const BASE = 'http://localhost:5173'

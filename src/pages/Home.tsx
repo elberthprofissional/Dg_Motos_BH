@@ -176,7 +176,7 @@ export function Home() {
                 </Revelar>
               ))}
             </div>
-          ) : patio.length === 0 ? (
+          ) : (
             <div className="mt-12">
               <p className="titulo text-2xl text-texto">Motos no caminho</p>
               <p className="corpo mt-3 text-texto-2">
@@ -187,7 +187,7 @@ export function Home() {
                 Falar com a loja
               </Link>
             </div>
-          ) : null}
+          )}
         </div>
       </section>
 

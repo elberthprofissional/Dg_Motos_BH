@@ -2,7 +2,7 @@
  * Auditoria funcional no celular: menu, filtros, galeria, contato e login.
  * Cada checagem imprime OK ou FALHOU com o motivo.
  */
-import { resolverPendente } from './lib/cdp.mjs'
+import { resolverPendente } from '../lib/cdp.mjs'
 
 const CDP = 'http://127.0.0.1:9222'
 const BASE = 'http://localhost:5173'

@@ -2,7 +2,7 @@
  * Auditoria do painel no celular: abas, formulário de moto e editor de post,
  * com sessão e dados simulados (o banco não é tocado).
  */
-import { resolverPendente } from './lib/cdp.mjs'
+import { resolverPendente } from '../lib/cdp.mjs'
 
 const CDP = 'http://127.0.0.1:9222'
 const BASE = 'http://localhost:5173'

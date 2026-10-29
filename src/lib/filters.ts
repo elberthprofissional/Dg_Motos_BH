@@ -5,7 +5,12 @@ export const PRECO_MAX = 60000
 /** Piso da busca: 0 = "sem chão", a faixa abre do zero como a Barroca. */
 export const PRECO_MIN = 0
 export const ANO_MIN = 2015
-export const ANO_MAX = 2026
+/**
+ * Teto do filtro de ano. Acompanha o calendário para não envelhecer: em
+ * 2027 a lista de "a partir de" passa a começar em 2027 sozinha, sem
+ * precisar de build. O piso de 2026 protege contra relógio errado.
+ */
+export const ANO_MAX = Math.max(new Date().getFullYear(), 2026)
 
 export const ORDENACOES: { value: BikeFilterState['ordenacao']; label: string }[] = [
   { value: 'ano-desc', label: 'Mais recentes' },

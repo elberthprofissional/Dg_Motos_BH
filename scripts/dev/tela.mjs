@@ -1,5 +1,5 @@
 /** Temporário: abre uma rota, tira foto e mede o que interessa. */
-import { resolverPendente } from './lib/cdp.mjs'
+import { resolverPendente } from '../lib/cdp.mjs'
 
 const CDP = 'http://127.0.0.1:9222'
 const ROTA = process.env.ROTA ?? '/'
