@@ -1821,50 +1821,14 @@
     line-height: 1.55;
   }
 
-  /* Contador do mural: número grande, rótulo miúdo. A régua em cima
-     separa o resumo das fotos, sem virar caixa de dashboard. */
+  /* Contador do mural: uma linha só — "4 fotos no mural". */
   .publicacoes-contador {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 0 18px;
     margin: 0;
     padding-top: 10px;
     border-top: 1px solid var(--cor-borda-forte);
-  }
-
-  .publicacoes-contador-item {
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 3px;
-    min-width: 0;
-  }
-
-  .publicacoes-contador-item + .publicacoes-contador-item {
-    padding-left: 18px;
-    border-left: 1px solid var(--cor-borda);
-  }
-
-  .publicacoes-contador-rotulo {
     color: var(--cor-texto-3);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    line-height: 1.2;
-    text-transform: uppercase;
-  }
-
-  .publicacoes-contador-numero {
-    margin: 0;
-    color: var(--cor-texto);
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .publicacoes-contador-numero--marca {
-    color: var(--cor-marca-texto);
+    font-size: 13px;
+    line-height: 1.4;
   }
 
   /* Pendências: uma linha de serviço, não um painel de KPI. */
@@ -2971,27 +2935,7 @@
     min-width: 0;
   }
 
-  .mesa-folha-etapa {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-steel-500);
-  }
-
-  .mesa-folha-etapa::before {
-    content: '';
-    width: 1rem;
-    height: 2px;
-    background: var(--cor-marca);
-  }
-
   .mesa-folha-titulo {
-    margin-top: 0.55rem;
     font-family: var(--font-cartaz);
     font-stretch: 88%;
     font-variation-settings: 'wdth' 88, 'wght' 740;
@@ -3763,7 +3707,7 @@
 
   /* ============================================================
      LIXEIRA — o livro de baixas
-     O peso visual vem de três lugares: o valor parado no topo, a
+     O peso visual vem de três lugares: a frase do prazo no topo, a
      barra de prazo de cada linha e o bloco de esvaziar no fim. A
      foto perde a cor enquanto a moto está fora do pátio e recupera
      no hover — a linha continua reconhecível sem parecer estoque.
@@ -3772,51 +3716,18 @@
     min-width: 0;
   }
 
-  .lixo-resumo {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1px;
-    border: 1px solid var(--cor-borda);
-    background: var(--cor-borda);
+  .lixo-guarda {
+    margin-top: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border-left: 2px solid var(--cor-borda-forte);
+    background: var(--cor-painel-2);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--color-steel-400);
   }
 
-  .lixo-resumo-celula {
-    min-width: 0;
-    padding: 0.85rem 1rem;
-    background: var(--cor-fundo);
-  }
-
-  .lixo-resumo-rotulo {
-    display: block;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--color-steel-500);
-  }
-
-  .lixo-resumo-valor {
-    display: block;
-    margin-top: 0.3rem;
-    overflow-wrap: anywhere;
-    font-family: var(--font-cartaz);
-    font-stretch: 84%;
-    font-variation-settings: 'wdth' 84, 'wght' 760;
-    font-size: 1.2rem;
-    font-weight: 760;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--color-paper);
-  }
-
-  .lixo-resumo-nota {
-    display: block;
-    margin-top: 0.2rem;
-    font-size: 0.6875rem;
-    line-height: 1.4;
-    color: var(--color-steel-500);
-  }
-
-  .lixo-resumo-celula--risco .lixo-resumo-valor {
+  .lixo-guarda-prazo {
+    font-weight: 700;
     color: var(--cor-marca-texto);
   }
 
@@ -4208,10 +4119,6 @@
   }
 
   @media (min-width: 1280px) {
-    .lixo-resumo {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .lixo-lista-cabecalho {
       display: grid;
       grid-template-columns: 4.5rem minmax(0, 1fr) 7.5rem 12rem;

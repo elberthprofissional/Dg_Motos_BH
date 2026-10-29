@@ -255,7 +255,7 @@ export const SECOES: DescricaoSecao[] = [
     id: 'lixeira',
     rotulo: 'Lixeira',
     descricao:
-      'Motos excluídas do estoque. Restaure para voltar ao pátio; o que ficar 30 dias aqui é apagado de vez, junto com as fotos.',
+      'Motos excluídas do estoque. Restaure para voltar ao pátio — ou apague de vez, com as fotos.',
     campos: [],
     resumo: (_config, naLixeira) =>
       naLixeira === 0 ? 'Vazia' : `${naLixeira} ${naLixeira === 1 ? 'moto' : 'motos'}`,

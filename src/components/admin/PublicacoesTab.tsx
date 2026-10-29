@@ -326,19 +326,10 @@ export function PublicacoesTab({ onFeedback }: PublicacoesTabProps) {
           />
         </div>
 
-        {!carregando && ativas.length > 0 ? (
-          <dl className="publicacoes-contador" aria-label="Resumo do mural">
-            <div className="publicacoes-contador-item">
-              <dt className="publicacoes-contador-rotulo">Sonhos realizados</dt>
-              <dd className="publicacoes-contador-numero publicacoes-contador-numero--marca numeros">
-                {ativas.length}
-              </dd>
-            </div>
-            <div className="publicacoes-contador-item">
-              <dt className="publicacoes-contador-rotulo">Fotos no mural</dt>
-              <dd className="publicacoes-contador-numero numeros">{totalFotos}</dd>
-            </div>
-          </dl>
+        {!carregando && totalFotos > 0 ? (
+          <p className="publicacoes-contador">
+            {totalFotos === 1 ? '1 foto no mural' : `${totalFotos} fotos no mural`}
+          </p>
         ) : null}
       </header>
 

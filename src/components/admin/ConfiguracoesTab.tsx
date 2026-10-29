@@ -99,7 +99,6 @@ export function ConfiguracoesTab({
   const totalLixeira = lixeira?.length ?? 0
   const secaoAtiva = secao ?? 'contato'
   const metaAtiva = metaDaSecao(secaoAtiva)
-  const indiceAtivo = SECOES.findIndex((bloco) => bloco.id === secaoAtiva) + 1
 
   const secoesSujas = SECOES.filter(
     (bloco) => bloco.id !== 'lixeira' && secaoSuja(bloco.id, config, salvo),
@@ -245,7 +244,7 @@ export function ConfiguracoesTab({
       setFeedback({
         tipo: 'erro',
         texto:
-          'Salvo neste aparelho, mas o banco não respondeu. O site local já usa os valores; tente sincronizar de novo.',
+          'Salvo neste aparelho, mas sem resposta online. Os valores já valem aqui; tente sincronizar de novo.',
       })
     }
   }
@@ -261,12 +260,12 @@ export function ConfiguracoesTab({
       setUltimoSalvoEm(horaAgora())
       setFeedback({
         tipo: 'ok',
-        texto: 'Banco sincronizado. A loja inteira já recebe estes valores.',
+        texto: 'Sincronizado. A loja inteira já recebe estes valores.',
       })
     } else {
       setFeedback({
         tipo: 'erro',
-        texto: 'O banco continua sem responder. Verifique a conexão e tente de novo.',
+        texto: 'Não deu para publicar. Verifique a conexão e tente de novo.',
       })
     }
   }
@@ -275,7 +274,7 @@ export function ConfiguracoesTab({
     texto: string
     tom: 'ok' | 'pendente' | 'erro' | 'neutro'
   } | null {
-    if (sincronizando) return { texto: 'Lendo o banco…', tom: 'neutro' }
+    if (sincronizando) return { texto: 'Lendo dados…', tom: 'neutro' }
     if (salvando === id) return { texto: 'Salvando…', tom: 'neutro' }
     if (secaoSuja(id, config, salvo)) return { texto: 'Alterações não salvas', tom: 'pendente' }
     if (falhaBanco) return { texto: 'Salvo só neste aparelho', tom: 'erro' }
@@ -337,7 +336,6 @@ export function ConfiguracoesTab({
     return (
       <div className="mesa-folha-topo">
         <div className="mesa-folha-topo-texto">
-          <p className="mesa-folha-etapa">Bloco {String(indiceAtivo).padStart(2, '0')}</p>
           <h2 className="mesa-folha-titulo">{metaAtiva.rotulo}</h2>
           <p className="mesa-folha-desc">{metaAtiva.descricao}</p>
         </div>
@@ -372,22 +370,22 @@ export function ConfiguracoesTab({
             para onde vai uma moto excluída antes de sumir de vez.
           </p>
         </div>
-        <p className="mesa-topo-estado">
-          <span
-            className="mesa-ponto"
-            data-tom={
-              sincronizando ? 'neutro' : falhaBanco ? 'erro' : totalPendentes > 0 ? 'pendente' : 'ok'
-            }
-            aria-hidden="true"
-          />
-          {sincronizando
-            ? 'Lendo os valores publicados'
-            : falhaBanco
-              ? 'Banco sem confirmação'
-              : totalPendentes > 0
-                ? `${totalPendentes} ${totalPendentes === 1 ? 'bloco com edição pendente' : 'blocos com edição pendente'}`
-                : 'Tudo publicado'}
-        </p>
+        {/* Só fala quando há algo a dizer: carregando, sem resposta
+            online ou edição pendente. Em repouso, nada. */}
+        {sincronizando || falhaBanco || totalPendentes > 0 ? (
+          <p className="mesa-topo-estado">
+            <span
+              className="mesa-ponto"
+              data-tom={sincronizando ? 'neutro' : falhaBanco ? 'erro' : 'pendente'}
+              aria-hidden="true"
+            />
+            {sincronizando
+              ? 'Lendo dados'
+              : falhaBanco
+                ? 'Sem resposta online'
+                : `${totalPendentes} ${totalPendentes === 1 ? 'bloco com edição pendente' : 'blocos com edição pendente'}`}
+          </p>
+        ) : null}
       </header>
 
       <div className="mesa-grade">
@@ -486,9 +484,7 @@ export function ConfiguracoesTab({
             <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="mesa-mobile-kicker">
-              Configurações · bloco {String(indiceAtivo).padStart(2, '0')}
-            </p>
+            <p className="mesa-mobile-kicker">Configurações</p>
             <h1 className="painel-h1">{metaAtiva.rotulo}</h1>
           </div>
         </div>

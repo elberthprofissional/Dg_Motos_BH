@@ -38,7 +38,7 @@ export function PeSecao({
         {sincronizando ? (
           <>
             <span className="mesa-ponto" data-tom="neutro" aria-hidden="true" />
-            Lendo os valores publicados no banco…
+            Lendo dados…
           </>
         ) : salvando ? (
           <>
@@ -53,7 +53,7 @@ export function PeSecao({
         ) : falhaBanco ? (
           <>
             <span className="mesa-ponto" data-tom="erro" aria-hidden="true" />
-            Salvo neste aparelho. O banco não confirmou.
+            Salvo neste aparelho. O site não confirmou.
           </>
         ) : ultimoSalvoEm ? (
           <>
@@ -76,7 +76,7 @@ export function PeSecao({
             ) : (
               <RefreshCw className="size-3.5" aria-hidden="true" />
             )}
-            {reenviando ? 'Sincronizando…' : 'Sincronizar com o banco'}
+            {reenviando ? 'Sincronizando…' : 'Sincronizar com o site'}
           </button>
         ) : null}
       </div>

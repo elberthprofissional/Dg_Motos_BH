@@ -175,37 +175,29 @@ export function VendidasTab({
         </div>
       ) : (
         <>
+          {/* Dois números de verdade: quantas motos saíram e quanto sobrou.
+              O faturamento não vira um terceiro cartão — ele mora como
+              apoio do primeiro, porque sozinho ele já é a soma das vendas
+              lançadas e repetia a conta na tela. */}
           <dl
-            className="mt-4 grid grid-cols-2 border border-line bg-painel-2/20 sm:grid-cols-3"
+            className="mt-4 grid grid-cols-2 border border-line bg-painel-2/20"
             aria-label="Resumo das vendas"
           >
-            <div className="border-r border-b border-line px-3 py-2.5 sm:border-b-0 sm:px-4 sm:py-3">
+            <div className="border-r border-line px-3 py-2.5 sm:px-4 sm:py-3">
               <dt className="text-[10px] font-bold tracking-[0.12em] text-steel-500 uppercase">
-                No livro
+                Motos vendidas
               </dt>
               <dd className="numeros mt-1 font-display text-base leading-none font-bold text-paper sm:text-xl">
                 {registros.length}
               </dd>
-              <dd className="mt-1 text-[10px] leading-tight text-steel-500">
-                {registros.length === 1 ? 'moto vendida' : 'motos vendidas'}
-              </dd>
-            </div>
-
-            <div className="border-b border-line px-3 py-2.5 sm:border-r sm:border-b-0 sm:px-4 sm:py-3">
-              <dt className="text-[10px] font-bold tracking-[0.12em] text-steel-500 uppercase">
-                Faturamento
-              </dt>
-              <dd className="numeros mt-1 truncate font-display text-base leading-none font-bold text-paper sm:text-xl">
-                {resumo.registradas > 0 ? formatPrice(resumo.faturamento) : '—'}
-              </dd>
               <dd className="mt-1 truncate text-[10px] leading-tight text-steel-500">
                 {resumo.registradas === 0
                   ? 'nenhuma venda lançada'
-                  : `${resumo.registradas} ${resumo.registradas === 1 ? 'venda lançada' : 'vendas lançadas'}`}
+                  : `${formatPrice(resumo.faturamento)} em ${resumo.registradas} ${resumo.registradas === 1 ? 'venda' : 'vendas'}`}
               </dd>
             </div>
 
-            <div className="col-span-2 px-3 py-2.5 sm:col-span-1 sm:px-4 sm:py-3">
+            <div className="px-3 py-2.5 sm:px-4 sm:py-3">
               <dt className="text-[10px] font-bold tracking-[0.12em] text-steel-500 uppercase">
                 Lucro
               </dt>
@@ -223,7 +215,9 @@ export function VendidasTab({
               <dd className="mt-1 truncate text-[10px] leading-tight text-steel-500">
                 {resumo.comCusto === 0
                   ? 'sem custo lançado'
-                  : `em ${resumo.comCusto} ${resumo.comCusto === 1 ? 'venda com custo' : 'vendas com custo'}`}
+                  : resumo.comCusto < resumo.registradas
+                    ? `${resumo.comCusto} de ${resumo.registradas} vendas com custo`
+                    : `${resumo.comCusto} ${resumo.comCusto === 1 ? 'venda com custo' : 'vendas com custo'}`}
               </dd>
             </div>
           </dl>

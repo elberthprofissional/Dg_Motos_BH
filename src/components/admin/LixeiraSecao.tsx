@@ -139,26 +139,6 @@ export function LixeiraSecao({
 
   return (
     <section className="lixo" aria-label="Lixeira" aria-busy={motos === null}>
-      <div className="lixo-resumo">
-        <div className="lixo-resumo-celula">
-          <span className="lixo-resumo-rotulo">Na lixeira</span>
-          <span className="lixo-resumo-valor numeros">{motos === null ? '—' : total}</span>
-          <span className="lixo-resumo-nota">
-            {motos === null
-              ? 'Abrindo a lixeira…'
-              : total === 1
-                ? 'moto excluída'
-                : 'motos excluídas'}
-          </span>
-        </div>
-
-        <div className="lixo-resumo-celula lixo-resumo-celula--risco">
-          <span className="lixo-resumo-rotulo">Prazo de guarda</span>
-          <span className="lixo-resumo-valor numeros">{DIAS_NA_LIXEIRA} dias</span>
-          <span className="lixo-resumo-nota">depois disso, apaga sozinho</span>
-        </div>
-      </div>
-
       {erro ? (
         <div className="lixo-estado lixo-estado--erro" role="alert">
           <p className="lixo-estado-titulo">Não deu para abrir a lixeira agora</p>
@@ -188,7 +168,8 @@ export function LixeiraSecao({
             <p className="lixo-vazio-titulo">Nenhuma moto na lixeira</p>
             <p className="lixo-vazio-texto">
               Nada foi excluído ainda. Ao excluir uma moto no Estoque, ela fica aqui por{' '}
-              {DIAS_NA_LIXEIRA} dias e pode voltar ao pátio.
+              <strong className="lixo-guarda-prazo">{DIAS_NA_LIXEIRA} dias</strong> e pode voltar
+              ao pátio.
             </p>
             <button type="button" onClick={onIrParaEstoque} className="mesa-btn-secundario">
               Ir para o Estoque
@@ -197,6 +178,14 @@ export function LixeiraSecao({
         </div>
       ) : (
         <>
+          <p className="lixo-guarda">
+            {total === 1
+              ? '1 moto excluída no Estoque fica guardada por '
+              : `${total} motos excluídas no Estoque ficam guardadas por `}
+            <strong className="lixo-guarda-prazo">{DIAS_NA_LIXEIRA} dias</strong>
+            {total === 1 ? ' antes de ser apagada de vez.' : ' antes de serem apagadas de vez.'}
+          </p>
+
           <div className="lixo-lista-cabecalho" aria-hidden="true">
             <span>Moto</span>
             <span>Preço</span>
