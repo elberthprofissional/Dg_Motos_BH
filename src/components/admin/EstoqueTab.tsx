@@ -13,8 +13,7 @@ import {
 import type { Motorcycle, MotorcycleStatus } from '../../types'
 import { motoParaFormulario } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
-import { filtrarEstoque, resumirEstoque } from '../../lib/painel'
-import type { FiltroEstoque } from '../../lib/painel'
+import { diasNaLoja, filtrarEstoque, resumirEstoque } from '../../lib/painel'
 import { descontoPercentual, formatKm, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 import { CampoBusca } from '../ui/CampoBusca'
@@ -45,10 +44,21 @@ function ordenarEstoque(motos: Motorcycle[], ordem: OrdemEstoque): Motorcycle[] 
 }
 
 function fichaTecnica(moto: Motorcycle): string[] {
-  const itens = [String(moto.ano), moto.categoria]
+  const itens = [String(moto.ano)]
   if (moto.cilindrada != null) itens.push(`${moto.cilindrada} cc`)
   if (moto.quilometragem != null) itens.push(formatKm(moto.quilometragem))
   return itens
+}
+
+/**
+ * Há quanto tempo a moto está na loja, em dias. É o número que mostra
+ * o que está encalhando — vale mais que repetir "Disponível" na linha.
+ */
+function rotuloNaLoja(moto: Motorcycle): string {
+  const dias = diasNaLoja(moto)
+  if (dias == null) return 'Sem data'
+  if (dias === 0) return 'Hoje'
+  return `${dias} ${dias === 1 ? 'dia' : 'dias'}`
 }
 
 function EsqueletoEstoque() {
@@ -64,8 +74,8 @@ function EsqueletoEstoque() {
               <Esqueleto className="mt-2 h-3 w-3/5" />
             </div>
           </div>
-          <div className="estoque-celula-situacao" role="cell">
-            <Esqueleto className="h-3 w-16" />
+          <div className="estoque-celula-loja" role="cell">
+            <Esqueleto className="h-3 w-14" />
           </div>
           <div className="estoque-celula-valor" role="cell">
             <Esqueleto className="h-3.5 w-24" />
@@ -105,7 +115,6 @@ export function EstoqueTab({
   /** A moto vendida sai do pátio; o atalho leva para onde ela foi. */
   onIrParaVendidas: () => void
 }) {
-  const [status, setStatus] = useState<FiltroEstoque['status']>('todas')
   const [ordem, setOrdem] = useState<OrdemEstoque>('padrao')
   // Menu ⋯ do cartão (celular): um aberto por vez, pelo id da moto.
   const [acoesAbertas, setAcoesAbertas] = useState<string | null>(null)
@@ -139,10 +148,10 @@ export function EstoqueTab({
 
   const visiveis = useMemo(() => {
     if (motos === null) return []
-    return ordenarEstoque(filtrarEstoque(noPatio, { busca, status }), ordem)
-  }, [motos, noPatio, busca, status, ordem])
+    return ordenarEstoque(filtrarEstoque(noPatio, { busca }), ordem)
+  }, [motos, noPatio, busca, ordem])
 
-  const filtrando = busca.trim() !== '' || status !== 'todas'
+  const filtrando = busca.trim() !== ''
   const ajustado = filtrando || ordem !== 'padrao'
   const erroAtivo = erro !== null
 
@@ -153,7 +162,6 @@ export function EstoqueTab({
 
   function limpar() {
     onBusca('')
-    setStatus('todas')
     setOrdem('padrao')
   }
 
@@ -236,9 +244,8 @@ export function EstoqueTab({
 
       {/* Barra de filtros: cada controle tem o mesmo desenho de campo
           (mesma altura, mesma borda, mesmo fundo) e o resumo fica à
-          direita. A situação virou um grupo de quatro opções à vista —
-          num select, "quantas vendidas?" ficava escondido atrás de um
-          clique. */}
+          direita. Só busca e ordem — a situação não é filtro aqui:
+          vendida mora em Vendidas e o pátio é o que ainda vende. */}
       <div className="estoque-operacoes">
         <CampoBusca
           value={busca}
@@ -283,8 +290,8 @@ export function EstoqueTab({
           <span role="columnheader" className="estoque-col-veiculo">
             Veículo
           </span>
-          <span role="columnheader" className="estoque-col-situacao">
-            Situação
+          <span role="columnheader" className="estoque-col-loja">
+            Tempo na loja
           </span>
           <span role="columnheader" className="estoque-col-valor">
             Valor
@@ -318,10 +325,10 @@ export function EstoqueTab({
                 </p>
                 <p className="estoque-estado-descricao">
                   {filtrando
-                    ? 'Nenhuma moto caiu nessa busca. Limpe os filtros ou tente outro termo.'
+                    ? 'Nenhuma moto corresponde à busca. Limpe os filtros ou tente outro termo.'
                     : (resumo?.vendidas ?? 0) > 0
                       ? `${resumo?.vendidas} ${resumo?.vendidas === 1 ? 'moto vendida já está' : 'motos vendidas já estão'} na aba Vendidas.`
-                      : 'Cadastre a primeira moto para começar — rápido, chega em dois minutos.'}
+                      : 'Cadastre a primeira moto para começar. Ela aparece no site assim que salvar.'}
                 </p>
               </div>
               {filtrando ? (
@@ -345,12 +352,6 @@ export function EstoqueTab({
           visiveis.map((moto) => {
             const ficha = fichaTecnica(moto)
             const vendida = moto.status === 'vendida'
-            const rotuloSituacao =
-              moto.status === 'disponivel'
-                ? 'Disponível'
-                : moto.status === 'indisponivel'
-                  ? 'Indisponível'
-                  : 'Vendida'
             // Mesmo selo que o cliente vê no site: no inventário é o que
             // mostra, sem abrir a ficha, que aquela moto está com oferta.
             const desconto = descontoPercentual(moto)
@@ -474,11 +475,8 @@ export function EstoqueTab({
                   ) : null}
                 </div>
 
-                <div className="estoque-celula-situacao" role="cell">
-                  <span className={`estoque-status estoque-status-${moto.status}`}>
-                    <span className="estoque-status-ponto" aria-hidden="true" />
-                    {rotuloSituacao}
-                  </span>
+                <div className="estoque-celula-loja" role="cell">
+                  <span className="estoque-loja">{rotuloNaLoja(moto)}</span>
                 </div>
 
                 <div className="estoque-celula-valor" role="cell">

@@ -49,6 +49,8 @@ variáveis, o app entra no modo catálogo estático.
 | `npm run build`          | Typecheck + build + prerender (roda via `postbuild`)  |
 | `npm run preview`        | Serve o `dist/` para conferir o resultado             |
 | `npm run prerender`      | Só as fichas estáticas + sitemap + robots             |
+| `npm run prerender:estatico` | Prerender determinístico, sem consultar o Supabase |
+| `npm run csp`            | Confere o hash do script inline contra o CSP          |
 | `npm run lint`           | Oxlint                                                |
 | `npm run typecheck`      | TypeScript sem emitir arquivos                        |
 | `npm test`               | Vitest (testes de `src/lib` e componentes)            |
@@ -125,20 +127,28 @@ os dados de `site_settings`, que valem para todos na hora.
 Antes de publicar:
 
 1. `npm run build` e `npm test` precisam passar.
-2. Aplicar as migrações do `supabase/migrations/` no SQL Editor, em
-   ordem (`_aplicar-tudo.sql` junta todas) — ver `supabase/README.md`.
+2. Aplicar `supabase/migrations/_aplicar-tudo.sql` no SQL Editor (ou
+   os arquivos 01–03, sem o seed opcional) — ver `supabase/README.md`.
 3. Conferir o dono em `public.admins` (quem não está na tabela não
-   entra no painel).
-4. Preencher `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` no host.
-5. Cadastrar `/admin/redefinir` em Authentication → URL Configuration →
+   entra no painel — `sou_admin()` faz o login checar isso).
+4. Desativar o cadastro público em Authentication → Sign In / Providers
+   ("Allow new users to sign up"). Sem isso, qualquer pessoa cria uma
+   conta e chega até a porta do painel, mesmo sem entrar.
+5. Preencher `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` no host.
+6. Cadastrar `/admin/redefinir` em Authentication → URL Configuration →
    Redirect URLs.
-6. Conferir o domínio (`SITE_URL`), que aparece em `index.html`
+7. Conferir o domínio (`SITE_URL`), que aparece em `index.html`
    (Open Graph), `public/robots.txt` e `src/data/site.ts`.
 
 Cabeçalhos de segurança (CSP, HSTS, X-Frame-Options etc.) já estão em
 `vercel.json` e replicados em `public/_headers` para Netlify e
 Cloudflare Pages. `/admin` sai dos buscadores no `robots.txt` **e** no
 cabeçalho `X-Robots-Tag`.
+
+O CSP libera o script inline do `index.html` por hash SHA-256. Esse
+script precisa ficar **numa linha só** (quebra de linha muda entre
+Windows e Linux) e o hash tem de bater nos dois arquivos de cabeçalho:
+`npm run csp` confere isso e roda no CI.
 
 ## Segurança
 
@@ -147,6 +157,14 @@ cabeçalho `X-Robots-Tag`.
   `supabase/migrations/`. Escrita e leitura do painel exigem estar em
   `public.admins`; `custo_compra` e os dados pessoais das entregas não
   são legíveis pelo anon. A `service_role` nunca entra em `VITE_*`.
+- **Login ≠ acesso ao painel.** A tela de entrada consulta
+  `sou_admin()`: conta autenticada fora de `public.admins` é deslogada
+  com aviso, e a guarda de rota mostra uma tela explicando o motivo. O
+  RLS continua sendo a barreira final.
+- **Lixeira de 30 dias.** O painel apaga o que venceu ao abrir; a
+  limpeza agendada via `pg_cron` cumpre o prazo mesmo se o dono ficar
+  sem entrar. Arquivos deixados pelo cron podem ser removidos pelo
+  painel do Supabase.
 - **O painel é PWA, não é segredo.** Instalável no celular do dono
   (`manifest.webmanifest` + `sw.js`, só em produção). Quem não tem
   login vê o `/admin/login`; o `RotaAdmin` bloqueia o resto no cliente
@@ -182,7 +200,7 @@ toque, foco de teclado, `dialog` do menu celular e mais — sai com código
 
 ```
 supabase/
-  migrations/     01..13 (esquema, RLS, vendas, entregas, lixeira…)
+  migrations/     01..04 (esquema, segurança/storage, funções, seed)
                   + _aplicar-tudo.sql para aplicar de uma vez
 docs/
   SUPABASE.md         passo a passo do banco e do painel
@@ -190,6 +208,7 @@ docs/
   PENDENCIAS-CLIENTE.md  o que depende do proprietário
   RELATORIO-REDESIGN.md  histórico do redesign da interface
 src/
+  styles/       tokens, base, componentes e utilitários (index.css só importa)
   data/         site.ts (contato/endereço) e motorcycles.ts (exemplo)
   lib/          funções puras: catálogo, filtros, formatação, schema.org,
                 config da loja, marcas, maps, supabase, placeholder
@@ -219,6 +238,7 @@ scripts/
   lib/cdp.mjs             ponte CDP das auditorias
   prerender.mjs           HTML estático das fichas + sitemap + robots
   auditar-navegador.mjs   auditoria de DOM/responsivo via CDP
+  verificar-csp.mjs       hash do script inline x cabeçalhos de produção
   convert-images.mjs      fotos de img/ para WebP
   gerar-icones-pwa.mjs    ícones do PWA a partir de public/logo.webp
   baixar-marcas.mjs       logos das marcas

@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { BUCKET_FOTOS, getSupabase, urlPublica } from '../../lib/supabase'
-import { caminhoUnico, nomeSeguro } from '../../lib/fotos'
+import { caminhoDeBucket, caminhoUnico, nomeSeguro } from '../../lib/fotos'
 import type { FotoSaida } from '../../lib/fotos'
+import { comprimirParaWebp, FOTO_TAMANHO_MAX_MB } from '../../lib/imagens'
 import { AreaUploadFoto } from './AreaUploadFoto'
 
 /**
@@ -15,34 +16,10 @@ import { AreaUploadFoto } from './AreaUploadFoto'
  *
  * A imagem é recomprimida no navegador antes do envio: foto de celular
  * tem 4-8 MB, e o cliente de uma concessionaria precisa carregar rápido
- * no 4G. O canvas converte para WebP e corta para 1280px de largura,
- * o mesmo alvo do scripts/convert-images.mjs.
+ * no 4G. A regra (1600px no maior lado, WebP 0.82) vive em
+ * src/lib/imagens.ts e é a mesma do mural — mesma foto, mesmo peso,
+ * não importa a aba que a enviou.
  */
-
-const LARGURA_MAX = 1280
-const QUALIDADE = 0.78
-const TAMANHO_MAX_MB = 12
-
-async function comprimir(arquivo: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(arquivo)
-  const escala = Math.min(1, LARGURA_MAX / bitmap.width)
-  const w = Math.round(bitmap.width * escala)
-  const h = Math.round(bitmap.height * escala)
-
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Navegador não suporta canvas.')
-  ctx.drawImage(bitmap, 0, 0, w, h)
-  bitmap.close()
-
-  const blob = await new Promise<Blob | null>((res) =>
-    canvas.toBlob(res, 'image/webp', QUALIDADE),
-  )
-  if (!blob) throw new Error('Falha ao converter a imagem.')
-  return blob
-}
 
 interface PhotoUploaderProps {
   slug: string
@@ -61,21 +38,21 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
     setErro(null)
     setEnviando(true)
 
-    try {
-      const sb = getSupabase()
-      if (!sb) throw new Error('Supabase não configurado.')
+    const sb = getSupabase()
+    const novas: FotoSaida[] = []
 
-      const novas: FotoSaida[] = []
+    try {
+      if (!sb) throw new Error('Supabase não configurado.')
 
       for (const arquivo of Array.from(arquivos)) {
         if (!arquivo.type.startsWith('image/')) {
           throw new Error(`"${arquivo.name}" não é uma imagem.`)
         }
-        if (arquivo.size > TAMANHO_MAX_MB * 1024 * 1024) {
-          throw new Error(`"${arquivo.name}" passa de ${TAMANHO_MAX_MB} MB.`)
+        if (arquivo.size > FOTO_TAMANHO_MAX_MB * 1024 * 1024) {
+          throw new Error(`"${arquivo.name}" passa de ${FOTO_TAMANHO_MAX_MB} MB.`)
         }
 
-        const blob = await comprimir(arquivo)
+        const blob = await comprimirParaWebp(arquivo)
         const caminho = caminhoUnico(
           `${slug}/${nomeSeguro(arquivo.name)}.webp`,
           [...fotos, ...novas],
@@ -92,6 +69,14 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
 
       onChange([...fotos, ...novas])
     } catch (e) {
+      // Falha no meio da lista: o que já subiu não apareceu na tela e
+      // ficaria órfão no bucket. Some com os arquivos da tentativa.
+      const caminhos = novas
+        .map((foto) => caminhoDeBucket(foto.src))
+        .filter((caminho): caminho is string => caminho !== null)
+      if (sb && caminhos.length > 0) {
+        await sb.storage.from(BUCKET_FOTOS).remove(caminhos).catch(() => undefined)
+      }
       setErro(e instanceof Error ? e.message : 'Falha no envio.')
     } finally {
       setEnviando(false)

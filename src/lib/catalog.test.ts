@@ -20,7 +20,6 @@ const linhaBase = {
   preco: 31900,
   quilometragem: 32000,
   cilindrada: 291,
-  categoria: 'Trail',
   descricao: 'Trail versátil.',
   especificacoes: [{ label: 'Motor', value: 'Mono OHc' }],
   motorcycle_images: [{ src: '/motos/honda-xre-300-2021/01.webp', alt: 'frontal', posicao: 0 }],
@@ -34,7 +33,6 @@ describe('linhaParaMotos', () => {
     const moto = linhaParaMotos(linhaBase)
     expect(moto.slug).toBe('honda-xre-300-2021')
     expect(moto.preco).toBe(31900)
-    expect(moto.categoria).toBe('Trail')
     expect(moto.especificacoes).toHaveLength(1)
   })
 

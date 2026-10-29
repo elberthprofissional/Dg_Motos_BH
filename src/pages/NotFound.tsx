@@ -11,8 +11,8 @@ export function NotFound() {
         Essa estrada não existe
       </h1>
       <p className="corpo mt-4 max-w-md">
-        O endereço que você tentou abrir não está no mapa da loja. Volte para o
-        início ou veja o que está no estoque.
+        A página que você tentou abrir não existe ou mudou de endereço. Volte ao
+        início ou veja o estoque.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button to="/">Voltar ao início</Button>

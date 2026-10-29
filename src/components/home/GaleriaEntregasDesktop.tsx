@@ -39,7 +39,7 @@ function AberturaGaleria({ id }: { id: string }) {
         <span className="text-marca">realizados</span>
       </h2>
       <p className="mt-6 max-w-[34ch] text-[length:var(--step-body)] leading-relaxed text-texto-2">
-        Mais do que uma compra: um sonho realizado.
+        Clientes que já saíram da loja com a moto na mão.
       </p>
     </div>
   )

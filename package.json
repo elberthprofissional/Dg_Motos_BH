@@ -13,9 +13,11 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint",
+    "csp": "node scripts/verificar-csp.mjs",
     "preview": "vite preview",
     "auditar": "node scripts/auditar-navegador.mjs",
     "prerender": "node scripts/prerender.mjs",
+    "prerender:estatico": "node scripts/prerender.mjs --estatico",
     "postbuild": "node scripts/prerender.mjs"
   },
   "dependencies": {

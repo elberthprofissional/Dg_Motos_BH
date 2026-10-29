@@ -16,12 +16,12 @@ export function formatKm(km: number | null): string {
 
 /** Mensagem para interesse em uma moto específica (spec do projeto). */
 export function buildBikeMessage(marca: string, modelo: string, ano: number): string {
-  return `Olá! Tenho interesse na ${nomeExibicao(marca, modelo)} ${ano} anunciada no site da DG Motos. Gostaria de receber mais informações.`
+  return `Olá! Vi a ${nomeExibicao(marca, modelo)} ${ano} no site da DG Motos e quero saber mais sobre ela.`
 }
 
 /** CTA geral de negociação. */
 export function buildDefaultMessage(): string {
-  return 'Olá! Vim pelo site da DG Motos e gostaria de negociar uma motocicleta.'
+  return 'Olá! Vim pelo site da DG Motos e quero saber mais sobre as motos.'
 }
 
 /**

@@ -3,59 +3,53 @@
 Este diretório guarda as migrações do Postgres. Elas são a fonte de
 verdade do esquema, das políticas RLS e das funções usadas pelo site.
 
+As 16 migrações originais foram consolidadas em quatro arquivos por
+assunto (o histórico continua no git). Cada arquivo descreve o estado
+final do banco e é idempotente: rodar de novo não duplica nada nem
+apaga dados.
+
 ## Ordem
 
 | # | Arquivo | O que faz |
 | - | --- | --- |
-| 01 | `01_cria_esquema_inicial.sql` | tabelas `motorcycles` e `motorcycle_images`, índices e trigger de `updated_at` |
-| 02 | `02_seguranca_rls_e_storage.sql` | RLS, políticas iniciais e bucket público `motos` |
-| 03 | `03_dados_iniciais_estoque.sql` | (opcional) 5 motos de demonstração |
-| 04 | `04_corrige_estrutura_estoque.sql` | conserta bancos criados com a tabela antiga |
-| 05 | `05_configuracoes_da_loja.sql` | tabela `site_settings` e o registro `loja` |
-| 06 | `06_promocoes_do_estoque.sql` | `em_promocao` e `preco_antes` |
-| 07 | `07_registro_de_vendas.sql` | `custo_compra` e a tabela `sales` |
-| 08 | `08_publicacoes_de_entregas.sql` | galeria de entregas e bucket privado `entregas` |
-| 09 | `09_lixeira_do_estoque.sql` | `lixeira_em` e leitura pública sem os itens da lixeira |
-| 10 | `10_edicao_de_vendas.sql` | edição de vendas já lançadas |
-| 11 | `11_seguranca_e_transacoes.sql` | lista de admins, grants por coluna e RPCs transacionais |
-| 12 | `12_seguranca_site_settings.sql` | leitura de `site_settings` separada por papel (anon: só `key`+`value`; authenticated: só admin) |
-| 13 | `13_lixeira_fotos_entregas.sql` | fotos apagadas do mural ficam 30 dias na lixeira (`entregas_fotos_lixeira` + RPCs) e o post pode ficar sem nome |
+| 01 | `01_esquema.sql` | tabelas `motorcycles`, `motorcycle_images`, `site_settings`, `sales`, `entregas` e `entregas_fotos_lixeira`; constraints, índices e triggers. Alinha bancos criados por versões antigas do esquema. |
+| 02 | `02_seguranca_e_storage.sql` | `public.admins`, `e_admin()`, `sou_admin()`, grants por coluna, políticas RLS finais e buckets `motos` (público) e `entregas` (privado). |
+| 03 | `03_funcoes.sql` | RPCs do painel (`salvar_imagens_da_moto`, `custo_da_moto`, mover/restaurar foto da lixeira) e a limpeza diária da lixeira via `pg_cron`. |
+| 04 | `04_dados_iniciais.sql` | **Opcional.** 5 motos de demonstração (só quando o estoque está vazio), as fotos delas e o registro `loja` em `site_settings`. |
 
 ## Como aplicar
 
 **Projeto novo:** abra o SQL Editor e execute `_aplicar-tudo.sql` uma
-vez. Ele contém as migrações 01–13 na ordem.
+vez. Ele contém os arquivos 01–04 na ordem e é idempotente.
 
-**Projeto que já está no ar:** execute só as migrações que faltam, em
-ordem. Se o banco está na 10, rode a 11 e depois a 12; se está na 11,
-rode só a 12; na 12, rode a 13.
+Se não quiser as motos de demonstração, rode só `01_esquema.sql`,
+`02_seguranca_e_storage.sql` e `03_funcoes.sql`, nesta ordem.
 
-> **A migração 11 é obrigatória para o código atual.** Sem ela, salvar
-> fotos falha com a mensagem "o banco ainda não tem a rotina que grava
-> as fotos" e a venda é registrada sem custo. Aplique a 11 **antes** de
-> publicar a versão nova do site.
+**Projeto que já está no ar:** se as migrações antigas (01–16) já foram
+aplicadas, não há nada a fazer — o banco já está no estado final. Em
+caso de dúvida, rodar `_aplicar-tudo.sql` é seguro.
 
-> **A migração 12 fecha um vazamento de leitura.** A política da 05
-> deixava qualquer conta autenticada (mesmo fora de `public.admins`)
-> ler a tabela `site_settings` inteira, incluindo `updated_by`. A 12
-> derruba essa política e separa a leitura: o visitante vê só
-> `key`/`value`, o painel exige `e_admin()`. Rode junto com a 11 e
-> confira a lista de admins no `notice` final.
+> **A 02 é obrigatória para o código atual.** Sem `public.admins`,
+> `e_admin()` e `sou_admin()`, o login não sabe quem é admin, salvar
+> fotos falha e a venda é registrada sem custo.
 
-> **A migração 13 é obrigatória para apagar fotos do mural.** Sem ela,
-> a RPC que move a foto para a lixeira não existe e o botão de apagar
-> falha. A 13 também remove o check que exigia nome de modelo na
-> publicação — o painel novo grava posts só com foto.
+> **A 03 é obrigatória para as lixeiras.** As RPCs que movem e
+> restauram fotos do mural, e a limpeza agendada da lixeira, vivem nela.
+> Se o `pg_cron` não estiver disponível no projeto, a migração só emite
+> um aviso e a limpeza continua acontecendo quando o painel abre.
+
+> **A 01 já remove `categoria` e `destaque`.** O código lê e grava sem
+> esses campos; `categoria` era vocabulário de catálogo estrangeiro que
+> a loja nunca usou e `destaque` virou `em_promocao`.
 
 ## Administradores
 
-A partir da 11, escrever no catálogo, ler vendas e gerenciar entregas
-não depende mais de "estar autenticado": é preciso estar em
-`public.admins`. A tabela não tem política nem grant — só o
-`service_role` (painel do Supabase) e as funções `security definer` a
-enxergam.
+Escrever no catálogo, ler vendas e gerenciar entregas não depende de
+"estar autenticado": é preciso estar em `public.admins`. A tabela não
+tem política nem grant — só o `service_role` (painel do Supabase) e as
+funções `security definer` a enxergam.
 
-Ao rodar a 11, todas as contas que já existiam em `auth.users` são
+Ao rodar a 02, todas as contas que já existiam em `auth.users` são
 promovidas. Confira:
 
 ```sql
@@ -70,7 +64,7 @@ Se aparecer uma conta que não é do dono, remova:
 delete from public.admins where user_id = '<uuid>';
 ```
 
-Se o dono for criado **depois** da 11, ele não entra sozinho. Cadastre-o
+Se o dono for criado **depois** da 02, ele não entra sozinho. Cadastre-o
 em Authentication → Users e rode:
 
 ```sql
@@ -88,13 +82,17 @@ continua existindo, mas não escreve nem lê dados do painel).
 pessoa cria uma conta. A lista de admins impede que essa conta escreva,
 mas ela ainda conseguiria autenticar — o ideal é fechar as duas portas.
 
-## Funções criadas na 11
+## Funções do banco
 
 | Função | Quem pode chamar | Para quê |
 | --- | --- | --- |
-| `e_admin()` | `authenticated` | checagem usada pelas políticas |
+| `e_admin()` | `authenticated` | checagem usada pelas políticas e RPCs |
+| `sou_admin()` | `authenticated` | responde se a própria conta está em `public.admins`, sem expor a lista |
 | `salvar_imagens_da_moto(uuid, jsonb)` | admin | substitui as fotos numa transação (delete + insert) |
-| `custo_da_moto(uuid)` | admin | lê `custo_compra`, que não sai mais no select público |
+| `custo_da_moto(uuid)` | admin | lê `custo_compra`, que não sai no select da API |
+| `mover_foto_entrega_para_lixeira(uuid, text)` | admin | tira a foto do mural e guarda 30 dias na lixeira |
+| `restaurar_foto_da_lixeira(uuid)` | admin | devolve a foto da lixeira para a publicação |
+| `limpar_lixeira_vencida()` | ninguém pela API | apaga linhas vencidas da lixeira; chamada só pelo `pg_cron` |
 
 ## O que não vai para o cliente
 

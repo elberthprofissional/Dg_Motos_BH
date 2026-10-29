@@ -14,6 +14,11 @@ export interface EstadoAuth {
   carregando: boolean
   /** `false` quando o .env não tem as chaves do Supabase. */
   disponivel: boolean
+  /**
+   * A conta logada administra a loja? `null` enquanto a consulta não
+   * respondeu — ou quando não foi possível perguntar ao banco.
+   */
+  admin: boolean | null
   /** Resolve com a mensagem de erro, ou `null` em caso de sucesso. */
   entrar: (email: string, senha: string) => Promise<string | null>
   sair: () => Promise<void>

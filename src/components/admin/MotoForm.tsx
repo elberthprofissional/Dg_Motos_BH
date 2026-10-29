@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ChevronDown, Plus, Trash2 } from 'lucide-react'
 import {
+  excluirFotosAdicionadas,
   excluirFotosRemovidas,
   montarSlug,
   salvarMoto,
@@ -32,7 +33,6 @@ const VAZIO: MotoParaSalvar = {
   preco: 0,
   quilometragem: null,
   cilindrada: null,
-  categoria: 'Street',
   descricao: '',
   especificacoes: [],
   imagens: [],
@@ -157,6 +157,33 @@ export function MotoForm({
   // Folha de escolha de marca: campo grande → folha com busca.
   const [escolhendoMarca, setEscolhendoMarca] = useState(false)
 
+  // As fotos sobem para o Storage na hora; se a tela for abandonada sem
+  // salvar, elas viram arquivos órfãos. Os refs guardam o estado mais
+  // recente para a limpeza de desmontagem, e `encerrado` impede que o
+  // cancelamento explícito apague duas vezes.
+  const fotosRef = useRef(form.imagens)
+  const inicialRef = useRef(inicial)
+  const encerradoRef = useRef(false)
+  useEffect(() => {
+    fotosRef.current = form.imagens
+  }, [form.imagens])
+  useEffect(() => {
+    inicialRef.current = inicial
+  }, [inicial])
+  useEffect(() => {
+    return () => {
+      if (encerradoRef.current) return
+      void excluirFotosAdicionadas(inicialRef.current?.imagens ?? [], fotosRef.current)
+    }
+  }, [])
+
+  /** Sair sem salvar: devolve ao Storage o mesmo estado de antes. */
+  async function cancelar() {
+    encerradoRef.current = true
+    await excluirFotosAdicionadas(inicial?.imagens ?? [], form.imagens)
+    onCancelar()
+  }
+
   // Ao trocar de moto, o pai passa uma `key` diferente e o React remonta
   // este componente: os campos já nascem com os valores da nova moto, sem
   // precisar de efeito para sincronizar estado derivado das props.
@@ -220,6 +247,7 @@ export function MotoForm({
     // Só depois do save: as fotos que saíram do formulário já não estão
     // mais no banco, então os arquivos podem sair do Storage sem deixar
     // imagem quebrada se o dono tivesse cancelado.
+    encerradoRef.current = true
     await excluirFotosRemovidas(inicial?.imagens ?? [], form.imagens)
     onSalvo()
   }
@@ -298,7 +326,6 @@ export function MotoForm({
           onChange={(e) => set('status', e.target.value as MotorcycleStatus)}
         >
           <option value="disponivel">Disponível</option>
-          <option value="indisponivel">Indisponível</option>
           <option value="vendida">Vendida</option>
         </select>
       </div>
@@ -460,7 +487,16 @@ export function MotoForm({
           placeholder="Condição, revisões, o que acompanha a moto. Esse texto aparece na ficha e no Google."
         />
       </div>
-      <PhotoUploader slug={form.slug || 'sem-slug'} fotos={form.imagens} onChange={(fotos) => set('imagens', fotos)} />
+      <PhotoUploader
+        slug={form.slug || 'sem-slug'}
+        fotos={form.imagens}
+        onChange={(fotos) => {
+          // Atualiza o ref já no evento: se a tela sair antes do próximo
+          // efeito, a limpeza ainda vê a lista com as fotos novas.
+          fotosRef.current = fotos
+          set('imagens', fotos)
+        }}
+      />
     </Secao>,
   ]
 
@@ -474,7 +510,7 @@ export function MotoForm({
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={onCancelar}
+          onClick={() => void cancelar()}
           aria-label="Voltar ao estoque"
           className="foco-painel -ml-2 grid size-11 shrink-0 cursor-pointer place-items-center text-steel-300 transition-colors hover:text-paper lg:hidden"
         >
@@ -513,7 +549,7 @@ export function MotoForm({
               de volta nessa barra só criava confusão. Na mesa mantém. */}
           <button
             type="button"
-            onClick={onCancelar}
+            onClick={() => void cancelar()}
             className="foco-painel hidden h-10 cursor-pointer items-center px-4 text-sm font-medium text-steel-400 transition-colors hover:text-paper sm:inline-flex"
           >
             Cancelar

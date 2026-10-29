@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { CircleAlert, LockKeyhole, Mail } from 'lucide-react'
 import { SenhaInput } from '../components/ui/SenhaInput'
 import { useAuth } from '../hooks/authContexto'
+import { consultarSeAdmin } from '../lib/adminAcesso'
 
 const ANO_ATUAL = new Date().getFullYear()
 
@@ -27,7 +28,7 @@ const ANO_ATUAL = new Date().getFullYear()
  * anunciada; o dono acessa digitando /admin.
  */
 export function AdminLogin() {
-  const { entrar, sessao, carregando, disponivel } = useAuth()
+  const { entrar, sair, sessao, carregando, disponivel } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -39,11 +40,24 @@ export function AdminLogin() {
     setErro(null)
     setEnviando(true)
     const falha = await entrar(email.trim(), senha)
-    setEnviando(false)
     if (falha) {
+      setEnviando(false)
       setErro(falha)
       return
     }
+
+    // Sessão criada não é o mesmo que acesso ao painel: só conta em
+    // public.admins entra. Sem esta checagem, qualquer usuário do
+    // projeto abriria a casca do painel (vazia, mas aberta).
+    const ehAdmin = await consultarSeAdmin()
+    if (ehAdmin === false) {
+      await sair()
+      setEnviando(false)
+      setErro('Esta conta não tem acesso ao painel. Entre com o e-mail do dono da loja.')
+      return
+    }
+
+    setEnviando(false)
     // Autenticado: entra no painel. Sem esta linha o login dava certo mas
     // a tela de acesso continuava na frente, e o dono só percebia depois
     // de voltar ao site e clicar no login do rodapé.
@@ -82,7 +96,7 @@ export function AdminLogin() {
             Realizando Sonhos
           </p>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
-            Gerencie todo o seu negócio em um lugar só.
+            Estoque, vendas e site da loja em um só painel.
           </p>
         </div>
       </aside>

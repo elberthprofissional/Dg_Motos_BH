@@ -210,8 +210,7 @@ export const SECOES: DescricaoSecao[] = [
   {
     id: 'contato',
     rotulo: 'Contato',
-    descricao:
-      'O número que abre os botões de WhatsApp do site. Só dígitos, com DDI e DDD — sem espaços, traços ou parênteses.',
+    descricao: 'O número que os clientes usam para falar com a loja pelo WhatsApp.',
     campos: ['whatsapp'],
     resumo: (config) =>
       config.whatsapp ? formatarWhatsapp(config.whatsapp) : 'Sem número definido',
@@ -222,7 +221,7 @@ export const SECOES: DescricaoSecao[] = [
     id: 'instagram',
     rotulo: 'Instagram',
     descricao:
-      'O @ publicado no cabeçalho, no rodapé e na página de contato. O link final é montado a partir dele.',
+      'O perfil para onde levam os links do rodapé, do menu do celular e da página de contato.',
     campos: ['instagramHandle', 'instagramUrl'],
     resumo: (config) => config.instagramHandle || 'Sem perfil definido',
     rotuloSalvar: 'Salvar Instagram',
@@ -232,7 +231,7 @@ export const SECOES: DescricaoSecao[] = [
     id: 'endereco',
     rotulo: 'Endereço',
     descricao:
-      'Rua, número e cidade usados no rodapé e no botão de rota do Google Maps. O link do mapa nasce desta ficha.',
+      'O endereço que aparece no rodapé e no mapa da página de contato. Com ele, o site monta o link de rota no Google Maps.',
     campos: ['enderecoRua', 'enderecoCidadeUf'],
     resumo: (config) => config.enderecoRua || 'Sem endereço definido',
     rotuloSalvar: 'Salvar endereço',
@@ -242,7 +241,7 @@ export const SECOES: DescricaoSecao[] = [
     id: 'horarios',
     rotulo: 'Horários',
     descricao:
-      'As faixas de atendimento exibidas no rodapé e na página de contato. A ordem das linhas é a ordem publicada.',
+      'Os horários que aparecem no rodapé e na página de contato, na ordem das faixas abaixo.',
     campos: ['horarios'],
     resumo: (config) =>
       config.horarios.length === 0

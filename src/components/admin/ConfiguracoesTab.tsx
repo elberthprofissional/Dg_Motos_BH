@@ -326,7 +326,7 @@ export function ConfiguracoesTab({
               definirInstagram={definirInstagram}
               marcarTocado={marcarTocado}
             />
-            <SaidaSecao id={id} config={config} />
+            {mesa ? <SaidaSecao id={id} config={config} /> : null}
           </div>
         </div>
         <PeSecao
@@ -380,8 +380,8 @@ export function ConfiguracoesTab({
             </span>
           </h1>
           <p className="mesa-sub">
-            O contato, o perfil e o endereço que o site publica. A Lixeira fica no fim: é
-            para onde vai uma moto excluída antes de sumir de vez.
+            O WhatsApp, o Instagram, o endereço e os horários que o site publica. A Lixeira
+            guarda por 30 dias o que for excluído.
           </p>
         </div>
         {/* Só fala quando há algo a dizer: carregando, sem resposta
@@ -480,8 +480,6 @@ export function ConfiguracoesTab({
   /* Celular                                                             */
   /* ------------------------------------------------------------------ */
 
-  const statusMobile = secao ? statusDaSecao(secao) : null
-
   const telaCelular = secao ? (
     <div className="mx-auto max-w-2xl">
       <header className="mesa-mobile-cabecalho">
@@ -503,11 +501,6 @@ export function ConfiguracoesTab({
         <p className="mesa-mobile-desc">{metaAtiva.descricao}</p>
         {secao === 'lixeira' ? (
           <span className="mesa-selo mesa-mobile-selo">Área de risco</span>
-        ) : statusMobile ? (
-          <span className="mesa-estado mesa-mobile-selo" data-tom={statusMobile.tom}>
-            <span className="mesa-ponto" aria-hidden="true" />
-            {statusMobile.texto}
-          </span>
         ) : null}
       </header>
 
@@ -527,10 +520,6 @@ export function ConfiguracoesTab({
             .
           </span>
         </h1>
-        <p className="mesa-mobile-sub">
-          Escolha um bloco para editar. Cada um salva por si — o que aparece nos botões e no
-          rodapé do site nasce daqui.
-        </p>
         {totalPendentes > 0 ? (
           <p className="mesa-hub-aviso">
             <span className="mesa-ponto" data-tom="pendente" aria-hidden="true" />
@@ -562,9 +551,6 @@ export function ConfiguracoesTab({
                       <span className="sr-only">Alterações não salvas</span>
                     </span>
                   ) : null}
-                </span>
-                <span className="mesa-hub-valor">
-                  {bloco.resumo(config, totalLixeira)}
                 </span>
               </span>
               <ChevronRight className="mesa-hub-seta size-4" aria-hidden="true" />

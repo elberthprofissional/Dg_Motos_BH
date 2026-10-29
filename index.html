@@ -8,21 +8,11 @@
          (painel, estoque, fichas) ela seria baixada à toa. As fotos
          ficam em public/ para manter a URL estável entre dev e build.
          CSP: este script inline é liberado por hash em vercel.json e
-         public/_headers. Se o texto abaixo mudar, recalcule o sha256 e
-         atualize os dois arquivos. -->
-    <script>
-      if (location.pathname === '/') {
-        var preloadHero = document.createElement('link')
-        preloadHero.rel = 'preload'
-        preloadHero.as = 'image'
-        preloadHero.type = 'image/webp'
-        preloadHero.href = matchMedia('(min-width: 1024px)').matches
-          ? '/hero/home-desktop.webp'
-          : '/hero/home-mobile-texto.webp'
-        preloadHero.setAttribute('fetchpriority', 'high')
-        document.head.appendChild(preloadHero)
-      }
-    </script>
+         public/_headers. Ele PRECISA ficar numa linha só: quebra de
+         linha muda entre Windows (CRLF) e Linux (LF), e o hash deixaria
+         de bater no deploy. Depois de qualquer mudança, rode
+         `npm run csp` para recalcular e conferir o sha256. -->
+    <script>if(location.pathname==='/'){var l=document.createElement('link');l.rel='preload';l.as='image';l.type='image/webp';l.href=matchMedia('(min-width: 1024px)').matches?'/hero/home-desktop.webp':'/hero/home-mobile-texto.webp';l.setAttribute('fetchpriority','high');document.head.appendChild(l)}</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- PWA: app instalável (painel do dono). O manifest aponta
          start_url para /admin/login, então quem abre o app cai no

@@ -32,7 +32,6 @@ export const motorcycles: Motorcycle[] = [
     preco: 31900,
     quilometragem: null,
     cilindrada: 291,
-    categoria: 'Trail',
     descricao:
       'Trail da Honda, ano 2021, com motor de um cilindro que responde bem em baixa rotação. Pilotagem ereta, boa para cidade e estrada, e manutenção de custo previsível. Revisão e documentação em dia.',
     especificacoes: [
@@ -59,7 +58,6 @@ export const motorcycles: Motorcycle[] = [
     preco: 26900,
     quilometragem: null,
     cilindrada: 250,
-    categoria: 'Trail',
     descricao:
       'Lander 2024 com suspensão dianteira invertida e freios ABS. Seminova de pouca estrada: confortável no dia a dia e segura em viagem.',
     especificacoes: [
@@ -86,7 +84,6 @@ export const motorcycles: Motorcycle[] = [
     preco: 16900,
     quilometragem: null,
     cilindrada: 162,
-    categoria: 'Street',
     descricao:
       'Titan 2022, street de 160 cc econômica e robusta. Serve bem para o dia a dia na cidade e para o trabalho, com manutenção simples e peça fácil de achar.',
     especificacoes: [
@@ -113,7 +110,6 @@ export const motorcycles: Motorcycle[] = [
     preco: 16900,
     quilometragem: null,
     cilindrada: 162,
-    categoria: 'Street',
     descricao:
       'CG 160 Start 2024: a porta de entrada da linha CG. Partida elétrica, freio CBS e custo de uso baixo. Simples de pilotar e fácil de manter.',
     especificacoes: [
@@ -140,7 +136,6 @@ export const motorcycles: Motorcycle[] = [
     preco: 13900,
     quilometragem: null,
     cilindrada: 149,
-    categoria: 'Street',
     descricao:
       'Fazer 150 2020 da Yamaha. Confortável para o trajeto diário e barata de manter — uma das mais equilibradas da faixa de 150 cc.',
     especificacoes: [

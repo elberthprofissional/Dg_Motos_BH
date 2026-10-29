@@ -16,6 +16,11 @@
  * de src/data/motorcycles.ts.
  *
  * Uso: npm run prerender   (roda sozinho depois do vite build)
+ *
+ * Modo determinístico: `npm run prerender:estatico` (ou a variável
+ * PRERENDER_OFFLINE=1) ignora o Supabase e usa o catálogo de
+ * src/data/motorcycles.ts. Serve para gerar sempre o mesmo artefato,
+ * mesmo com o banco ao vivo respondendo.
  */
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -68,7 +73,7 @@ html,body{margin:0;background:#0f0e0c;color:#ece7de}
 async function motosDoBanco(url, key) {
   // Colunas explícitas: o build não precisa (nem deve) baixar
   // custo_compra, dado interno do painel. O runtime usa a mesma lista —
-  // a migração 11 fecha o acesso à coluna para a API.
+  // os grants por coluna da 02 fecham o acesso à coluna para a API.
   const colunas = [
     'id',
     'slug',
@@ -80,7 +85,6 @@ async function motosDoBanco(url, key) {
     'em_promocao',
     'quilometragem',
     'cilindrada',
-    'categoria',
     'descricao',
     'especificacoes',
     'status',
@@ -103,7 +107,7 @@ async function motosDoBanco(url, key) {
 
   try {
     // A coluna da lixeira pode não existir em bancos que ainda não
-    // aplicaram a migração 09; nesse caso a consulta acima
+    // rodaram o esquema atual (01); nesse caso a consulta acima
     // recebe 42703 e repetimos sem ela, como o catálogo em runtime.
     return await buscar([...colunas, 'lixeira_em'])
   } catch (erro) {
@@ -216,7 +220,6 @@ function gruposDe(moto) {
     { label: 'Ano', value: String(moto.ano) },
     { label: 'Quilometragem', value: kmTexto(moto.quilometragem) },
     ...(moto.cilindrada ? [{ label: 'Cilindrada', value: `${moto.cilindrada} cc` }] : []),
-    { label: 'Categoria', value: moto.categoria },
     { label: 'Situação', value: statusLongo(moto.status) },
   ]
 
@@ -260,12 +263,11 @@ function fichaDe(moto, base) {
   const referencia = fichaDeReferencia(moto)
   const lead =
     referencia?.resumo ??
-    `${moto.categoria} ${moto.ano}${
+    `${moto.marca} ${moto.modelo} ${moto.ano}${
       moto.quilometragem != null ? ` com ${kmTexto(moto.quilometragem)}` : ''
     } no pátio da DG Motos, em Belo Horizonte.`
   const anoCilindrada = [
     String(moto.ano),
-    moto.categoria,
     moto.cilindrada ? `${moto.cilindrada} cc` : null,
   ]
     .filter(Boolean)
@@ -323,7 +325,12 @@ async function run() {
   let motos
   const url = process.env.VITE_SUPABASE_URL
   const key = process.env.VITE_SUPABASE_ANON_KEY
-  if (url && key) {
+  // Build reproduzível: ignora o banco mesmo com chaves presentes.
+  const modoEstatico =
+    process.argv.includes('--estatico') ||
+    /^(1|true|sim)$/i.test(process.env.PRERENDER_OFFLINE ?? '')
+
+  if (url && key && !modoEstatico) {
     try {
       motos = await motosDoBanco(url, key)
       console.log(`Prerender: ${motos.length} motos vindas do Supabase.`)
@@ -332,7 +339,11 @@ async function run() {
       motos = await motosDoArquivo()
     }
   } else {
-    console.log('Prerender: sem chaves do Supabase, usando catálogo estático.')
+    console.log(
+      modoEstatico
+        ? 'Prerender: modo estático forçado — usando src/data/motorcycles.ts.'
+        : 'Prerender: sem chaves do Supabase, usando catálogo estático.',
+    )
     motos = await motosDoArquivo()
   }
 

@@ -38,7 +38,6 @@ function destinoDaRestauracao(moto: Motorcycle): string {
 function fichaTecnica(moto: Motorcycle): string {
   return [
     String(moto.ano),
-    moto.categoria,
     moto.quilometragem != null ? formatKm(moto.quilometragem) : null,
   ]
     .filter(Boolean)

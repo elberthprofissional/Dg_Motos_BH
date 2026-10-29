@@ -111,9 +111,7 @@ export function SaidaSecao({ id, config }: { id: SecaoConfig; config: ConfigLoja
       <p className="mesa-saida-rotulo">No site</p>
       <div className="mesa-saida-cartao">
         {faixas.length === 0 ? (
-          <p className="mesa-saida-vazio">
-            Sem faixas — o site pede confirmação antes da visita.
-          </p>
+          <p className="mesa-saida-vazio">Sem faixas — o site não mostra horário.</p>
         ) : (
           <div className="mesa-saida-placa">
             {faixas.map((horario, indice) => (

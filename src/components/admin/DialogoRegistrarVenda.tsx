@@ -83,8 +83,8 @@ export function DialogoRegistrarVenda({
     setOcupado(true)
 
     // Numa venda nova o custo vem da ficha pela função do painel. Se o
-    // banco ainda não tiver a migração 11, registra sem custo em vez de
-    // travar o lançamento.
+    // banco ainda não tiver a RPC custo_da_moto (03_funcoes.sql),
+    // registra sem custo em vez de travar o lançamento.
     let custoDaMoto: number | null = venda?.custo ?? null
     if (!venda) {
       try {
@@ -199,7 +199,7 @@ export function DialogoRegistrarVenda({
             {/* O retorno do telefone: sem isso não parece valer preencher. */}
             <p id="venda-telefone-ajuda" className="mt-3 text-xs leading-relaxed text-steel-500">
               O telefone vira link de WhatsApp na aba Vendidas, com a mensagem de agradecimento já
-              escrita. Opcional.
+              escrita. É opcional.
             </p>
 
             {erro && (

@@ -41,7 +41,7 @@ function esperarCarregar(sessionId) {
 
 const moto = (id, modelo, ano, status, preco, extra = {}) => ({
   id, slug: id, marca: 'Honda', modelo, ano, preco, quilometragem: 52000, cilindrada: 291,
-  categoria: 'street', descricao: 'Moto revisada.', especificacoes: [], created_at: '2026-01-01T00:00:00Z',
+  descricao: 'Moto revisada.', especificacoes: [], created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-10-20T10:00:00Z', motorcycle_images: [], status, ...extra,
 })
 const MOTOS = [

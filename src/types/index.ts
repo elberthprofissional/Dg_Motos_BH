@@ -1,11 +1,3 @@
-export type MotorcycleCategory =
-  | 'Street'
-  | 'Trail'
-  | 'Naked'
-  | 'Scooter'
-  | 'Esportiva'
-  | 'Custom'
-
 /**
  * Situação da moto no estoque.
  *   disponivel  → aparece no site e pode ser comprada
@@ -45,7 +37,6 @@ export interface Motorcycle {
   emPromocao: boolean
   quilometragem: number | null
   cilindrada: number | null
-  categoria: MotorcycleCategory
   descricao: string
   especificacoes: MotorcycleSpec[]
   imagens: MotorcycleImage[]
@@ -124,6 +115,5 @@ export interface BikeFilterState {
   precoMin: number
   precoMax: number
   anoMin: number
-  categoria: MotorcycleCategory | 'todas'
   ordenacao: BikeSort
 }

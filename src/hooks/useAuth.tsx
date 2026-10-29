@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { getSupabase, supabaseConfigured } from '../lib/supabase'
 import { AuthContexto } from './authContexto'
 import { traduzirErroLogin } from '../lib/authErros'
+import { consultarSeAdmin } from '../lib/adminAcesso'
 
 /**
  * Sessão do dono.
@@ -15,6 +16,9 @@ import { traduzirErroLogin } from '../lib/authErros'
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sessao, setSessao] = useState<Session | null>(null)
   const [carregando, setCarregando] = useState(supabaseConfigured)
+  // Resposta da checagem de admin, atrelada ao id de quem perguntou:
+  // trocar de conta zera o valor derivado até a nova resposta chegar.
+  const [acesso, setAcesso] = useState<{ usuarioId: string; ehAdmin: boolean } | null>(null)
 
   useEffect(() => {
     const sb = getSupabase()
@@ -39,6 +43,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sub.subscription.unsubscribe()
     }
   }, [])
+
+  // A checagem roda uma vez por conta: renovar o token dispara
+  // onAuthStateChange, mas o `user.id` continua o mesmo.
+  const usuarioId = sessao?.user.id ?? null
+  useEffect(() => {
+    if (!usuarioId) return
+
+    let vivo = true
+    void consultarSeAdmin().then((resultado) => {
+      // `null` = não deu para saber; o painel não bloqueia (o RLS barra).
+      if (vivo) setAcesso({ usuarioId, ehAdmin: resultado ?? true })
+    })
+
+    return () => {
+      vivo = false
+    }
+  }, [usuarioId])
+
+  // Enquanto a resposta não chega — ou quando a conta mudou — o acesso
+  // fica indefinido, e a guarda mostra o carregamento em vez de expulsar.
+  const admin = usuarioId && acesso?.usuarioId === usuarioId ? acesso.ehAdmin : null
 
   async function entrar(email: string, senha: string): Promise<string | null> {
     const sb = getSupabase()
@@ -77,7 +102,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContexto
-      value={{ sessao, carregando, disponivel: supabaseConfigured, entrar, sair, enviarReset, redefinirSenha }}
+      value={{
+        sessao,
+        carregando,
+        disponivel: supabaseConfigured,
+        admin,
+        entrar,
+        sair,
+        enviarReset,
+        redefinirSenha,
+      }}
     >
       {children}
     </AuthContexto>

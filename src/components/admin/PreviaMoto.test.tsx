@@ -24,7 +24,6 @@ function motoDe(parcial: Partial<Motorcycle> = {}): Motorcycle {
     emPromocao: false,
     quilometragem: 12000,
     cilindrada: 160,
-    categoria: 'Street',
     descricao: '',
     especificacoes: [],
     imagens: [

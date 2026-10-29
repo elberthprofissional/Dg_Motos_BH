@@ -1,0 +1,268 @@
+/* ============================================================
+   DG MOTOS BH — SISTEMA VISUAL "BANCADA + FICHA"
+   ============================================================
+   O lugar é a bancada de oficina, onde a ficha de vistoria é
+   montada antes de a moto virar anúncio. A página é esse lugar:
+
+     · PRETO   — a bancada. O fundo de tudo, à noite.
+     · FOLHA   — o papel da ficha. Seções claras que deitam sobre
+                 a bancada, de ponta a ponta.
+     · VERMELHO— o carimbo. O único acento: preço, ação
+                 principal, o que está disponível.
+
+   REGRA DE OURO: o vermelho é o sinal. Se algo está vermelho, é
+   porque o olho precisa parar aí. E o vermelho só aparece onde o
+   carimbo aparece de verdade — nunca em rótulo miúdo, nunca em
+   borda de 1 px, nunca em gradiente.
+
+   A logo da casa é um traço branco sobre preto: por isso o preto
+   é o chão do cabeçalho e do rodapé, e o papel só entra no
+   corpo da página, onde a foto da moto vive.
+   ============================================================ */
+
+@theme {
+  /* Tipografia ------------------------------------------------- */
+  /* Display: Lato em peso pesado — título de oficina: dá a ideia de
+     placa estampada sem precisar gritar em caixa alta (que é o truque
+     genérico de landing page). */
+  --font-display: 'Lato', 'Helvetica Neue', Arial, sans-serif;
+  /* Texto e interface: Lato regular — a família única do site. Algarismos
+     tabulares de verdade ficam por conta do @utility numeros. */
+  --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  /* Voz editorial do desktop: cartaz condensado. Não entra no
+     catálogo, no painel nem no celular. */
+  --font-cartaz: 'Archivo', 'Arial Narrow', Arial, sans-serif;
+
+  /* Rótulos de 10 e 11 px: sobraram só para o painel do dono, que é
+     uma tela de trabalho e não uma vitrine. O site público não usa
+     nenhum texto abaixo de 13 px. */
+  --text-micro: 0.625rem;
+  --text-etiqueta: 0.6875rem;
+
+  /* ---------- PRETO: a bancada ---------- */
+  --color-breu: #100f0d;
+  --color-night-950: #0d0c0a;
+  --color-night-900: #141311;
+  --color-night-800: #1e1c19;
+  --color-night-700: #282521;
+  --color-sidebar: #0c0b09;
+
+  /* ---------- BRANCO: a letra ---------- */
+  --color-paper: #ffffff;
+  /* A escada de cinzas do painel. O degrau mais escuro (steel-600)
+     passa de 4,5:1 sobre o fundo do painel — microtexto de 10 px não
+     pode depender de borda para ser lido. */
+  --color-steel-300: #cfc8bd;
+  --color-steel-400: #ada59a;
+  --color-steel-500: #948c82;
+  --color-steel-600: #7d756b;
+
+  /* ---------- VERMELHO: o carimbo ---------- */
+  --color-brand-400: #f26d62;
+  --color-brand-500: #d91f26;
+  --color-brand-600: #b3131a;
+  --color-brand-700: #8d0f14;
+  --color-carimbo: #d91f26;
+  --color-carimbo-escuro: #b3131a;
+
+  --color-ok: #3fbf7f;
+  --color-warn: #e0a33c;
+
+  --animate-sheet: sheet 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade: fade 0.18s ease-out both;
+
+  @keyframes sheet {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* ============================================================
+   TOKENS SEMÂNTICOS — o que o componente pede, não o que ele é
+   ============================================================ */
+:root {
+  /* --- A bancada (chão padrão do site) --- */
+  --cor-fundo: #0f0e0c;
+  --cor-painel: #161513;
+  --cor-painel-2: #1d1b18;
+  --cor-painel-3: #252320;
+
+  --cor-texto: #ece7de;
+  --cor-texto-2: #a8a198;
+  --cor-texto-3: #8e887e;
+
+  --cor-borda: rgba(236, 231, 222, 0.09);
+  --cor-borda-forte: rgba(236, 231, 222, 0.18);
+
+  /* Vermelho de preenchimento: branco sobra ele passa de 4,5:1.
+     O tom puro (#ef302f) fica no realce (.preco), onde o corpo grande
+     ja sustenta o contraste. */
+  --cor-marca: #d91f26;
+  --cor-marca-viva: #ef302f;
+  /* Vermelho de texto sobre preto: o tom puro fica no limite do
+     contraste em corpo pequeno; este sobe o suficiente para ler. */
+  --cor-marca-texto: #f26d62;
+  /* Vermelho pressionado: mais fundo, nunca mais claro. */
+  --cor-marca-forte: #b3131a;
+
+  --cor-ok: #3fbf7f;
+  --cor-alerta: #e0a33c;
+  --cor-foco: #f0554b;
+  --cor-papel-claro: #ffffff;
+  --cor-tinta: #ffffff;
+
+  /* Verde do WhatsApp: a única cor fora da paleta, e só no botão que
+     leva ao WhatsApp — precisa ser reconhecido de longe como "chama
+     no zap". O texto sobre ele é quase preto (10,6:1); branco sobre
+     este verde daria 1,98:1 e reprovaria na WCAG. */
+  --cor-whatsapp: #25d366;
+
+  /* --- A folha: o papel da ficha --- */
+  --cor-folha: #f1f2f3;
+  --cor-folha-2: #ffffff;
+
+  /* --- Escala: cinco degraus, bem afastados --- */
+  --step-display: clamp(2.5rem, 1rem + 6.6vw, 5.75rem);
+  --step-head: clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
+  --step-lead: clamp(1.25rem, 1.12rem + 0.55vw, 1.625rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-small: 0.8125rem;
+
+  /* --- Moldura: margens apertadas, conteúdo até a borda --- */
+  --margem: clamp(1rem, 2.2vw, 2rem);
+  --gutter: clamp(0.75rem, 1.4vw, 1.5rem);
+}
+
+/* A ficha: chapa escura levemente mais clara que a bancada para
+   criar hierarquia sem virar papel branco. */
+[data-tema='folha'] {
+  --cor-fundo: #161513;
+  --cor-painel: #1d1b18;
+  --cor-painel-2: #242220;
+  --cor-painel-3: #2c2a26;
+
+  --cor-texto: #ece7de;
+  --cor-texto-2: #a8a198;
+  --cor-texto-3: #8e887e;
+
+  --cor-borda: rgba(236, 231, 222, 0.09);
+  --cor-borda-forte: rgba(236, 231, 222, 0.18);
+
+  --cor-marca: #d91f26;
+  --cor-marca-viva: #ef302f;
+  --cor-marca-texto: #f26d62;
+  --cor-marca-forte: #b3131a;
+  --cor-foco: #f0554b;
+
+  --cor-papel-claro: #ffffff;
+  --cor-tinta: #ffffff;
+}
+
+/* O painel do dono é a mesma bancada, com a luz de serviço acesa:
+   a área restrita é da casa, não do público. */
+[data-tema='painel'] {
+  --cor-fundo: #0b0c0e;
+  --cor-painel: #121417;
+  --cor-painel-2: #191b1f;
+  --cor-painel-3: #22252a;
+  --cor-texto: #f2f3f5;
+  --cor-texto-2: #b7bac0;
+  --cor-texto-3: #969ba3;
+  --cor-borda: rgba(242, 243, 245, 0.1);
+  --cor-borda-forte: rgba(242, 243, 245, 0.18);
+  --cor-marca: #d91f26;
+  --cor-marca-viva: #ef302f;
+  --cor-marca-texto: #f26d62;
+  --cor-marca-forte: #b3131a;
+  --cor-ok: #3fbf7f;
+  --cor-alerta: #e0a33c;
+  --cor-foco: #f0554b;
+  --cor-papel-claro: #ffffff;
+  --cor-tinta: #ffffff;
+  --color-night-950: #0b0c0e;
+  --color-night-900: #121417;
+  --color-night-800: #191b1f;
+  --color-night-700: #22252a;
+  --color-sidebar: #090a0c;
+  --color-steel-300: #d1d3d7;
+  --color-steel-400: #b7bac0;
+  --color-steel-500: #969ba3;
+  --color-steel-600: #858a92;
+}
+
+/* Prévia do mural dentro do painel: recoloca os tokens do site público
+   no trecho, para o cartão ser exatamente o que o visitante recebe. */
+[data-tema='publico'] {
+  --cor-fundo: #0f0e0c;
+  --cor-painel: #161513;
+  --cor-painel-2: #1d1b18;
+  --cor-painel-3: #252320;
+  --cor-texto: #ece7de;
+  --cor-texto-2: #a8a198;
+  --cor-texto-3: #8e887e;
+  --cor-borda: rgba(236, 231, 222, 0.09);
+  --cor-borda-forte: rgba(236, 231, 222, 0.18);
+  --cor-marca: #d91f26;
+  --cor-marca-viva: #ef302f;
+  --cor-marca-texto: #f26d62;
+  --cor-marca-forte: #b3131a;
+  --cor-ok: #3fbf7f;
+  --cor-papel-claro: #ffffff;
+  --cor-tinta: #ffffff;
+}
+
+@theme inline {
+  --color-fundo: var(--cor-fundo);
+  --color-painel: var(--cor-painel);
+  --color-painel-2: var(--cor-painel-2);
+  --color-painel-3: var(--cor-painel-3);
+  --color-texto: var(--cor-texto);
+  --color-texto-2: var(--cor-texto-2);
+  --color-texto-3: var(--cor-texto-3);
+  --color-borda: var(--cor-borda);
+  --color-borda-forte: var(--cor-borda-forte);
+  --color-marca: var(--cor-marca);
+  --color-marca-viva: var(--cor-marca-viva);
+  --color-marca-texto: var(--cor-marca-texto);
+  --color-marca-forte: var(--cor-marca-forte);
+  --color-ok: var(--cor-ok);
+  --color-alerta: var(--cor-alerta);
+  /* Verde do WhatsApp: só no CTA que leva ao WhatsApp. */
+  --color-whatsapp: var(--cor-whatsapp);
+  /* Alias do painel antigo: `border-line`, `divide-line` e `bg-line` do
+     admin continuam existindo e passam a seguir o tema em uso. */
+  --color-line: var(--cor-borda);
+  --color-line-forte: var(--cor-borda-forte);
+  /* Branco puro: traço fino, foco e fundo sutil. */
+  --color-claro: #ffffff;
+
+  /* A escala `neutral` do Tailwind tem subtom azulado — o cinza frio
+     de ferramenta de design. Sobre a bancada quente ela destoa, então
+     aqui ela toma o mesmo subtom quente (borracha/ossio) com as
+     mesmas luzes de cada degrau. Nenhum componente muda; todo
+     `neutral-*` usado nos filtros, cartões e overlays esquenta igual. */
+  --color-neutral-50: #f8f6f2;
+  --color-neutral-100: #f2efe9;
+  --color-neutral-200: #e6e1d8;
+  --color-neutral-300: #d5cfc5;
+  --color-neutral-400: #a59d92;
+  --color-neutral-500: #746e64;
+  --color-neutral-600: #534e46;
+  --color-neutral-700: #413d36;
+  --color-neutral-800: #292720;
+  --color-neutral-900: #1a1815;
+  --color-neutral-950: #0d0c0a;
+}

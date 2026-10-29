@@ -337,7 +337,7 @@ export function Admin() {
   function pedirExclusao(moto: Motorcycle) {
     setConfirmacao({
       titulo: 'Excluir moto',
-      descricao: `Tem certeza que deseja excluir a moto "${moto.marca} ${moto.modelo} ${moto.ano}"? Ela será encaminhada para a Lixeira, em Configurações, e pode ser restaurada depois.`,
+      descricao: `"${moto.marca} ${moto.modelo} ${moto.ano}" vai para a Lixeira, em Configurações, e pode ser restaurada depois.`,
       rotuloConfirmar: 'Sim',
       rotuloCancelar: 'Não',
       rotuloOcupado: 'Movendo...',
@@ -369,7 +369,7 @@ export function Admin() {
   function pedirExclusaoDefinitiva(moto: Motorcycle) {
     setConfirmacao({
       titulo: 'Apagar de vez',
-      descricao: `"${moto.marca} ${moto.modelo} ${moto.ano}" e as fotos serão removidas do banco e do armazenamento. Não dá para restaurar depois.`,
+      descricao: `"${moto.marca} ${moto.modelo} ${moto.ano}" e as fotos serão apagadas de vez. Não dá para restaurar depois.`,
       rotuloConfirmar: 'Apagar de vez',
       rotuloOcupado: 'Apagando...',
       onConfirmar: async () => {
@@ -405,7 +405,7 @@ export function Admin() {
     setConfirmacao({
       titulo: 'Apagar foto de vez',
       descricao:
-        'A foto sai do mural, do site e do armazenamento. Não dá para restaurar depois.',
+        'A foto sai do mural e do site. Não dá para restaurar depois.',
       rotuloConfirmar: 'Apagar de vez',
       rotuloOcupado: 'Apagando...',
       onConfirmar: async () => {
@@ -509,7 +509,7 @@ export function Admin() {
     setVendaAberta({ moto, venda: vendaDaMoto(moto.id) })
   }
 
-  /** Atalho de status: vender, reativar ou marcar como indisponível. */
+  /** Atalho de status: vender ou reativar. */
   async function alterarStatus(moto: Motorcycle, status: MotorcycleStatus) {
     // Vender: o dono confirma antes — a moto sai do site na hora, e
     // o clique errado acontecia sem freio. Errar ainda vira nada:
@@ -596,7 +596,7 @@ export function Admin() {
   function pedirSaida() {
     setConfirmacao({
       titulo: 'Sair do painel',
-      descricao: 'Tem certeza que deseja sair?',
+      descricao: 'Você vai precisar entrar de novo com e-mail e senha.',
       rotuloConfirmar: 'Sair',
       tom: 'neutro',
       onConfirmar: async () => {

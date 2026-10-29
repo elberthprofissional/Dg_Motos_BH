@@ -1,0 +1,1798 @@
+@layer components {
+  /* ============================================================
+     MOLDURA
+     Uma margem só para a página inteira — content chega perto da
+     borda e as figuras grandes sangram fora dela.
+     ============================================================ */
+  .container-site {
+    @apply mx-auto w-full max-w-[1760px] px-[length:var(--margem)];
+  }
+
+  /* Respiro entre seções: 64 px no celular, 96 px no desktop. A
+     distância entre uma seção e outra é bem maior que a distância
+     dentro de uma seção. */
+  .section {
+    @apply py-16 sm:py-24;
+  }
+
+  /* ============================================================
+     TIPOGRAFIA — cinco degraus, nada entre eles
+     ============================================================ */
+  .display {
+    font-family: var(--font-display);
+    font-size: var(--step-display);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    max-width: 16ch;
+    margin: 0;
+  }
+
+  /* Título de seção: mesmo desenho, um degrau abaixo do display. */
+  .titulo {
+    font-family: var(--font-display);
+    font-size: var(--step-head);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  /* Linha de apoio: a frase que segura o título. */
+  .lead {
+    font-size: var(--step-lead);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+    max-width: 40ch;
+    margin: 0;
+  }
+
+  /* Texto corrido: 17 a 19 px. */
+  .corpo {
+    font-size: var(--step-body);
+    line-height: 1.55;
+    text-wrap: pretty;
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  /* Texto pequeno: nunca abaixo de 13 px. */
+  .pequeno {
+    font-size: var(--step-small);
+    line-height: 1.45;
+  }
+
+  /* Rótulo de dado: o estêncil da máquina. "Ano", "Cilindrada",
+     "Quilômetro" — nomeia a chapa que vem logo abaixo, e só existe
+     quando existe dado. Vive no painel do dono; o site público usa
+     texto normal. */
+  .etiqueta {
+    @apply font-sans text-etiqueta leading-[1.2] font-semibold tracking-[0.14em] text-texto-3 uppercase;
+  }
+
+  /* Preço: o número que o cliente procura primeiro. Vermelho de
+     texto, condensado, com algarismos de odômetro. */
+  .preco {
+    @apply font-display font-bold numeros;
+    color: var(--cor-marca-viva);
+    letter-spacing: 0.005em;
+  }
+
+  /* ============================================================
+     CAMPOS
+     ============================================================ */
+  .input {
+    @apply w-full border border-borda bg-painel-2 px-3.5 py-2.5 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-marca;
+  }
+
+  .select {
+    @apply w-full cursor-pointer appearance-none border border-borda bg-painel-2 px-3.5 py-2.5 pr-9 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-marca;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237e7e8a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+
+  .select option {
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto);
+  }
+
+  .field-label {
+    @apply mb-1 block font-sans text-[11px] leading-[1.3] font-medium text-texto-3;
+  }
+
+  .surface {
+    @apply border border-borda bg-painel;
+  }
+
+  /* Chip de filtro: pílula, com o estado ativo preenchido. */
+  .chip-filtro {
+    @apply inline-flex min-h-8 shrink-0 items-center gap-2 rounded-full border border-borda bg-painel-2 px-3 font-sans text-[13px] font-medium text-texto-2 transition-colors hover:border-borda-forte hover:text-texto;
+  }
+
+  .chip-filtro[aria-pressed='true'] {
+    @apply border-borda-forte bg-painel-3 text-texto;
+  }
+
+  /* ============================================================
+     BOTÕES
+     Retangulares, sem raio, sem brilho: botão de oficina. A
+     hierarquia vem da variante — `primary` é a chapa de sinal,
+     `outline` é o contorno, `ghost` é só o texto.
+     ============================================================ */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 font-sans text-sm font-semibold whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-marca text-white hover:bg-marca-forte;
+  }
+
+  .btn-secondary {
+    @apply border border-borda-forte bg-transparent text-texto hover:border-texto hover:bg-texto hover:text-fundo;
+  }
+
+  .btn-ghost {
+    @apply text-texto-2 hover:bg-painel-2 hover:text-texto;
+  }
+
+  .btn-danger {
+    @apply border border-marca bg-transparent text-marca-texto hover:bg-marca hover:text-white;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn-icone {
+    @apply grid size-11 shrink-0 place-items-center border border-transparent text-texto-3 transition-colors hover:border-borda-forte hover:bg-painel-2 hover:text-texto active:bg-painel-3;
+  }
+
+  .btn-icone-perigo {
+    @apply hover:border-marca hover:bg-marca/10 hover:text-marca-texto;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 border px-2.5 py-1 font-sans text-xs leading-none font-semibold;
+  }
+
+  /* Link de ação: o texto vermelho que leva adiante. O respiro
+     vertical garante 24 px de altura — alvo mínimo de toque. */
+  .link-acao {
+    @apply inline-flex items-center gap-2 py-1 font-sans text-sm font-semibold text-marca-texto transition-colors hover:text-texto;
+  }
+
+  .esqueleto {
+    @apply animate-pulse bg-painel-2;
+  }
+
+  /* ============================================================
+     CARTÁZ — a voz editorial do desktop
+     Archivo condensada em peso pesado, caixa alta e entrelinha
+     curta. Só existe a partir de 1024 px: o celular continua com
+     a composição aprovada, em Lato. O catálogo e o estoque não
+     usam esta classe.
+     ============================================================ */
+  @media (min-width: 1024px) {
+    .cartaz {
+      font-family: var(--font-cartaz);
+      font-stretch: 62%;
+      font-variation-settings: 'wdth' 62, 'wght' 800;
+      font-weight: 800;
+      font-kerning: normal;
+      font-synthesis: none;
+      text-transform: uppercase;
+      letter-spacing: -0.012em;
+      line-height: 0.86;
+      text-wrap: balance;
+      margin-left: -0.02em;
+    }
+
+    .titulo-galeria {
+      font-size: clamp(3rem, 5.15vw, 5.75rem);
+    }
+
+    .titulo-troca {
+      font-size: clamp(2.9rem, 4.7vw, 4.75rem);
+    }
+
+    /* Véu neutro só atrás do texto: a foto e a moto continuam
+       limpas à direita. É o único gradiente permitido na casa. */
+    .hero-veu {
+      background: linear-gradient(
+        90deg,
+        #0f0e0c 0%,
+        rgba(15, 14, 12, 0.94) 28%,
+        rgba(15, 14, 12, 0.82) 42%,
+        rgba(15, 14, 12, 0.3) 56%,
+        rgba(15, 14, 12, 0) 66%
+      );
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .hero-foto {
+        animation: hero-foto 1.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .hero-texto > * {
+        animation: hero-texto 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .hero-texto > *:nth-child(2) {
+        animation-delay: 0.08s;
+      }
+
+      .hero-texto > *:nth-child(3) {
+        animation-delay: 0.16s;
+      }
+    }
+  }
+
+  @keyframes hero-foto {
+    from {
+      transform: scale(1.035);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes hero-texto {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ============================================================
+     PÁGINA ESTÁTICA DA FICHA (sem JavaScript)
+     O build injeta este HTML dentro de #root para o buscador e
+     para a preview do WhatsApp. O React reescreve o #root ao
+     montar, mas quem chega sem JavaScript precisa ler a ficha
+     inteira — e precisa lê-la com a cara da casa.
+     ============================================================ */
+  .prerender {
+    @apply mx-auto w-full max-w-[1760px] px-[length:var(--margem)] py-16;
+    color: var(--cor-texto);
+  }
+
+  .prerender h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 1rem + 4vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .prerender .preco {
+    @apply mt-6 font-display text-3xl font-bold numeros;
+    color: var(--cor-marca-viva);
+  }
+
+  .prerender .ano {
+    @apply mt-3 text-sm text-texto-3;
+  }
+
+  .prerender .descricao {
+    @apply mt-6 max-w-[62ch] text-lg leading-relaxed text-texto-2;
+  }
+
+  .prerender .especificacoes {
+    @apply mt-8 grid gap-x-10 gap-y-3 sm:grid-cols-2;
+  }
+
+  .prerender .especificacoes dt {
+    @apply text-sm text-texto-3;
+  }
+
+  .prerender .especificacoes dd {
+    @apply font-display text-sm font-semibold text-texto;
+  }
+
+  .prerender a {
+    @apply mt-8 inline-flex font-sans text-sm font-semibold text-marca-texto;
+  }
+
+  /* ============================================================
+     PAINEL ADMINISTRATIVO
+     Mantém a linguagem de bancada: fundo escuro, linhas discretas.
+     ============================================================ */
+  .card {
+    @apply border border-borda bg-painel;
+  }
+
+  /* ============================================================
+     ESTOQUE — inventário, não dashboard
+     First mobile: no celular a página é uma carteira de fichas —
+     título com a ação principal em linha própria, indicadores em
+     cartões 2×2 e cada moto em um cartão com fileira de ações.
+     A partir da mesa vira o que sempre foi: faixa de resumo
+     tipográfica e tabela de colunas lida de cima para baixo.
+     ============================================================ */
+  .estoque-pagina {
+    @apply flex flex-col;
+    gap: 24px;
+  }
+
+  .estoque-cabecalho-pagina {
+    @apply flex flex-col;
+    gap: 10px;
+  }
+
+  .estoque-titulo-linha {
+    @apply flex flex-wrap items-center justify-between;
+    gap: 12px 16px;
+  }
+
+  .estoque-h1 {
+    margin: 0;
+    color: var(--cor-texto);
+    font-family: var(--font-cartaz);
+    font-stretch: 88%;
+    font-variation-settings: 'wdth' 88, 'wght' 750;
+    font-size: 27px;
+    font-weight: 750;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  .estoque-h1-ponto {
+    color: var(--cor-marca);
+  }
+
+  @media (min-width: 640px) {
+    .estoque-h1 {
+      font-size: 31px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .estoque-h1 {
+      font-size: 33px;
+    }
+  }
+
+  /* CTA compacto na linha do título, como num app de verdade: 40px,
+     ao lado do nome da página — o corpo da tela continua sendo o
+     estoque, não um botão pedindo atenção a tela inteira. */
+  .estoque-btn-primario {
+    @apply inline-flex shrink-0 items-center justify-center gap-1.5 font-semibold text-white;
+    height: 40px;
+    font-size: 13px;
+    padding: 0 14px;
+    border: 1px solid var(--cor-marca);
+    border-radius: 2px;
+    background-color: var(--cor-marca);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14);
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .estoque-btn-primario:hover {
+    border-color: var(--cor-marca-forte);
+    background-color: var(--cor-marca-forte);
+  }
+
+  .estoque-btn-primario:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+
+  /* Faixa de resumo: frase de texto natural, separada por ponto médio.
+     O valor é a única informação empurrada para a direita. */
+  .estoque-resumo {
+    @apply flex flex-wrap items-baseline;
+    gap: 1px 0;
+    color: var(--cor-texto-3);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .estoque-resumo-total {
+    color: var(--cor-texto);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Faixa do pátio: três números entre réguas, sem caixa de KPI. O
+     rótulo miúdo em cima e o número condensado embaixo — o olho lê a
+     loja, não um dashboard. */
+  .estoque-indicadores {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--cor-borda-forte);
+    border-bottom: 1px solid var(--cor-borda);
+    background-color: transparent;
+  }
+
+  .estoque-indicador {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 14px 16px 16px;
+  }
+
+  .estoque-indicador:first-child {
+    padding-left: 0;
+  }
+
+  .estoque-indicador:nth-child(2) {
+    border-left: 1px solid var(--cor-borda);
+  }
+
+  .estoque-indicador-financeiro {
+    grid-column: 1 / -1;
+    padding: 14px 0 16px;
+    border-top: 1px solid var(--cor-borda);
+  }
+
+  .estoque-indicador-rotulo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cor-texto-3);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .estoque-indicador-valor {
+    margin-top: 5px;
+    overflow: hidden;
+    color: var(--cor-texto);
+    font-family: var(--font-cartaz);
+    font-stretch: 82%;
+    font-variation-settings: 'wdth' 82, 'wght' 760;
+    font-size: 28px;
+    font-weight: 760;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .estoque-indicador-financeiro .estoque-indicador-valor {
+    font-size: 30px;
+  }
+
+  /* O número de vendidas é o atalho para a aba onde elas vivem: a moto
+     sai do pátio, mas não some sem explicação. */
+  .estoque-indicador-acao {
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .estoque-indicador-acao .estoque-indicador-rotulo svg {
+    color: var(--cor-marca-texto);
+    transition: transform 0.15s ease;
+  }
+
+  .estoque-indicador-acao:hover {
+    background-color: color-mix(in srgb, var(--cor-texto) 3.5%, transparent);
+  }
+
+  .estoque-indicador-acao:hover .estoque-indicador-rotulo svg {
+    transform: translateX(2px);
+  }
+
+  .estoque-indicador-acao:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: -2px;
+  }
+
+  /* ============================================================
+     BARRA DE FILTROS DO ESTOQUE
+     ============================================================
+     Três controles, um desenho só: mesma altura, mesma borda de 1px,
+     mesmo fundo um tom acima do painel. Antes eram três textos
+     sublinhados soltos na linha — nada dizia qual filtrava, qual
+     ordenava e qual só contava.
+
+     A situação é um grupo de quatro opções à vista, não um select:
+     "quantas vendidas?" era justamente a conta que ficava escondida
+     atrás de um clique.
+     ============================================================ */
+  .estoque-operacoes {
+    @apply flex flex-col items-stretch;
+    gap: 10px;
+  }
+
+  .estoque-busca-primaria {
+    flex: 1 1 auto;
+  }
+
+  .estoque-busca-primaria .input {
+    height: 46px !important;
+    /* 16px é o mínimo para o iOS não dar zoom forçado ao focar. */
+    padding: 0 40px 0 38px !important;
+    border: 1px solid var(--cor-borda-forte);
+    border-radius: 2px;
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto);
+    font-size: 16px;
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .estoque-busca-primaria .input::placeholder {
+    color: var(--cor-texto-3);
+  }
+
+  .estoque-busca-primaria .input:hover {
+    border-color: var(--cor-borda-forte);
+  }
+
+  .estoque-busca-primaria .input:focus {
+    border-color: var(--cor-marca);
+    background-color: var(--cor-painel);
+    outline: none;
+    box-shadow: none;
+  }
+
+  .estoque-busca-primaria > svg {
+    left: 14px !important;
+    width: 17px !important;
+    height: 17px !important;
+    color: var(--cor-texto-3);
+  }
+
+  .estoque-busca-primaria > button {
+    right: 8px !important;
+    width: 30px !important;
+    height: 30px !important;
+    color: var(--cor-texto-3);
+    border-radius: 2px;
+  }
+
+  .estoque-select {
+    width: 100%;
+    max-width: none;
+    height: 46px;
+    padding: 0 34px 0 12px;
+    border: 1px solid var(--cor-borda-forte);
+    border-radius: 2px;
+    background-color: var(--cor-painel-2);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23929292' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    color: var(--cor-texto);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    appearance: none;
+    color-scheme: dark;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .estoque-select:hover {
+    border-color: var(--cor-borda-forte);
+    color: var(--cor-texto);
+  }
+
+  .estoque-select:focus-visible {
+    border-color: var(--cor-marca);
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+
+  .estoque-select option {
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto);
+  }
+
+  /* Resumo da barra: quantas motos estão na tela e a saída rápida. */
+  .estoque-contagem {
+    @apply flex flex-wrap items-center justify-between;
+    gap: 8px 14px;
+    min-height: 0;
+    color: var(--cor-texto-3);
+    font-size: 13px;
+  }
+
+  .estoque-contagem-texto {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .estoque-limpar {
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 2px;
+    color: var(--cor-texto-2);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .estoque-limpar:hover {
+    border-color: var(--cor-borda-forte);
+    color: var(--cor-texto);
+  }
+
+  .estoque-limpar:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+
+  
+  /* Inventário: no celular é uma pilha de fichas-cartão (cada moto
+     em sua caixa); a partir da mesa volta a ser a tabela de colunas,
+     lida de cima para baixo — cabeçalho de colunas reaparece lá. */
+  .estoque-inventario {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .estoque-cabecalho {
+    display: none;
+    padding: 0 14px 10px;
+    border-bottom: 1px solid var(--cor-borda-forte);
+    color: var(--cor-texto-3);
+    font-size: 10px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* O cartão da moto: foto + nome/ficha com o menu ⋯ no canto,
+     tempo na loja à esquerda e preço à direita na linha de baixo.
+     Ações poluídas não moram no cartão — moram no menu. */
+  .estoque-linha {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'veiculo menu'
+      'loja valor';
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 2px;
+    background-color: var(--cor-painel);
+    transition:
+      background-color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .estoque-col-veiculo {
+    grid-area: veiculo;
+  }
+
+  .estoque-col-loja {
+    grid-area: loja;
+  }
+
+  .estoque-col-valor {
+    grid-area: valor;
+    text-align: right;
+  }
+
+  .estoque-col-acoes {
+    grid-area: acoes;
+    text-align: right;
+  }
+
+  .estoque-celula-veiculo {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+    grid-area: veiculo;
+  }
+
+  .estoque-foto,
+  .estoque-thumb {
+    width: 76px;
+    aspect-ratio: 4 / 3;
+    flex: none;
+    overflow: hidden;
+    border: 1px solid var(--cor-borda);
+    border-radius: 2px;
+    background-color: var(--cor-painel-2);
+  }
+
+  .estoque-thumb {
+    border: 0;
+  }
+
+  .estoque-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .estoque-veiculo-texto {
+    min-width: 0;
+  }
+
+  .estoque-nome {
+    display: block;
+    margin: 0;
+    overflow: hidden;
+    color: var(--cor-texto);
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* O nome estica o clique pela linha inteira: o ::after cobre o
+     cartão e transforma qualquer ponto morto em "abrir prévia". As
+     ações da linha ficam acima dele (z-index), então o toque nelas
+     não cai no link. */
+  .estoque-nome-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .estoque-nome-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .estoque-nome-link:focus-visible {
+    outline: none;
+  }
+
+  .estoque-nome-link:focus-visible::after {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: -2px;
+  }
+
+  .estoque-ficha {
+    margin: 3px 0 0;
+    overflow: hidden;
+    color: var(--cor-texto-3);
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: normal;
+    text-overflow: clip;
+  }
+
+  .estoque-ficha-sep {
+    color: var(--cor-texto-3);
+    opacity: 0.55;
+  }
+
+  /* Tempo na loja em linha por baixo da foto. */
+  .estoque-celula-loja {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    min-width: 0;
+    grid-area: loja;
+    margin: 0;
+  }
+
+  .estoque-loja {
+    color: var(--cor-texto-2);
+    font-size: 12.5px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .estoque-destaque {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cor-marca-texto);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .estoque-destaque::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+
+  .estoque-celula-valor {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    grid-area: valor;
+    margin: 0;
+    text-align: right;
+  }
+
+  .estoque-preco {
+    color: var(--cor-texto);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* No celular as ações inline somem: o cartão ganha um menu ⋯ no
+     canto (36px), padrão de app — o cartão fica com foto, ficha,
+     tempo na loja e preço, e nada de teclas chamando atenção. Na mesa
+     os ícones de 32px da tabela voltam como sempre foram. */
+  .estoque-celula-acoes {
+    display: none;
+  }
+
+  .estoque-menu-acoes {
+    position: relative;
+    z-index: 1;
+    grid-area: menu;
+    justify-self: end;
+    align-self: center;
+  }
+
+  .estoque-menu-botao {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 2px;
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto-3);
+    cursor: pointer;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .estoque-menu-botao:hover,
+  .estoque-menu-botao[aria-expanded='true'] {
+    color: var(--cor-texto);
+    background-color: var(--cor-painel-3);
+  }
+
+  .estoque-menu-botao:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 1px;
+  }
+
+  .estoque-menu-painel {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 30;
+    min-width: 200px;
+    border: 1px solid var(--cor-borda-forte);
+    background-color: var(--cor-painel-2);
+  }
+
+  .estoque-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 0;
+    background-color: transparent;
+    color: var(--cor-texto-2);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .estoque-menu-item:hover {
+    color: var(--cor-texto);
+    background-color: var(--cor-painel-3);
+  }
+
+  .estoque-menu-item:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: -2px;
+  }
+
+  /* Excluir tem régua própria em cima e vermelho no hover — sinal
+     de perigo sem precisar de confirmação dupla no menu. */
+  .estoque-menu-item-perigo {
+    border-top: 1px solid var(--cor-borda);
+  }
+
+  .estoque-menu-item-perigo:hover {
+    color: var(--cor-marca-texto);
+    background-color: rgba(229, 22, 29, 0.08);
+  }
+
+  /* Estados: erro, vazio e carregamento falam como um cartão da pilha. */
+  .estoque-estado {
+    padding: 20px 16px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 2px;
+    background-color: var(--cor-painel);
+  }
+
+  .estoque-estado-celula {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .estoque-estado-texto {
+    min-width: 0;
+  }
+
+  .estoque-estado-titulo {
+    margin: 0;
+    color: var(--cor-texto);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .estoque-estado-descricao {
+    max-width: 56ch;
+    margin: 4px 0 0;
+    color: var(--cor-texto-3);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .estoque-estado-acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--cor-marca-texto);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .estoque-estado-acao:hover {
+    color: var(--cor-texto);
+  }
+
+  .estoque-linha:last-child {
+    border-bottom: 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .estoque-linha:hover {
+      background-color: color-mix(in srgb, var(--cor-texto) 3.5%, transparent);
+      box-shadow: inset 2px 0 0 var(--cor-marca);
+    }
+
+    .estoque-linha:hover .estoque-foto {
+      border-color: var(--cor-borda-forte);
+    }
+
+    .estoque-linha:hover .estoque-foto img {
+      transform: scale(1.04);
+    }
+
+    .estoque-nome-link:hover {
+      text-decoration: underline;
+      text-decoration-color: var(--cor-marca);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+    }
+  }
+
+  /* Do tablet pra cima a ficha vira tabela de colunas: cabeçalho
+     reaparece e a grade volta a 4 colunas, na ordem do documento.
+     Tudo que o celular ganhou (cartões, teclas, campos) se desfaz
+     aqui, um a um — a mesa não pode regredir. */
+  @media (min-width: 768px) {
+    .estoque-pagina {
+      gap: 20px;
+    }
+
+    .estoque-cabecalho-pagina {
+      gap: 10px;
+    }
+
+    .estoque-btn-primario {
+      width: auto;
+      height: 36px;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 14px;
+    }
+
+    .estoque-indicadores {
+      border-bottom-color: var(--cor-borda);
+    }
+
+    .estoque-indicador {
+      padding: 16px 20px 18px;
+    }
+
+    .estoque-indicador:first-child {
+      padding-left: 0;
+    }
+
+    .estoque-indicador-financeiro {
+      padding: 16px 0 18px;
+    }
+
+    .estoque-indicador-valor {
+      font-size: 32px;
+    }
+
+    .estoque-indicador-financeiro .estoque-indicador-valor {
+      font-size: 34px;
+    }
+
+    /* Na mesa os quatro controles ficam na mesma linha, todos com a
+       mesma altura (40px): busca, situação, ordenação e o resumo à
+       direita, empurrado pelo espaço livre. */
+    .estoque-operacoes {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 12px;
+    }
+
+    .estoque-busca-primaria {
+      flex: 1 1 260px;
+      max-width: 320px;
+    }
+
+    .estoque-busca-primaria .input {
+      height: 40px !important;
+      padding: 0 34px 0 34px !important;
+      font-size: 13px;
+    }
+
+    .estoque-busca-primaria > svg {
+      left: 11px !important;
+      width: 15px !important;
+      height: 15px !important;
+    }
+
+    .estoque-busca-primaria > button {
+      right: 6px !important;
+      width: 26px !important;
+      height: 26px !important;
+    }
+
+    .estoque-select {
+      width: auto;
+      min-width: 168px;
+      height: 40px;
+      font-size: 13px;
+    }
+
+    .estoque-contagem {
+      justify-content: flex-end;
+      min-height: 0;
+      margin-left: auto;
+    }
+
+    .estoque-inventario {
+      display: block;
+    }
+
+    .estoque-cabecalho {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px 140px 128px;
+      grid-template-areas: 'veiculo loja valor acoes';
+      gap: 16px;
+    }
+
+    .estoque-linha {
+      grid-template-columns: minmax(0, 1fr) 120px 140px 128px;
+      grid-template-areas: 'veiculo loja valor acoes';
+      align-items: center;
+      gap: 16px;
+      padding: 14px;
+      border: 0;
+      border-bottom: 1px solid var(--cor-borda);
+      border-radius: 0;
+      background-color: transparent;
+    }
+
+    /* Na fila da tabela a última linha não fecha com régua dobrada. */
+    .estoque-linha:last-child {
+      border-bottom: 0;
+    }
+
+    .estoque-celula-veiculo {
+      align-items: center;
+      gap: 14px;
+    }
+
+    .estoque-foto,
+    .estoque-thumb {
+      width: 84px;
+    }
+
+    .estoque-nome {
+      font-size: 17px;
+    }
+
+    .estoque-ficha {
+      font-size: 12px;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .estoque-celula-loja {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    /* A célula continua em flex (justify-end): o preço e o esqueleto
+       de carregamento encostam no mesmo fio direito da coluna. */
+    .estoque-celula-valor {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .estoque-preco {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+    }
+
+    /* Ações voltam a ser ícones discretos de 32px: a fileira mora
+       na coluna da tabela; o menu ⋯ do celular não existe aqui. */
+    .estoque-celula-acoes {
+      position: relative;
+      z-index: 1;
+      grid-area: acoes;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 2px;
+    }
+
+    .estoque-acoes {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 2px;
+    }
+
+    .estoque-acao {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 2px;
+      background-color: transparent;
+      color: var(--cor-texto-3);
+      cursor: pointer;
+      transition:
+        color 0.15s ease,
+        background-color 0.15s ease;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .estoque-linha:hover .estoque-acao {
+        color: var(--cor-texto-2);
+      }
+    }
+
+    .estoque-acao:hover {
+      color: var(--cor-texto);
+      background-color: var(--cor-painel-2);
+    }
+
+    .estoque-acao:focus-visible {
+      outline: 2px solid var(--cor-foco);
+      outline-offset: 1px;
+    }
+
+    .estoque-acao-perigo:hover {
+      color: var(--cor-marca-texto);
+      background-color: rgba(229, 22, 29, 0.1);
+    }
+
+    .estoque-menu-acoes {
+      display: none;
+    }
+
+    .estoque-estado {
+      padding: 24px 0;
+      border: 0;
+      border-bottom: 1px solid var(--cor-borda);
+      background-color: transparent;
+    }
+
+    .estoque-estado-celula {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .estoque-indicadores {
+      grid-template-columns: 1fr 1fr 1.6fr;
+    }
+
+    .estoque-indicador {
+      padding: 16px 24px 18px;
+    }
+
+    .estoque-indicador:first-child {
+      padding-left: 0;
+    }
+
+    .estoque-indicador:last-child {
+      padding-right: 0;
+    }
+
+    .estoque-indicador-financeiro {
+      grid-column: auto;
+      padding: 16px 0 18px 24px;
+      border-top: 0;
+      border-left: 1px solid var(--cor-borda);
+    }
+
+    .estoque-indicador-valor {
+      font-size: 34px;
+    }
+
+    .estoque-indicador-financeiro .estoque-indicador-valor {
+      font-size: 38px;
+    }
+
+    .estoque-cabecalho {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background-color: var(--cor-fundo);
+    }
+  }
+
+  /* ============================================================
+     PUBLICAÇÕES — o mural de fotos
+     ============================================================
+     A tela é um rolo de fotos: todas as imagens das entregas
+     lado a lado, sem pasta, data ou capa. Fora das fotos, só
+     tipografia e régua — nenhum cartão com sombra ou moldura.
+     ============================================================ */
+  .publicacoes-pagina {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .publicacoes-cabecalho {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Contador do mural: uma linha só — "4 fotos no mural". */
+  .publicacoes-contador {
+    margin: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--cor-borda-forte);
+    color: var(--cor-texto-3);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* Pendências: uma linha de serviço, não um painel de KPI. */
+  .publicacoes-pendentes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px 16px;
+    border-top: 1px solid var(--cor-borda-forte);
+    border-bottom: 1px solid var(--cor-borda);
+    padding: 2px 0;
+  }
+
+  .publicacoes-pendentes-texto {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    padding: 11px 0;
+    color: var(--cor-texto);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .publicacoes-pendentes-texto .publicacoes-ponto {
+    margin-top: 7px;
+  }
+
+  .publicacoes-pendentes-motivo {
+    color: var(--cor-texto-2);
+  }
+
+  .publicacoes-pendentes-acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    margin-left: auto;
+    padding: 0 2px;
+    color: var(--cor-texto);
+    font-size: 13px;
+    font-weight: 600;
+    transition: color 0.15s ease;
+  }
+
+  .publicacoes-pendentes-acao:hover {
+    color: var(--cor-marca-texto);
+  }
+
+  @media (max-width: 639px) {
+    .publicacoes-pendentes-acao {
+      width: 100%;
+      margin-left: 0;
+      padding-bottom: 8px;
+    }
+  }
+
+  .publicacoes-ponto {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background-color: currentColor;
+  }
+
+  .publicacoes-ponto--rascunho {
+    background-color: var(--cor-alerta);
+  }
+
+  /* Mural: parede justificada de fotos. Cada linha fecha — inclusive a
+     última, que estica — e a foto de abertura de cada bloco de sete
+     fica mais larga. Sem buraco de grade e sem a fileira de iguais. */
+  .publicacoes-mosaico {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .publicacoes-quadro {
+    position: relative;
+    display: block;
+    flex: 1 1 9.5rem;
+    min-width: 0;
+    height: 10rem;
+    overflow: hidden;
+    background-color: var(--cor-painel-2);
+  }
+
+  @media (min-width: 768px) {
+    .publicacoes-mosaico {
+      gap: 6px;
+    }
+
+    .publicacoes-quadro {
+      flex-basis: 13rem;
+      height: 12rem;
+    }
+
+    .publicacoes-quadro:nth-child(7n + 1) {
+      flex-basis: 22rem;
+      flex-grow: 2.4;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .publicacoes-mosaico {
+      gap: 8px;
+    }
+
+    .publicacoes-quadro {
+      height: 13rem;
+    }
+
+    .publicacoes-quadro:nth-child(7n + 1) {
+      flex-basis: 24rem;
+    }
+  }
+
+  .publicacoes-quadro img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (hover: hover) {
+    .publicacoes-quadro img {
+      transition: transform 0.35s ease;
+    }
+
+    .publicacoes-quadro:hover img {
+      transform: scale(1.03);
+    }
+  }
+
+  /* Sombra só no pé: o modelo precisa de chão para ler sobre foto
+     clara; o resto da imagem continua limpo. */
+  .publicacoes-quadro-sombra {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(
+      to top,
+      rgb(10 9 8 / 0.92) 0%,
+      rgb(10 9 8 / 0.5) 32%,
+      transparent 68%
+    );
+  }
+
+  .publicacoes-quadro-info {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 12px;
+    pointer-events: none;
+  }
+
+  /* O risco vermelho é o carimbo da casa em cada entrega — o mesmo
+     sinal de preço e ação do site. Cresce quando o mouse chega. */
+  .publicacoes-quadro-info::before {
+    content: '';
+    width: 18px;
+    height: 2px;
+    margin-bottom: 6px;
+    background-color: var(--cor-marca);
+    transition: width 0.2s ease;
+  }
+
+  .publicacoes-quadro:hover .publicacoes-quadro-info::before {
+    width: 32px;
+  }
+
+  .publicacoes-quadro-meta {
+    max-width: 100%;
+    margin: 0;
+    overflow: hidden;
+    color: var(--cor-texto-2);
+    font-size: 11px;
+    line-height: 1.35;
+    text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Rascunho no mural: o site ainda não mostra esta foto. */
+  .publicacoes-quadro-fora {
+    margin-bottom: 3px;
+    padding: 1px 5px;
+    background-color: var(--cor-alerta);
+    color: #17130c;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  .publicacoes-quadro-acoes {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    gap: 2px;
+    padding: 6px;
+  }
+
+  .publicacoes-quadro-acao {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    background-color: rgb(10 9 8 / 0.72);
+    color: var(--cor-texto);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .publicacoes-quadro-acao:hover {
+    background-color: var(--cor-fundo);
+  }
+
+  .publicacoes-quadro-acao--excluir:hover {
+    color: var(--cor-marca-texto);
+  }
+
+  .publicacoes-quadro-acao:disabled {
+    cursor: wait;
+    opacity: 0.4;
+  }
+
+  @media (min-width: 768px) {
+    .publicacoes-quadro-acao {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+  }
+
+  @media (hover: hover) and (min-width: 640px) {
+    .publicacoes-quadro-acoes {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .publicacoes-quadro:hover .publicacoes-quadro-acoes,
+    .publicacoes-quadro:focus-within .publicacoes-quadro-acoes {
+      opacity: 1;
+    }
+  }
+
+  .publicacoes-quadro-vazia {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto-3);
+    font-size: 11px;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  /* Vazio: a moldura da prova continua de pé, com os quadros numerados. */
+  .publicacoes-vazio {
+    display: grid;
+    gap: 18px;
+    padding: 16px;
+    background-color: var(--cor-painel);
+  }
+
+  @media (min-width: 768px) {
+    .publicacoes-vazio {
+      grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+      align-items: center;
+      gap: 28px;
+      padding: 20px;
+    }
+  }
+
+  .publicacoes-vazio-prova {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2px;
+    height: 112px;
+  }
+
+  @media (min-width: 640px) {
+    .publicacoes-vazio-prova {
+      height: 144px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .publicacoes-vazio-prova {
+      height: 176px;
+    }
+  }
+
+  .publicacoes-vazio-quadro {
+    display: grid;
+    place-items: center;
+    border: 1px dashed var(--cor-borda-forte);
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto-3);
+    font-size: 11px;
+  }
+
+  .publicacoes-vazio-titulo {
+    margin: 0;
+    color: var(--cor-texto);
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .publicacoes-vazio-descricao {
+    margin: 6px 0 0;
+    max-width: 46ch;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  /* Erro e aviso: a mesma régua do painel, sem caixa de dashboard. */
+  .publicacoes-erro {
+    padding: 20px;
+    background-color: var(--cor-painel);
+  }
+
+  .publicacoes-erro-titulo {
+    margin: 0;
+    color: var(--cor-texto);
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .publicacoes-erro-texto {
+    margin: 6px 0 0;
+    max-width: 60ch;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .publicacoes-aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 16px;
+    border-left: 2px solid var(--cor-alerta);
+    background-color: var(--cor-painel);
+    padding: 4px 12px;
+  }
+
+  .publicacoes-aviso p {
+    margin: 0;
+    padding: 8px 0;
+    color: var(--cor-texto-2);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .publicacoes-aviso strong {
+    color: var(--cor-alerta);
+    font-weight: 600;
+  }
+
+  .painel-secao {
+    @apply overflow-hidden border border-borda bg-painel;
+  }
+
+  .painel-cabecalho {
+    @apply flex items-center justify-between gap-3 border-b border-borda px-4 py-3.5 sm:px-5 sm:py-4; /* taste-skill-ignore: painel do dono é tela de trabalho */
+  }
+
+  .painel-titulo {
+    @apply font-display text-base leading-tight font-semibold text-texto;
+  }
+
+  .painel-h1 {
+    @apply font-display text-2xl leading-tight font-bold tracking-[-0.025em] text-texto sm:text-[28px];
+  }
+
+  .foco-painel:focus-visible {
+    @apply outline-2 outline-offset-0 outline-marca;
+  }
+
+  .item-linha {
+    @apply flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors;
+  }
+
+  .nav-item {
+    @apply relative flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors;
+  }
+
+  .nav-item-ativo::before {
+    content: '';
+    @apply absolute top-2 bottom-2 left-0 w-px bg-marca;
+  }
+
+  /* Cartão de perfil Instagram (aba Configurações do admin).
+     A faixa em gradiente é a marca do Instagram dentro do painel —
+     fora da paleta da casa, e só ali. */
+  .ig-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--cor-borda); /* taste-skill-ignore: painel do dono */
+    background-color: var(--cor-painel);
+  }
+
+  .ig-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, #f9ce34 0%, #ee2a7b 45%, #6228d7 100%); /* taste-skill-ignore: marca do Instagram no painel */
+    opacity: 0.85;
+  }
+
+  .ig-avatar-ring {
+    background: conic-gradient(from 210deg, #f9ce34, #ee2a7b, #6228d7, #ee2a7b, #f9ce34); /* taste-skill-ignore: marca do Instagram no painel */
+    padding: 3px;
+  }
+
+  .ig-avatar-furo {
+    background-color: var(--cor-painel);
+  }
+
+  .ig-btn-gradiente {
+    background-image: linear-gradient(90deg, #f9ce34 0%, #ee2a7b 50%, #6228d7 100%); /* taste-skill-ignore: marca do Instagram no painel */
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.35); /* taste-skill-ignore: marca do Instagram no painel */
+    transition: filter 0.2s ease;
+  }
+
+  .ig-btn-gradiente:hover {
+    filter: brightness(1.08);
+  }
+
+  .ig-campo {
+    @apply w-full resize-none bg-transparent px-0.5 py-1.5 text-sm text-texto placeholder:text-texto-3 focus:outline-none;
+    border-bottom: 1px solid var(--cor-borda-forte); /* taste-skill-ignore: painel do dono */
+    transition: border-color 0.2s ease;
+  }
+
+  .ig-campo:focus {
+    border-bottom-color: var(--cor-marca);
+  }
+
+  .ig-stat-valor {
+    @apply font-display text-lg leading-none font-bold text-texto numeros;
+  }
+
+  .ig-stat-rotulo {
+    @apply text-[11px] tracking-[0.08em] text-texto-3 uppercase;
+  }
+}

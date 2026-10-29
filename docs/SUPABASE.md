@@ -26,35 +26,29 @@ ambiente não existirem, o site simplesmente ignora o Supabase.
 
 ## 2. Criar as tabelas
 
-Abra o **SQL Editor** e execute as migrações numeradas de
+Abra o **SQL Editor** e execute as migrações de
 [`supabase/migrations/`](../supabase/migrations), em ordem (detalhes em
 [`supabase/README.md`](../supabase/README.md)):
 
-- `..._cria_esquema_inicial.sql` — tabelas `motorcycles` e `motorcycle_images`,
-  índices e trigger de `updated_at`;
-- `..._seguranca_rls_e_storage.sql` — RLS, políticas e o bucket público `motos`;
-- `..._dados_iniciais_estoque.sql` — (opcional) 5 motos de demonstração;
-- `..._configuracoes_da_loja.sql`, `..._promocoes_do_estoque.sql`,
-  `..._registro_de_vendas.sql`, `..._publicacoes_de_entregas.sql`,
-  `..._lixeira_do_estoque.sql` e `..._edicao_de_vendas.sql` — configurações,
-  promoções, histórico de vendas, a galeria de entregas, a lixeira do estoque e
-  a edição de quem comprou (aba **Vendidas**);
-- `..._seguranca_e_transacoes.sql` (**obrigatória**) — lista de
-  administradores, grants por coluna e as funções de fotos e custo;
-- `..._seguranca_site_settings.sql` — separa a leitura de
-  `site_settings` por papel: o visitante lê só `key`/`value`; a leitura
-  de `authenticated` passa a exigir `public.e_admin()`, fechando o
-  acesso de uma conta autenticada fora da lista de admins;
-- `..._lixeira_fotos_entregas.sql` — fotos apagadas do mural vão para
-  uma lixeira de 30 dias (`entregas_fotos_lixeira`), com as RPCs que
-  movem e restauram a foto dentro da publicação.
+- `01_esquema.sql` — tabelas `motorcycles`, `motorcycle_images`,
+  `site_settings`, `sales`, `entregas` e `entregas_fotos_lixeira`, com
+  constraints, índices e triggers. Também alinha bancos criados por
+  versões antigas do esquema;
+- `02_seguranca_e_storage.sql` (**obrigatória**) — lista de
+  administradores, `e_admin()`/`sou_admin()`, grants por coluna,
+  políticas RLS finais e os buckets `motos` (público) e `entregas`
+  (privado);
+- `03_funcoes.sql` (**obrigatória**) — RPCs do painel (fotos da moto,
+  custo de compra, lixeira das fotos do mural) e a limpeza diária da
+  lixeira via `pg_cron`;
+- `04_dados_iniciais.sql` — **opcional**: 5 motos de demonstração (só
+  quando o estoque está vazio), as fotos delas e o registro `loja` em
+  `site_settings`.
 
-Em um projeto novo, `_aplicar-tudo.sql` executa tudo de uma vez. Em um
-projeto que já está no ar, rode a migração 11 (e a 12 em seguida) antes
-de publicar esta versão do site: o código novo chama as funções criadas
-na 11 e a 12 fecha a leitura indevida de `updated_by`. A 13 é o que
-permite apagar uma foto do mural sem perdê-la — sem ela, o botão de
-apagar retorna erro.
+Em um projeto novo, `_aplicar-tudo.sql` executa os quatro de uma vez.
+Se não quiser as motos de demonstração, rode só 01–03. Em um projeto
+que já está no ar com as migrações antigas (01–16) aplicadas, o banco
+já está no estado final — em dúvida, rodar `_aplicar-tudo.sql` é seguro.
 
 ## 3. Ligar o projeto ao site
 
@@ -75,9 +69,11 @@ falta alguma das duas chaves.
 
 Em **Authentication → Users → Add user**, crie um e-mail e senha.
 
-A partir da migração 11, só quem está em `public.admins` gerencia o
-painel. Se a conta foi criada **antes** da 11, o seed da migração já a
-promoveu. Se foi criada depois, rode no SQL Editor:
+Só quem está em `public.admins` gerencia o painel. `sou_admin()` leva
+essa regra ao login: uma conta autenticada que não esteja na lista é
+deslogada com aviso, e a guarda de rota explica o motivo. Se a conta já
+existia quando a 02 foi aplicada, o seed da migração a promoveu. Se foi
+criada depois, rode no SQL Editor:
 
 ```sql
 insert into public.admins (user_id)
@@ -138,14 +134,15 @@ vendida volta para **Vendidas**, uma disponível volta para o pátio.
 
 A moto fica na lixeira por **30 dias**, contados da exclusão. Cada linha mostra
 quanto falta (`sai em 4 dias`) e, quando o prazo vence, ela é apagada de vez —
-linha e fotos do Storage. Essa limpeza roda ao abrir o painel: é o momento em
-que a sessão do dono tem permissão para apagar, e o site público nunca apaga
-nada. Se o painel ficar semanas sem ser aberto, nada se perde: o que venceu sai
-na primeira visita.
+linha e fotos do Storage. Essa limpeza roda ao abrir o painel (a sessão do dono
+é quem apaga os arquivos do Storage); além disso, o `pg_cron` apaga as linhas
+vencidas uma vez por dia, mesmo que o painel fique semanas sem ser aberto. O
+site público nunca apaga nada.
 
 O **apagar de vez** também fica na própria Lixeira, com confirmação, para quem
-não quer esperar. A lixeira depende da migração `09_lixeira_do_estoque.sql`;
-sem ela, o painel avisa ao tentar excluir.
+não quer esperar. A lixeira depende dos arquivos `01_esquema.sql` (coluna
+`lixeira_em`) e `03_funcoes.sql` (limpeza agendada); sem eles, o painel avisa
+ao tentar excluir.
 
 ### Evitar pausa por inatividade no plano Free
 
@@ -192,9 +189,9 @@ os avisos por e-mail da Supabase.
 O contato, o Instagram, o endereço e os horários saem de
 `src/data/site.ts` (padrão de fábrica). A aba **Configurações** deixa o
 dono editar isso e salvar. Com o Supabase configurado, o valor vai para a
-tabela pública `site_settings` (migração
-`05_configuracoes_da_loja.sql`) e passa a valer para todos os
-visitantes na hora, sem novo build. O `localStorage` fica como cache e
+tabela pública `site_settings` (criada em
+`01_esquema.sql`) e passa a valer para todos os visitantes na hora,
+sem novo build. O `localStorage` fica como cache e
 fallback quando o banco não responde.
 
 - O mesmo local tem o botão **Instalar o aplicativo** (ver PWA abaixo).
@@ -262,13 +259,13 @@ embaladas no JavaScript e ficam públicas para qualquer visitante.
 | --- | --- |
 | `/admin` diz "Área restrita desativada" | `.env` ausente, ou build anterior ao `.env`. Refaça o build. |
 | Login diz "E-mail ou senha inválidos" | Usuário não criado em Authentication → Users, ou e-mail não confirmado. |
-| Fotos não sobem | Bucket `motos` não criado (rode `..._seguranca_rls_e_storage.sql`) ou política de Storage faltando. |
-| Salvar moto diz "o banco ainda não tem a rotina que grava as fotos" | Falta a migração `11_seguranca_e_transacoes.sql`. Rode-a e tente de novo. |
+| Fotos não sobem | Bucket `motos` não criado (rode `02_seguranca_e_storage.sql`) ou política de Storage faltando. |
+| Salvar moto diz "o banco ainda não tem a rotina que grava as fotos" | Falta `03_funcoes.sql`. Rode-a e tente de novo. |
 | Painel diz que não há permissão ao salvar | A conta não está em `public.admins`. Veja o passo 4. |
-| Venda registrada sem custo | Falta a migração 11 (função `custo_da_moto`) ou a moto não tem `custo_compra` cadastrado. |
+| Venda registrada sem custo | Falta `03_funcoes.sql` (função `custo_da_moto`) ou a moto não tem `custo_compra` cadastrado. |
 | Link de recuperação abre "não é mais válido" | Link vencido/já usado, ou a URL `/admin/redefinir` não está em Redirect URLs (passo 4). |
 | `duplicate key` ao salvar | O sistema tenta sozinho o próximo endereço livre (`-2`, `-3`…). Se persistir, é outra restrição do banco: veja o erro completo no console. |
 | Site não muda após salvar | Faltou republicar (deploy pelo host / `git push`). A config da loja (aba Configurações) é exceção: vai para `site_settings` e vale na hora. |
-| Excluir moto pede uma migração | A coluna `lixeira_em` não existe no banco. Rode `09_lixeira_do_estoque.sql` no SQL Editor. |
+| Excluir moto pede uma migração | A coluna `lixeira_em` não existe no banco. Rode `01_esquema.sql` no SQL Editor. |
 | Instalar o app não aparece | Precisa HTTPS e o manifest acessível. No iPhone/Safari não há prompt: use *Compartilhar → Adicionar à Tela de Início*. |
 | `npm run build` usa o catálogo antigo | Faltam as chaves no `.env` **no ambiente do build**, não só localmente. |

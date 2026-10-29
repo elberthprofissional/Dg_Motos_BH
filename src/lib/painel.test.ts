@@ -4,6 +4,7 @@ import {
   contarPorStatus,
   diasAteApagar,
   diasAteApagarDesde,
+  diasNaLoja,
   filtrarEstoque,
   filtrarVendas,
   lucroPorMes,
@@ -26,7 +27,6 @@ const base = (patch: Partial<Motorcycle>): Motorcycle => ({
   preco: 15000,
   quilometragem: null,
   cilindrada: 160,
-  categoria: 'Street',
   descricao: '',
   especificacoes: [],
   imagens: [],
@@ -37,36 +37,35 @@ const base = (patch: Partial<Motorcycle>): Motorcycle => ({
 })
 
 describe('filtrarEstoque', () => {
-  it('sem busca e status "todas" devolve o estoque inteiro', () => {
-    const todas = filtrarEstoque(motorcycles, { busca: '', status: 'todas' })
+  it('sem busca devolve o estoque inteiro', () => {
+    const todas = filtrarEstoque(motorcycles, { busca: '' })
     expect(todas).toHaveLength(motorcycles.length)
-  })
-
-  it('filtra por status', () => {
-    const lista = [
-      base({ slug: 'a', status: 'disponivel' }),
-      base({ slug: 'b', status: 'vendida' }),
-      base({ slug: 'c', status: 'indisponivel' }),
-    ]
-    expect(filtrarEstoque(lista, { busca: '', status: 'vendida' }).map((m) => m.slug)).toEqual(['b'])
   })
 
   it('busca ignora acento e maiúsculas', () => {
     const lista = [base({ slug: 'a', modelo: 'XRE 300' }), base({ slug: 'b', modelo: 'Fazer' })]
-    expect(filtrarEstoque(lista, { busca: 'xre', status: 'todas' }).map((m) => m.slug)).toEqual(['a'])
-  })
-
-  it('combina busca e status', () => {
-    const lista = [
-      base({ slug: 'a', modelo: 'XRE 300', status: 'vendida' }),
-      base({ slug: 'b', modelo: 'XRE 190', status: 'disponivel' }),
-    ]
-    const r = filtrarEstoque(lista, { busca: 'xre', status: 'disponivel' })
-    expect(r.map((m) => m.slug)).toEqual(['b'])
+    expect(filtrarEstoque(lista, { busca: 'xre' }).map((m) => m.slug)).toEqual(['a'])
   })
 
   it('termo ausente devolve lista vazia', () => {
-    expect(filtrarEstoque(motorcycles, { busca: 'bmw', status: 'todas' })).toEqual([])
+    expect(filtrarEstoque(motorcycles, { busca: 'bmw' })).toEqual([])
+  })
+})
+
+describe('diasNaLoja', () => {
+  const agora = new Date('2026-10-29T12:00:00Z')
+
+  it('conta dias inteiros desde o cadastro', () => {
+    expect(diasNaLoja(base({ criadoEm: '2026-10-19T12:00:00Z' }), agora)).toBe(10)
+  })
+
+  it('moto cadastrada hoje conta zero', () => {
+    expect(diasNaLoja(base({ criadoEm: '2026-10-29T08:00:00Z' }), agora)).toBe(0)
+  })
+
+  it('sem data legível devolve null', () => {
+    expect(diasNaLoja(base({}), agora)).toBeNull()
+    expect(diasNaLoja(base({ criadoEm: 'sem-data' }), agora)).toBeNull()
   })
 })
 

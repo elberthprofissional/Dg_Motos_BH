@@ -29,6 +29,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: CSP
+        run: npm run csp
+
       - name: Testes
         run: npm test
 

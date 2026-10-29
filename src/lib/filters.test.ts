@@ -49,12 +49,6 @@ describe('filtrarMotos', () => {
     expect(filtrarMotos(motorcycles, com({ busca: 'bmw' }))).toEqual([])
   })
 
-  it('filtra por categoria', () => {
-    const trails = filtrarMotos(motorcycles, com({ categoria: 'Trail' }))
-    expect(trails.length).toBeGreaterThan(0)
-    for (const m of trails) expect(m.categoria).toBe('Trail')
-  })
-
   it('filtra por preço máximo', () => {
     const teto = 15000
     for (const m of filtrarMotos(motorcycles, com({ precoMax: teto }))) {
@@ -130,14 +124,13 @@ describe('filtrarMotos', () => {
     expect(motorcycles).toEqual(antes)
   })
 
-  it('combina busca, categoria e ordenação', () => {
+  it('combina busca e ordenação', () => {
     const resultado = filtrarMotos(
       motorcycles,
-      com({ busca: 'yamaha', categoria: 'Trail', ordenacao: 'preco-asc' }),
+      com({ busca: 'yamaha', ordenacao: 'preco-asc' }),
     )
     for (const m of resultado) {
       expect(m.marca).toBe('Yamaha')
-      expect(m.categoria).toBe('Trail')
     }
   })
 
@@ -165,7 +158,6 @@ describe('temFiltroAtivo', () => {
     expect(temFiltroAtivo(com({ precoMin: 10000 }))).toBe(true)
     expect(temFiltroAtivo(com({ precoMax: 20000 }))).toBe(true)
     expect(temFiltroAtivo(com({ anoMin: 2021 }))).toBe(true)
-    expect(temFiltroAtivo(com({ categoria: 'Trail' }))).toBe(true)
     expect(temFiltroAtivo(com({ ordenacao: 'preco-asc' }))).toBe(true)
   })
 })

@@ -1,4 +1,4 @@
-import type { Motorcycle, MotorcycleStatus, MotorcycleCategory, MotorcycleSpec } from '../types'
+import type { Motorcycle, MotorcycleStatus, MotorcycleSpec } from '../types'
 import { getSupabase, urlPublica, BUCKET_FOTOS } from './supabase'
 import { caminhoDeBucket } from './fotos'
 
@@ -36,18 +36,17 @@ interface LinhaCatalogo {
   modelo: string
   ano: number
   preco: number | string
-  /** Colunas da promoção; só existem depois da migração 06 aplicar. */
+  /** Colunas da promoção (01_esquema.sql); opcionais para banco antigo. */
   em_promocao?: boolean | number | null
   preco_antes?: number | string | null
   quilometragem: number | null
   cilindrada: number | null
-  categoria: string
   descricao: string
   especificacoes: unknown
   status: string
   created_at?: string | null
   updated_at?: string | null
-  /** Só existe depois da migração 09 (lixeira). */
+  /** Coluna da lixeira (01_esquema.sql); ausente em banco antigo. */
   lixeira_em?: string | null
   motorcycle_images?: LinhaImagem[] | null
 }
@@ -86,7 +85,6 @@ export function linhaParaMotos(linha: LinhaCatalogo): Motorcycle {
     precoAntes: linha.preco_antes == null ? null : Number(linha.preco_antes),
     quilometragem: linha.quilometragem == null ? null : Number(linha.quilometragem),
     cilindrada: linha.cilindrada == null ? null : Number(linha.cilindrada),
-    categoria: linha.categoria as MotorcycleCategory,
     descricao: linha.descricao ?? '',
     especificacoes: specs.filter(
       (s): s is MotorcycleSpec => typeof s?.label === 'string' && typeof s?.value === 'string',
@@ -116,14 +114,14 @@ export interface ResultadoCatalogo {
  * `custo_da_moto`, que exige admin.
  */
 const COLUNAS_MOTO =
-  'id, slug, marca, modelo, ano, preco, em_promocao, preco_antes, quilometragem, cilindrada, categoria, descricao, especificacoes, status, created_at, updated_at'
+  'id, slug, marca, modelo, ano, preco, em_promocao, preco_antes, quilometragem, cilindrada, descricao, especificacoes, status, created_at, updated_at'
 
 const COLUNAS_IMAGENS = 'motorcycle_images(src, alt, posicao)'
 
 /** Select usado em toda leitura: a moto + as fotos já ordenadas. */
 const SELECT_MOTO = `${COLUNAS_MOTO}, lixeira_em, ${COLUNAS_IMAGENS}`
 
-/** Select para banco que ainda não rodou a migração 09 (sem lixeira). */
+/** Select para banco que ainda não tem a coluna da lixeira. */
 const SELECT_MOTO_SEM_LIXEIRA = `${COLUNAS_MOTO}, ${COLUNAS_IMAGENS}`
 
 function colunaDaLixeiraAusente(error: { code?: string; message: string }): boolean {
@@ -155,8 +153,8 @@ export async function buscarCatalogo(
       .select(SELECT_MOTO)
       .order('ano', { ascending: false })
 
-    // Banco que ainda não rodou a migração 09: lê sem a coluna da
-    // lixeira em vez de deixar o painel inteiro sem catálogo.
+    // Banco que ainda não tem a coluna da lixeira: lê sem ela em vez
+    // de deixar o painel inteiro sem catálogo.
     const resposta =
       primeira.error && colunaDaLixeiraAusente(primeira.error)
         ? await sb
@@ -199,7 +197,6 @@ export interface MotoParaSalvar {
   preco: number
   quilometragem: number | null
   cilindrada: number | null
-  categoria: MotorcycleCategory
   descricao: string
   especificacoes: MotorcycleSpec[]
   imagens: { src: string; alt: string }[]
@@ -215,12 +212,12 @@ export interface MotoParaSalvar {
  */
 export function modelosDisponiveis(
   motos: Motorcycle[],
-): { marca: string; modelo: string; categoria: MotorcycleCategory }[] {
-  const mapa = new Map<string, { marca: string; modelo: string; categoria: MotorcycleCategory }>()
+): { marca: string; modelo: string }[] {
+  const mapa = new Map<string, { marca: string; modelo: string }>()
   for (const m of motos) {
     const chave = `${m.marca}|${m.modelo}`.toLowerCase()
     if (!mapa.has(chave)) {
-      mapa.set(chave, { marca: m.marca, modelo: m.modelo, categoria: m.categoria })
+      mapa.set(chave, { marca: m.marca, modelo: m.modelo })
     }
   }
   return [...mapa.values()].sort((a, b) =>
@@ -273,7 +270,7 @@ async function salvarImagens(motoId: string, imagens: { src: string; alt: string
     error.code === '42883' ||
     /salvar_imagens_da_moto/i.test(error.message)
   ) {
-    return 'O banco ainda não tem a rotina que grava as fotos. Rode a migração 11_seguranca_e_transacoes.sql no SQL Editor do Supabase.'
+    return 'O banco ainda não tem a rotina que grava as fotos. Rode supabase/migrations/03_funcoes.sql no SQL Editor do Supabase.'
   }
 
   return error.message
@@ -298,7 +295,6 @@ export async function salvarMoto(
     preco: dados.preco,
     quilometragem: dados.quilometragem,
     cilindrada: dados.cilindrada,
-    categoria: dados.categoria,
     descricao: dados.descricao,
     especificacoes: dados.especificacoes,
     em_promocao: dados.emPromocao,
@@ -344,7 +340,7 @@ export async function salvarMoto(
 /** Erro de banco sem a coluna da lixeira vira instrução, não stack trace. */
 function mensagemLixeira(error: { code?: string; message: string }): string {
   if (colunaDaLixeiraAusente(error)) {
-    return 'A coluna da lixeira ainda não existe no banco. Rode a migração 09_lixeira_do_estoque.sql no SQL Editor do Supabase.'
+    return 'A coluna da lixeira ainda não existe no banco. Rode supabase/migrations/01_esquema.sql no SQL Editor do Supabase.'
   }
   return error.message
 }
@@ -509,6 +505,34 @@ export async function excluirFotosRemovidas(
   }
 }
 
+/**
+ * Apaga do Storage as fotos enviadas nesta sessão que não chegaram a
+ * ser gravadas.
+ *
+ * É o inverso de `excluirFotosRemovidas`: aqui saem as que estão em
+ * `depois` e não estavam em `antes`. Chamada ao cancelar o formulário —
+ * o upload acontece antes do "Salvar", então sem isto o arquivo ficaria
+ * órfão no bucket sempre que o dono desistisse do cadastro.
+ */
+export async function excluirFotosAdicionadas(
+  antes: { src: string }[],
+  depois: { src: string }[],
+): Promise<void> {
+  const sb = getSupabase()
+  if (!sb) return
+
+  const anteriores = new Set(antes.map((f) => f.src))
+  const caminhos = depois
+    .map((f) => f.src)
+    .filter((src) => !anteriores.has(src))
+    .map(caminhoDeBucket)
+    .filter((c): c is string => c !== null)
+
+  if (caminhos.length > 0) {
+    await sb.storage.from(BUCKET_FOTOS).remove(caminhos)
+  }
+}
+
 /** Altera somente o status (usado nos atalhos do painel). */
 export async function atualizarStatus(
   id: string,
@@ -531,7 +555,6 @@ export function motoParaFormulario(m: Motorcycle): MotoParaSalvar {
     preco: m.preco,
     quilometragem: m.quilometragem,
     cilindrada: m.cilindrada,
-    categoria: m.categoria,
     descricao: m.descricao,
     especificacoes: m.especificacoes,
     imagens: m.imagens,

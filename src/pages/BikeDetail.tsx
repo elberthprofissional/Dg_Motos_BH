@@ -98,7 +98,7 @@ export function BikeDetail() {
         </h1>
         <p className="corpo mt-4 max-w-md text-texto-2">
           {semCatalogo
-            ? 'O catálogo não respondeu. Tente de novo em instantes — ou fale com a loja que a gente confirma a moto pra você.'
+            ? 'O catálogo não respondeu. Tente de novo em instantes ou fale com a loja para confirmar a moto.'
             : 'Essa moto pode já ter sido vendida, ou o endereço do link está errado.'}
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -142,7 +142,6 @@ export function BikeDetail() {
     ...(bike.cilindrada
       ? [{ label: 'Cilindrada', value: `${bike.cilindrada} cc` }]
       : []),
-    { label: 'Categoria', value: bike.categoria },
     { label: 'Situação', value: statusLongo(bike.status) },
   ]
 
@@ -171,7 +170,7 @@ export function BikeDetail() {
         : ''
 
   const introFicha = referencia
-    ? `Esta unidade em cima; abaixo, as especificações públicas da linha ${referencia.modelo}.`
+    ? `Os dados desta unidade abrem a ficha; o restante é a especificação da linha ${referencia.modelo}.`
     : 'Os dados cadastrados pela loja para esta unidade.'
 
   const notaFicha = referencia
@@ -217,8 +216,8 @@ export function BikeDetail() {
   const notaSobre =
     usandoReferencia && referencia ? (
       <p className="mt-6 text-sm leading-relaxed text-texto-3">
-        Texto e especificações da linha {referencia.modelo}. O estado desta
-        unidade é conferido com a loja.
+        Texto e ficha da linha {referencia.modelo}. O estado desta unidade, você
+        confere com a loja.
       </p>
     ) : null
 
@@ -257,7 +256,6 @@ export function BikeDetail() {
           {[
             ['Ano', String(bike.ano)],
             ['Quilometragem', formatKm(bike.quilometragem)],
-            ['Categoria', bike.categoria],
             ['Cilindrada', bike.cilindrada ? `${bike.cilindrada} cc` : 'A confirmar'],
           ].map(([rotulo, valorItem]) => (
             <div
@@ -356,12 +354,12 @@ export function BikeDetail() {
 
                 {precoIncompleto ? (
                   <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-texto-2">
-                    O valor desta unidade está em conferência na loja. Fale com a
+                    O preço desta moto está em conferência na loja. Fale com a
                     equipe para confirmar.
                   </p>
                 ) : precoParaConfirmar ? (
                   <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-texto-2">
-                    Valor cadastrado. Confirme o preço com a loja antes de negociar.
+                    Confirme o preço com a loja antes de negociar.
                   </p>
                 ) : null}
               </div>
@@ -372,7 +370,6 @@ export function BikeDetail() {
             {[
               ['Ano', String(bike.ano)],
               ['Quilometragem', formatKm(bike.quilometragem)],
-              ['Categoria', bike.categoria],
               ['Cilindrada', bike.cilindrada ? `${bike.cilindrada} cc` : 'A confirmar'],
             ].map(([rotulo, valorItem]) => (
               <div

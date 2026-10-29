@@ -39,7 +39,7 @@ export function CamposSecao({
         <Campo
           id="cfg-whatsapp"
           rotulo="WhatsApp da loja"
-          dica="Só números, com DDI e DDD. É o número que abre os botões de WhatsApp do site."
+          dica="Só números, com DDI e DDD — sem espaços, traços ou parênteses."
           erro={erroWhatsapp}
         >
           <input
@@ -158,14 +158,13 @@ export function CamposSecao({
           Faixas de atendimento
         </p>
         <p className="mesa-campo-dica">
-          Os horários salvos estão em um formato livre que não dá para separar por dia. Ajuste
-          abaixo; quando as faixas usarem dias e horas reconhecíveis, o editor por dia volta.
+          O jeito como os horários estão salvos não permite separar por dia, então o editor por
+          dia fica oculto. Ao usar o formato abaixo, ele volta.
         </p>
 
         {config.horarios.length === 0 ? (
           <p className="mesa-nota-vazio">
-            Nenhuma faixa cadastrada. O site mostra um pedido para confirmar o horário antes da
-            visita.
+            Nenhuma faixa cadastrada. O site não mostra horário de funcionamento.
           </p>
         ) : (
           <div className="mesa-horarios">
@@ -239,7 +238,7 @@ export function CamposSecao({
         ) : null}
 
         <p id="cfg-horarios-dica" className="mesa-campo-dica">
-          Ex.: “Seg a Sex” e “9h–18h”. A ordem das linhas é a ordem publicada no site.
+          Dias em uma coluna, horário na outra — como “Seg a Sex” e “9h–18h”.
         </p>
       </div>
     </div>

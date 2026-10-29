@@ -31,8 +31,7 @@ import { formatPrice } from '../lib/format'
  *
  * A coluna de filtros trabalha com um rascunho: o visitante ajusta os
  * campos e só então aplica. Assim o resultado não muda a cada arrasto
- * de slider, e o botão "Aplicar filtros" tem uma função clara. Os
- * atalhos de categoria continuam aplicando na hora.
+ * de slider, e o botão "Aplicar filtros" tem uma função clara.
  *
  * No celular a coluna vira uma folha de tela cheia (um <dialog>
  * nativo, com foco preso e Esc de graça). A folha abre pelo botão na
@@ -52,7 +51,7 @@ export function Estoque() {
 
   usePageMeta(
     'Estoque | DG Motos — Motocicletas seminovas em BH',
-    'Catálogo de motocicletas seminovas da DG Motos em Belo Horizonte: busque por marca ou modelo, filtre por marca, preço, ano e categoria.',
+    'Catálogo de motocicletas seminovas da DG Motos em Belo Horizonte: busque por marca ou modelo e filtre por marca, preço e ano.',
   )
 
   const [marcaParamAnterior, setMarcaParamAnterior] = useState(marcaUrl)
@@ -198,13 +197,6 @@ export function Estoque() {
       chave: 'ano',
       rotulo: `Ano: ${filtros.anoMin}+`,
       limpar: () => atualizar({ anoMin: ANO_MIN }),
-    })
-  }
-  if (filtros.categoria !== 'todas') {
-    ativos.push({
-      chave: 'categoria',
-      rotulo: `Categoria: ${filtros.categoria}`,
-      limpar: () => atualizar({ categoria: 'todas' }),
     })
   }
 
@@ -381,8 +373,7 @@ export function Estoque() {
               ) : null}
             </form>
 
-            {/* No celular, a folha de filtros abre por aqui: os
-                atalhos de categoria não mostram os demais campos. */}
+            {/* No celular, a folha de filtros abre por aqui. */}
             <div className="mb-5 flex items-center gap-3 lg:hidden">
               <button
                 type="button"
@@ -444,8 +435,8 @@ export function Estoque() {
                   titulo={totalDisponiveis === 0 ? 'Sem motos anunciadas agora' : 'Nenhuma moto encontrada com esses filtros'}
                   descricao={
                     totalDisponiveis === 0
-                      ? 'Fale com a loja para consultar as próximas entradas.'
-                      : 'Ajuste a faixa de preço, o ano ou a categoria, ou limpe os filtros para ver todo o estoque.'
+                      ? 'Fale com a loja para saber quando chegam as próximas.'
+                      : 'Ajuste a faixa de preço ou o ano, ou limpe os filtros para ver todo o estoque.'
                   }
                   acao={
                     <div className="flex flex-wrap justify-center gap-3">

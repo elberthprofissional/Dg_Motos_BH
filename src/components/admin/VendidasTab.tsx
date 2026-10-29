@@ -141,21 +141,18 @@ export function VendidasTab({
 
   return (
     <section className="mx-auto max-w-6xl" aria-labelledby="vendidas-titulo">
-      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-line pb-4">
-        <div>
-          <h2
-            id="vendidas-titulo"
-            className="font-display text-[22px] leading-none font-bold tracking-[-0.02em] text-paper sm:text-[26px]"
-          >
+      <header className="estoque-cabecalho-pagina">
+        <div className="estoque-titulo-linha">
+          <h2 id="vendidas-titulo" className="estoque-h1">
             Vendidas
+            <span className="estoque-h1-ponto" aria-hidden="true">
+              .
+            </span>
           </h2>
-          <p className="mt-1.5 max-w-[52ch] text-sm leading-relaxed text-steel-400">
-            Cada moto que saiu do pátio, com data, comprador e resultado da venda.
-          </p>
+          {registros.length > 1 ? (
+            <p className="text-[11px] text-steel-500">Mais recentes primeiro.</p>
+          ) : null}
         </div>
-        {registros.length > 1 ? (
-          <p className="text-[11px] text-steel-500">Mais recentes primeiro.</p>
-        ) : null}
       </header>
 
       {registros.length === 0 ? (
@@ -236,7 +233,6 @@ export function VendidasTab({
             {registros.map(({ moto, venda }) => {
               const ficha = [
                 String(moto.ano),
-                moto.categoria,
                 moto.quilometragem != null ? formatKm(moto.quilometragem) : null,
               ].filter(Boolean)
 

@@ -84,7 +84,6 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
       <p className="numeros mt-1 truncate text-xs leading-snug text-texto-3">
         {[
           bike.ano,
-          bike.categoria,
           bike.quilometragem != null ? formatKm(bike.quilometragem) : null,
         ]
           .filter(Boolean)
@@ -93,7 +92,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
 
       {precoRequerConfirmacao(bike.preco) ? (
         <p className="mt-2 text-[11px] leading-snug text-texto-2">
-          Valor cadastrado. Confirme com a loja antes de negociar.
+          Confirme o preço com a loja antes de negociar.
         </p>
       ) : null}
 
@@ -207,7 +206,7 @@ export function BikeCard({ bike, priority = false, variante = 'grade' }: BikeCar
             )}
             {precoRequerConfirmacao(bike.preco) ? (
               <p className="mt-2 max-w-36 text-left text-[11px] leading-snug text-texto-2">
-                Valor cadastrado. Confirme com a loja.
+                Confirme o preço com a loja.
               </p>
             ) : null}
           </div>

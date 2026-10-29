@@ -29,9 +29,8 @@ import bannerDesktop from '../assets/troca/banner-desktop.webp'
  * registro em texto e o fechamento volta ao preto, onde a logo
  * (traço branco) funciona.
  *
- * O texto é o mesmo que o dono aprovou: nada de promessa de origem
- * ou garantia que não possa ser comprovada (ver
- * docs/RELATORIO-REDESIGN.md).
+ * A linha de apoio não promete origem nem garantia: fica no que a loja
+ * mostra e sustenta — preço no anúncio e pátio aberto para visita.
  */
 export function Home() {
   const { motos } = useCatalogo()
@@ -113,7 +112,7 @@ export function Home() {
                 <br className="hidden lg:block" /> em Belo Horizonte.
               </h1>
               <p className="corpo mt-2 max-w-[32ch] text-sm leading-6 text-texto-2 sm:mt-5 sm:max-w-[38ch] sm:text-base sm:leading-[1.55] lg:mt-6 lg:max-w-[36ch] lg:text-[1.25rem] lg:leading-[1.45]">
-                Realizando sonhos sobre duas rodas.
+                Seminovas com preço na etiqueta e a loja aberta para você ver de perto.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3 sm:mt-7 lg:mt-8">
                 <Link
@@ -180,8 +179,8 @@ export function Home() {
             <div className="mt-12">
               <p className="titulo text-2xl text-texto">Motos no caminho</p>
               <p className="corpo mt-3 text-texto-2">
-                O pátio está em virada de estoque. Chama a gente que a gente
-                conta o que está chegando.
+                O pátio está sem motos disponíveis agora. Fale com a loja para
+                saber o que está chegando.
               </p>
               <Link to="/contato" className="btn btn-primary mt-6 h-11 px-5">
                 Falar com a loja

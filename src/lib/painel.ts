@@ -194,19 +194,28 @@ export function rotuloMes(yyyyMm: string): string {
 
 export interface FiltroEstoque {
   busca: string
-  status: MotorcycleStatus | 'todas'
 }
 
 export function filtrarEstoque(motos: Motorcycle[], filtro: FiltroEstoque): Motorcycle[] {
   const termo = slugificar(filtro.busca)
 
   return motos.filter((moto) => {
-    if (filtro.status !== 'todas' && moto.status !== filtro.status) return false
     if (!termo) return true
 
     const alvo = slugificar(
-      `${moto.marca} ${moto.modelo} ${moto.ano} ${moto.categoria} ${moto.slug}`,
+      `${moto.marca} ${moto.modelo} ${moto.ano} ${moto.slug}`,
     )
     return alvo.includes(termo)
   })
+}
+
+/**
+ * Dias inteiros desde o cadastro — há quanto tempo a moto está na loja.
+ * `null` quando a linha não traz a data (catálogo de fallback, sem banco).
+ */
+export function diasNaLoja(moto: Motorcycle, agora = new Date()): number | null {
+  if (!moto.criadoEm) return null
+  const entrada = Date.parse(moto.criadoEm)
+  if (!Number.isFinite(entrada)) return null
+  return Math.max(0, Math.floor((agora.getTime() - entrada) / 86_400_000))
 }

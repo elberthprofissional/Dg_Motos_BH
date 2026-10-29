@@ -9,7 +9,8 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 > na aba **Configurações** do `/admin`: no projeto com Supabase, o valor é
 > salvo na tabela `site_settings` e vale para todos os visitantes na hora
 > (sem rebuild) — o `localStorage` fica só como cache/fallback.
-> Ver `docs/SUPABASE.md` e `supabase/migrations/05_configuracoes_da_loja.sql`.
+> Ver `docs/SUPABASE.md` e, em `supabase/migrations/`, `01_esquema.sql`
+> (tabela) e `04_dados_iniciais.sql` (registro `loja`).
 
 ## 1. WhatsApp oficial (crítico)
 
@@ -104,7 +105,7 @@ Sem Supabase, o caminho é pelo código:
 
 1. Abra `src/data/motorcycles.ts`.
 2. Cada moto é um objeto com `marca, modelo, ano, preco, quilometragem,
-   cilindrada, categoria, descricao, especificacoes, imagens, emPromocao,
+   cilindrada, descricao, especificacoes, imagens, emPromocao,
    precoAntes, status, slug`.
 3. Para **adicionar**: copie um bloco existente, mude `id`, `slug`
    (formato `marca-modelo-ano`) e os dados.

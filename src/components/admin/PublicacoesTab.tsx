@@ -272,15 +272,13 @@ export function PublicacoesTab({
   return (
     <section className="publicacoes-pagina mx-auto max-w-6xl" aria-labelledby="publicacoes-titulo">
       <header className="publicacoes-cabecalho">
-        <div className="publicacoes-titulo-linha">
-          <div className="min-w-0">
-            <h2 id="publicacoes-titulo" className="publicacoes-h2">
-              Sonhos realizados
-            </h2>
-            <p className="publicacoes-subtitulo">
-              Cada entrega vira foto no site. A data entra sozinha, no dia do envio.
-            </p>
-          </div>
+        <div className="estoque-titulo-linha">
+          <h2 id="publicacoes-titulo" className="estoque-h1">
+            Sonhos realizados
+            <span className="estoque-h1-ponto" aria-hidden="true">
+              .
+            </span>
+          </h2>
 
           <AreaUploadFoto
             {...entrada}
@@ -436,7 +434,7 @@ function ErroPublicacoes({ erro, onTentar }: { erro: string; onTentar: () => voi
         <summary className="cursor-pointer text-xs text-steel-500">Detalhe técnico</summary>
         <p className="mt-2 text-xs leading-relaxed break-words text-steel-500">{erro}</p>
         <p className="mt-2 text-xs leading-relaxed text-steel-500">
-          Se a tabela ainda não existe, aplique a migração 08 descrita em supabase/README.md.
+          Se a tabela ainda não existe, aplique supabase/migrations/01_esquema.sql (tabela `entregas`).
         </p>
       </details>
     </section>

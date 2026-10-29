@@ -46,7 +46,7 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
                 Sonhos <span className="text-marca">realizados</span>
               </h2>
               <p className="mt-3 max-w-[46ch] text-sm leading-relaxed text-texto-2 sm:text-base">
-                Mais do que uma compra: um sonho realizado.
+                Clientes que já saíram da loja com a moto na mão.
               </p>
             </div>
           </header>

@@ -65,7 +65,7 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
 
   const lead = referencia
     ? referencia.resumo
-    : `${moto.categoria} ${moto.ano}${
+    : `${moto.marca} ${moto.modelo} ${moto.ano}${
         moto.quilometragem != null ? ` com ${formatKm(moto.quilometragem)}` : ''
       } no pátio da DG Motos, em Belo Horizonte.`
 
@@ -73,7 +73,6 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
     { label: 'Ano', value: String(moto.ano) },
     { label: 'Quilometragem', value: formatKm(moto.quilometragem) },
     ...(moto.cilindrada ? [{ label: 'Cilindrada', value: `${moto.cilindrada} cc` }] : []),
-    { label: 'Categoria', value: moto.categoria },
     { label: 'Situação', value: rotuloStatus(moto.status) },
   ]
 
@@ -101,7 +100,6 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
   const resumoTecnico: { rotulo: string; valor: string; incerto?: boolean }[] = [
     { rotulo: 'Ano', valor: String(moto.ano) },
     { rotulo: 'Quilometragem', valor: formatKm(moto.quilometragem) },
-    { rotulo: 'Categoria', valor: moto.categoria },
     {
       rotulo: 'Cilindrada',
       valor: moto.cilindrada ? `${moto.cilindrada} cc` : 'A confirmar',
@@ -191,7 +189,7 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
           <div className="flex flex-col gap-7 sm:gap-8 lg:grid lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] lg:items-center lg:gap-10 xl:gap-14">
             <div className="order-1 min-w-0">
               <p className="text-[11px] font-semibold tracking-[0.14em] text-texto-3 uppercase">
-                {moto.categoria} · {moto.ano}
+                {moto.ano}
               </p>
 
               <h2 className="mt-3 font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-[0.98] font-bold tracking-[-0.035em] break-words text-balance text-texto">
@@ -235,11 +233,11 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
 
                 {precoIncompleto ? (
                   <p className="mt-2 max-w-[40ch] text-xs leading-relaxed text-texto-2">
-                    O valor desta unidade está em conferência na loja.
+                    O preço desta moto está em conferência na loja.
                   </p>
                 ) : precoParaConfirmar ? (
                   <p className="mt-2 max-w-[40ch] text-xs leading-relaxed text-texto-2">
-                    Valor cadastrado. Confirme o preço com a loja antes de negociar.
+                    Confirme o preço com a loja antes de negociar.
                   </p>
                 ) : null}
               </div>
@@ -344,8 +342,8 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
 
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-line pt-5">
         <p className="max-w-[58ch] text-xs leading-relaxed text-steel-500">
-          A prévia mostra o anúncio como está agora. Mudar o status ou excluir vale na hora, para o
-          site e para o painel.
+          A prévia mostra o anúncio como está no site agora. Mudar o status ou excluir
+          já reflete no site e no painel.
         </p>
 
         {/* Cada ação ocupa a linha que precisa e as duas compartilham a

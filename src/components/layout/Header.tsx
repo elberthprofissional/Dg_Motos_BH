@@ -14,9 +14,9 @@ const NAV = [
 ]
 
 const WA_TEXTO: Record<string, string> = {
-  '/': 'Olá! Gostaria de consultar o estoque da DG Motos.',
+  '/': 'Olá! Quero ver as motos do estoque da DG Motos.',
   '/estoque': 'Olá! Vi o catálogo e quero saber mais sobre uma moto.',
-  '/contato': 'Olá! Gostaria de falar com a equipe da DG Motos.',
+  '/contato': 'Olá! Vim pelo site e quero falar com a equipe da DG Motos.',
 }
 
 /**

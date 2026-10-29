@@ -1,5 +1,4 @@
-import type { Motorcycle, MotorcycleCategory } from '../types'
-import type { BikeFilterState } from '../types'
+import type { Motorcycle, BikeFilterState } from '../types'
 
 export const PRECO_MAX = 60000
 /** Piso da busca: 0 = "sem chão", a faixa abre do zero como a Barroca. */
@@ -19,15 +18,6 @@ export const ORDENACOES: { value: BikeFilterState['ordenacao']; label: string }[
   { value: 'relevancia', label: 'Relevância' },
 ]
 
-export const CATEGORIAS: MotorcycleCategory[] = [
-  'Street',
-  'Trail',
-  'Naked',
-  'Scooter',
-  'Esportiva',
-  'Custom',
-]
-
 export const FILTROS_PADRAO: BikeFilterState = {
   busca: '',
   marca: '',
@@ -35,7 +25,6 @@ export const FILTROS_PADRAO: BikeFilterState = {
   precoMin: PRECO_MIN,
   precoMax: PRECO_MAX,
   anoMin: ANO_MIN,
-  categoria: 'todas',
   ordenacao: 'relevancia',
 }
 
@@ -55,19 +44,6 @@ export function marcasDisponiveis(motos: Motorcycle[]): string[] {
   return [...new Set(motos.map((m) => m.marca.trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b, 'pt-BR'),
   )
-}
-
-/**
- * Categorias presentes no estoque, na ordem canônica de CATEGORIAS.
- *
- * O filtro público só oferece o que existe de verdade: um chip "Scooter"
- * sem nenhuma scooter no catálogo é um filtro que sempre leva ao estado
- * vazio — ruído, não ajuda. Quem consome decide: com menos de duas
- * categorias distintas não vale mostrar o controle.
- */
-export function categoriasDisponiveis(motos: Motorcycle[]): MotorcycleCategory[] {
-  const presentes = new Set(motos.map((m) => m.categoria).filter(Boolean))
-  return CATEGORIAS.filter((c) => presentes.has(c))
 }
 
 /**
@@ -103,7 +79,6 @@ export function filtrarMotos(
     if (f.precoMin > PRECO_MIN && m.preco < f.precoMin) return false
     if (f.precoMax < precoMaximo && m.preco > f.precoMax) return false
     if (f.anoMin > ANO_MIN && m.ano < f.anoMin) return false
-    if (f.categoria !== 'todas' && m.categoria !== f.categoria) return false
     if (busca) {
       const alvo = `${m.marca} ${m.modelo} ${m.ano}`.toLowerCase()
       if (!alvo.includes(busca)) return false
@@ -136,7 +111,6 @@ export function temFiltroAtivo(f: BikeFilterState, precoMaximo = PRECO_MAX): boo
     f.precoMin > PRECO_MIN ||
     f.precoMax < precoMaximo ||
     f.anoMin > ANO_MIN ||
-    f.categoria !== 'todas' ||
     f.ordenacao !== 'relevancia'
   )
 }

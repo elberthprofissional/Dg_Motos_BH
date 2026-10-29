@@ -5,6 +5,7 @@ import type {
   StatusEntrega,
 } from '../data/entregas'
 import { BUCKET_ENTREGAS, getSupabase } from './supabase'
+import { comprimirParaWebp, FOTO_TAMANHO_MAX_MB } from './imagens'
 
 interface LinhaEntrega {
   id: string
@@ -269,30 +270,6 @@ export async function atualizarFotosEntrega(id: string, fotos: string[]): Promis
 }
 
 /**
- * Comprime no navegador antes de subir: economiza o bucket e acelera a
- * galeria. Mesma regra das fotos do estoque (1600px, WebP 0.82).
- */
-async function comprimirFoto(arquivo: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(arquivo)
-  try {
-    const escala = Math.min(1, 1600 / bitmap.width)
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.round(bitmap.width * escala)
-    canvas.height = Math.round(bitmap.height * escala)
-    const contexto = canvas.getContext('2d')
-    if (!contexto) throw new Error('Este navegador não conseguiu preparar a foto.')
-    contexto.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-    const resultado = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, 'image/webp', 0.82),
-    )
-    if (!resultado) throw new Error('Não foi possível converter a foto.')
-    return resultado
-  } finally {
-    bitmap.close()
-  }
-}
-
-/**
  * Sobe as fotos de uma publicação e devolve caminho + URL assinada.
  *
  * Falha parcial desfaz tudo o que subiu: uma publicação nunca é
@@ -306,8 +283,8 @@ export async function enviarFotosEntrega(
   if (arquivos.some((arquivo) => !arquivo.type.startsWith('image/'))) {
     throw new Error('Só fotos: escolha arquivos de imagem.')
   }
-  if (arquivos.some((arquivo) => arquivo.size > 12 * 1024 * 1024)) {
-    throw new Error('Cada foto precisa ter até 12 MB.')
+  if (arquivos.some((arquivo) => arquivo.size > FOTO_TAMANHO_MAX_MB * 1024 * 1024)) {
+    throw new Error(`Cada foto precisa ter até ${FOTO_TAMANHO_MAX_MB} MB.`)
   }
   if (arquivos.length > 10) {
     throw new Error('Até 10 fotos por publicação.')
@@ -321,7 +298,7 @@ export async function enviarFotosEntrega(
   try {
     for (const arquivo of arquivos) {
       const caminho = `${entregaId}/${crypto.randomUUID()}.webp`
-      const blob = await comprimirFoto(arquivo)
+      const blob = await comprimirParaWebp(arquivo)
       const { error: erroUpload } = await sb.storage
         .from(BUCKET_ENTREGAS)
         .upload(caminho, blob, { contentType: 'image/webp', upsert: false })
