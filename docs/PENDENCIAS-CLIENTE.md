@@ -85,6 +85,21 @@ moto + showroom + logo. Elas foram convertidas para WebP e já estão no site.
   cliente antes de publicar; a edição também pode ser feita em
   `/admin → Configurações`.
 
+## 7. Domínio (crítico)
+
+- O site está publicado em `https://dg-motos-bh.vercel.app`, mas todos os
+  endereços internos — sitemap, Open Graph, canonical e JSON-LD — apontam
+  para `https://dgmotos.com.br`, definido em `src/data/site.ts` →
+  `SITE_URL`.
+- **`dgmotos.com.br` hoje serve outro site**: o sitemap de lá lista
+  `/sobre-nos`, `/avaliacao` e `/financiamento`, páginas que não existem
+  neste projeto. Enquanto o domínio não apontar para a Vercel, o Google
+  lê os canonicals deste site e encontra conteúdo diferente no destino.
+- Para resolver: painel da Vercel do projeto → **Settings → Domains** →
+  adicionar `dgmotos.com.br` e seguir as instruções de DNS.
+- `SITE_URL` já está com o valor certo; o que falta é o domínio chegar
+  na Vercel.
+
 ---
 
 ## Como atualizar o estoque no dia a dia
