@@ -5,8 +5,7 @@
 # O "!" no final força o redirect mesmo com o HTML antigo ainda
 # existindo no deploy — sem ele o Netlify/Cloudflare serviria o
 # arquivo estático e ignoraria a regra.
-/moto/honda-start-2024-2          /moto/honda-start-2024            301!
-/moto/honda-titan-2022-2022       /moto/honda-titan-2024            301!
+/moto/honda-titan-2022-2022       /moto/honda-titan-2024-2        301!
 /moto/honda-xre-300-preta-2018    /moto/honda-xre-300-verde-2017    301!
 /moto/yamaha-fezer-2024           /moto/yamaha-fazer-2024           301!
 

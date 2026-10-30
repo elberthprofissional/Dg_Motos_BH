@@ -49,12 +49,20 @@ update public.motorcycles set modelo = 'Titan'
 -- ------------------------------------------------------------
 -- PARTE 2 — slugs
 -- Trocar slug muda a URL da ficha. Por isso:
---   1. cada troca primeiro confere se o slug de destino está
---      livre — se estiver ocupado, o `raise exception` aborta
---      a transação inteira e nada muda;
+--   1. cada troca confere se o slug de destino está livre. Se
+--      estiver ocupado, ela é PULADA com um aviso (RAISE NOTICE)
+--      e as seguem adiante — ocupado aqui quase sempre é moto na
+--      lixeira, que a vitrine não vê mas o banco ainda guarda;
 --   2. os redirects correspondentes já estão em `vercel.json`
 --      (produção) e em `public/_redirects` (Netlify e
 --      Cloudflare), para o link antigo não virar 404.
+--
+-- Slug que NÃO entra aqui, de propósito:
+--   `honda-start-2024-2` → `honda-start-2024` seria o sonho do
+--   dono, mas o slug base está com uma moto na lixeira. Tirar o
+--   sufixo agora roubaria a URL de uma moto que ainda pode
+--   voltar da lixeira. Deixa como está.
+--
 -- As pares `de → para` ficam numa tabela VALUES percorrida por
 -- cursor: mais legível que array bidimensional, que o FOREACH
 -- do PL/pgSQL nem aceita sem SLICE.
@@ -66,32 +74,41 @@ declare
 begin
   for reg in
     select * from (values
-      ('honda-start-2024-2',       'honda-start-2024'),
-      ('honda-titan-2022-2022',    'honda-titan-2024'),
+      ('honda-titan-2022-2022',    'honda-titan-2024-2'),
       ('honda-xre-300-preta-2018', 'honda-xre-300-verde-2017'),
       ('yamaha-fezer-2024',        'yamaha-fazer-2024')
     ) as t(de, para)
   loop
-    -- Vistoria: destino precisa estar livre antes de qualquer troca.
     select slug into ocupado from public.motorcycles where slug = reg.para;
     if ocupado is not null then
-      raise exception 'Slug de destino ocupado: "%" já existe. Nada foi alterado.', reg.para;
+      raise notice 'PULADO: o slug "%" já está em uso, então "%" ficou como estava.', reg.para, reg.de;
+      continue;
     end if;
 
-    -- Troca. `motorcycle_images` liga por motorcycle_id, não por
-    -- slug, então as fotos acompanham a moto sozinhas.
+    -- `motorcycle_images` liga por motorcycle_id, não por slug,
+    -- então as fotos acompanham a moto sozinhas.
     update public.motorcycles set slug = reg.para where slug = reg.de;
     if not found then
-      raise exception 'Slug de origem não encontrado: "%". Nada foi alterado.', reg.de;
+      raise notice 'PULADO: não achei nenhuma moto com o slug "%".', reg.de;
     end if;
   end loop;
 end $$;
 
 commit;
 
--- Conferência final: as 16 motos com os slugs novos. Roda junto
--- com o script e mostra a tabela na tela, para dar para bater o
--- olho antes de sair do SQL Editor.
+-- Conferência 1: o catálogo visível, com os slugs do jeito que
+-- ficaram. Roda junto com o script e mostra na tela.
 select slug, modelo, ano, status
   from public.motorcycles
+ where lixeira_em is null
  order by marca, modelo;
+
+-- Conferência 2: o que está guardado na lixeira. A vitrine não
+-- mostra, mas essas motos ainda ocupam slug no banco. Moto na
+-- lixeira é limpa sozinha pelo agendamento de 30 dias (função
+-- limpar_lixeira_vencida) — não tem botão de esvaziar no painel,
+-- que serve para a lixeira de fotos do mural.
+select slug, modelo, ano, lixeira_em
+  from public.motorcycles
+ where lixeira_em is not null
+ order by lixeira_em;

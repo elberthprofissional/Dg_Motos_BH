@@ -2,13 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
-      "source": "/moto/honda-start-2024-2",
-      "destination": "/moto/honda-start-2024",
-      "permanent": true
-    },
-    {
       "source": "/moto/honda-titan-2022-2022",
-      "destination": "/moto/honda-titan-2024",
+      "destination": "/moto/honda-titan-2024-2",
       "permanent": true
     },
     {
