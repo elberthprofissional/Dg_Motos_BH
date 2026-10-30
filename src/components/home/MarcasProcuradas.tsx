@@ -35,12 +35,17 @@ function ListaDeMarcas({ copia }: { copia: number }) {
           key={`${copia}-${marca}`}
           className="flex w-28 shrink-0 items-center justify-center sm:w-36"
         >
+          {/* As logos vêm coloridas e cada marca tem sua própria luz:
+              o azul da Suzuki e o anel preto da BMW somem na bancada,
+              enquanto o vermelho da Yamaha grita. Cinza claro e alto
+              igual coloca todas no mesmo degrau — e devolve o vermelho
+              ao papel exclusivo de carimbo do site. */}
           <img
             src={logoDaMarca(marca)}
             alt={decorativa ? '' : marca}
             width={144}
             height={40}
-            className="block h-9 w-28 object-contain opacity-85 sm:h-10 sm:w-36"
+            className="block h-9 w-28 object-contain opacity-90 grayscale brightness-125 sm:h-10 sm:w-36"
             decoding="async"
           />
         </li>

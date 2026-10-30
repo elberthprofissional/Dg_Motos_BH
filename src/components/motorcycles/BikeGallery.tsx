@@ -185,7 +185,7 @@ export function BikeGallery({
           onClick={abrirAmpliada}
           className={
             app
-              ? 'absolute top-3 right-3 z-10 grid size-10 place-items-center rounded-full bg-neutral-950/70 text-white backdrop-blur-md transition-colors hover:bg-marca focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
+              ? 'absolute top-3 right-3 z-10 grid size-11 place-items-center rounded-full bg-neutral-950/70 text-white backdrop-blur-md transition-colors hover:bg-marca focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
               : 'absolute top-3 right-3 z-10 inline-flex h-11 items-center gap-2 bg-fundo/90 px-3 text-sm font-semibold text-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
           }
           aria-label={`Ampliar foto de ${titulo}`}

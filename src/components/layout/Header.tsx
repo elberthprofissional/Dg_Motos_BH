@@ -125,7 +125,7 @@ export function Header() {
           <Link
             to="/"
             aria-label="DG Motos — Página inicial"
-            className="flex items-center gap-3"
+            className="flex min-h-11 items-center gap-3"
           >
             <img
               src="/logo.webp"

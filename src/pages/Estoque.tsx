@@ -210,6 +210,11 @@ export function Estoque() {
 
           {/* Resultado */}
           <div className="min-w-0 flex-1">
+            {/* A vitrine abre direto no grid, sem título visível — mas
+                a página precisa de um h1 para o leitor de tela e para
+                o buscador. O sr-only entrega o nome sem mexer no
+                desenho compacto da barra de filtros. */}
+            <h1 className="sr-only">Estoque de motos seminovas em Belo Horizonte</h1>
             <h2 className="sr-only">Resultados do estoque</h2>
 
             {/* Barra de filtros do desktop: uma linha acima do grid, à la
@@ -380,7 +385,7 @@ export function Estoque() {
                 onClick={(e) => abrirFolha(e.currentTarget)}
                 aria-haspopup="dialog"
                 aria-expanded={filtrosAbertos}
-                className="btn btn-secondary h-9 shrink-0 gap-2 rounded-lg px-4 text-[13px]"
+                className="btn btn-secondary h-11 shrink-0 gap-2 rounded-lg px-4 text-[13px]"
               >
                 <SlidersHorizontal className="size-4" aria-hidden="true" />
                 Filtros

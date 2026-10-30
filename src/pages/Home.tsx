@@ -39,6 +39,9 @@ export function Home() {
   // mostrar o link "Ver todas as entregas".
   const { entregas } = useEntregasPublicadas(LIMITE_MURAL)
 
+  // O título carrega as palavras que o cliente digita ("seminovas",
+  // "Belo Horizonte"): é o pedaço de texto que o Google mostra nos
+  // resultados e o que aparece na aba. Curto demais e a página some.
   usePageMeta(
     'DG Motos — Motos seminovas em Belo Horizonte',
     'Veja as motocicletas seminovas disponíveis no estoque da DG Motos, em Belo Horizonte, MG.',
@@ -103,6 +106,12 @@ export function Home() {
               />
             </picture>
           </div>
+          {/* No celular o título mora dentro da arte do dono, e o h1
+              do desktop vive num bloco escondido — sem este, quem lê
+              a página com leitor de tela no celular ficaria sem
+              título nenhum. Um h1 sr-only entrega o mesmo nome sem
+              aparecer na tela; `lg:hidden` evita dois h1 no desktop. */}
+          <h1 className="sr-only lg:hidden">Motos seminovas em Belo Horizonte</h1>
           <div className="container-site relative z-10 hidden flex-1 flex-col pt-6 pb-0 sm:pt-8 sm:pb-0 lg:flex lg:justify-end lg:py-12 xl:py-14">
             <div className="hero-texto max-w-[18rem] sm:max-w-[24rem] lg:max-w-[46rem] xl:max-w-[54rem]">
               {/* A cidade e a loja já estão no título e no cabeçalho:
@@ -154,17 +163,24 @@ export function Home() {
           ============================================================ */}
       <section id="acervo" className="bg-fundo pt-9 pb-14 sm:pt-14 sm:pb-20">
         <div className="container-site">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="titulo text-texto">Motos disponíveis</h2>
-            </div>
+          {/* Título e atalho na mesma linha em qualquer largura: no
+              celular o título desce um degrau e o botão encurta o
+              rótulo, então os dois dividem a primeira dobra sem
+              empilhar e sem transbordar os 390 px. */}
+          <div className="flex items-center justify-between gap-3 sm:items-end sm:gap-6">
+            <h2 className="titulo text-[1.35rem] sm:text-(length:--step-head) text-texto">
+              Motos disponíveis
+            </h2>
 
-            <div className="flex flex-wrap items-center gap-5">
-              <Link to="/estoque" className="btn btn-secondary h-11 gap-2 px-5 text-sm">
-                Ver todo o estoque
-                <ArrowUpRight className="size-4" aria-hidden="true" />
-              </Link>
-            </div>
+            <Link
+              to="/estoque"
+              aria-label="Ver catálogo completo"
+              className="btn btn-secondary h-11 shrink-0 gap-1.5 px-3.5 text-[13px] sm:h-11 sm:gap-2 sm:px-5 sm:text-sm"
+            >
+              <span className="sm:hidden">Ver estoque</span>
+              <span className="hidden sm:inline">Ver catálogo completo</span>
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
           </div>
 
           {patio.length > 0 ? (

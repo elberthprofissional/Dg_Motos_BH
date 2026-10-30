@@ -56,14 +56,14 @@ export function Footer() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="inline-flex min-h-8 items-center text-sm text-texto-2 transition-colors hover:text-texto"
+                className="inline-flex min-h-11 items-center text-sm text-texto-2 transition-colors hover:text-texto sm:min-h-9"
               >
                 {item.label}
               </Link>
             ))}
             <a
               href="/#sonhos"
-              className="inline-flex min-h-8 items-center text-sm text-texto-2 transition-colors hover:text-texto"
+              className="inline-flex min-h-11 items-center text-sm text-texto-2 transition-colors hover:text-texto sm:min-h-9"
             >
               Sonhos realizados
             </a>
@@ -89,7 +89,7 @@ export function Footer() {
                 href={wa}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-8 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto"
+                className="inline-flex min-h-11 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto sm:min-h-9"
               >
                 <IconeWhatsapp className="size-4 shrink-0" aria-hidden="true" />
                 <span>WhatsApp</span>
@@ -103,7 +103,7 @@ export function Footer() {
                 href={config.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-8 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto"
+                className="inline-flex min-h-11 items-center gap-2 text-sm text-texto-2 transition-colors hover:text-texto sm:min-h-9"
               >
                 <InstagramIcon className="size-4 shrink-0" aria-hidden="true" />
                 <span className="underline decoration-texto-3/40 underline-offset-4 transition-colors hover:decoration-texto">
@@ -118,7 +118,7 @@ export function Footer() {
           <p>© {ANO_ATUAL} DG Motos · Belo Horizonte, MG.</p>
           <Link
             to="/admin"
-            className="inline-flex min-h-8 items-center gap-2 transition-colors hover:text-texto-2"
+            className="inline-flex min-h-11 items-center gap-2 transition-colors hover:text-texto-2 sm:min-h-9"
           >
             <Lock className="size-3.5" aria-hidden="true" />
             <span>Acesso restrito</span>
