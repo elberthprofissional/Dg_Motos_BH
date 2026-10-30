@@ -124,10 +124,11 @@
   --cor-papel-claro: #ffffff;
   --cor-tinta: #ffffff;
 
-  /* Verde do WhatsApp: a única cor fora da paleta, e só no botão que
-     leva ao WhatsApp — precisa ser reconhecido de longe como "chama
-     no zap". O texto sobre ele é quase preto (10,6:1); branco sobre
-     este verde daria 1,98:1 e reprovaria na WCAG. */
+  /* Verde do WhatsApp: a única cor fora da paleta, e só no botão
+     flutuante do canto — quem chega de fora precisa reconhecer o
+     "chama no zap" de longe. Nos CTAs dentro do site manda o
+     vermelho da casa. O texto sobre o verde é quase preto (10,6:1);
+     branco sobre este verde daria 1,98:1 e reprovaria na WCAG. */
   --cor-whatsapp: #25d366;
 
   /* --- A folha: o papel da ficha --- */
@@ -240,7 +241,7 @@
   --color-marca-forte: var(--cor-marca-forte);
   --color-ok: var(--cor-ok);
   --color-alerta: var(--cor-alerta);
-  /* Verde do WhatsApp: só no CTA que leva ao WhatsApp. */
+  /* Verde do WhatsApp: só no botão flutuante do canto. */
   --color-whatsapp: var(--cor-whatsapp);
   /* Alias do painel antigo: `border-line`, `divide-line` e `bg-line` do
      admin continuam existindo e passam a seguir o tema em uso. */

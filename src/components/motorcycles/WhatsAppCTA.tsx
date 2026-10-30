@@ -7,10 +7,11 @@ interface WhatsAppCTAProps {
   message: string
   label?: string
   variant?: 'solid' | 'outline'
-  /** Retângulo verde com o glifo oficial do WhatsApp — o único ponto
-      fora da paleta, porque precisa ser reconhecido de longe como
-      "chama no zap". O texto é quase preto (10,6:1 de contraste): o
-      branco sobre este verde daria 1,98:1. */
+  /** Chapa vermelha da casa com o glifo oficial do WhatsApp — o
+      botão da página de contato. O verde do WhatsApp fica só no
+      botão flutuante, que precisa ser reconhecido de longe de fora
+      do site; aqui dentro o vermelho é a identidade da DG Motos, e
+      branco sobre ele dá 4,9:1 de contraste. */
   glifoWhatsapp?: boolean
   className?: string
 }
@@ -30,7 +31,7 @@ export function WhatsAppCTA({
 
   if (glifoWhatsapp) {
     const cls =
-      'inline-flex items-center justify-center gap-2.5 bg-whatsapp text-fundo font-display text-base font-semibold transition-[filter] hover:brightness-95 ' +
+      'inline-flex items-center justify-center gap-2.5 bg-marca text-white font-display text-base font-semibold transition-colors duration-150 hover:bg-marca-forte ' +
       className
 
     if (!href) {

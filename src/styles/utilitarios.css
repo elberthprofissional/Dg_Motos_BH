@@ -22,6 +22,25 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
+  /* A foto da garagem do /contato respira: escala de 1 a 1,04 em
+     28 s — devagar o bastante para ser sentida, não vista. Quem
+     pediu redução de movimento recebe a foto parada; e como a
+     animação mora no CSS, ela funciona sem JavaScript. */
+  @media (prefers-reduced-motion: no-preference) {
+    .foto-respira {
+      animation: foto-respira 28s ease-in-out infinite alternate;
+    }
+
+    @keyframes foto-respira {
+      from {
+        transform: scale(1);
+      }
+      to {
+        transform: scale(1.04);
+      }
+    }
+  }
+
   /* Rolagem horizontal sem barra visível (carrossel de marcas). */
   .no-scrollbar {
     scrollbar-width: none;
