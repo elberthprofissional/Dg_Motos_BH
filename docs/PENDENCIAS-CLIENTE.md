@@ -87,18 +87,22 @@ moto + showroom + logo. Elas foram convertidas para WebP e já estão no site.
 
 ## 7. Domínio (crítico)
 
-- O site está publicado em `https://dg-motos-bh.vercel.app`, mas todos os
-  endereços internos — sitemap, Open Graph, canonical e JSON-LD — apontam
-  para `https://dgmotos.com.br`, definido em `src/data/site.ts` →
-  `SITE_URL`.
-- **`dgmotos.com.br` hoje serve outro site**: o sitemap de lá lista
-  `/sobre-nos`, `/avaliacao` e `/financiamento`, páginas que não existem
-  neste projeto. Enquanto o domínio não apontar para a Vercel, o Google
-  lê os canonicals deste site e encontra conteúdo diferente no destino.
-- Para resolver: painel da Vercel do projeto → **Settings → Domains** →
-  adicionar `dgmotos.com.br` e seguir as instruções de DNS.
-- `SITE_URL` já está com o valor certo; o que falta é o domínio chegar
-  na Vercel.
+- O site está publicado em `https://dg-motos-bh.vercel.app` e é para lá
+  que canonical, sitemap, Open Graph e JSON-LD apontam hoje — definido em
+  `src/data/site.ts` → `SITE_URL`.
+- **`dgmotos.com.br` é de OUTRA loja DG Motos** — não é nosso e não deve
+  ser usado em lugar nenhum (o `SITE_URL` original tinha esse valor por
+  descuido, nunca ajustado).
+- Domínio próprio previsto: **`dgmotosbh.com.br`** — ainda não registrado.
+- Quando registrar e apontar para a Vercel:
+  1. Painel da Vercel do projeto → **Settings → Domains** → adicionar
+     `dgmotosbh.com.br` e seguir as instruções de DNS.
+  2. Trocar o domínio em `src/data/site.ts` → `SITE_URL` (grep por
+     `dg-motos-bh.vercel.app`).
+  3. Trocar nas tags `og:url` e `og:image` do `index.html`.
+  4. Trocar a linha `Sitemap:` de `public/robots.txt` (o build regenera
+     o `dist/robots.txt` e o `dist/sitemap.xml` a partir do `SITE_URL`).
+  5. `git push` — um deploy já basta.
 
 ---
 

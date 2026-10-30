@@ -99,7 +99,7 @@ ele funcionar, cadastre a URL de retorno em **Authentication → URL
 Configuration → Redirect URLs**:
 
 ```
-https://dgmotos.com.br/admin/redefinir
+https://dg-motos-bh.vercel.app/admin/redefinir
 http://localhost:5173/admin/redefinir
 ```
 

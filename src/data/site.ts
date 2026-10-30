@@ -14,11 +14,20 @@
 export const WHATSAPP_NUMBER: string | null = null
 
 /**
- * URL final do site em produção (sem barra final).
- * Usada no sitemap, robots.txt e dados estruturados.
- * Ajustar quando o domínio definitivo for publicado.
+ * URL do site no ar (sem barra final).
+ * Usada no sitemap, robots.txt, canonical e dados estruturados.
+ *
+ * ATENÇÃO: o domínio `dgmotos.com.br` é de OUTRA loja DG Motos —
+ * nunca esteve com a gente. Enquanto o domínio próprio não for
+ * registrado, o site vive na Vercel e é para lá que canonical,
+ * sitemap e Open Graph apontam.
+ *
+ * Quando `dgmotosbh.com.br` estiver registrado e apontando para a
+ * Vercel, trocar por `https://dgmotosbh.com.br` AQUI e nas tags
+ * og:url e og:image do `index.html` (grep pelo domínio antigo),
+ * e dar deploy.
  */
-export const SITE_URL = 'https://dgmotos.com.br'
+export const SITE_URL = 'https://dg-motos-bh.vercel.app'
 
 export const SITE = {
   nome: 'DG Motos',

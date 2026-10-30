@@ -2,4 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://dgmotos.com.br/sitemap.xml
+# Gerado de novo no build por scripts/prerender.mjs, a partir do
+# SITE_URL de src/data/site.ts — edite lá se o domínio mudar.
+Sitemap: https://dg-motos-bh.vercel.app/sitemap.xml
