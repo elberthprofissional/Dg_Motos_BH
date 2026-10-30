@@ -125,16 +125,6 @@ export function Contato() {
                   <ArrowUpRight className="size-4" aria-hidden="true" />
                 </a>
               </div>
-
-              <div>
-                <p className="text-sm uppercase tracking-[0.16em] text-texto-3">
-                  Troca
-                </p>
-                <p className="corpo mt-3 text-texto-2">
-                  Aceitamos sua moto usada como parte do pagamento. A avaliação é
-                  feita na loja.
-                </p>
-              </div>
             </div>
           </div>
 
