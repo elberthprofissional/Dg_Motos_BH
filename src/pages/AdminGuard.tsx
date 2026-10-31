@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { Lock, ShieldAlert } from 'lucide-react'
+import { CloudOff, Lock, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../hooks/authContexto'
 import { Button } from '../components/ui/Button'
 
@@ -9,11 +9,16 @@ import { Button } from '../components/ui/Button'
  * Espera a sessão resolver antes de decidir: redirecionar para o login
  * enquanto `carregando` faria o dono cair no login a cada F5.
  *
+ * O painel abre só com "sim" do banco. Quando o banco não responde
+ * (rede, Supabase fora do ar), não é "não" — é "não deu para saber",
+ * e a tela diz isso com um botão de tentar de novo em vez de expulsar
+ * o dono ou entregar o painel a qualquer conta autenticada.
+ *
  * Quando o Supabase não está configurado no build, mostra instruções em
  * vez de redirecionar — assim o developer não acha que o login quebrou.
  */
 export function RotaAdmin({ children }: { children: React.ReactNode }) {
-  const { sessao, carregando, disponivel, admin, sair } = useAuth()
+  const { sessao, carregando, disponivel, admin, acessoIncerto, reverificarAcesso, sair } = useAuth()
 
   if (!disponivel) {
     return (
@@ -46,6 +51,33 @@ export function RotaAdmin({ children }: { children: React.ReactNode }) {
   }
 
   if (!sessao) return <Navigate to="/admin/login" replace />
+
+  // O banco não respondeu a checagem de admin. Não é um "não": é uma
+  // falha de leitura, e o painel só abre com resposta positiva. O dono
+  // fica aqui, com saída e nova tentativa — sem ser expulso e sem ver
+  // uma tela de edição que recusaria tudo.
+  if (acessoIncerto) {
+    return (
+      <div className="container-site flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
+        <CloudOff className="size-8 text-brand-500" aria-hidden="true" />
+        <h1 className="titulo mt-4 text-2xl">Não consegui confirmar seu acesso</h1>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-steel-400">
+          O painel só abre quando o banco confirma que a conta é de administrador. A consulta
+          falhou — pode ser a internet, o Supabase fora do ar ou uma checagem ainda não criada.
+          Tente de novo em instantes.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Button onClick={reverificarAcesso}>Tentar de novo</Button>
+          <Button onClick={() => void sair()} variant="outline">
+            Sair desta conta
+          </Button>
+          <Button to="/" variant="outline">
+            Voltar ao site
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   // Sessão válida, mas ainda perguntando ao banco se a conta é admin.
   if (admin === null) {

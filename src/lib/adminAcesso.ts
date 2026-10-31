@@ -10,8 +10,9 @@ import { getSupabase } from './supabase'
  * é admin.
  *
  * Devolve `null` quando não é possível saber (Supabase fora do ar ou
- * função ainda não criada). Nesse caso o painel não bloqueia:
- * o dono não fica trancado fora por causa de um banco desatualizado.
+ * função ainda não criada). Esse `null` é uma falha de leitura, não um
+ * "pode entrar": quem chama trata como acesso sem confirmar, e o
+ * `AuthProvider` mantém o painel fechado até vir `true`.
  */
 export async function consultarSeAdmin(): Promise<boolean | null> {
   const sb = getSupabase()

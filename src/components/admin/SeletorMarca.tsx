@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Search, X } from 'lucide-react'
 
 /**
@@ -12,7 +12,10 @@ import { Check, Search, X } from 'lucide-react'
  * lugar nenhum, a mesma busca serve para digitar uma nova.
  *
  * No celular a folha sobe do rodapé; na mesa aparece centrada,
- * como um diálogo comum. Esc fecha, igual ao resto do painel.
+ * como um diálogo comum — os dois casos vêm da casca `.dialogo`,
+ * a mesma dos outros diálogos do painel. `<dialog>` nativo entrega
+ * foco preso, Esc e camada superior de graça: aqui dentro a Tab
+ * fica na lista, e não pula para o formulário atrás da folha.
  */
 
 const MARCAS_COMUNS = [
@@ -52,32 +55,43 @@ export function SeletorMarca({
   aberto,
 }: SeletorMarcaProps) {
   const [busca, setBusca] = useState('')
-
-  // Ao abrir: busca começa limpa e o rolar do formulário fica preso
-  // (a folha tem rolagem própria — esbarrar na folha não mexe no form).
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const buscaRef = useRef<HTMLInputElement>(null)
+  const onFecharRef = useRef(onFechar)
   useEffect(() => {
-    if (!aberto) return
-    setBusca('')
-    const anterior = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = anterior
+    onFecharRef.current = onFechar
+  }, [onFechar])
+
+  // Abrir e fechar são o `aberto` do pai virando showModal()/close().
+  // A folha fica montada o tempo todo — o React precisa do nó para a
+  // referência, e a lista já nasce com a busca limpa.
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (aberto && !dialog.open) {
+      setBusca('')
+      // O rolar do formulário fica preso: esbarrar na folha não mexe
+      // no form atrás dela.
+      const anterior = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      dialog.showModal()
+      buscaRef.current?.focus()
+      return () => {
+        document.body.style.overflow = anterior
+      }
     }
+    if (!aberto && dialog.open) dialog.close()
   }, [aberto])
 
-  // Esc fecha; a referência ao onFechar fica valendo do momento em
-  // que o efeito rodou — o setter do pai não muda de identidade útil.
+  // Esc fecha pelo próprio `<dialog>`; o `close` é o único caminho de
+  // saída — clique no fundo, ✕ e escolher a marca passam por aqui.
   useEffect(() => {
-    if (!aberto) return
-    function aoEsc(evento: KeyboardEvent) {
-      if (evento.key === 'Escape') onFechar()
-    }
-    window.addEventListener('keydown', aoEsc)
-    return () => window.removeEventListener('keydown', aoEsc)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aberto])
-
-  if (!aberto) return null
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const aoFechar = () => onFecharRef.current()
+    dialog.addEventListener('close', aoFechar)
+    return () => dialog.removeEventListener('close', aoFechar)
+  }, [])
 
   // Ordem: a marca já escolhida primeiro, depois o estoque, depois
   // as comuns — sem repetir ninguém. A busca filtra esses grupos.
@@ -96,29 +110,28 @@ export function SeletorMarca({
 
   function escolher(marca: string) {
     onEscolher(marca)
-    onFechar()
+    dialogRef.current?.close()
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Escolher a marca da moto"
-      className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center"
+    <dialog
+      ref={dialogRef}
+      className="dialogo dialogo-marcas"
+      aria-labelledby="marcas-titulo"
+      onClick={(evento) => {
+        // O fundo é o próprio `<dialog>`: o painel é filho, então um
+        // clique fora dele fecha a folha.
+        if (evento.target === dialogRef.current) dialogRef.current?.close()
+      }}
     >
-      <button
-        type="button"
-        onClick={onFechar}
-        aria-label="Fechar escolha de marca"
-        className="absolute inset-0 cursor-default bg-black/65"
-      />
-
-      <div className="relative flex max-h-[82vh] w-full flex-col overflow-hidden border-t border-line-forte bg-night-950 sm:max-w-md sm:border">
+      <div className="flex max-h-[inherit] flex-col">
         <header className="flex shrink-0 items-center justify-between border-b border-line px-5 py-3">
-          <h2 className="font-display text-lg font-semibold text-paper">Escolha a marca</h2>
+          <h2 id="marcas-titulo" className="font-display text-lg font-semibold text-paper">
+            Escolha a marca
+          </h2>
           <button
             type="button"
-            onClick={onFechar}
+            onClick={() => dialogRef.current?.close()}
             aria-label="Fechar"
             className="foco-painel grid size-11 cursor-pointer place-items-center text-steel-400 transition-colors hover:text-paper"
           >
@@ -128,7 +141,7 @@ export function SeletorMarca({
 
         {/* A busca é a única mescla de "achar" e "digitar": se o termo
             não casa com nenhuma marca lista, ele se oferece como
-            marca nova Logo embaixo das listas. */}
+            marca nova logo embaixo das listas. */}
         <div className="shrink-0 p-4 pb-2">
           <div className="relative">
             <Search
@@ -136,8 +149,7 @@ export function SeletorMarca({
               aria-hidden="true"
             />
             <input
-              /* eslint-disable-next-line jsx-a11y/no-autofocus */
-              autoFocus
+              ref={buscaRef}
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar ou digitar a marca"
@@ -182,7 +194,7 @@ export function SeletorMarca({
           ) : null}
         </div>
       </div>
-    </div>
+    </dialog>
   )
 }
 

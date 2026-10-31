@@ -15,8 +15,10 @@ interface MenuContaProps {
  * Avatar da conta (só no celular): o caminho para Configurações e Sair,
  * que saíram da barra inferior. Desktop é sidebar.
  *
- * O menu fecha com Esc e clique fora — o painel fica preso ao header;
- * os itens podem trocar de aba sem recarregar.
+ * O painel é um `role="group"`, não um `role="menu"`: o pattern ARIA
+ * de menu obriga navegação por setas e roving tabindex, e para dois
+ * itens isso é peso sem ganho. Os itens são botões comuns, tabuláveis.
+ * Fecha com Esc (devolvendo o foco ao avatar) e com clique fora.
  */
 export function MenuConta({
   aba,
@@ -26,6 +28,7 @@ export function MenuConta({
 }: MenuContaProps) {
   const [aberto, setAberto] = useState(false)
   const referencia = useRef<HTMLDivElement>(null)
+  const gatilhoRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!aberto) return
@@ -35,7 +38,10 @@ export function MenuConta({
       }
     }
     function aoEsc(evento: KeyboardEvent) {
-      if (evento.key === 'Escape') setAberto(false)
+      if (evento.key !== 'Escape') return
+      setAberto(false)
+      // Sem devolver o foco, Esc deixaria a tecla presa no body.
+      gatilhoRef.current?.focus()
     }
     window.addEventListener('mousedown', aoCliqueFora)
     window.addEventListener('keydown', aoEsc)
@@ -49,9 +55,9 @@ export function MenuConta({
     <div className="ml-auto relative lg:hidden" ref={referencia}>
       <button
         type="button"
+        ref={gatilhoRef}
         onClick={() => setAberto((v) => !v)}
         aria-expanded={aberto}
-        aria-haspopup="menu"
         aria-label="Menu da conta"
         className={`foco-painel grid size-10 place-items-center rounded-full border transition-colors ${
           aberto
@@ -64,7 +70,7 @@ export function MenuConta({
 
       {aberto ? (
         <div
-          role="menu"
+          role="group"
           aria-label="Conta"
           className="absolute right-0 top-[3.25rem] z-50 w-52 overflow-hidden rounded-lg border border-line bg-sidebar shadow-xl shadow-black/40"
         >
@@ -73,7 +79,6 @@ export function MenuConta({
           </p>
           <button
             type="button"
-            role="menuitem"
             onClick={() => {
               setAberto(false)
               onIrParaConfiguracoes()
@@ -90,7 +95,6 @@ export function MenuConta({
           </button>
           <button
             type="button"
-            role="menuitem"
             onClick={() => {
               setAberto(false)
               onPedirSaida()

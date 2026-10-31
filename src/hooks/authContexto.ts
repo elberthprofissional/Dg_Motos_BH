@@ -16,9 +16,17 @@ export interface EstadoAuth {
   disponivel: boolean
   /**
    * A conta logada administra a loja? `null` enquanto a consulta não
-   * respondeu — ou quando não foi possível perguntar ao banco.
+   * respondeu. Só `true` abre o painel — fechado por padrão.
    */
   admin: boolean | null
+  /**
+   * `true` quando o banco não respondeu a checagem de admin e o acesso
+   * ficou sem confirmar. A guarda mostra o aviso com "tentar de novo"
+   * em vez de abrir ou expulsar.
+   */
+  acessoIncerto: boolean
+  /** Pergunta de novo ao banco — o botão do aviso de acesso incerto. */
+  reverificarAcesso: () => void
   /** Resolve com a mensagem de erro, ou `null` em caso de sucesso. */
   entrar: (email: string, senha: string) => Promise<string | null>
   sair: () => Promise<void>

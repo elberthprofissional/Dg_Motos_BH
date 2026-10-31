@@ -15,9 +15,13 @@ import { VendasContexto } from './vendasContexto'
 /**
  * Texto quando a edição de `sales` é recusada em silêncio.
  *
- * A política de UPDATE de `sales` vem da 02_seguranca_e_storage.sql: sem
- * ela, o PostgREST devolve 0 linhas (ou `PGRST116` no `.single()`) sem
- * erro nenhum — e o painel mostraria "salvo" sem ter salvo nada.
+ * A política de UPDATE e DELETE de `sales` vem da
+ * 02_seguranca_e_storage.sql: sem ela, o PostgREST devolve 0 linhas (ou
+ * `PGRST116` no `.single()`) sem erro nenhum — e o painel mostraria
+ * "salvo" ou "excluído" sem ter feito nada.
+ *
+ * Só é usado depois de confirmar que a linha existia: 0 linhas sobre
+ * uma linha inexistente é sucesso, não recusa.
  */
 const ERRO_EDICAO_VENDA =
   'O banco recusou a alteração: aplique supabase/migrations/02_seguranca_e_storage.sql no Supabase e tente de novo.'
@@ -129,8 +133,21 @@ export function VendasProvider({ children }: { children: ReactNode }) {
       if (!sb) return 'Supabase não configurado.'
       if (!motoId) return null
 
-      // `.select` devolve as linhas tocadas: sem ele, uma atualização
-      // barrada pelo RLS devolve sucesso silencioso (0 linhas).
+      // Passo 1: existe venda ligada a esta moto? Sem esta pergunta,
+      // "0 linhas" no update seria lido como "o RLS barrou" — mas 0
+      // linhas também significa que nunca houve venda nenhuma (moto
+      // marcada como vendida sem lançamento, por exemplo). Aí o dono
+      // veria um pedido de migration para um problema que não existe.
+      const { data: vinculadas, error: erroLeitura } = await sb
+        .from('sales')
+        .select('id')
+        .eq('motorcycle_id', motoId)
+
+      if (erroLeitura) return erroDeVenda(erroLeitura, 'procurar a venda da moto')
+      if (!vinculadas || vinculadas.length === 0) return null
+
+      // Passo 2: `.select` devolve as linhas tocadas. Sem ele, uma
+      // atualização barrada pelo RLS devolve sucesso silencioso.
       const { data, error } = await sb
         .from('sales')
         .update({ motorcycle_id: null })
@@ -150,8 +167,21 @@ export function VendasProvider({ children }: { children: ReactNode }) {
     async (id: string): Promise<string | null> => {
       if (!sb) return 'Supabase não configurado.'
 
-      const { error } = await sb.from('sales').delete().eq('id', id)
-      if (error) return error.message
+      // Passo 1: a linha ainda está lá? Sem isso, um delete recusado
+      // pelo RLS (0 linhas) seria confundido com "venda que já tinha
+      // saido", e o painel mostraria "excluída" sem excluir nada.
+      const { data: existente, error: erroLeitura } = await sb
+        .from('sales')
+        .select('id')
+        .eq('id', id)
+
+      if (erroLeitura) return erroDeVenda(erroLeitura, 'procurar a venda')
+      if (!existente || existente.length === 0) return null
+
+      // Passo 2: `.select` devolve as linhas tocadas pelo delete.
+      const { data, error } = await sb.from('sales').delete().eq('id', id).select('id')
+      if (error) return erroDeVenda(error, 'excluir a venda')
+      if (!data || data.length === 0) return ERRO_EDICAO_VENDA
 
       setVendas((atuais) => atuais.filter((v) => v.id !== id))
       return null

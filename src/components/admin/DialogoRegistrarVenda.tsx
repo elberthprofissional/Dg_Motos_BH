@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useVendas } from '../../hooks/vendasContexto'
-import { buscarCustoCompra } from '../../lib/catalog'
+import { buscarCustoCompra, custoIndisponivel } from '../../lib/catalog'
 import { bikeTitle, formatPrice } from '../../lib/format'
 import { PLACEHOLDER_CARD } from '../../lib/placeholder'
 import { campoLinha } from './campoLinha'
@@ -39,6 +39,10 @@ export function DialogoRegistrarVenda({
   const { salvarVenda } = useVendas()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const campoNomeRef = useRef<HTMLInputElement>(null)
+  const onFecharRef = useRef(onFechar)
+  useEffect(() => {
+    onFecharRef.current = onFechar
+  }, [onFechar])
 
   const [comprador, setComprador] = useState('')
   const [telefone, setTelefone] = useState('')
@@ -46,8 +50,6 @@ export function DialogoRegistrarVenda({
   const [erro, setErro] = useState<string | null>(null)
 
   // Moto nova no diálogo: campos reprovinos + abre o modal natively.
-  const idAberto = moto?.id ?? null
-  const idVenda = venda?.id ?? null
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -60,15 +62,18 @@ export function DialogoRegistrarVenda({
     } else if (!moto && dialog.open) {
       dialog.close()
     }
-  }, [moto, venda, idAberto, idVenda])
+  }, [moto, venda])
 
+  // A referência ao callback fica valendo do momento em que o efeito
+  // rodou: sem ela, um pai que não memoizasse `onFechar` re-registraria
+  // o listener a cada render.
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
-    const aoFechar = () => onFechar()
+    const aoFechar = () => onFecharRef.current?.()
     dialog.addEventListener('close', aoFechar)
     return () => dialog.removeEventListener('close', aoFechar)
-  }, [onFechar])
+  }, [])
 
   async function aoConfirmar() {
     if (!moto || ocupado) return
@@ -84,13 +89,20 @@ export function DialogoRegistrarVenda({
 
     // Numa venda nova o custo vem da ficha pela função do painel. Se o
     // banco ainda não tiver a RPC custo_da_moto (03_funcoes.sql),
-    // registra sem custo em vez de travar o lançamento.
+    // registra sem custo em vez de travar o lançamento — mas uma falha
+    // de verdade não pode passar em silêncio: a venda grava, e o dono
+    // fica sabendo que o lucro ficou sem custo.
     let custoDaMoto: number | null = venda?.custo ?? null
+    let avisoCusto: string | null = null
     if (!venda) {
       try {
         custoDaMoto = await buscarCustoCompra(moto.id)
-      } catch {
+      } catch (e) {
         custoDaMoto = null
+        if (!custoIndisponivel(e)) {
+          avisoCusto =
+            'Não consegui ler o custo de compra desta moto — o histórico fica sem esse número.'
+        }
       }
     }
 
@@ -119,7 +131,10 @@ export function DialogoRegistrarVenda({
     }
     dialogRef.current?.close()
     onSalvo(
-      venda ? 'Dados da venda atualizados.' : `Venda de ${bikeTitle(moto)} registrada para ${nome}.`,
+      venda
+        ? 'Dados da venda atualizados.'
+        : `Venda de ${bikeTitle(moto)} registrada para ${nome}.` +
+            (avisoCusto ? ` ${avisoCusto}` : ''),
     )
   }
 

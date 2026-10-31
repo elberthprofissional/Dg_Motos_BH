@@ -14,7 +14,7 @@
  */
 
 export type { ResultadoCatalogo } from './catalogo/leitura'
-export { buscarCatalogo, buscarCustoCompra, linhaParaMotos } from './catalogo/leitura'
+export { buscarCatalogo, buscarCustoCompra, custoIndisponivel, linhaParaMotos } from './catalogo/leitura'
 
 export type { MotoParaSalvar } from './catalogo/escrita'
 export {

@@ -203,18 +203,45 @@ export async function buscarCatalogo(
 }
 
 /**
+ * Erro da RPC `custo_da_moto`, com o código do Postgres à mão.
+ *
+ * O diálogo de venda precisa separar duas situações que a mensagem
+ * sozinha não distingue: "a função ainda não existe no banco" (seguir
+ * sem custo) e "o banco falhou de verdade" (avisar o dono).
+ */
+export class ErroCusto extends Error {
+  readonly codigo: string | undefined
+  constructor(mensagem: string, codigo?: string) {
+    super(mensagem)
+    this.name = 'ErroCusto'
+    this.codigo = codigo
+  }
+}
+
+/**
+ * `true` quando a RPC `custo_da_moto` não existe no banco — a migration
+ * 03_funcoes.sql ainda não foi aplicada. Qualquer outro erro é uma
+ * falha de verdade e não deve ser engolida.
+ */
+export function custoIndisponivel(e: unknown): boolean {
+  return e instanceof ErroCusto && (e.codigo === '42883' || e.codigo === 'PGRST202')
+}
+
+/**
  * Lê o custo de compra de uma moto pelo RPC do painel.
  *
  * A coluna `custo_compra` não faz parte do select do catálogo (era
  * legível por qualquer visitante). O diálogo de venda chama esta função
- * para gravar o lucro no histórico.
+ * para gravar o lucro no histórico. Lança `ErroCusto` quando o banco
+ * responde com erro — use `custoIndisponivel` para saber se é só a
+ * função que ainda não existe.
  */
 export async function buscarCustoCompra(motoId: string): Promise<number | null> {
   const sb = getSupabase()
   if (!sb) return null
 
   const { data, error } = await sb.rpc('custo_da_moto', { p_moto_id: motoId })
-  if (error) throw new Error(error.message)
+  if (error) throw new ErroCusto(error.message, error.code)
   if (data == null || data === '') return null
   const numero = Number(data)
   return Number.isFinite(numero) ? numero : null

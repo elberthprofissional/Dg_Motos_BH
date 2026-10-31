@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { RootLayout } from './components/layout/RootLayout'
 import { Entrada } from './pages/Entrada'
-import { AuthProvider } from './hooks/useAuth'
+import { AuthProvider } from './hooks/AuthProvider'
 import { VendasProvider } from './hooks/VendasProvider'
 import { RotaAdmin } from './pages/AdminGuard'
 

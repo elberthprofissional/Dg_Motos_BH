@@ -46,8 +46,34 @@ function numeroOuNulo(texto: string): number | null {
   return parseNumeroBR(texto)
 }
 
+/**
+ * Km e cilindrada: 0 é o mesmo que não preenchido.
+ *
+ * O campo mostra vazio para zero, então o estado também não pode
+ * guardar zero — senão a lista diverge do que o dono vê na tela.
+ */
+function positivoOuNulo(texto: string): number | null {
+  const n = numeroOuNulo(texto)
+  return n != null && n > 0 ? n : null
+}
+
 function textoInicial(valor: number | null): string {
   return valor == null || valor === 0 ? '' : formatarNumeroBR(valor)
+}
+
+/** Ano mínimo das motos que a loja vende — mesmo valor do campo HTML. */
+const ANO_MINIMO = 1980
+
+/** Ano do modelo seguinte: a loja já anuncia a moto do ano que vem. */
+const ANO_MAXIMO = new Date().getFullYear() + 1
+
+/**
+ * Ano plausível, com folga para o modelo seguinte. `min`/`max` do input
+ * não seguram submit programático, e o form é `noValidate` — então a
+ * barra é aqui.
+ */
+function anoValido(ano: number): boolean {
+  return Number.isInteger(ano) && ano >= ANO_MINIMO && ano <= ANO_MAXIMO
 }
 
 /**
@@ -216,10 +242,17 @@ export function MotoForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Duplo clique: o botão já nasce desabilitado, mas o clique pode
+    // passar entre o evento e o re-render. O guard aqui mata de vez.
+    if (salvando) return
     setErro(null)
 
     if (!form.marca.trim() || !form.modelo.trim()) {
       setErro('Faltou marca ou modelo.')
+      return
+    }
+    if (!anoValido(form.ano)) {
+      setErro(`Informe o ano da moto — entre ${ANO_MINIMO} e ${ANO_MAXIMO}.`)
       return
     }
     if (!Number.isFinite(form.preco) || form.preco <= 0) {
@@ -291,7 +324,19 @@ export function MotoForm({
         </div>
         <div>
           <label htmlFor="f-ano" className="field-label">Ano *</label>
-          <input id="f-ano" type="number" min={1980} max={2100} className={campoLinha} value={form.ano} onChange={(e) => set('ano', Number(e.target.value))} />
+          {/* Ano vazio aparece vazio, não como 0 — 0 é só o estado
+              interno enquanto o campo não foi preenchido. */}
+          <input
+            id="f-ano"
+            type="number"
+            min={ANO_MINIMO}
+            max={ANO_MAXIMO}
+            inputMode="numeric"
+            className={campoLinha}
+            value={form.ano === 0 ? '' : form.ano}
+            onChange={(e) => set('ano', e.target.value === '' ? 0 : Number(e.target.value))}
+            placeholder="2022"
+          />
         </div>
       </div>
     </Secao>,
@@ -313,7 +358,7 @@ export function MotoForm({
           id="f-km"
           className={campoLinha}
           defaultValue={textoInicial(form.quilometragem)}
-          onChange={(e) => set('quilometragem', numeroOuNulo(e.target.value))}
+          onChange={(e) => set('quilometragem', positivoOuNulo(e.target.value))}
           placeholder="Deixe vazio = Km a confirmar"
         />
       </div>
@@ -413,7 +458,7 @@ export function MotoForm({
           id="f-cc"
           className={campoLinha}
           defaultValue={textoInicial(form.cilindrada)}
-          onChange={(e) => set('cilindrada', numeroOuNulo(e.target.value))}
+          onChange={(e) => set('cilindrada', positivoOuNulo(e.target.value))}
           placeholder="Ex.: 291,6"
         />
       </div>

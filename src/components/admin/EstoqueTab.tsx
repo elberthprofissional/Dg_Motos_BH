@@ -1,93 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import {
-  ArchiveRestore,
-  ArrowRight,
-  CircleDollarSign,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  RotateCw,
-  Trash2,
-} from 'lucide-react'
+import { ArrowRight, Plus, RotateCw } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
-import { motoParaFormulario } from '../../lib/catalog'
 import type { MotoParaSalvar } from '../../lib/catalog'
-import { diasNaLoja, filtrarEstoque, resumirEstoque } from '../../lib/painel'
-import { descontoPercentual, formatKm, formatPrice } from '../../lib/format'
-import { PLACEHOLDER_CARD } from '../../lib/placeholder'
+import { filtrarEstoque, resumirEstoque } from '../../lib/painel'
+import { formatPrice } from '../../lib/format'
 import { CampoBusca } from '../ui/CampoBusca'
-import { Esqueleto } from '../ui/Esqueleto'
 import { MotoForm } from './MotoForm'
-
-/* Vendida não é situação de estoque: a moto sai do pátio e passa a
-   viver na aba Vendidas. Por isso não há filtro "Vendidas" aqui. */
-type OrdemEstoque = 'padrao' | 'preco-desc' | 'preco-asc' | 'ano-desc'
-
-const ORDENS: { valor: OrdemEstoque; rotulo: string }[] = [
-  { valor: 'padrao', rotulo: 'Ordem padrão' },
-  { valor: 'preco-desc', rotulo: 'Maior preço' },
-  { valor: 'preco-asc', rotulo: 'Menor preço' },
-  { valor: 'ano-desc', rotulo: 'Mais novo' },
-]
-
-function ordenarEstoque(motos: Motorcycle[], ordem: OrdemEstoque): Motorcycle[] {
-  if (ordem === 'preco-desc') return [...motos].sort((a, b) => b.preco - a.preco)
-  if (ordem === 'preco-asc') return [...motos].sort((a, b) => a.preco - b.preco)
-  if (ordem === 'ano-desc') return [...motos].sort((a, b) => b.ano - a.ano)
-  return [...motos].sort(
-    (a, b) =>
-      Number(b.emPromocao) - Number(a.emPromocao) ||
-      b.ano - a.ano ||
-      a.modelo.localeCompare(b.modelo, 'pt-BR'),
-  )
-}
-
-function fichaTecnica(moto: Motorcycle): string[] {
-  const itens = [String(moto.ano)]
-  if (moto.cilindrada != null) itens.push(`${moto.cilindrada} cc`)
-  if (moto.quilometragem != null) itens.push(formatKm(moto.quilometragem))
-  return itens
-}
-
-/**
- * Há quanto tempo a moto está na loja, em dias. É o número que mostra
- * o que está encalhando — vale mais que repetir "Disponível" na linha.
- */
-function rotuloNaLoja(moto: Motorcycle): string {
-  const dias = diasNaLoja(moto)
-  if (dias == null) return 'Sem data'
-  if (dias === 0) return 'Hoje'
-  return `${dias} ${dias === 1 ? 'dia' : 'dias'}`
-}
-
-function EsqueletoEstoque() {
-  return (
-    <>
-      {Array.from({ length: 4 }, (_, i) => (
-        <div key={i} className="estoque-linha" role="row" aria-busy="true">
-          <span className="sr-only">Carregando veículo</span>
-          <div className="estoque-celula-veiculo" role="cell">
-            <Esqueleto className="estoque-thumb" />
-            <div className="min-w-0 flex-1">
-              <Esqueleto className="h-3.5 w-2/5" />
-              <Esqueleto className="mt-2 h-3 w-3/5" />
-            </div>
-          </div>
-          <div className="estoque-celula-loja" role="cell">
-            <Esqueleto className="h-3 w-14" />
-          </div>
-          <div className="estoque-celula-valor" role="cell">
-            <Esqueleto className="h-3.5 w-24" />
-          </div>
-          <div className="estoque-celula-acoes" role="cell">
-            <Esqueleto className="h-11 w-full max-w-[14rem]" />
-          </div>
-        </div>
-      ))}
-    </>
-  )
-}
+import { EsqueletoEstoque } from './estoque/EsqueletoEstoque'
+import { LinhaInventario } from './estoque/LinhaInventario'
+import { ORDENS, ordenarEstoque } from './estoque/comum'
+import type { OrdemEstoque } from './estoque/comum'
 
 export function EstoqueTab({
   motos,
@@ -337,182 +259,20 @@ export function EstoqueTab({
             </div>
           </div>
         ) : (
-          visiveis.map((moto) => {
-            const ficha = fichaTecnica(moto)
-            const vendida = moto.status === 'vendida'
-            // Mesmo selo que o cliente vê no site: no inventário é o que
-            // mostra, sem abrir a ficha, que aquela moto está com oferta.
-            const desconto = descontoPercentual(moto)
-            return (
-              <div key={moto.id} className="estoque-linha" role="row">
-                <div className="estoque-celula-veiculo" role="cell">
-                  <div className="estoque-foto">
-                    <img
-                      src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
-                      alt={`${moto.marca} ${moto.modelo}, ${moto.ano}`}
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null
-                        e.currentTarget.src = PLACEHOLDER_CARD
-                      }}
-                    />
-                  </div>
-                  <div className="estoque-veiculo-texto">
-                    {/* O nome é o link da linha inteira: o ::after dele
-                        cobre o cartão, então qualquer clique fora das
-                        ações abre a prévia. Menu e ícones ficam acima. */}
-                    <Link
-                      to={`/admin/estoque/${moto.id}`}
-                      className="estoque-nome estoque-nome-link"
-                      title={`Abrir a prévia de ${moto.marca} ${moto.modelo}`}
-                    >
-                      {moto.marca} {moto.modelo}
-                    </Link>
-                    <p className="estoque-ficha">
-                      {ficha.map((item, i) => (
-                        <span key={i}>
-                          {item}
-                          {i < ficha.length - 1 ? (
-                            <>
-                              {' '}
-                              <span className="estoque-ficha-sep" aria-hidden="true">
-                                ·
-                              </span>{' '}
-                            </>
-                          ) : null}
-                        </span>
-                      ))}
-                    </p>
-                    {desconto != null ? (
-                      <span className="mt-1.5 inline-flex items-center gap-1 bg-marca px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
-                        Oferta
-                        <span className="numeros" aria-hidden="true">
-                          −{desconto}%
-                        </span>
-                        <span className="sr-only"> {desconto}% de desconto</span>
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-
-                {/* Menu ⋯ do cartão: vive só no celular (o CSS esconde
-                    na mesa). Cada item fecha o menu antes de agir, e
-                    Excluir continua passando pela confirmação global. */}
-                <div className="estoque-menu-acoes" data-estoque-menu>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAcoesAbertas((abertas) => (abertas === moto.id ? null : moto.id))
-                    }
-                    aria-expanded={acoesAbertas === moto.id}
-                    aria-haspopup="menu"
-                    aria-label={`Mais ações de ${moto.marca} ${moto.modelo}`}
-                    className="estoque-menu-botao"
-                  >
-                    <MoreHorizontal className="size-5" strokeWidth={1.7} aria-hidden="true" />
-                  </button>
-
-                  {acoesAbertas === moto.id ? (
-                    <div
-                      role="menu"
-                      aria-label={`Ações de ${moto.marca} ${moto.modelo}`}
-                      className="estoque-menu-painel"
-                    >
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setAcoesAbertas(null)
-                          onAlterarStatus(moto, vendida ? 'disponivel' : 'vendida')
-                        }}
-                        className="estoque-menu-item"
-                      >
-                        {vendida ? (
-                          <ArchiveRestore className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                        ) : (
-                          <CircleDollarSign className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                        )}
-                        {vendida ? 'Reativar moto' : 'Marcar como vendida'}
-                      </button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setAcoesAbertas(null)
-                          onEditando({ id: moto.id, dados: motoParaFormulario(moto) })
-                        }}
-                        className="estoque-menu-item"
-                      >
-                        <Pencil className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setAcoesAbertas(null)
-                          onPedirExclusao(moto)
-                        }}
-                        className="estoque-menu-item estoque-menu-item-perigo"
-                      >
-                        <Trash2 className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                        Excluir
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="estoque-celula-loja" role="cell">
-                  <span className="estoque-loja">{rotuloNaLoja(moto)}</span>
-                </div>
-
-                <div className="estoque-celula-valor" role="cell">
-                  <span className="estoque-preco">{formatPrice(moto.preco)}</span>
-                </div>
-
-                <div className="estoque-celula-acoes" role="cell">
-                  <div className="estoque-acoes">
-                    <button
-                      type="button"
-                      onClick={() => onAlterarStatus(moto, vendida ? 'disponivel' : 'vendida')}
-                      className="estoque-acao"
-                      aria-label={
-                        vendida
-                          ? `Reativar ${moto.marca} ${moto.modelo}`
-                          : `Marcar ${moto.marca} ${moto.modelo} como vendida`
-                      }
-                      title={vendida ? 'Reativar' : 'Marcar como vendida'}
-                    >
-                      {vendida ? (
-                        <ArchiveRestore className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                      ) : (
-                        <CircleDollarSign className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onEditando({ id: moto.id, dados: motoParaFormulario(moto) })}
-                      className="estoque-acao"
-                      aria-label={`Editar ${moto.marca} ${moto.modelo}`}
-                      title="Editar"
-                    >
-                      <Pencil className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onPedirExclusao(moto)}
-                      className="estoque-acao estoque-acao-perigo"
-                      aria-label={`Excluir ${moto.marca} ${moto.modelo}`}
-                      title="Excluir"
-                    >
-                      <Trash2 className="size-4" strokeWidth={1.7} aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })
+          visiveis.map((moto) => (
+            <LinhaInventario
+              key={moto.id}
+              moto={moto}
+              menuAberto={acoesAbertas === moto.id}
+              onAlternarMenu={() =>
+                setAcoesAbertas((abertas) => (abertas === moto.id ? null : moto.id))
+              }
+              onFecharMenu={() => setAcoesAbertas(null)}
+              onAlterarStatus={onAlterarStatus}
+              onEditando={onEditando}
+              onPedirExclusao={onPedirExclusao}
+            />
+          ))
         )}
       </div>
     </div>

@@ -5,8 +5,9 @@ import { consultarSeAdmin } from './adminAcesso'
  * A resposta é tri-estado de propósito:
  *   true  → entra no painel;
  *   false → login é desfeito com aviso;
- *   null  → não deu para perguntar (banco antigo/fora do ar); não
- *           bloqueia, porque o RLS continua barrando quem não é admin.
+ *   null  → não deu para perguntar (banco antigo/fora do ar). Não é um
+ *           "pode entrar": o AuthProvider mantém o painel fechado e a
+ *           guarda oferece nova tentativa.
  */
 
 const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }))

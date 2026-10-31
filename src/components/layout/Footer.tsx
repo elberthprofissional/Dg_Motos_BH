@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { Lock } from 'lucide-react'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
 import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
@@ -116,13 +115,8 @@ export function Footer() {
 
         <div className="mt-5 flex flex-col items-start justify-between gap-3 border-t border-painel-3/60 pt-4 text-sm text-texto-3 sm:flex-row sm:items-center">
           <p>© {ANO_ATUAL} DG Motos · Belo Horizonte, MG.</p>
-          <Link
-            to="/admin"
-            className="inline-flex min-h-11 items-center gap-2 transition-colors hover:text-texto-2 sm:min-h-9"
-          >
-            <Lock className="size-3.5" aria-hidden="true" />
-            <span>Acesso restrito</span>
-          </Link>
+          {/* Sem link para /admin aqui de propósito: a área restrita
+              não é anunciada — o dono digita o endereço. */}
         </div>
       </div>
     </footer>

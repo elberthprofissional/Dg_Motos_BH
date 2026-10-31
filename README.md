@@ -21,7 +21,7 @@ restrita, que também se instala como app no celular.
 | Build      | Vite 8 (code-split por rota, prerender das fichas no build) |
 | Estilo     | Tailwind 4 + tokens próprios em `src/index.css`             |
 | Dados      | Supabase (`@supabase/supabase-js`) + RLS no banco           |
-| Qualidade  | oxlint, `tsc --strict`, Vitest (172 testes) + E2E de navegação |
+| Qualidade  | oxlint, `tsc --strict`, Vitest (185 testes) + E2E de navegação |
 | Entrega    | Vercel (produção); compatível com Netlify/Cloudflare Pages  |
 
 ## Rodando local
@@ -158,10 +158,14 @@ Windows e Linux) e o hash tem de bater nos dois arquivos de cabeçalho:
   `supabase/migrations/`. Escrita e leitura do painel exigem estar em
   `public.admins`; `custo_compra` e os dados pessoais das entregas não
   são legíveis pelo anon. A `service_role` nunca entra em `VITE_*`.
-- **Login ≠ acesso ao painel.** A tela de entrada consulta
-  `sou_admin()`: conta autenticada fora de `public.admins` é deslogada
-  com aviso, e a guarda de rota mostra uma tela explicando o motivo. O
-  RLS continua sendo a barreira final.
+- **Login ≠ acesso ao painel.** O login consulta `sou_admin()` na hora:
+  conta autenticada fora de `public.admins` é deslogada com aviso, e a
+  guarda de rota mostra uma tela explicando o motivo. O RLS continua
+  sendo a barreira final.
+- **Fechado por padrão.** O painel abre só com "sim" do banco. Se a
+  checagem falhar (rede, Supabase fora do ar, `sou_admin()` ainda não
+  criada), o dono vê "Não consegui confirmar seu acesso" com botão de
+  tentar de novo — nunca a tela de edição, e nunca um logout à toa.
 - **Lixeira de 30 dias.** O painel apaga o que venceu ao abrir; a
   limpeza agendada via `pg_cron` cumpre o prazo mesmo se o dono ficar
   sem entrar. Arquivos deixados pelo cron podem ser removidos pelo

@@ -51,26 +51,6 @@
     display: none;
   }
 
-  /* Alvo de toque mínimo de 44 px sem alterar o desenho. */
-  .toque-minimo {
-    position: relative;
-  }
-
-  .toque-minimo::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: max(100%, 44px);
-    height: max(100%, 44px);
-    transform: translate(-50%, -50%);
-  }
-
-  .valor-moeda {
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.015em;
-  }
-
   /* Link de escape: aparece só no foco do teclado. */
   .pular-para-conteudo {
     position: absolute;
@@ -114,23 +94,6 @@
 
   .revelar[data-visivel='true'] {
     opacity: 1;
-  }
-
-  /* Entrada da primeira tela: o conteúdo já está no lugar, ele só
-     assenta. Nada de tela vazia esperando. */
-  @keyframes assenta {
-    from {
-      opacity: 0;
-      transform: translateY(14px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  .assenta {
-    animation: assenta 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   /* A foto do showroom respira devagar: é a única imagem que se
@@ -322,6 +285,17 @@
     max-width: min(30rem, 100%);
     border-top: 1px solid var(--cor-borda-forte);
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    overscroll-behavior: contain;
+  }
+
+  /* Folha de escolha de marca: mesma casca do diálogo, só mais baixa —
+     a lista cabe no polegar sem virar rolagem de página. O `overflow`
+     esconde o que estoura a caixa: só a lista rola, o cabeçalho e a
+     busca ficam fixos. */
+  .dialogo-marcas {
+    max-width: min(28rem, calc(100vw - 2rem));
+    max-height: 82vh;
+    overflow: hidden;
     overscroll-behavior: contain;
   }
 
