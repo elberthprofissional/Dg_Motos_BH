@@ -305,7 +305,7 @@ export function useAcoesPainel({
   function pedirSaida() {
     setConfirmacao({
       titulo: 'Sair do painel',
-      descricao: 'Você vai precisar entrar de novo com e-mail e senha.',
+      descricao: 'Deseja encerrar sua sessão?',
       rotuloConfirmar: 'Sair',
       tom: 'neutro',
       onConfirmar: async () => {
