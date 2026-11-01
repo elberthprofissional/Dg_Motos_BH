@@ -128,16 +128,14 @@ export function VendidasTab({
     [motos, vendaDaMoto],
   )
 
-  const resumo = useMemo(() => {
-    const registradas = registros.flatMap(({ venda }) => (venda ? [venda] : []))
-    const comCusto = registradas.filter((venda) => venda.custo != null)
-    return {
-      registradas: registradas.length,
-      faturamento: registradas.reduce((total, venda) => total + venda.valor, 0),
-      comCusto: comCusto.length,
-      lucro: comCusto.reduce((total, venda) => total + (venda.valor - (venda.custo ?? 0)), 0),
-    }
-  }, [registros])
+  // Soma dos valores lançados: é o número que o dono quer ver no topo.
+  const faturamento = useMemo(
+    () =>
+      registros
+        .flatMap(({ venda }) => (venda ? [venda] : []))
+        .reduce((total, venda) => total + venda.valor, 0),
+    [registros],
+  )
 
   return (
     <section className="mx-auto max-w-6xl" aria-labelledby="vendidas-titulo">
@@ -149,9 +147,6 @@ export function VendidasTab({
               .
             </span>
           </h2>
-          {registros.length > 1 ? (
-            <p className="text-[11px] text-steel-500">Mais recentes primeiro.</p>
-          ) : null}
         </div>
       </header>
 
@@ -172,10 +167,9 @@ export function VendidasTab({
         </div>
       ) : (
         <>
-          {/* Dois números de verdade: quantas motos saíram e quanto sobrou.
-              O faturamento não vira um terceiro cartão — ele mora como
-              apoio do primeiro, porque sozinho ele já é a soma das vendas
-              lançadas e repetia a conta na tela. */}
+          {/* Dois números e nada mais: quantas motos saíram e quanto
+              entrou por elas. Sem nota de apoio — a linha de cada
+              venda já guarda o detalhe (data, comprador, margem). */}
           <dl
             className="mt-4 grid grid-cols-2 border border-line bg-painel-2/20"
             aria-label="Resumo das vendas"
@@ -184,13 +178,8 @@ export function VendidasTab({
               <dt className="text-[10px] font-bold tracking-[0.12em] text-steel-500 uppercase">
                 Motos vendidas
               </dt>
-              <dd className="numeros mt-1 font-display text-base leading-none font-bold text-paper sm:text-xl">
+              <dd className="numeros mt-1 font-display text-lg leading-none font-bold text-paper sm:text-xl">
                 {registros.length}
-              </dd>
-              <dd className="mt-1 truncate text-[10px] leading-tight text-steel-500">
-                {resumo.registradas === 0
-                  ? 'nenhuma venda lançada'
-                  : `${formatPrice(resumo.faturamento)} em ${resumo.registradas} ${resumo.registradas === 1 ? 'venda' : 'vendas'}`}
               </dd>
             </div>
 
@@ -198,23 +187,8 @@ export function VendidasTab({
               <dt className="text-[10px] font-bold tracking-[0.12em] text-steel-500 uppercase">
                 Lucro
               </dt>
-              <dd
-                className={`numeros mt-1 truncate font-display text-base leading-none font-bold sm:text-xl ${
-                  resumo.comCusto === 0
-                    ? 'text-steel-500'
-                    : resumo.lucro < 0
-                      ? 'text-marca-texto'
-                      : 'text-ok'
-                }`}
-              >
-                {resumo.comCusto > 0 ? formatPrice(resumo.lucro) : '—'}
-              </dd>
-              <dd className="mt-1 truncate text-[10px] leading-tight text-steel-500">
-                {resumo.comCusto === 0
-                  ? 'sem custo lançado'
-                  : resumo.comCusto < resumo.registradas
-                    ? `${resumo.comCusto} de ${resumo.registradas} vendas com custo`
-                    : `${resumo.comCusto} ${resumo.comCusto === 1 ? 'venda com custo' : 'vendas com custo'}`}
+              <dd className="numeros mt-1 truncate font-display text-lg leading-none font-bold text-ok sm:text-xl">
+                {formatPrice(faturamento)}
               </dd>
             </div>
           </dl>
@@ -251,9 +225,11 @@ export function VendidasTab({
                   key={moto.id}
                   className={`relative flex flex-col border border-line bg-painel-2/20 transition-colors lg:grid lg:items-center lg:gap-5 lg:border-x-0 lg:border-t-0 lg:border-b-line lg:bg-transparent lg:px-3 lg:py-3.5 lg:hover:bg-painel-2/40 lg:last:border-b-0 ${GRADE}`}
                 >
-                  {/* Veículo: foto, nome, ficha e o carimbo de vendida. */}
-                  <div className="flex min-w-0 gap-3 pr-12 p-3 lg:items-center lg:gap-3.5 lg:p-0 lg:pr-0">
-                    <div className="aspect-[4/3] w-20 shrink-0 overflow-hidden border border-line bg-painel-2 lg:w-24">
+                  {/* Veículo: foto, nome, ficha e o carimbo de vendida.
+                      No celular o par de ações mora à direita da
+                      primeira linha, em icons compactos. */}
+                  <div className="flex min-w-0 gap-3 p-3 pr-[5.25rem] lg:items-center lg:gap-3.5 lg:p-0 lg:pr-0">
+                    <div className="aspect-[4/3] w-16 shrink-0 overflow-hidden border border-line bg-painel-2 lg:w-24">
                       <img
                         src={moto.imagens[0]?.src ?? PLACEHOLDER_CARD}
                         alt=""
@@ -286,22 +262,21 @@ export function VendidasTab({
                     </div>
                   </div>
 
-                  {/* Valor e comprador: duas colunas no celular, duas
-                      colunas da grade no desktop. */}
-                  <div className="grid grid-cols-2 gap-x-4 border-t border-line px-3 py-2.5 lg:contents">
+                  {/* Valor e comprador: no celular uma coluna só,
+                      na ordem da leitura (valor, data, comprador,
+                      telefone); no desktop, as duas colunas da grade. */}
+                  <div className="flex flex-col gap-2.5 border-t border-line px-3 py-3 lg:contents">
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold tracking-[0.12em] text-steel-500 uppercase lg:sr-only">
-                        Venda
-                      </p>
+                      <p className="sr-only">Venda</p>
                       <p
-                        className={`numeros mt-0.5 truncate font-display text-lg leading-tight font-bold lg:mt-0 ${
-                          venda ? 'text-marca-texto' : 'text-steel-300'
+                        className={`numeros mt-0.5 truncate font-display text-xl leading-tight font-bold lg:mt-0 lg:text-lg ${
+                          venda ? 'text-marca-texto' : 'text-steel-400'
                         }`}
                         title={formatPrice(valor)}
                       >
                         {formatPrice(valor)}
                       </p>
-                      <p className="mt-0.5 truncate text-[11px] text-steel-500">
+                      <p className="mt-1 truncate text-xs text-steel-500 lg:mt-0.5 lg:text-[11px]">
                         {venda
                           ? data
                             ? `Vendida em ${data}`
@@ -310,7 +285,7 @@ export function VendidasTab({
                       </p>
                       {lucro != null ? (
                         <p
-                          className={`mt-1 inline-flex max-w-full items-center gap-1 text-[11px] font-semibold ${
+                          className={`mt-1.5 inline-flex max-w-full items-center gap-1 text-xs font-semibold lg:mt-1 lg:text-[11px] ${
                             lucro < 0 ? 'text-marca-texto' : 'text-ok'
                           }`}
                         >
@@ -328,9 +303,7 @@ export function VendidasTab({
                     </div>
 
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold tracking-[0.12em] text-steel-500 uppercase lg:sr-only">
-                        Comprador
-                      </p>
+                      <p className="sr-only">Comprador</p>
                       {comprador ? (
                         <button
                           type="button"
@@ -339,7 +312,7 @@ export function VendidasTab({
                           title="Corrigir comprador"
                           className="group/comprador mt-0.5 flex min-h-9 max-w-full items-center gap-1 text-left lg:mt-0"
                         >
-                          <span className="truncate text-[13px] font-medium text-paper transition-colors group-hover/comprador:text-brand-300">
+                          <span className="truncate text-sm font-medium text-paper transition-colors group-hover/comprador:text-brand-300 lg:text-[13px]">
                             {comprador}
                           </span>
                           <Pencil
@@ -349,13 +322,13 @@ export function VendidasTab({
                         </button>
                       ) : (
                         <div>
-                          <p className="mt-0.5 text-[13px] text-steel-500 lg:mt-0">
+                          <p className="mt-0.5 text-sm text-steel-500 lg:mt-0 lg:text-[13px]">
                             Não informado
                           </p>
                           <button
                             type="button"
                             onClick={() => onRegistrarVenda(moto)}
-                            className="mt-0.5 inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-marca-texto transition-colors hover:text-paper"
+                            className="mt-1 inline-flex min-h-8 items-center gap-1 text-xs font-semibold text-marca-texto transition-colors hover:text-paper lg:mt-0.5 lg:text-[11px]"
                           >
                             <UserPlus className="size-3 shrink-0" aria-hidden="true" />
                             Registrar comprador
@@ -370,14 +343,14 @@ export function VendidasTab({
                             target="_blank"
                             rel="noreferrer"
                             aria-label={`Conversar com ${comprador ?? 'o comprador'} no WhatsApp`}
-                            className="mt-0.5 inline-flex max-w-full items-center gap-1 text-[11px] text-steel-400 transition-colors hover:text-brand-300"
+                            className="mt-1 inline-flex max-w-full items-center gap-1.5 text-xs text-steel-400 transition-colors hover:text-brand-300 lg:mt-0.5 lg:text-[11px]"
                           >
-                            <MessageCircle className="size-3 shrink-0" aria-hidden="true" />
+                            <MessageCircle className="size-3.5 shrink-0" aria-hidden="true" />
                             <span className="truncate">{formatarTelefone(telefone)}</span>
                           </a>
                         ) : (
-                          <span className="mt-0.5 inline-flex max-w-full items-center gap-1 text-[11px] text-steel-500">
-                            <MessageCircle className="size-3 shrink-0" aria-hidden="true" />
+                          <span className="mt-1 inline-flex max-w-full items-center gap-1.5 text-xs text-steel-500 lg:mt-0.5 lg:text-[11px]">
+                            <MessageCircle className="size-3.5 shrink-0" aria-hidden="true" />
                             <span className="truncate">{formatarTelefone(telefone)}</span>
                           </span>
                         )
@@ -386,15 +359,15 @@ export function VendidasTab({
                   </div>
 
                   {/* Ações discretas: devolver ao estoque e editar. No
-                      celular moram no canto do cartão; no desktop, na
-                      última coluna da grade. */}
-                  <div className="absolute top-1 right-1 flex flex-col lg:static lg:flex-row lg:items-center lg:justify-end lg:gap-1">
+                      celular moram no canto da primeira linha, em icons
+                      compactos; no desktop, na última coluna da grade. */}
+                  <div className="absolute top-2 right-2 flex flex-row lg:static lg:flex-row lg:items-center lg:justify-end lg:gap-1">
                     <button
                       type="button"
                       onClick={() => onReativar(moto)}
                       aria-label={`Devolver ${bikeTitle(moto)} ao estoque`}
                       title="Devolver ao estoque"
-                      className="grid size-10 place-items-center border border-transparent text-steel-400 transition-colors hover:border-line-forte hover:bg-painel-2 hover:text-brand-300"
+                      className="grid size-9 place-items-center border border-transparent text-steel-400 transition-colors hover:border-line-forte hover:bg-painel-2 hover:text-brand-300 lg:size-10"
                     >
                       <ArchiveRestore className="size-4" aria-hidden="true" />
                     </button>
@@ -403,7 +376,7 @@ export function VendidasTab({
                       onClick={() => onEditar(moto)}
                       aria-label={`Editar ${bikeTitle(moto)}`}
                       title="Editar"
-                      className="grid size-10 place-items-center border border-transparent text-steel-400 transition-colors hover:border-line-forte hover:bg-painel-2 hover:text-paper"
+                      className="grid size-9 place-items-center border border-transparent text-steel-400 transition-colors hover:border-line-forte hover:bg-painel-2 hover:text-paper lg:size-10"
                     >
                       <Pencil className="size-4" aria-hidden="true" />
                     </button>

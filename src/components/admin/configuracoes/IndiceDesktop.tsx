@@ -7,7 +7,8 @@ import type { Secao } from './dados'
  * ============================================================
  * ÍNDICE LATERAL DA MESA (DESKTOP)
  * ============================================================
- * Tablist vertical: cada bloco mostra o valor já publicado.
+ * Tablist vertical enxuta: número e rótulo — o mesmo desenho do
+ * hub do celular, sem a linha de valor embaixo.
  * Navegação por setas: roteie entre blocos com ↑ ↓ ← → (e
  * Home/End) sem sair do grupo. Somente a aba ativa entra na
  * ordem de tabulação (roving tabindex).
@@ -68,14 +69,6 @@ export function IndiceDesktop({
                     <span className="sr-only">Alterações não salvas</span>
                   </span>
                 ) : null}
-              </span>
-              <span
-                className={`mesa-nav-valor ${bloco.id === 'lixeira' ? 'mesa-nav-valor--perigo' : ''}`}
-                aria-hidden="true"
-              >
-                {bloco.id === 'lixeira'
-                  ? 'Área de risco'
-                  : bloco.resumo(salvo, totalLixeira)}
               </span>
             </span>
             {bloco.id === 'lixeira' && totalLixeira > 0 ? (

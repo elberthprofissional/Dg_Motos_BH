@@ -490,24 +490,6 @@
     color: var(--color-paper);
   }
 
-  .mesa-nav-valor {
-    overflow: hidden;
-    font-size: 0.6875rem;
-    line-height: 1.4;
-    color: var(--color-steel-600);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .mesa-nav-item[aria-selected='true'] .mesa-nav-valor {
-    color: var(--color-steel-400);
-  }
-
-  .mesa-nav-valor--perigo,
-  .mesa-nav-item[aria-selected='true'] .mesa-nav-valor--perigo {
-    color: color-mix(in srgb, var(--cor-marca-texto) 72%, var(--color-steel-400));
-  }
-
   .mesa-nav-contagem {
     display: inline-flex;
     flex: none;

@@ -383,8 +383,8 @@ export function ConfiguracoesTab({
             </span>
           </h1>
           <p className="mesa-sub">
-            O WhatsApp, o Instagram, o endereço e os horários que o site publica. A Lixeira
-            guarda por 30 dias o que for excluído.
+            Gerencie todo o seu comércio em um só lugar: WhatsApp, Instagram, endereço,
+            horários e a Lixeira, que guarda por 30 dias o que for excluído.
           </p>
         </div>
         {/* Só fala quando há algo a dizer: carregando, sem resposta

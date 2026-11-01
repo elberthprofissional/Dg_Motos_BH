@@ -14,7 +14,6 @@ export interface DescricaoSecao {
   rotulo: string
   descricao: string
   campos: readonly (keyof ConfigLoja)[]
-  resumo: (config: ConfigLoja, naLixeira: number) => string
   rotuloSalvar?: string
   mensagemSalva?: string
 }
@@ -212,8 +211,6 @@ export const SECOES: DescricaoSecao[] = [
     rotulo: 'Contato',
     descricao: 'O número que os clientes usam para falar com a loja pelo WhatsApp.',
     campos: ['whatsapp'],
-    resumo: (config) =>
-      config.whatsapp ? formatarWhatsapp(config.whatsapp) : 'Sem número definido',
     rotuloSalvar: 'Salvar contato',
     mensagemSalva: 'Contato salvo. Os botões do site já usam o novo número.',
   },
@@ -223,7 +220,6 @@ export const SECOES: DescricaoSecao[] = [
     descricao:
       'O perfil para onde levam os links do rodapé, do menu do celular e da página de contato.',
     campos: ['instagramHandle', 'instagramUrl'],
-    resumo: (config) => config.instagramHandle || 'Sem perfil definido',
     rotuloSalvar: 'Salvar Instagram',
     mensagemSalva: 'Instagram salvo. O link do perfil já foi atualizado no site.',
   },
@@ -233,7 +229,6 @@ export const SECOES: DescricaoSecao[] = [
     descricao:
       'O endereço que aparece no rodapé e no mapa da página de contato. Com ele, o site monta o link de rota no Google Maps.',
     campos: ['enderecoRua', 'enderecoCidadeUf'],
-    resumo: (config) => config.enderecoRua || 'Sem endereço definido',
     rotuloSalvar: 'Salvar endereço',
     mensagemSalva: 'Endereço salvo. O mapa e o rodapé já usam o novo endereço.',
   },
@@ -243,10 +238,6 @@ export const SECOES: DescricaoSecao[] = [
     descricao:
       'Os horários que aparecem no rodapé e na página de contato, na ordem das faixas abaixo.',
     campos: ['horarios'],
-    resumo: (config) =>
-      config.horarios.length === 0
-        ? 'Nenhuma faixa'
-        : config.horarios.map((horario) => `${horario.dias} ${horario.horas}`).join(' · '),
     rotuloSalvar: 'Salvar horários',
     mensagemSalva: 'Horários salvos. O rodapé e a página de contato já mostram as novas faixas.',
   },
@@ -256,10 +247,6 @@ export const SECOES: DescricaoSecao[] = [
     descricao:
       'Motos excluídas do Estoque e fotos apagadas do mural. Restaure — ou apague de vez.',
     campos: [],
-    resumo: (_config, naLixeira) =>
-      naLixeira === 0
-        ? 'Vazia'
-        : `${naLixeira} ${naLixeira === 1 ? 'guardado' : 'guardados'}`,
   },
 ]
 

@@ -35,15 +35,16 @@ function ListaDeMarcas({ copia }: { copia: number }) {
           key={`${copia}-${marca}`}
           className="flex w-28 shrink-0 items-center justify-center sm:w-36"
         >
-          {/* Logos dobram cores para não disputar com o vermelho do
-              site, mas um leve brilho mantém as marcas escuras (BMW,
-              Ducati, Harley) visíveis na bancada. */}
+          {/* Logos em escala de cinza: as cores das marcas não
+              disputam com o vermelho do site, e um leve brilho mantém
+              as mais escuras (BMW, Ducati, Harley) visíveis na
+              bancada. */}
           <img
             src={logoDaMarca(marca)}
             alt={decorativa ? '' : marca}
             width={144}
             height={40}
-            className="block h-9 w-28 object-contain opacity-90 brightness-110 sm:h-10 sm:w-36"
+            className="block h-9 w-28 object-contain opacity-90 grayscale brightness-110 sm:h-10 sm:w-36"
             decoding="async"
           />
         </li>
