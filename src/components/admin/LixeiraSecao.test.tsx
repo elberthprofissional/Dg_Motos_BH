@@ -33,7 +33,7 @@ function fotoDe(parcial: Partial<FotoNaLixeira> = {}): FotoNaLixeira {
     entregaId: 'e1',
     caminho: 'e1/a.webp',
     url: 'https://exemplo.test/assinada',
-    // Data recente: o prazo "sai em X dias" não depende do dia da máquina.
+    // Data recente: o prazo "Exclusão definitiva em X dias" não depende do dia da máquina.
     apagadaEm: new Date(Date.now() - 3 * 86_400_000).toISOString(),
     ...parcial,
   }
@@ -72,7 +72,7 @@ describe('LixeiraSecao — fotos do mural', () => {
     expect(html).toContain('https://exemplo.test/assinada')
     expect(html).toContain('Restaurar a foto apagada')
     expect(html).toContain('Apagar a foto apagada')
-    expect(html).toContain('sai em')
+    expect(html).toContain('Exclusão definitiva em')
   })
 
   it('junta motos e fotos na mesma frase de prazo', () => {

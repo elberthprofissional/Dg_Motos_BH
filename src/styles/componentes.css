@@ -361,14 +361,16 @@
     }
   }
 
-  /* CTA compacto na linha do título, como num app de verdade: 40px,
-     ao lado do nome da página — o corpo da tela continua sendo o
-     estoque, não um botão pedindo atenção a tela inteira. */
+  /* CTA compacto na linha do título, como num app de verdade. No
+     celular é um quadrado só com o "+" — o título "Estoque." já
+     conta a história; no tablet pra cima o rótulo volta. O nome
+     acessível é o aria-label, igual nos dois formatos. */
   .estoque-btn-primario {
     @apply inline-flex shrink-0 items-center justify-center gap-1.5 font-semibold text-white;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     font-size: 13px;
-    padding: 0 14px;
+    padding: 0;
     border: 1px solid var(--cor-marca);
     border-radius: 2px;
     background-color: var(--cor-marca);
@@ -377,6 +379,10 @@
     transition:
       background-color 0.15s ease,
       border-color 0.15s ease;
+  }
+
+  .estoque-btn-primario-texto {
+    display: none;
   }
 
   .estoque-btn-primario:hover {
@@ -907,6 +913,23 @@
     background-color: rgba(229, 22, 29, 0.08);
   }
 
+  /* Card de venda no mural de saídas: o ⋯ vive só no celular (a
+     mesa mantém os dois ícones direto na coluna Ações). Posição e
+     painel idênticos ao ⋯ do inventário — é o mesmo gesto com os
+     mesmos controles. */
+  .vendidas-menu-acoes {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+  }
+
+  @media (min-width: 1024px) {
+    .vendidas-menu-acoes {
+      display: none;
+    }
+  }
+
   /* Estados: erro, vazio e carregamento falam como um cartão da pilha. */
   .estoque-estado {
     padding: 20px 16px;
@@ -1007,6 +1030,18 @@
       font-size: 13px;
       font-weight: 600;
       padding: 0 14px;
+    }
+
+    .estoque-btn-primario-texto {
+      display: inline;
+    }
+
+    .btn-foto-cabecalho {
+      width: auto;
+    }
+
+    .btn-foto-cabecalho .btn-foto-rotulo {
+      display: inline;
     }
 
     .estoque-indicadores {
@@ -1281,6 +1316,19 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+
+  /* Mesma receita do "+ Cadastrar moto" do Estoque: no celular o
+     botão de foto na linha do título vira um quadrado com o "+",
+     e o rótulo volta no tablet pra cima. O nome acessível é o
+     aria-label — igual nos dois formatos. */
+  .btn-foto-cabecalho {
+    width: 44px;
+    padding: 0;
+  }
+
+  .btn-foto-cabecalho .btn-foto-rotulo {
+    display: none;
   }
 
   /* Contador do mural: uma linha só — "4 fotos no mural". */

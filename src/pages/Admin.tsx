@@ -14,6 +14,8 @@ import { VendidasTab } from '../components/admin/VendidasTab'
 import { PublicacoesTab } from '../components/admin/PublicacoesTab'
 import { SidebarPainel } from '../components/admin/SidebarPainel'
 import { MenuConta } from '../components/admin/MenuConta'
+import { ConvitePwa } from '../components/admin/ConvitePwa'
+import { useConvitePwa } from '../components/admin/useConvitePwa'
 import { NavegacaoPainel } from '../components/admin/NavegacaoPainel'
 import type { Aba } from '../components/admin/NavegacaoPainel'
 import { DialogoRegistrarVenda } from '../components/admin/DialogoRegistrarVenda'
@@ -81,6 +83,8 @@ export function Admin() {
     recarregarFotosLixeira,
     avisar,
   })
+
+  const convite = useConvitePwa()
 
   /** O formulário salvou (novo cadastro ou edição): recarrega o estoque. */
   async function aoSalvarMoto() {
@@ -331,6 +335,11 @@ export function Admin() {
       />
 
       <Toast feedback={feedback} onFechar={() => setFeedback(null)} acimaDaBarra />
+
+      {/* Convite de instalação: aparece uma vez só, quando há motivo
+          (Chrome oferecendo instalação, ou iPhone com o caminho manual).
+          Some para fechar no primeiro "não". */}
+      <ConvitePwa convite={convite} />
     </div>
   )
 }

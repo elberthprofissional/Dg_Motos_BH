@@ -10,9 +10,14 @@
  * Regra de ouro: nada de cachear API (Supabase) nem HTML das fichas —
  * eles mudam e precisam vir sempre do servidor. Só o shell estático
  * (ícones, manifest, fonte do app) entra em cache.
+ *
+ * Atualização: a versão do cache está no nome da cache; quando o
+ * deploy muda o sw.js, o navegador instala a nova, o activate apaga
+ * a antiga e os clientes são avisados (postMessage) pra recarregar.
+ * Assim um deploy novo nunca fica preso numa versão antiga do painel.
  */
 
-const CACHE = 'dg-motos-shell-v1'
+const CACHE = 'dg-motos-shell-v2'
 
 // Apenas a casca: o build injeta os assets com hash no index; o que
 // pré-cacheamos aqui é o que não muda de nome.
@@ -35,7 +40,11 @@ self.addEventListener('activate', (evento) => {
       .then((chaves) =>
         Promise.all(chaves.filter((c) => c !== CACHE).map((c) => caches.delete(c))),
       )
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
+      // Avisa as abas abertas que há versão nova, pra poderem recarregar
+      // sem o dono precisar fechar e abrir o app de novo.
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then((janelas) => janelas.forEach((janela) => janela.postMessage({ tipo: 'sw-atualizado' }))),
   )
 })
 

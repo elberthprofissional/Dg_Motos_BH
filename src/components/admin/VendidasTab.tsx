@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ArchiveRestore,
   MessageCircle,
+  MoreHorizontal,
   Pencil,
   TrendingDown,
   TrendingUp,
@@ -105,6 +106,9 @@ export function VendidasTab({
   onReativar,
   onIrParaEstoque,
 }: VendidasTabProps) {
+  // O menu ⋯ do celular: um aberto por vez, no id da moto.
+  const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null)
+
   const vendaDaMoto = useMemo(() => {
     // A lista do provedor vem da mais nova para a mais antiga: a
     // primeira venda vinculada é a que vale para a moto.
@@ -245,19 +249,29 @@ export function VendidasTab({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <p
-                          className="min-w-0 truncate font-display text-[15px] leading-tight font-semibold text-paper lg:text-base"
-                          title={bikeTitle(moto)}
-                        >
-                          {bikeTitle(moto)}
-                        </p>
-                        <span className="shrink-0 bg-marca px-1.5 py-0.5 text-[9px] leading-none font-bold tracking-[0.14em] text-white uppercase">
-                          Vendida
-                        </span>
-                      </div>
+                      {/* Sem carimbo "Vendida": quem já está na aba
+                          Vendidas sabe a condição da moto — repetir era
+                          ruído. */}
+                      <p
+                        className="min-w-0 truncate font-display text-[15px] leading-tight font-semibold text-paper lg:text-base"
+                        title={bikeTitle(moto)}
+                      >
+                        {bikeTitle(moto)}
+                      </p>
                       <p className="mt-1 truncate text-[11px] text-steel-400">
                         {ficha.join(' · ')}
+                      </p>
+                      {/* O valor sobe para debaixo do nome no celular:
+                          é o dado que decide conversa, e agora mora
+                          junto da moto. Na mesa a coluna Venda cuida
+                          dele (cópia gemela embaixo). */}
+                      <p
+                        className={`numeros mt-1.5 truncate font-display text-xl leading-none font-bold lg:hidden ${
+                          venda ? 'text-marca-texto' : 'text-steel-400'
+                        }`}
+                        title={formatPrice(valor)}
+                      >
+                        {formatPrice(valor)}
                       </p>
                     </div>
                   </div>
@@ -269,7 +283,7 @@ export function VendidasTab({
                     <div className="min-w-0">
                       <p className="sr-only">Venda</p>
                       <p
-                        className={`numeros mt-0.5 truncate font-display text-xl leading-tight font-bold lg:mt-0 lg:text-lg ${
+                        className={`numeros mt-0.5 hidden truncate font-display text-xl leading-tight font-bold lg:mt-0 lg:block lg:text-lg ${
                           venda ? 'text-marca-texto' : 'text-steel-400'
                         }`}
                         title={formatPrice(valor)}
@@ -358,10 +372,58 @@ export function VendidasTab({
                     </div>
                   </div>
 
-                  {/* Ações discretas: devolver ao estoque e editar. No
-                      celular moram no canto da primeira linha, em icons
-                      compactos; no desktop, na última coluna da grade. */}
-                  <div className="absolute top-2 right-2 flex flex-row lg:static lg:flex-row lg:items-center lg:justify-end lg:gap-1">
+                  {/* Ações discretas: no celular um único ⋯ (mesmo
+                      padrão do inventário) — devolver ao estoque e
+                      editar moram no painelzinho; só um menu aberto
+                      por vez. Na mesa os ícones ficam na última
+                      coluna, como sempre. */}
+                  <div className="vendidas-menu-acoes">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMenuAbertoId((id) => (id === moto.id ? null : moto.id))
+                      }
+                      aria-expanded={menuAbertoId === moto.id}
+                      aria-label={`Mais ações de ${bikeTitle(moto)}`}
+                      className="estoque-menu-botao"
+                    >
+                      <MoreHorizontal className="size-5" strokeWidth={1.7} aria-hidden="true" />
+                    </button>
+
+                    {menuAbertoId === moto.id ? (
+                      <div
+                        role="group"
+                        aria-label={`Ações de ${bikeTitle(moto)}`}
+                        className="estoque-menu-painel"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuAbertoId(null)
+                            onReativar(moto)
+                          }}
+                          className="estoque-menu-item"
+                        >
+                          <ArchiveRestore className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                          Devolver ao estoque
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuAbertoId(null)
+                            onEditar(moto)
+                          }}
+                          className="estoque-menu-item"
+                        >
+                          <Pencil className="size-4" strokeWidth={1.7} aria-hidden="true" />
+                          Editar
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Mesa: os mesmos atos, direto na coluna Ações. */}
+                  <div className="absolute top-2 right-2 hidden flex-row lg:static lg:flex lg:items-center lg:justify-end lg:gap-1">
                     <button
                       type="button"
                       onClick={() => onReativar(moto)}

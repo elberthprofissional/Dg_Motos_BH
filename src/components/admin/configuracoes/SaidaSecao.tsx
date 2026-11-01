@@ -13,7 +13,6 @@ export function SaidaSecao({ id, config }: { id: SecaoConfig; config: ConfigLoja
 
     return (
       <aside className="mesa-saida" aria-label="Prévia do que o site publica">
-        <p className="mesa-saida-rotulo">No site</p>
         <div className="mesa-saida-cartao">
           <p className="mesa-saida-numero numeros">
             {config.whatsapp ? formatarWhatsapp(config.whatsapp) : 'Sem número'}
@@ -45,7 +44,6 @@ export function SaidaSecao({ id, config }: { id: SecaoConfig; config: ConfigLoja
 
     return (
       <aside className="mesa-saida" aria-label="Prévia do que o site publica">
-        <p className="mesa-saida-rotulo">No site</p>
         <div className="mesa-saida-cartao">
           <div className="mesa-saida-perfil">
             <span className="mesa-saida-icone">
@@ -53,7 +51,6 @@ export function SaidaSecao({ id, config }: { id: SecaoConfig; config: ConfigLoja
             </span>
             <div className="min-w-0">
               <p className="mesa-saida-handle">{handle || 'Sem perfil'}</p>
-              <p className="mesa-saida-texto">Cabeçalho, rodapé e contato</p>
             </div>
           </div>
           {link ? (
@@ -80,7 +77,6 @@ export function SaidaSecao({ id, config }: { id: SecaoConfig; config: ConfigLoja
 
     return (
       <aside className="mesa-saida" aria-label="Prévia do que o site publica">
-        <p className="mesa-saida-rotulo">No site</p>
         <div className="mesa-saida-cartao">
           <p className="mesa-saida-endereco">{rua || 'Rua e número'}</p>
           <p className="mesa-saida-cidade">{cidade || 'Cidade e estado'}</p>
@@ -108,7 +104,7 @@ export function SaidaSecao({ id, config }: { id: SecaoConfig; config: ConfigLoja
 
   return (
     <aside className="mesa-saida" aria-label="Prévia do que o site publica">
-      <p className="mesa-saida-rotulo">No site</p>
+      <p className="mesa-saida-rotulo">Prévia no site</p>
       <div className="mesa-saida-cartao">
         {faixas.length === 0 ? (
           <p className="mesa-saida-vazio">Sem faixas — o site não mostra horário.</p>
@@ -122,7 +118,6 @@ export function SaidaSecao({ id, config }: { id: SecaoConfig; config: ConfigLoja
             ))}
           </div>
         )}
-        <p className="mesa-saida-texto">Rodapé e página de contato</p>
       </div>
     </aside>
   )

@@ -209,7 +209,7 @@ export const SECOES: DescricaoSecao[] = [
   {
     id: 'contato',
     rotulo: 'Contato',
-    descricao: 'O número que os clientes usam para falar com a loja pelo WhatsApp.',
+    descricao: 'O número utilizado nos botões de WhatsApp do site.',
     campos: ['whatsapp'],
     rotuloSalvar: 'Salvar contato',
     mensagemSalva: 'Contato salvo. Os botões do site já usam o novo número.',
@@ -217,8 +217,7 @@ export const SECOES: DescricaoSecao[] = [
   {
     id: 'instagram',
     rotulo: 'Instagram',
-    descricao:
-      'O perfil para onde levam os links do rodapé, do menu do celular e da página de contato.',
+    descricao: 'Informe o @ do perfil da loja.',
     campos: ['instagramHandle', 'instagramUrl'],
     rotuloSalvar: 'Salvar Instagram',
     mensagemSalva: 'Instagram salvo. O link do perfil já foi atualizado no site.',
@@ -226,8 +225,7 @@ export const SECOES: DescricaoSecao[] = [
   {
     id: 'endereco',
     rotulo: 'Endereço',
-    descricao:
-      'O endereço que aparece no rodapé e no mapa da página de contato. Com ele, o site monta o link de rota no Google Maps.',
+    descricao: 'Endereço utilizado no rodapé e na página de contato.',
     campos: ['enderecoRua', 'enderecoCidadeUf'],
     rotuloSalvar: 'Salvar endereço',
     mensagemSalva: 'Endereço salvo. O mapa e o rodapé já usam o novo endereço.',
@@ -235,8 +233,7 @@ export const SECOES: DescricaoSecao[] = [
   {
     id: 'horarios',
     rotulo: 'Horários',
-    descricao:
-      'Os horários que aparecem no rodapé e na página de contato, na ordem das faixas abaixo.',
+    descricao: 'Defina os dias e horários de funcionamento da loja.',
     campos: ['horarios'],
     rotuloSalvar: 'Salvar horários',
     mensagemSalva: 'Horários salvos. O rodapé e a página de contato já mostram as novas faixas.',
@@ -244,8 +241,7 @@ export const SECOES: DescricaoSecao[] = [
   {
     id: 'lixeira',
     rotulo: 'Lixeira',
-    descricao:
-      'Motos excluídas do Estoque e fotos apagadas do mural. Restaure — ou apague de vez.',
+    descricao: 'Motos e fotos excluídas recentemente.',
     campos: [],
   },
 ]

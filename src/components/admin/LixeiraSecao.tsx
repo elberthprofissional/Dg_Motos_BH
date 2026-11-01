@@ -28,11 +28,11 @@ interface LixeiraSecaoProps {
   onRecarregar: () => void | Promise<void>
 }
 
-/** Diz para onde a moto volta, sem esconder o status que ela tinha. */
+/** Só avisa quando o destino da moto é fora do pátio: Vendidas ou indisponível. */
 function destinoDaRestauracao(moto: Motorcycle): string {
   if (moto.status === 'vendida') return 'volta para Vendidas'
   if (moto.status === 'indisponivel') return 'volta como indisponível'
-  return 'volta para o pátio'
+  return ''
 }
 
 function fichaTecnica(moto: Motorcycle): string {
@@ -61,7 +61,8 @@ function prazoRestante(dias: number | null): Prazo | null {
   if (dias === null) return null
 
   const tom: TomPrazo = dias <= 7 ? 'urgente' : dias <= 15 ? 'atencao' : 'normal'
-  const texto = dias === 0 ? 'sai hoje' : dias === 1 ? 'sai em 1 dia' : `sai em ${dias} dias`
+  const texto =
+    dias === 0 ? 'Exclusão definitiva hoje' : `Exclusão definitiva em ${dias} dias`
 
   return {
     texto,
@@ -320,7 +321,9 @@ export function LixeiraSecao({
                         </p>
                         <p className="lixo-ficha">
                           <span>{fichaTecnica(moto)}</span>
-                          <span className="lixo-destino">{destinoDaRestauracao(moto)}</span>
+                          {destinoDaRestauracao(moto) ? (
+                            <span className="lixo-destino">{destinoDaRestauracao(moto)}</span>
+                          ) : null}
                         </p>
                         <div className="lixo-meta">
                           <span title={dataBaixa ?? undefined}>
@@ -488,8 +491,8 @@ export function LixeiraSecao({
             <div className="min-w-0">
               <p className="lixo-risco-titulo">Esvaziar a lixeira</p>
               <p className="lixo-risco-texto">
-                Apaga de vez {alvosDoEsvaziar.join(', ')} — sem esperar os {DIAS_NA_LIXEIRA} dias e
-                sem volta.
+                Excluir definitivamente {alvosDoEsvaziar.join(', ')}. Essa ação não pode ser
+                desfeita.
               </p>
             </div>
             <button

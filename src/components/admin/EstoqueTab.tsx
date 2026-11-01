@@ -119,9 +119,14 @@ export function EstoqueTab({
               .
             </span>
           </h1>
-          <button type="button" onClick={() => onEditando({})} className="estoque-btn-primario">
+          <button
+            type="button"
+            onClick={() => onEditando({})}
+            aria-label="Cadastrar moto"
+            className="estoque-btn-primario"
+          >
             <Plus className="size-4" strokeWidth={2.2} aria-hidden="true" />
-            Cadastrar moto
+            <span className="estoque-btn-primario-texto">Cadastrar moto</span>
           </button>
         </div>
 

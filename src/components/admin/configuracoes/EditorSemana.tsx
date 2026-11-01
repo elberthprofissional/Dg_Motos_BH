@@ -104,8 +104,7 @@ export function EditorSemana({ semana, erro, onMudar, marcarTocado }: EditorSema
         ) : null}
 
         <p id="cfg-horarios-dica" className="mesa-campo-dica">
-          Desligue os dias em que a loja não abre. Dias seguidos com o mesmo horário viram uma
-          faixa só no site, como “Seg a Sex · 9h–18h”.
+          Os dias seguidos com o mesmo horário aparecem agrupados no site.
         </p>
       </div>
     </div>

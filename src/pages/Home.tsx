@@ -121,7 +121,7 @@ export function Home() {
                 <br className="hidden lg:block" /> em Belo Horizonte.
               </h1>
               <p className="corpo mt-2 max-w-[32ch] text-sm leading-6 text-texto-2 sm:mt-5 sm:max-w-[38ch] sm:text-base sm:leading-[1.55] lg:mt-6 lg:max-w-[36ch] lg:text-[1.25rem] lg:leading-[1.45]">
-                Seminovas com preço na etiqueta e a loja aberta para você ver de perto.
+                Confira nosso estoque, conheça as opções disponíveis e encontre sua próxima moto.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3 sm:mt-7 lg:mt-8">
                 <Link

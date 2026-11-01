@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react'
-import { Camera, ImagePlus, Images, Loader2, X } from 'lucide-react'
+import { Camera, ImagePlus, Images, Loader2, Plus, X } from 'lucide-react'
 import { temCameraNaHora } from '../../lib/dispositivo'
 
 interface AreaUploadFotoProps {
@@ -125,14 +125,15 @@ export function AreaUploadFoto({
           disabled={enviando}
           aria-haspopup={temCamera ? 'dialog' : undefined}
           aria-busy={enviando || undefined}
-          className={`foco-painel btn btn-primary min-h-11 gap-1.5 px-4 py-0 text-[13px] lg:min-h-9 ${className ?? ''}`}
+          aria-label={enviando ? 'Enviando fotos…' : (rotulo ?? 'Adicionar foto')}
+          className={`foco-painel btn btn-primary btn-foto-cabecalho min-h-11 gap-1.5 px-4 py-0 text-[13px] lg:min-h-9 ${className ?? ''}`}
         >
           {enviando ? (
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           ) : (
-            <ImagePlus className="size-4" aria-hidden="true" />
+            <Plus className="size-5" strokeWidth={2.2} aria-hidden="true" />
           )}
-          {enviando ? 'Enviando fotos…' : (rotulo ?? 'Adicionar foto')}
+          <span className="btn-foto-rotulo">{enviando ? 'Enviando fotos…' : (rotulo ?? 'Adicionar foto')}</span>
         </button>
         {folha}
       </>

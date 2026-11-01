@@ -16,9 +16,18 @@ createRoot(document.getElementById('root')!).render(
 )
 
 // Service worker só em produção: em dev, cache atrapalharia o HMR.
+// `registration.update()` na troca de foco faz o navegador checar se o
+// deploy trouxe um sw.js novo sem esperar o próximo reload do app.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => undefined)
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js')
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') void registration.update().catch(() => undefined)
+      })
+    } catch {
+      // Sem SW o app funciona igual; não é erro que precise interromper.
+    }
   })
 }
 

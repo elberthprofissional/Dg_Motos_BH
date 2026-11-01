@@ -46,11 +46,22 @@ export class ErroDeRender extends Component<Props, State> {
 
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center bg-fundo px-6 text-center">
-        <p className="etiqueta text-marca-texto">Falha inesperada</p>
-        <h1 className="titulo mt-3 text-3xl text-texto">Algo saiu do eixo</h1>
-        <p className="corpo mt-3 max-w-md text-texto-2">
-          A página não conseguiu carregar por completo. Recarregue para tentar de novo;
-          se o site acabou de ser atualizado, isso costuma resolver.
+        {/* Selo de vermelho e título no padrão da casa: rótulo miúdo,
+            display com o ponto carimbado — igual ao "Estoque." do
+            painel. Sem card, sem ícone grande, sem moldura. */}
+        <p className="etiqueta flex items-center justify-center gap-2 text-marca-texto">
+          <span className="size-1.5 shrink-0 bg-marca" aria-hidden="true" />
+          Falha inesperada
+        </p>
+        <h1 className="titulo mt-3 text-3xl text-texto sm:text-4xl">
+          Algo saiu do eixo
+          <span className="text-marca-texto" aria-hidden="true">
+            .
+          </span>
+        </h1>
+        <p className="corpo mt-4 max-w-md text-texto-2">
+          A página não carregou por completo. Recarregar costuma resolver —
+          é comum quando o site acaba de ser atualizado.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
@@ -64,6 +75,9 @@ export class ErroDeRender extends Component<Props, State> {
             Ir para a loja
           </a>
         </div>
+        <p className="mt-12 text-[10px] font-semibold uppercase tracking-[0.18em] text-texto-3">
+          DG Motos BH · Belo Horizonte, MG
+        </p>
       </div>
     )
   }

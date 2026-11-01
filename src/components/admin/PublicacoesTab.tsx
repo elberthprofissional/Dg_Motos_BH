@@ -172,8 +172,8 @@ export function PublicacoesTab({
         tipo: 'ok',
         texto:
           paths.length === 1
-            ? '1 foto no mural e no site.'
-            : `${paths.length} fotos no mural e no site.`,
+            ? '1 foto publicada.'
+            : `${paths.length} fotos publicadas.`,
       })
     } catch (e) {
       onFeedback({
@@ -277,13 +277,12 @@ export function PublicacoesTab({
             {...entrada}
             variante="botao"
             rotulo="Adicionar foto"
-            className="w-full sm:w-auto"
           />
         </div>
 
         {!carregando && totalFotos > 0 ? (
           <p className="publicacoes-contador">
-            {totalFotos === 1 ? '1 foto no mural' : `${totalFotos} fotos no mural`}
+            {totalFotos === 1 ? '1 foto' : `${totalFotos} fotos`}
           </p>
         ) : null}
       </header>

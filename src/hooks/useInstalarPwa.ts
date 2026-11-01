@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * ============================================================
@@ -6,8 +6,18 @@ import { useCallback, useEffect, useState } from 'react'
  * ============================================================
  * O navegador só permite abrir o prompt nativo de instalação a partir
  * de um gesto do usuário. O caminho é: capturar o `beforeinstallprompt`
- * (o Chrome/Edge disparam e nós seguramos), guardar o evento e chamar
- * `prompt()` quando o dono tocar em "Instalar".
+ * (o Chrome/Edge disparam), guardar o evento e chamar `prompt()` quando
+ * for a hora.
+ *
+ * Há dois caminhos de exibição, e é o chamador que escolhe:
+ *
+ *  - BANNER NATIVO: quando não há convite na tela, o evento passa
+ *    direto (sem preventDefault) e o próprio Chrome mostra o "Quer
+ *    instalar o app?" — é a pergunta automática do Android.
+ *  - CONVITE NOSSO (cartão): quando o chamador informa
+ *    `conviteAberto: true`, seguramos o evento (preventDefault) para
+ *    que o banner nativo não apareça junto com o cartão — aí quem
+ *    decide é o botão do cartão.
  *
  * O iOS/Safari não dispara esse evento — lá a instalação é manual
  * (Compartilhar → Adicionar à Tela de Início). Por isso o hook expõe
@@ -42,7 +52,7 @@ export function estaInstalado(): boolean {
   )
 }
 
-function ehIos(): boolean {
+export function ehIos(): boolean {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent
   // iPadOS 13+ se passa por Mac; o touch é o desempate.
@@ -50,18 +60,28 @@ function ehIos(): boolean {
   return /iPhone|iPad|iPod/.test(ua) || ipad
 }
 
-export function useInstalarPwa(): EstadoInstalacao {
+export function useInstalarPwa(opcoes?: { conviteAberto?: boolean }): EstadoInstalacao {
   const [evento, setEvento] = useState<EventoInstalacao | null>(null)
   const [instalado, setInstalado] = useState(estaInstalado)
   // iOS é derivado na inicialização: lá não há evento de instalação,
   // então já nasce com as instruções manuais (se ainda não instalado).
   const [instrucoesIos, setInstrucoesIos] = useState(() => ehIos() && !estaInstalado())
 
+  // Espelho síncrono de `conviteAberto` para o listener do evento. A
+  // escrita acontece só em efeito (não durante o render) — o lint e o
+  // React avisariam, e o valor ficaria defasado de qualquer forma.
+  const conviteAberto = useRef(false)
+
+  useEffect(() => {
+    conviteAberto.current = opcoes?.conviteAberto ?? false
+  }, [opcoes?.conviteAberto])
+
   useEffect(() => {
     function onPrompt(e: Event) {
-      // Segura o prompt: sem preventDefault o navegador mostraria o
-      // próprio banner no momento dele.
-      e.preventDefault()
+      // Com convite nosso na tela, seguramos o banner nativo (senão os
+      // dois apareceriam). Sem convite, deixamos o navegador perguntar
+      // sozinho — é assim que o Android pergunta sem ninguém pedir.
+      if (conviteAberto.current) e.preventDefault()
       setEvento(e as EventoInstalacao)
     }
 

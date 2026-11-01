@@ -195,7 +195,7 @@ export function useAcoesPainel({
 
     setConfirmacao({
       titulo: 'Esvaziar a lixeira',
-      descricao: `Apaga de vez ${alvos.join(', ')}. Não dá para restaurar depois.`,
+      descricao: `Excluir definitivamente ${alvos.join(', ')}. Essa ação não pode ser desfeita.`,
       rotuloConfirmar: 'Esvaziar lixeira',
       rotuloOcupado: 'Apagando...',
       onConfirmar: async () => {
