@@ -62,8 +62,7 @@ export function Contato() {
             <h1 className="display text-3xl text-texto sm:text-5xl">DG Motos BH
             </h1>
               <p className="lead mt-3 max-w-xl text-texto-2 sm:mt-4">
-                Estamos em Belo Horizonte. Escolha o melhor canal para falar com
-                nossa equipe.
+              Sua próxima conquista sobre duas rodas começa aqui.
             </p>
           </Revelar>
         </div>
