@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { LockKeyhole } from 'lucide-react'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
 import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
@@ -6,12 +7,14 @@ import { InstagramIcon } from '../ui/InstagramIcon'
 import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 
 const NAV = [
-  { to: '/', label: 'Página inicial' },
   { to: '/estoque', label: 'Estoque' },
   { to: '/contato', label: 'Contato' },
 ]
 
 const ANO_ATUAL = new Date().getFullYear()
+
+/** Link direto do WhatsApp de quem fez o site (ddi 55 + número). */
+const WHATSAPP_CRIADOR = 'https://wa.me/553198015559'
 
 export function Footer() {
   const { config } = useSiteConfig()
@@ -34,11 +37,8 @@ export function Footer() {
                 height={40}
                 className="size-10 object-contain"
               />
-              <span>
-                <span className="block font-display text-xl leading-none font-bold tracking-[0.03em]">
-                  DG Motos
-                </span>
-                <span className="mt-1 block text-sm text-texto-2">Realizando sonhos</span>
+              <span className="font-display text-xl leading-none font-bold tracking-[0.03em]">
+                DG Motos
               </span>
             </Link>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-texto-2">
@@ -114,9 +114,49 @@ export function Footer() {
         </div>
 
         <div className="mt-5 flex flex-col items-start justify-between gap-3 border-t border-painel-3/60 pt-4 text-sm text-texto-3 sm:flex-row sm:items-center">
-          <p>© {ANO_ATUAL} DG Motos · Belo Horizonte, MG.</p>
-          {/* Sem link para /admin aqui de propósito: a área restrita
-              não é anunciada — o dono digita o endereço. */}
+          <div className="flex items-center gap-1">
+            <p>© {ANO_ATUAL} DG Motos · Belo Horizonte, MG.</p>
+            {/* Porta do painel: discreta de propósito — quem sabe, sabe.
+                O ícone de cadeado não anuncia a área, só a deixa ao
+                alcance de quem conhece o site por dentro. */}
+            <Link
+              to="/admin/login"
+              aria-label="Área administrativa"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center text-texto-3 transition-colors hover:text-texto"
+            >
+              <LockKeyhole className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+          {/* Crédito do criador com atalho direto pro WhatsApp dele. */}
+          <a
+            href={WHATSAPP_CRIADOR}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center text-texto-3 transition-colors hover:text-texto"
+          >
+            <span>
+              Criado por{' '}
+              <span className="font-medium text-texto-2 underline decoration-texto-3/40 underline-offset-4 transition-colors hover:decoration-texto">
+                Elberth
+              </span>
+            </span>
+          </a>
+          {/* Campanha do Ibama, como no site da Honda: o selo acompanha
+              a frase. A frase vizinha já descreve o selo, por isso o
+              alt vazio — leitor de tela não lê tudo duas vezes. */}
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/icons/ibama.webp"
+              alt=""
+              width={28}
+              height={28}
+              loading="lazy"
+              className="size-7 shrink-0 object-contain"
+            />
+            <p className="tracking-wide">
+              Desacelere. Seu bem maior é a vida.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
