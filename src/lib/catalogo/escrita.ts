@@ -1,5 +1,5 @@
 import type { Motorcycle, MotorcycleSpec, MotorcycleStatus } from '../../types'
-import { getSupabase } from '../supabase'
+import { carregarSupabase } from '../supabase'
 import { mensagemLixeira } from './leitura'
 
 /**
@@ -80,7 +80,10 @@ export function proximoSlug(slugBase: string, existentes: string[]): string {
  * arquivos no Storage saem depois do save, em `excluirFotosRemovidas`.
  */
 async function salvarImagens(motoId: string, imagens: { src: string; alt: string }[]) {
-  const sb = getSupabase()!
+  const sb = await carregarSupabase()
+  if (!sb) {
+    return 'Supabase não configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env '
+  }
   const { error } = await sb.rpc('salvar_imagens_da_moto', {
     p_moto_id: motoId,
     p_imagens: imagens.map(({ src, alt }) => ({ src, alt })),
@@ -103,7 +106,7 @@ export async function salvarMoto(
   dados: MotoParaSalvar,
   id?: string,
 ): Promise<{ ok: boolean; erro: string | null }> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
 
   // O dono nunca digita slug: o endereço sai do que ele já preencheu.
@@ -196,7 +199,7 @@ export async function salvarMoto(
 export async function moverParaLixeira(
   id: string,
 ): Promise<{ ok: boolean; erro: string | null }> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
 
   const { error } = await sb
@@ -211,7 +214,7 @@ export async function moverParaLixeira(
 export async function restaurarMoto(
   id: string,
 ): Promise<{ ok: boolean; erro: string | null }> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
 
   const { error } = await sb.from('motorcycles').update({ lixeira_em: null }).eq('id', id)
@@ -224,7 +227,7 @@ export async function atualizarStatus(
   id: string,
   status: MotorcycleStatus,
 ): Promise<{ ok: boolean; erro: string | null }> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
 
   const { error } = await sb.from('motorcycles').update({ status }).eq('id', id)

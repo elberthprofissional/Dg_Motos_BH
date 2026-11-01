@@ -23,5 +23,10 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    // Reutiliza o worker entre arquivos em vez de subir um por arquivo:
+    // encurta a suíte em vários segundos. Os testes ainda rodam cada
+    // arquivo com mocks limpos (beforeEach/afterEach) — nada depende da
+    // ordem, então o reuso não vaza estado entre eles.
+    isolate: false,
   },
 })

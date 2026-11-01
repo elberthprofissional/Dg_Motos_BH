@@ -73,11 +73,15 @@ const { fila, sbComFilas } = vi.hoisted(() => {
   return { fila, sbComFilas }
 })
 
-// Singleton, como o cliente real: `getSupabase` devolve o mesmo objeto
-// a cada chamada, e o efeito do provider depende dele.
+// Singleton, como o cliente real: `carregarSupabase` devolve o mesmo objeto
+// a cada chamada (via Promise, como o import() dinâmico real), e o efeito
+// do provider depende dele.
 vi.mock('../lib/supabase', () => {
   let cliente: unknown = null
-  return { getSupabase: () => (cliente ??= sbComFilas()) }
+  return {
+    supabaseConfigured: true,
+    carregarSupabase: () => Promise.resolve((cliente ??= sbComFilas())),
+  }
 })
 
 const VENDA = {

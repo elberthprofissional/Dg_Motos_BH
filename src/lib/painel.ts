@@ -85,9 +85,6 @@ export function resumirEstoque(motos: Motorcycle[]): ResumoEstoque {
   }
 }
 
-/** Status do estoque, na ordem em que aparecem em filtro e no resumo. */
-export const STATUS_ESTOQUE = ['disponivel', 'indisponivel', 'vendida'] as const
-
 export function contarPorStatus(resumo: ResumoEstoque, status: MotorcycleStatus): number {
   if (status === 'disponivel') return resumo.disponiveis
   if (status === 'indisponivel') return resumo.indisponiveis

@@ -28,7 +28,7 @@ export function OutrasMotos({ recomendadas }: OutrasMotosProps) {
           <div className="flex items-end justify-between gap-6">
             <h2
               id="outras-titulo"
-              className="max-w-[12ch] font-display text-[2rem] leading-[1.02] font-bold tracking-[-0.035em] text-texto lg:text-[2.5rem]"
+              className="max-w-[12ch] font-display text-[2rem] leading-[1.02] font-bold tracking-[-0.035em] text-texto text-balance lg:text-[2.5rem]"
             >
               Outras motos no pátio
             </h2>

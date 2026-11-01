@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react'
-import { ArrowLeft, Check, ChevronRight, Download } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import {
   gravarConfig,
   gravarConfigNoBanco,
@@ -18,6 +18,8 @@ import { useInstalarApp } from './useInstalarApp'
 import { CamposSecao } from './configuracoes/CamposSecao'
 import { PeSecao } from './configuracoes/PeSecao'
 import { SaidaSecao } from './configuracoes/SaidaSecao'
+import { IndiceDesktop } from './configuracoes/IndiceDesktop'
+import { HubCelular } from './configuracoes/HubCelular'
 import { useTelaDeMesa } from './configuracoes/useTelaDeMesa'
 import {
   SECOES,
@@ -52,8 +54,9 @@ import type { Secao, SecaoConfig } from './configuracoes/dados'
  * dois arranjos compartilham a mesma lógica e nunca são montados ao
  * mesmo tempo — assim não existem ids duplicados de campo.
  *
- * As peças (campos, prévia e pé) vivem em `./configuracoes/`;
- * este arquivo guarda o estado, a gravação e os dois arranjos.
+ * As peças (campos, prévia e pé) vivem em `./configuracoes/` e os
+ * arranjos de tela (índice do desktop, hub do celular) também; este
+ * arquivo guarda o estado, a gravação e a montagem final.
  */
 
 interface ConfiguracoesTabProps {
@@ -404,63 +407,15 @@ export function ConfiguracoesTab({
 
       <div className="mesa-grade">
         <div className="mesa-indice">
-          <nav
-            className="mesa-nav"
-            role="tablist"
-            aria-label="Blocos de ajuste"
-            aria-orientation="vertical"
-          >
-            {SECOES.map((bloco, indice) => {
-              const selecionada = bloco.id === secaoAtiva
-              const suja = bloco.id !== 'lixeira' && secaoSuja(bloco.id, config, salvo)
-
-              return (
-                <button
-                  key={bloco.id}
-                  ref={(elemento) => {
-                    abaRefs.current[indice] = elemento
-                  }}
-                  id={`aba-${bloco.id}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={selecionada}
-                  aria-controls={`painel-${bloco.id}`}
-                  tabIndex={selecionada ? 0 : -1}
-                  onClick={() => abrirSecao(bloco.id)}
-                  onKeyDown={(evento) => aoTeclarAba(evento, indice)}
-                  className={`mesa-nav-item ${bloco.id === 'lixeira' ? 'mesa-nav-item--perigo' : ''}`}
-                >
-                  <span className="mesa-nav-indice" aria-hidden="true">
-                    {String(indice + 1).padStart(2, '0')}
-                  </span>
-                  <span className="mesa-nav-texto">
-                    <span className="mesa-nav-rotulo">
-                      {bloco.rotulo}
-                      {suja ? (
-                        <span className="mesa-nav-pendente" title="Alterações não salvas">
-                          <span className="sr-only">Alterações não salvas</span>
-                        </span>
-                      ) : null}
-                    </span>
-                    <span
-                      className={`mesa-nav-valor ${bloco.id === 'lixeira' ? 'mesa-nav-valor--perigo' : ''}`}
-                      aria-hidden="true"
-                    >
-                      {bloco.id === 'lixeira'
-                        ? 'Área de risco'
-                        : bloco.resumo(salvo, totalLixeira)}
-                    </span>
-                  </span>
-                  {bloco.id === 'lixeira' && totalLixeira > 0 ? (
-                    <span className="mesa-nav-contagem">
-                      {totalLixeira}
-                      <span className="sr-only"> na lixeira</span>
-                    </span>
-                  ) : null}
-                </button>
-              )
-            })}
-          </nav>
+          <IndiceDesktop
+            secaoAtiva={secaoAtiva}
+            config={config}
+            salvo={salvo}
+            totalLixeira={totalLixeira}
+            onAbrir={abrirSecao}
+            onTecla={aoTeclarAba}
+            abaRefs={abaRefs}
+          />
         </div>
 
         <section
@@ -529,54 +484,13 @@ export function ConfiguracoesTab({
         ) : null}
       </header>
 
-      <div className="mesa-hub">
-        {SECOES.map((bloco, indice) => {
-          const suja = bloco.id !== 'lixeira' && secaoSuja(bloco.id, config, salvo)
-
-          return (
-            <button
-              key={bloco.id}
-              type="button"
-              onClick={() => abrirSecao(bloco.id)}
-              className={`mesa-hub-item ${bloco.id === 'lixeira' ? 'mesa-hub-item--perigo' : ''}`}
-            >
-              <span className="mesa-hub-indice" aria-hidden="true">
-                {String(indice + 1).padStart(2, '0')}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="mesa-hub-rotulo">
-                  {bloco.rotulo}
-                  {suja ? (
-                    <span className="mesa-nav-pendente" title="Alterações não salvas">
-                      <span className="sr-only">Alterações não salvas</span>
-                    </span>
-                  ) : null}
-                </span>
-              </span>
-              <ChevronRight className="mesa-hub-seta size-4" aria-hidden="true" />
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="mesa-app mesa-app--mobile">
-        <div className="mesa-app-texto">
-          <p className="mesa-app-titulo">Aplicativo do painel</p>
-          <p className="mesa-app-nota">
-            {app.instalado
-              ? 'Instalado neste aparelho.'
-              : 'Abre em tela cheia, direto da tela inicial do celular.'}
-          </p>
-        </div>
-        <button type="button" onClick={app.abrir} className="mesa-btn-secundario">
-          {app.instalado ? (
-            <Check className="size-4" aria-hidden="true" />
-          ) : (
-            <Download className="size-4" aria-hidden="true" />
-          )}
-          {app.instalado ? 'Instalado' : 'Instalar app'}
-        </button>
-      </div>
+      <HubCelular
+        config={config}
+        salvo={salvo}
+        onAbrir={abrirSecao}
+        appInstalado={app.instalado}
+        onAbrirInstalacao={app.abrir}
+      />
     </div>
   )
 

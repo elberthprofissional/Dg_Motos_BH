@@ -1,4 +1,4 @@
-import { getSupabase, BUCKET_FOTOS } from '../supabase'
+import { carregarSupabase, BUCKET_FOTOS } from '../supabase'
 import { caminhoDeBucket } from '../fotos'
 import { mensagemLixeira } from './leitura'
 
@@ -34,7 +34,7 @@ export interface ResultadoExclusao {
 export async function excluirMotosDefinitivamente(
   ids: string[],
 ): Promise<ResultadoExclusao> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return { ok: false, erro: 'Supabase não configurado.' }
   if (ids.length === 0) return { ok: true, erro: null }
 
@@ -105,7 +105,7 @@ export async function excluirFotosRemovidas(
   antes: { src: string }[],
   depois: { src: string }[],
 ): Promise<void> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return
 
   const mantidas = new Set(depois.map((f) => f.src))
@@ -133,7 +133,7 @@ export async function excluirFotosAdicionadas(
   antes: { src: string }[],
   depois: { src: string }[],
 ): Promise<void> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return
 
   const anteriores = new Set(antes.map((f) => f.src))

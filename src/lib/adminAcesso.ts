@@ -1,4 +1,4 @@
-import { getSupabase } from './supabase'
+import { carregarSupabase } from './supabase'
 
 /**
  * Pergunta ao banco se a conta logada está na lista de administradores.
@@ -15,7 +15,7 @@ import { getSupabase } from './supabase'
  * `AuthProvider` mantém o painel fechado até vir `true`.
  */
 export async function consultarSeAdmin(): Promise<boolean | null> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return null
 
   const { data, error } = await sb.rpc('sou_admin')

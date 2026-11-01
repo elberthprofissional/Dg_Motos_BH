@@ -46,6 +46,19 @@ export function PalcoDesktop({
 
   return (
     <div className="hidden flex-col sm:flex lg:mx-auto lg:grid lg:w-full lg:max-w-7xl lg:grid-cols-12 lg:items-start lg:gap-10 lg:px-6 lg:py-8">
+      {/* Galeria: 3ª posição no fluxo do celular/tablet, e coluna
+          esquerda (7 de 12) no desktop. Precisa ser filho direto do
+          grid para o `col-span-7` valer. */}
+      <aside
+        aria-label={`Fotos de ${titulo} ${bike.ano}`}
+        className="order-3 mt-8 px-4 lg:order-none lg:col-span-7 lg:mt-0 lg:w-full lg:px-0"
+      >
+        <BikeGallery key={bike.id} imagens={bike.imagens} titulo={`${titulo} ${bike.ano}`} />
+      </aside>
+
+      {/* Painel de compra: no celular/tablet os filhos fluem um abaixo
+          do outro via `contents`; no desktop o wrapper vira a coluna
+          direita (5 de 12), grudada no topo enquanto a foto rola. */}
       <div className="contents lg:sticky lg:top-24 lg:col-span-5 lg:flex lg:min-w-0 lg:flex-col lg:self-start">
         <header className="order-1 px-4 pt-5 sm:pt-8 lg:order-none lg:px-0 lg:pt-0">
           <div className="max-w-[42rem]">
@@ -154,13 +167,6 @@ export function PalcoDesktop({
             </a>
           ) : null}
         </div>
-
-        <aside
-          aria-label={`Fotos de ${titulo} ${bike.ano}`}
-          className="order-3 mt-8 px-4 lg:order-first lg:col-span-7 lg:mt-0 lg:w-full lg:px-0"
-        >
-          <BikeGallery key={bike.id} imagens={bike.imagens} titulo={`${titulo} ${bike.ano}`} />
-        </aside>
       </div>
     </div>
   )

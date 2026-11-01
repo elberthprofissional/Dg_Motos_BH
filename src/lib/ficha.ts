@@ -31,7 +31,7 @@ export function descricaoDe(bike: Motorcycle): string[] {
 }
 
 /** Situação por extenso, para a ficha técnica. */
-export function statusLongo(status: MotorcycleStatus): string {
+function statusLongo(status: MotorcycleStatus): string {
   if (status === 'disponivel') return 'Disponível no pátio'
   if (status === 'vendida') return 'Vendida'
   return 'Indisponível no momento'

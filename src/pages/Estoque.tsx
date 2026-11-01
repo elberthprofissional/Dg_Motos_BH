@@ -1,46 +1,49 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, SearchX, SlidersHorizontal, X } from 'lucide-react'
+import { SearchX, SlidersHorizontal } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import {
-  ANO_MAX,
   ANO_MIN,
   FILTROS_PADRAO,
-  ORDENACOES,
   PRECO_MIN,
   filtrarMotos,
-  marcasDisponiveis,
-  modelosDisponiveis,
   tetoPrecoDisponivel,
 } from '../lib/filters'
 import type { BikeFilterState } from '../types'
 import { usePageMeta } from '../hooks/usePageMeta'
 import { Marcas } from '../components/home/MarcasProcuradas'
 import { BikeCard } from '../components/motorcycles/BikeCard'
-import { BikeFilters } from '../components/motorcycles/BikeFilters'
 import { EstadoVazio } from '../components/ui/EstadoVazio'
 import { Button } from '../components/ui/Button'
 import { Revelar } from '../components/ui/Revelar'
 import { formatPrice } from '../lib/format'
+import { BarraFiltrosDesktop } from '../components/estoque/BarraFiltrosDesktop'
+import { FolhaFiltrosMobile } from '../components/estoque/FolhaFiltrosMobile'
+import {
+  BotaoFiltrosFlutuante,
+  EtiquetasFiltros,
+  type EtiquetaFiltro,
+} from '../components/estoque/EtiquetasFiltros'
 
 /**
  * Estoque — a vitrine completa do pátio.
  *
- * A página começa direto no catálogo: filtros na coluna lateral e o
- * resultado em grade de vitrines. O título fica só para leitores de tela.
+ * A página começa direto no catálogo: filtros na barra do desktop (aplicam
+ * na hora) e o resultado em grade de vitrines. O título fica só para
+ * leitores de tela.
  *
- * A coluna de filtros trabalha com um rascunho: o visitante ajusta os
+ * A folha do celular trabalha com um rascunho: o visitante ajusta os
  * campos e só então aplica. Assim o resultado não muda a cada arrasto
  * de slider, e o botão "Aplicar filtros" tem uma função clara.
- *
- * No celular a coluna vira uma folha de tela cheia (um <dialog>
- * nativo, com foco preso e Esc de graça). A folha abre pelo botão na
- * pelo botão flutuante, sempre disponível.
  *
  * A coluna cresce dentro do <main>: num pátio curto (poucas motos), a
  * sobra de altura fica entre o resultado e a esteira de marcas, e a
  * esteira continua encostada no rodapé — como na Home, onde o conteúdo
  * é longo demais para sobrar espaço.
+ *
+ * Peças visuais moram em `components/estoque/`: a barra do desktop, a
+ * folha do celular e as etiquetas de filtros ativos. Aqui fica a
+ * máquina de estado dos filtros.
  */
 export function Estoque() {
   const { motos } = useCatalogo()
@@ -116,12 +119,6 @@ export function Estoque() {
     gatilhoRef.current?.focus()
   }
 
-  const cancelarFolha = () => {
-    setRascunho(filtrosAtuais)
-    setTetoPrecoRascunhoAlterado(tetoPrecoAplicadoAlterado)
-    fecharFolha()
-  }
-
   const aplicarEFechar = () => {
     setFiltros(rascunhoAtual)
     setTetoPrecoAplicadoAlterado(tetoPrecoRascunhoAlterado)
@@ -162,7 +159,7 @@ export function Estoque() {
   // Resumo removível dos filtros ativos: cada etiqueta sabe desfazer
   // só o próprio campo. A ordenação não entra na conta — ela organiza,
   // não restringe o pátio.
-  const ativos: { chave: string; rotulo: string; limpar: () => void }[] = []
+  const ativos: EtiquetaFiltro[] = []
 
   if (filtros.busca.trim()) {
     ativos.push({
@@ -204,10 +201,9 @@ export function Estoque() {
   const totalDisponiveis = motos.filter((moto) => moto.status === 'disponivel').length
 
   return (
-<div className="flex grow flex-col pt-cabecalho">
-        <section className="grow bg-fundo pt-2 pb-6 sm:pt-3 sm:pb-8">
-          <div className="container-site">
-
+    <div className="flex grow flex-col pt-cabecalho">
+      <section className="grow bg-fundo pt-2 pb-6 sm:pt-3 sm:pb-8">
+        <div className="container-site flex grow">
           {/* Resultado */}
           <div className="min-w-0 flex-1">
             {/* A vitrine abre direto no grid, sem título visível — mas
@@ -217,166 +213,16 @@ export function Estoque() {
             <h1 className="sr-only">Estoque de motos seminovas em Belo Horizonte</h1>
             <h2 className="sr-only">Resultados do estoque</h2>
 
-            {/* Barra de filtros do desktop: uma linha acima do grid, à la
-                catálogo simples — sem coluna lateral. Aplica na hora (o
-                mesmo caminho dos chips); o botão de aplicar ficou pro
-                celular, que continua com a folha de rascunho intacta. */}
-            <form
-              onSubmit={(e) => e.preventDefault()}
-              aria-label="Filtros do estoque"
-              className="mb-6 hidden flex-wrap items-end gap-3 bg-painel p-4 lg:flex"
-            >
-              <div className="min-w-44 flex-1">
-                <label htmlFor="barra-busca" className="field-label">
-                  Buscar
-                </label>
-                <div className="relative">
-                  <Search
-                    className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-texto-3"
-                    aria-hidden="true"
-                  />
-                  <input
-                    id="barra-busca"
-                    type="search"
-                    value={filtros.busca}
-                    onChange={(e) => atualizar({ busca: e.target.value })}
-                    placeholder="Marca, modelo ou ano"
-                    className="h-10 w-full rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1.5 pr-8 pl-8 text-[13px] text-neutral-200 transition-colors placeholder:text-texto-3 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600/30 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="w-40">
-                <label htmlFor="barra-marca" className="field-label">
-                  Marca
-                </label>
-                <select
-                  id="barra-marca"
-                  value={filtros.marca}
-                  onChange={(e) => atualizar({ marca: e.target.value, modelo: '' })}
-                  className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
-                >
-                  <option value="">Todas as marcas</option>
-                  {marcasDisponiveis(motos).map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="w-40">
-                <label htmlFor="barra-modelo" className="field-label">
-                  Modelo
-                </label>
-                {filtros.marca ? (
-                  <select
-                    id="barra-modelo"
-                    value={filtros.modelo}
-                    onChange={(e) => atualizar({ modelo: e.target.value })}
-                    className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
-                  >
-                    <option value="">Todos os modelos</option>
-                    {modelosDisponiveis(motos, filtros.marca).map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <select
-                    id="barra-modelo"
-                    disabled
-                    aria-disabled="true"
-                    className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px] opacity-60"
-                  >
-                    <option value="">Escolha a marca</option>
-                  </select>
-                )}
-              </div>
-
-              <div className="w-36">
-                <label htmlFor="barra-ano" className="field-label">
-                  Ano
-                </label>
-                <select
-                  id="barra-ano"
-                  value={filtros.anoMin}
-                  onChange={(e) => atualizar({ anoMin: Number(e.target.value) })}
-                  className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
-                >
-                  <option value={ANO_MIN}>Ano: todos</option>
-                  {Array.from({ length: ANO_MAX - ANO_MIN }, (_, i) => ANO_MAX - i).map(
-                    (ano) => (
-                      <option key={ano} value={ano}>
-                        A partir de {ano}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </div>
-
-              <div className="w-36">
-                <label htmlFor="barra-ordenacao" className="field-label">
-                  Ordenar
-                </label>
-                <select
-                  id="barra-ordenacao"
-                  value={filtros.ordenacao}
-                  onChange={(e) =>
-                    atualizar({ ordenacao: e.target.value as BikeFilterState['ordenacao'] })
-                  }
-                  className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
-                >
-                  {ORDENACOES.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Preço: um puxador só, "até tal" — a versão limpa da
-                  referência. O mínimo fica no padrão (a folha do celular
-                  continua com os dois, intocada). */}
-              <div className="w-44">
-                <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="barra-preco-max" className="field-label !mb-0">
-                    Preço até
-                  </label>
-                  <span className="numeros text-[11px] leading-none font-semibold text-neutral-200">
-                    {formatPrice(filtrosAtuais.precoMax)}
-                  </span>
-                </div>
-                <div className="flex h-10 items-center">
-                  <input
-                    id="barra-preco-max"
-                    type="range"
-                    aria-label="Preço até"
-                    min={PRECO_MIN}
-                    max={precoMaximo}
-                    step={1000}
-                    value={filtrosAtuais.precoMax}
-                    onChange={(e) =>
-                      atualizar({
-                        precoMax: Math.max(Number(e.target.value), filtrosAtuais.precoMin + 1000),
-                      })
-                    }
-                    className="w-full"
-                  />
-                </div>
-              </div>
-
-              {temAtivos ? (
-                <button
-                  type="button"
-                  onClick={limparFiltros}
-                  className="self-center shrink-0 text-[13px] text-texto-3 transition-colors hover:text-texto"
-                >
-                  Limpar filtros
-                </button>
-              ) : null}
-            </form>
+            {/* Barra de filtros do desktop */}
+            <BarraFiltrosDesktop
+              motos={motos}
+              filtros={filtros}
+              filtrosAtuais={filtrosAtuais}
+              precoMaximo={precoMaximo}
+              temAtivos={temAtivos}
+              atualizar={atualizar}
+              limparFiltros={limparFiltros}
+            />
 
             {/* No celular, a folha de filtros abre por aqui. */}
             <div className="mb-5 flex items-center gap-3 lg:hidden">
@@ -400,39 +246,16 @@ export function Estoque() {
               </p>
             </div>
 
-            {temAtivos ? (
-              <div className="mb-5 flex flex-wrap items-center gap-2">
-                {ativos.map((ativo) => (
-                  <button
-                    key={ativo.chave}
-                    type="button"
-                    onClick={ativo.limpar}
-                    className="inline-flex items-center gap-2 rounded-full border border-borda bg-painel-2 px-3 py-1.5 font-sans text-xs text-texto-2 transition-colors hover:border-borda-forte hover:text-texto"
-                  >
-                    {ativo.rotulo}
-                    <X className="size-3.5" aria-hidden="true" />
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={limparFiltros}
-                  className="px-1 py-1.5 font-sans text-xs font-semibold text-marca-texto transition-colors hover:text-texto"
-                >
-                  Limpar tudo
-                </button>
-              </div>
-            ) : null}
+            {temAtivos ? <EtiquetasFiltros ativos={ativos} onLimparTudo={limparFiltros} /> : null}
 
             {resultados.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {resultados.map((bike, i) => (
-                    <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
-                      <BikeCard bike={bike} priority={i < 3} />
-                    </Revelar>
-                  ))}
-                </div>
-              </>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {resultados.map((bike, i) => (
+                  <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
+                    <BikeCard bike={bike} priority={i < 3} />
+                  </Revelar>
+                ))}
+              </div>
             ) : (
               <div className="bg-painel px-4 py-2 sm:px-8">
                 <EstadoVazio
@@ -456,7 +279,6 @@ export function Estoque() {
                 />
               </div>
             )}
-
           </div>
         </div>
       </section>
@@ -465,95 +287,34 @@ export function Estoque() {
           do resultado para não competir com os filtros. */}
       <Marcas />
 
-      {/* Folha de filtros do celular: dialog nativo — foco preso, Esc
-          e camada superior de graça, como o menu. */}
+      {/* Folha de filtros do celular */}
       {filtrosAbertos && (
-        <dialog
-          ref={(el) => {
-            folhaRef.current = el
-            if (el && !el.open) el.showModal()
+        <FolhaFiltrosMobile
+          motos={motos}
+          rascunho={rascunhoAtual}
+          precoMaximo={precoMaximo}
+          folhaRef={folhaRef}
+          aoMudar={(proximo) => {
+            setRascunho(proximo)
+            if (proximo.precoMax !== rascunhoAtual.precoMax) {
+              setTetoPrecoRascunhoAlterado(true)
+            }
           }}
-          onClose={() => {
+          onAplicar={aplicarEFechar}
+          onCancelar={() => {
             setFiltrosAbertos(false)
             gatilhoRef.current?.focus()
           }}
-          className="menu-mobile"
-          aria-label="Filtros do estoque"
-        >
-          <div className="flex h-full flex-col">
-            <div className="flex items-center justify-between border-b border-borda px-5 py-4">
-              <div>
-                <h2 className="font-display text-lg leading-none font-bold text-texto">
-                  Filtrar
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={cancelarFolha}
-                aria-label="Fechar filtros"
-                className="btn-icone rounded-xl"
-              >
-                <X className="size-5" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto overscroll-contain p-5">
-              <BikeFilters
-                filtros={rascunhoAtual}
-                motos={motos}
-                precoMaximo={precoMaximo}
-                onChange={(proximo) => {
-                  setRascunho(proximo)
-                  if (proximo.precoMax !== rascunhoAtual.precoMax) {
-                    setTetoPrecoRascunhoAlterado(true)
-                  }
-                }}
-                onAplicar={aplicarEFechar}
-                prefix="filtro-m"
-              />
-            </div>
-
-            <div className="border-t border-borda bg-painel px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={limparFiltros}
-                  className="rounded-xl border border-borda px-4 py-3 text-sm text-texto-2 transition-colors hover:border-borda-forte hover:text-texto"
-                >
-                  Limpar
-                </button>
-                <button
-                  type="button"
-                  onClick={aplicarEFechar}
-                  className="flex-1 rounded-xl bg-white py-3 text-sm font-bold text-black transition-colors hover:bg-neutral-200"
-                >
-                  Aplicar filtros
-                </button>
-              </div>
-            </div>
-          </div>
-        </dialog>
+          onLimpar={limparFiltros}
+        />
       )}
 
-      {/* Botão flutuante de filtro — só no celular. Ele é o espelho do
-          WhatsApp no outro canto. */}
-      <button
-        type="button"
-        onClick={(e) => abrirFolha(e.currentTarget)}
-        aria-label={
-          temAtivos ? `Abrir filtros, ${ativos.length} ativos` : 'Abrir filtros'
-        }
-        aria-expanded={filtrosAbertos}
-        aria-haspopup="dialog"
-        className="fixed left-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 grid size-14 place-items-center rounded-2xl border border-borda-forte bg-painel-2 text-texto transition-colors hover:border-marca hover:text-marca-texto lg:hidden"
-      >
-        <SlidersHorizontal className="size-6" aria-hidden="true" />
-        {temAtivos ? (
-          <span className="absolute -top-2 -right-2 grid size-6 place-items-center rounded-full bg-marca font-sans text-[11px] font-bold text-white">
-            {ativos.length}
-          </span>
-        ) : null}
-      </button>
+      {/* Botão flutuante de filtro — espelho do WhatsApp no outro canto. */}
+      <BotaoFiltrosFlutuante
+        abertos={filtrosAbertos}
+        contarAtivos={ativos.length}
+        onAbrir={abrirFolha}
+      />
     </div>
   )
 }

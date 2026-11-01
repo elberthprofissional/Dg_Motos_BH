@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { getSupabase } from '../lib/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { carregarSupabase, supabaseConfigured } from '../lib/supabase'
 import { resumirVendas } from '../lib/painel'
 import type { Venda, VendaParaSalvar } from '../types'
 import { VendasContexto } from './vendasContexto'
@@ -63,34 +64,43 @@ function linhaParaVenda(l: LinhaVenda): Venda {
 }
 
 export function VendasProvider({ children }: { children: ReactNode }) {
-  const sb = getSupabase()
+  const [sb, setSb] = useState<SupabaseClient | null>(null)
   const [vendas, setVendas] = useState<Venda[]>([])
-  const [carregando, setCarregando] = useState<boolean>(() => Boolean(sb))
+  const [carregando, setCarregando] = useState<boolean>(() => supabaseConfigured)
   const [erro, setErro] = useState<string | null>(() =>
-    sb ? null : 'Supabase não configurado neste deploy.',
+    supabaseConfigured ? null : 'Supabase não configurado neste deploy.',
   )
 
   useEffect(() => {
-    if (!sb) return
+    if (!supabaseConfigured) return
 
     let vivo = true
-    sb.from('sales')
-      .select('*')
-      .order('vendida_em', { ascending: false })
-      .then(({ data, error }) => {
-        if (!vivo) return
+    void carregarSupabase().then((cliente) => {
+      if (!vivo) return
+      if (!cliente) {
         setCarregando(false)
-        if (error) {
-          setErro(error.message)
-          return
-        }
-        setVendas(((data ?? []) as LinhaVenda[]).map(linhaParaVenda))
-      })
+        setErro('Não consegui me conectar ao banco de dados.')
+        return
+      }
+      setSb(cliente)
+      cliente.from('sales')
+      .select('*')
+      .order('vendida_em', { ascending: false })        .then(({ data, error }) => {
+          if (!vivo) return
+          setCarregando(false)
+          if (error) {
+            setErro(error.message)
+
+            return
+          }
+          setVendas(((data ?? []) as LinhaVenda[]).map(linhaParaVenda))
+        })
+    })
 
     return () => {
       vivo = false
     }
-  }, [sb])
+  }, [])
 
   const salvarVenda = useCallback(
     async (dados: VendaParaSalvar): Promise<string | null> => {

@@ -1,5 +1,5 @@
 import { SITE, SITE_URL, WHATSAPP_NUMBER } from '../data/site'
-import { getSupabase } from './supabase'
+import { carregarSupabase } from './supabase'
 
 /**
  * ============================================================
@@ -29,7 +29,7 @@ export interface ConfigLoja {
 }
 
 /** Valor de fábrica, montado a partir de src/data/site.ts. */
-export function configPadrao(): ConfigLoja {
+function configPadrao(): ConfigLoja {
   return {
     whatsapp: WHATSAPP_NUMBER,
     instagramHandle: SITE.instagram.handle,
@@ -61,7 +61,7 @@ function normalizarConfig(salvo: Partial<ConfigLoja> | null | undefined): Config
 
 /** Busca configuração salva no banco. */
 export async function lerConfigDoBanco(): Promise<ConfigLoja | null> {
-  const supabase = getSupabase()
+  const supabase = await carregarSupabase()
   if (!supabase) return null
   try {
     const { data, error } = await supabase
@@ -80,7 +80,7 @@ export async function lerConfigDoBanco(): Promise<ConfigLoja | null> {
 
 /** Salva configuração no banco. */
 export async function gravarConfigNoBanco(config: ConfigLoja): Promise<boolean> {
-  const supabase = getSupabase()
+  const supabase = await carregarSupabase()
   if (!supabase) return false
   try {
     const { error } = await supabase
@@ -98,7 +98,7 @@ export async function gravarConfigNoBanco(config: ConfigLoja): Promise<boolean> 
 
 /** Restaura configuração no banco para os valores de fábrica. */
 export async function limparConfigNoBanco(): Promise<boolean> {
-  const supabase = getSupabase()
+  const supabase = await carregarSupabase()
   if (!supabase) return false
   try {
     const { error } = await supabase
@@ -131,7 +131,7 @@ function avisarMudanca(): void {
 }
 
 /** Salva cópia local no localStorage (cache/compatibilidade). */
-export function salvarConfigLocal(config: ConfigLoja): void {
+function salvarConfigLocal(config: ConfigLoja): void {
   try {
     localStorage.setItem(CHAVE, JSON.stringify(config))
   } catch {
@@ -151,14 +151,7 @@ export function lerConfigLocal(): ConfigLoja | null {
   }
 }
 
-/** Limpa cópia local do localStorage. */
-export function limparConfigLocal(): void {
-  try {
-    localStorage.removeItem(CHAVE)
-  } catch {
-    // Sem storage não há nada a limpar.
-  }
-}
+
 
 /** O valor salvo no painel ou, sem ele, o de fábrica. */
 export function lerConfig(): ConfigLoja {
@@ -170,12 +163,6 @@ export function lerConfig(): ConfigLoja {
 /** Salva a config editada no painel (localStorage + evento). */
 export function gravarConfig(config: ConfigLoja): void {
   salvarConfigLocal(config)
-  avisarMudanca()
-}
-
-/** Restaura os valores de fábrica (src/data/site.ts). */
-export function limparConfig(): void {
-  limparConfigLocal()
   avisarMudanca()
 }
 export { SITE_URL }

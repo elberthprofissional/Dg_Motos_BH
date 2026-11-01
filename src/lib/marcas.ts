@@ -6,18 +6,6 @@
  * testáveis sem renderizar React.
  */
 
-/** Iniciais: primeira letra de cada palavra, até 2. Honda → HO. */
-export function iniciaisDaMarca(marca: string): string {
-  return marca
-    .trim()
-    .split(/\s+/)
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-}
-
 /** Caminho do arquivo de logo: Yamaha → /marcas/yamaha.webp. */
 export function logoDaMarca(marca: string): string {
   const slug = marca

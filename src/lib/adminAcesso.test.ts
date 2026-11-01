@@ -13,7 +13,7 @@ import { consultarSeAdmin } from './adminAcesso'
 const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }))
 
 vi.mock('./supabase', () => ({
-  getSupabase: () => ({ rpc }),
+  carregarSupabase: () => ({ rpc }),
 }))
 
 describe('consultarSeAdmin', () => {

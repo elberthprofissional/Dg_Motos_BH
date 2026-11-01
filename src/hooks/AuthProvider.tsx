@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { getSupabase, supabaseConfigured } from '../lib/supabase'
+import { carregarSupabase, supabaseConfigured } from '../lib/supabase'
 import { AuthContexto } from './authContexto'
 import { traduzirErroLogin } from '../lib/authErros'
 import { consultarSeAdmin } from '../lib/adminAcesso'
@@ -36,26 +36,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const respondidoRef = useRef<string | null>(null)
 
   useEffect(() => {
-    const sb = getSupabase()
-    if (!sb) return
-
     let vivo = true
+    let pararSubscription: (() => void) | null = null
 
-    sb.auth.getSession().then(({ data }) => {
-      if (!vivo) return
-      setSessao(data.session)
-      setCarregando(false)
-    })
+    void carregarSupabase().then((sb) => {
+      if (!sb || !vivo) return
 
-    // Mantém o estado em sincronia com login, logout e token renovado.
-    const { data: sub } = sb.auth.onAuthStateChange((_evento, nova) => {
-      setSessao(nova)
-      setCarregando(false)
+      sb.auth.getSession().then(({ data }) => {
+        if (!vivo) return
+        setSessao(data.session)
+        setCarregando(false)
+      })
+
+      // Mantém o estado em sincronia com login, logout e token renovado.
+      const { data: sub } = sb.auth.onAuthStateChange((_evento, nova) => {
+        if (!vivo) return
+        setSessao(nova)
+        setCarregando(false)
+      })
+
+      pararSubscription = () => sub.subscription.unsubscribe()
     })
 
     return () => {
       vivo = false
-      sub.subscription.unsubscribe()
+      pararSubscription?.()
     }
   }, [])
 
@@ -102,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const acessoIncerto = acessoDestaConta !== null && acessoDestaConta.ehAdmin === null
 
   async function entrar(email: string, senha: string): Promise<string | null> {
-    const sb = getSupabase()
+    const sb = await carregarSupabase()
     if (!sb) return 'Supabase não configurado.'
     const { data, error } = await sb.auth.signInWithPassword({ email, password: senha })
     if (error) return traduzirErroLogin(error)
@@ -123,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (resultado === false) {
       setAcesso(null)
       respondidoRef.current = null
-      await getSupabase()?.auth.signOut()
+      await (await carregarSupabase())?.auth.signOut()
       setSessao(null)
       return 'Esta conta não tem acesso ao painel. Entre com o e-mail do dono da loja.'
     }
@@ -133,14 +138,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function sair(): Promise<void> {
-    await getSupabase()?.auth.signOut()
+    await (await carregarSupabase())?.auth.signOut()
     setSessao(null)
     setAcesso(null)
     respondidoRef.current = null
   }
 
   async function enviarReset(email: string): Promise<string | null> {
-    const sb = getSupabase()
+    const sb = await carregarSupabase()
     if (!sb) return 'Supabase não configurado.'
     // Redireciona de volta para a área restrita, na tela de nova senha.
     const { error } = await sb.auth.resetPasswordForEmail(email, {
@@ -150,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function redefinirSenha(senha: string): Promise<string | null> {
-    const sb = getSupabase()
+    const sb = await carregarSupabase()
     if (!sb) return 'Supabase não configurado.'
     const { error } = await sb.auth.updateUser({ password: senha })
     return error ? traduzirErroLogin(error) : null

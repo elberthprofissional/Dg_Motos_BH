@@ -7,6 +7,9 @@ const L = Number(process.env.LARGURA ?? 390)
 const A = Number(process.env.ALTURA ?? 900)
 const NOME = process.env.NOME ?? 'tela'
 const ROLAR = Number(process.env.ROLAR ?? 0)
+const BASE = process.env.BASE ?? 'http://localhost:5173'
+const SAIDA = process.env.SAIDA ?? '.taste-skill/inspect'
+const CHEIA = process.env.CHEIA === '1'
 const { writeFileSync, mkdirSync } = await import('node:fs')
 
 const v = await (await fetch(`${CDP}/json/version`)).json()
@@ -41,16 +44,16 @@ const carregou = new Promise((res) => {
   }
   ls.push(h)
 })
-await send('Page.navigate', { url: `http://localhost:5173${ROTA}` }, sessionId)
+await send('Page.navigate', { url: `${BASE}${ROTA}` }, sessionId)
 await carregou
-await new Promise((r) => setTimeout(r, 2200))
+await new Promise((r) => setTimeout(r, 3200))
 if (ROLAR) {
   await send('Runtime.evaluate', { expression: `scrollTo(0, ${ROLAR})` }, sessionId)
   await new Promise((r) => setTimeout(r, 600))
 }
-mkdirSync('.taste-skill/inspect', { recursive: true })
-const shot = await send('Page.captureScreenshot', { format: 'png' }, sessionId)
-writeFileSync(`.taste-skill/inspect/${NOME}-${L}.png`, Buffer.from(shot.data, 'base64'))
+mkdirSync(SAIDA, { recursive: true })
+const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: CHEIA }, sessionId)
+writeFileSync(`${SAIDA}/${NOME}-${L}.png`, Buffer.from(shot.data, 'base64'))
 const med = await send('Runtime.evaluate', {
   returnByValue: true,
   expression: `({ overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, altura: document.documentElement.scrollHeight })`,

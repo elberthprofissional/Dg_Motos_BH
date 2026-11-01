@@ -6,8 +6,8 @@
  * antes do upload. Antes cada fluxo tinha números próprios e a mesma
  * foto saía diferente conforme a aba.
  */
-export const FOTO_LADO_MAX = 1600
-export const FOTO_QUALIDADE = 0.82
+const FOTO_LADO_MAX = 1600
+const FOTO_QUALIDADE = 0.82
 export const FOTO_TAMANHO_MAX_MB = 12
 
 export async function comprimirParaWebp(arquivo: File): Promise<Blob> {

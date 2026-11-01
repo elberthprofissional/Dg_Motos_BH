@@ -4,7 +4,7 @@ import type {
   FotoNaLixeira,
   StatusEntrega,
 } from '../data/entregas'
-import { BUCKET_ENTREGAS, getSupabase } from './supabase'
+import { BUCKET_ENTREGAS, carregarSupabase } from './supabase'
 import { comprimirParaWebp, FOTO_TAMANHO_MAX_MB } from './imagens'
 
 interface LinhaEntrega {
@@ -58,7 +58,7 @@ async function assinarFotos(
   validadeSegundos = 60 * 60 * 24,
 ): Promise<Map<string, string>> {
   const urls = new Map<string, string>()
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   const unicos = [...new Set(paths)]
   if (!sb || unicos.length === 0) return urls
 
@@ -93,7 +93,7 @@ function paraRegistro(linha: LinhaEntrega, urls: Map<string, string>): EntregaRe
 }
 
 export async function buscarEntregasAdmin(): Promise<EntregaRegistro[]> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
 
   const { data, error } = await sb
@@ -109,7 +109,7 @@ export async function buscarEntregasAdmin(): Promise<EntregaRegistro[]> {
 }
 
 export async function buscarEntregasPublicadas(limite?: number): Promise<EntregaPublicada[]> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return []
 
   const consulta = sb
@@ -146,7 +146,7 @@ export async function buscarEntregasPublicadas(limite?: number): Promise<Entrega
 
 /** Fotos que saíram do mural, da exclusão mais recente para a mais antiga. */
 export async function buscarFotosNaLixeira(): Promise<FotoNaLixeira[]> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
 
   const { data, error } = await sb
@@ -173,7 +173,7 @@ export async function buscarFotosNaLixeira(): Promise<FotoNaLixeira[]> {
  * que a foto sumiu da publicação sem estar na lixeira (ou vice-versa).
  */
 export async function moverFotoParaLixeira(entregaId: string, caminho: string): Promise<void> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
   const { error } = await sb.rpc('mover_foto_entrega_para_lixeira', {
     p_entrega_id: entregaId,
@@ -184,7 +184,7 @@ export async function moverFotoParaLixeira(entregaId: string, caminho: string): 
 
 /** Devolve a foto à publicação de origem; ela volta ao ar se autorizada. */
 export async function restaurarFotoDaLixeira(id: string): Promise<void> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
   const { error } = await sb.rpc('restaurar_foto_da_lixeira', { p_id: id })
   if (error) throw new Error(error.message)
@@ -200,7 +200,7 @@ export async function restaurarFotoDaLixeira(id: string): Promise<void> {
 export async function apagarFotosDaLixeira(
   fotos: FotoNaLixeira[],
 ): Promise<{ aviso: string | null }> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
   if (fotos.length === 0) return { aviso: null }
 
@@ -222,7 +222,7 @@ export async function apagarFotosDaLixeira(
 }
 
 export async function salvarEntrega(dados: EntregaParaSalvar): Promise<void> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
   if (dados.status === 'publicada' && dados.fotos.length === 0) {
     throw new Error('Para publicar, adicione ao menos uma foto.')
@@ -248,7 +248,7 @@ export async function salvarEntrega(dados: EntregaParaSalvar): Promise<void> {
 }
 
 export async function arquivarEntrega(id: string): Promise<void> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
   const { error } = await sb.from('entregas').update({ status: 'arquivada' }).eq('id', id)
   if (error) throw new Error(error.message)
@@ -262,7 +262,7 @@ export async function arquivarEntrega(id: string): Promise<void> {
  * foto quando o status é `publicada`) continua válido sem virar erro.
  */
 export async function atualizarFotosEntrega(id: string, fotos: string[]): Promise<void> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
   const linha = fotos.length === 0 ? { fotos, status: 'arquivada' } : { fotos }
   const { error } = await sb.from('entregas').update(linha).eq('id', id)
@@ -290,7 +290,7 @@ export async function enviarFotosEntrega(
     throw new Error('Até 10 fotos por publicação.')
   }
 
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) throw new Error('Supabase não configurado neste deploy.')
 
   const paths: string[] = []

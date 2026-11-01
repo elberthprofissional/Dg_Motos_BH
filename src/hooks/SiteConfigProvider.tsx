@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { EVENTO_CONFIG, lerConfig, lerConfigDoBanco, lerConfigLocal } from '../lib/configLoja'
 import type { ConfigLoja } from '../lib/configLoja'
-import { getSupabase } from '../lib/supabase'
+import { supabaseConfigured } from '../lib/supabase'
 import { SiteConfigContexto } from './siteConfigContexto'
 
 /**
@@ -15,14 +15,14 @@ import { SiteConfigContexto } from './siteConfigContexto'
  */
 export function SiteConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<ConfigLoja>(() => lerConfig())
-  const [carregando, setCarregando] = useState<boolean>(() => Boolean(getSupabase()))
+  const [carregando, setCarregando] = useState<boolean>(() => supabaseConfigured)
   const [doBanco, setDoBanco] = useState(false)
 
   useEffect(() => {
     let ativo = true
 
     async function carregar() {
-      if (!getSupabase()) return
+      if (!supabaseConfigured) return
 
       const doBancoConfig = await lerConfigDoBanco()
       if (!ativo) return

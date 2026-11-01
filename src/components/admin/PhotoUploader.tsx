@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Trash2 } from 'lucide-react'
-import { BUCKET_FOTOS, getSupabase, urlPublica } from '../../lib/supabase'
+import { BUCKET_FOTOS, carregarSupabase, urlPublica } from '../../lib/supabase'
 import { caminhoDeBucket, caminhoUnico, nomeSeguro } from '../../lib/fotos'
 import type { FotoSaida } from '../../lib/fotos'
 import { comprimirParaWebp, FOTO_TAMANHO_MAX_MB } from '../../lib/imagens'
@@ -38,7 +38,7 @@ export function PhotoUploader({ slug, fotos, onChange }: PhotoUploaderProps) {
     setErro(null)
     setEnviando(true)
 
-    const sb = getSupabase()
+    const sb = await carregarSupabase()
     const novas: FotoSaida[] = []
 
     try {

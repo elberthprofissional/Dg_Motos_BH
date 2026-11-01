@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const URL = import.meta.env.VITE_SUPABASE_URL?.trim()
@@ -13,46 +12,43 @@ const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
  */
 export const supabaseConfigured: boolean = Boolean(URL && ANON_KEY)
 
-let client: SupabaseClient | null = null
+/**
+ * ============================================================
+ * O cliente pesado entra só sob demanda
+ * ============================================================
+ * Este módulo é leve e pode ser importado no caminho crítico da
+ * vitrine. O cliente de verdade mora em `supabaseCliente.ts`
+ * (~200 kB) e só baixa quando alguém espera esta promise.
+ */
 
 /**
- * Cliente do Supabase, ou `null` se o projeto não estiver configurado.
+ * Cliente do Supabase, ou `null` se o projeto não estiver
+ * configurado (ou se o chunk falhar a baixar — rede).
  *
  * Espere `null` e degrade — não tente chamar métodos em cima dele.
  */
-export function getSupabase(): SupabaseClient | null {
+export async function carregarSupabase(): Promise<SupabaseClient | null> {
   if (!supabaseConfigured) return null
-  client ??= createClient(URL!, ANON_KEY!, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      // O link de recuperação chega com o token na URL (#access_token=
-      // ou ?code=). Sem detectar, /admin/redefinir abre sem sessão e a
-      // troca de senha falha.
-      detectSessionInUrl: true,
-    },
-  })
-  return client
-}
-
-/** Mesmo cliente, mas lança erro em vez de devolver `null`. */
-export function requireSupabase(): SupabaseClient {
-  const sb = getSupabase()
-  if (!sb) {
-    throw new Error(
-      'Supabase não configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env (veja .env.example).',
-    )
+  try {
+    const { cliente } = await import('./supabaseCliente')
+    return cliente
+  } catch {
+    return null
   }
-  return sb
 }
 
 /** Nome do bucket de fotos. */
 export const BUCKET_FOTOS = 'motos'
 export const BUCKET_ENTREGAS = 'entregas'
 
-/** Monta a URL pública de uma foto do Storage. */
+/**
+ * Monta a URL pública de uma foto do Storage, sem precisar do
+ * cliente: é só interpolação como o `getPublicUrl` faz. Fica
+ * sincrono de propósito — é chamado direto no JSX das galerias.
+ */
 export function urlPublica(caminho: string): string {
-  const sb = getSupabase()
-  if (!sb) return caminho
-  return sb.storage.from(BUCKET_FOTOS).getPublicUrl(caminho).data.publicUrl
+  if (!supabaseConfigured) return caminho
+  const origem = (URL ?? '').replace(/\/+$/, '')
+  const caminhoLimpo = caminho.replace(/^\/+/, '')
+  return `${origem}/storage/v1/object/public/${BUCKET_FOTOS}/${caminhoLimpo}`
 }

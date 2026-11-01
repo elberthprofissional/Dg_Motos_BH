@@ -1,5 +1,5 @@
 import type { Motorcycle, MotorcycleStatus, MotorcycleSpec } from '../../types'
-import { getSupabase } from '../supabase'
+import { carregarSupabase } from '../supabase'
 
 /**
  * ============================================================
@@ -151,7 +151,7 @@ export function mensagemLixeira(error: { code?: string; message: string }): stri
 export async function buscarCatalogo(
   opcoes: { incluirLixeira?: boolean } = {},
 ): Promise<ResultadoCatalogo> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) {
     return { motos: [], doBanco: false, erro: 'Supabase não configurado neste deploy.' }
   }
@@ -237,7 +237,7 @@ export function custoIndisponivel(e: unknown): boolean {
  * função que ainda não existe.
  */
 export async function buscarCustoCompra(motoId: string): Promise<number | null> {
-  const sb = getSupabase()
+  const sb = await carregarSupabase()
   if (!sb) return null
 
   const { data, error } = await sb.rpc('custo_da_moto', { p_moto_id: motoId })
