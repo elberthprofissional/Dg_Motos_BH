@@ -12,48 +12,40 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 > Ver `docs/SUPABASE.md` e, em `supabase/migrations/`, `01_esquema.sql`
 > (tabela) e `04_dados_iniciais.sql` (registro `loja`).
 
+> **CONTA DO DONO — RESOLVIDO:** o acesso ao painel fica com o e-mail
+> que o Elberth criou no Supabase Authentication (o dono aprovou
+> manter esse e-mail). O cadastro de novos usuários deve permanecer
+> desativado em Authentication → Providers → Email.
+
 ## 1. WhatsApp oficial (crítico)
 
-- Arquivo: `src/data/site.ts` → `WHATSAPP_NUMBER`
-- Está `null` de propósito. Preencher com o número oficial da loja, só
-  dígitos, com DDI e DDD. Exemplo: `5531987654321`.
-- Enquanto estiver nulo, todo CTA de WhatsApp cai para a página /contato.
-- Nenhum telefone foi inventado.
+- Configuração fica em `/admin → Configurações → Contato` (salva no
+  Supabase, vale para o site inteiro sem rebuild).
+- O `src/data/site.ts → WHATSAPP_NUMBER` é só fallback emergencial;
+  manter `null` enquanto o painel estiver preenchido.
+- Conferir se o número oficial da loja está lançado no painel.
 
 ## 2. Instagram oficial
 
-- Arquivo: `src/data/site.ts` → `SITE.instagram`
-- Placeholder atual: `@dgmotosbh` / `https://instagram.com/dgmotosbh`.
-- Confirmar o handle real antes de publicar.
+- Configuração fica em `/admin → Configurações → Instagram`.
+- Handle em uso: `@dgmotosbh` — confirmar com o dono antes de publicar.
 
 ## 3. Endereço
 
-- Arquivo: `src/data/site.ts` → `SITE.endereco`
-- Usado: **Av. Basílio da Gama, 139 — Belo Horizonte, MG** (dado do briefing,
-  sujeito a confirmação, conforme instruído).
+- Configuração fica em `/admin → Configurações → Endereço`.
+- Em uso: **Av. Basílio da Gama, 139 — Belo Horizonte, MG**.
 - O link do Google Maps é gerado por busca; revisar após confirmar o endereço
   (ideal: trocar pelo link oficial do Google Meu Negócio).
 
 ## 4. Estoque (catálogo)
 
-- Em produção, o catálogo vem do Supabase e é editado em `/admin → Estoque`.
-- `src/data/motorcycles.ts` é o **fallback**: entra quando o Supabase não
-  está configurado ou está fora do ar, e alimenta o prerender quando o build
-  roda sem chaves. Um catálogo vazio no banco é respeitado.
-- Os 5 registros do fallback vieram do site atual:
-  - XRE 300 — 2021 — R$ 31.900
-  - Fazer 150 — 2020 — R$ 13.900
-  - Titan — 2022 — R$ 16.900
-  - Lander — 2024 — R$ 26.900
-  - Start — 2024 — R$ 16.900
-- **Quilometragem**: `null` no fallback — o site mostra "Km a confirmar" até o
-  cliente passar os valores reais (vale também para o cadastro no painel).
-- Descrições e especificações são rascunho editorial; revisar antes de
-  publicar (principalmente o câmbio da Start — o seed diz 4 marchas, mas a
-  CG 160 usa 5 — e os detalhes da Lander).
-- Confirmar se alguma das motos já foi vendida e usar
-  `status: 'indisponivel' | 'vendida'` conforme o caso (só `disponivel`
-  aparece no site).
+- O catálogo vem 100% do Supabase e é editado em `/admin → Estoque`.
+- Nada é setado no código (`src/data/motorcycles.ts` está vazio de
+  propósito; `src/test/motos-fixture.ts` é fixture só de testes).
+- **14 motas cadastradas** pelo dono — revisar fotos, preços,
+  promoções, descrições e quilometragens direto no painel.
+- Confirmar se alguma já foi vendida e usar o status conforme o caso
+  (só `disponivel` aparece no site).
 
 ## 5. Fotografias
 
@@ -81,10 +73,8 @@ moto + showroom + logo. Elas foram convertidas para WebP e já estão no site.
 
 ## 6. Horários de atendimento
 
-- Arquivo: `src/data/site.ts` → `SITE.horarios`
-- Preenchidos com **Seg a Sex, 9h–18h** e **Sáb, 9h–13h**. Confirmar com o
-  cliente antes de publicar; a edição também pode ser feita em
-  `/admin → Configurações`.
+- Configuração fica em `/admin → Configurações → Horários`.
+- Em uso: **Seg a Sex, 9h–18h** e **Sáb, 9h–13h** — confirmar com o dono.
 
 ## 7. Domínio (crítico)
 
@@ -144,19 +134,6 @@ Com o painel configurado (recomendado):
 
 No celular, a aba **Configurações** também tem **Instalar o aplicativo**:
 o painel vira um app em tela cheia, abrindo direto no login.
-
-Sem Supabase, o caminho é pelo código:
-
-1. Abra `src/data/motorcycles.ts`.
-2. Cada moto é um objeto com `marca, modelo, ano, preco, quilometragem,
-   cilindrada, descricao, especificacoes, imagens, emPromocao,
-   precoAntes, status, slug`.
-3. Para **adicionar**: copie um bloco existente, mude `id`, `slug`
-   (formato `marca-modelo-ano`) e os dados.
-4. Para **marcar como vendida**: `status: 'vendida'` (some do catálogo
-   automaticamente).
-5. Fotos: coloque os arquivos em `public/motos/<pasta>/` listados em
-   `imagens[]` — a primeira é a capa.
 
 ## Como rodar o projeto
 
