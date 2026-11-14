@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Check, Download, Share, Smartphone, X } from 'lucide-react'
+import { Check, Download, Share, X } from 'lucide-react'
 import type { EstadoInstalarApp } from './useInstalarApp'
 
 /**
@@ -120,14 +120,29 @@ export function ModalInstalar({ app }: { app: EstadoInstalarApp }) {
             Instalar agora
           </button>
         ) : (
-          <div className="mt-6 flex items-start gap-3 rounded-lg border border-line bg-night-800 px-4 py-3">
-            <Smartphone className="mt-0.5 size-4 shrink-0 text-steel-400" aria-hidden="true" />
-            <p className="text-xs leading-relaxed text-steel-400">
-              Abra este site no Chrome do Android (ou Safari no iPhone) para
-              instalar. Se a opção não aparecer, use o menu do navegador e
-              escolha <span className="text-steel-300">“Adicionar à tela inicial”</span>.
-            </p>
-          </div>
+          <ol className="mt-6 space-y-3 rounded-lg border border-line bg-night-800 p-4">
+            <li className="flex items-start gap-3 text-sm text-steel-300">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-claro/5 font-display text-xs font-bold text-steel-300">
+                1
+              </span>
+              <span>
+                No <span className="text-steel-400">Android</span>, abra o menu{' '}
+                <span className="font-bold">⋮</span> do Chrome e escolha{' '}
+                <span className="text-steel-300">“Instalar app”</span>.
+              </span>
+            </li>
+            <li className="flex items-start gap-3 text-sm text-steel-300">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-claro/5 font-display text-xs font-bold text-steel-300">
+                2
+              </span>
+              <span>
+                No <span className="text-steel-400">iPhone</span>, toque em{' '}
+                <Share className="inline size-4 align-text-bottom" aria-hidden="true" />{' '}
+                <span className="text-steel-400">Compartilhar</span> e escolha{' '}
+                <span className="text-steel-300">“Adicionar à Tela de Início”</span>.
+              </span>
+            </li>
+          </ol>
         )}
       </div>
     </div>

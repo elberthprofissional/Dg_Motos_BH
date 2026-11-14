@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { ArrowRight, CircleAlert, LockKeyhole, Mail } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CircleAlert, LockKeyhole, Mail } from 'lucide-react'
 import { SenhaInput } from '../components/ui/SenhaInput'
 import { useAuth } from '../hooks/authContexto'
 
@@ -60,7 +60,18 @@ export function AdminLogin() {
   if (!carregando && sessao) return <Navigate to="/admin" replace />
 
   return (
-    <div className="grid min-h-dvh grid-cols-1 bg-neutral-950 lg:grid-cols-[1.08fr_0.92fr]">
+    <div className="relative grid min-h-dvh grid-cols-1 bg-neutral-950 lg:grid-cols-[1.08fr_0.92fr]">
+      {/* Saída de emergência: a seta de volta no canto — quem caiu aqui
+          por engano volta pra vitrine num toque, desktop e celular. */}
+      <Link
+        to="/"
+        aria-label="Voltar para o site"
+        title="Voltar para o site"
+        className="absolute left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))] z-20 grid size-11 place-items-center rounded-full border border-white/15 bg-black/40 text-white/80 backdrop-blur-sm transition-colors hover:border-white/40 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca lg:left-6 lg:top-6"
+      >
+        <ArrowLeft className="size-5" aria-hidden="true" />
+        <span className="sr-only">Voltar para o site</span>
+      </Link>
       {/* Esquerda: a metade do showroom. Some antes de lg — no celular a
           foto única do cartão faz o papel de "entrada". A foto cobre a
           coluna inteira e o overlay escuro suave protege o texto. */}

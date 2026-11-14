@@ -251,13 +251,19 @@ export function VendidasTab({
                     <div className="min-w-0 flex-1">
                       {/* Sem carimbo "Vendida": quem já está na aba
                           Vendidas sabe a condição da moto — repetir era
-                          ruído. */}
-                      <p
-                        className="min-w-0 truncate font-display text-[15px] leading-tight font-semibold text-paper lg:text-base"
-                        title={bikeTitle(moto)}
-                      >
-                        {bikeTitle(moto)}
-                      </p>
+                          ruído. A data mora na mesma linha, à direita. */}
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p
+                          className="min-w-0 truncate font-display text-[15px] leading-tight font-semibold text-paper lg:text-base"
+                          title={bikeTitle(moto)}
+                        >
+                          {bikeTitle(moto)}
+                        </p>
+                        <p className="numeros shrink-0 text-[11px] text-steel-400 lg:hidden">
+                          <span className="sr-only">Vendida em </span>
+                          {data}
+                        </p>
+                      </div>
                       <p className="mt-1 truncate text-[11px] text-steel-400">
                         {ficha.join(' · ')}
                       </p>
@@ -276,9 +282,9 @@ export function VendidasTab({
                     </div>
                   </div>
 
-                  {/* Valor e comprador: no celular uma coluna só,
-                      na ordem da leitura (valor, data, comprador,
-                      telefone); no desktop, as duas colunas da grade. */}
+                  {/* Valor e comprador: no celular o comprador vem
+                      primeiro (colado no nome, do lado esquerdo) e o
+                      lucro fecha; na mesa, as duas colunas da grade. */}
                   <div className="flex flex-col gap-2.5 border-t border-line px-3 py-3 lg:contents">
                     <div className="min-w-0">
                       <p className="sr-only">Venda</p>
@@ -290,7 +296,7 @@ export function VendidasTab({
                       >
                         {formatPrice(valor)}
                       </p>
-                      <p className="mt-1 truncate text-xs text-steel-500 lg:mt-0.5 lg:text-[11px]">
+                      <p className="mt-1 hidden truncate text-xs text-steel-500 lg:mt-0.5 lg:block lg:text-[11px]">
                         {venda
                           ? data
                             ? `Vendida em ${data}`
@@ -316,7 +322,7 @@ export function VendidasTab({
                       ) : null}
                     </div>
 
-                    <div className="min-w-0">
+                    <div className="order-first min-w-0 lg:order-none">
                       <p className="sr-only">Comprador</p>
                       {comprador ? (
                         <button

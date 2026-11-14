@@ -16,18 +16,21 @@ export function HubCelular({
   salvo,
   onAbrir,
   appInstalado,
-  onAbrirInstalacao,
+  onInstalar,
 }: {
   config: ConfigLoja
   salvo: ConfigLoja
   onAbrir: (proxima: Secao) => void
   appInstalado: boolean
-  onAbrirInstalacao: () => void
+  /** Chamado no gesto do dono: com prompt nativo disponível, o
+   * diálogo de instalação do Android abre na hora; sem prompt, o
+   * modal de instruções entra no lugar. */
+  onInstalar: () => void
 }) {
   return (
     <>
       <div className="mesa-hub">
-        {SECOES.map((bloco, indice) => {
+        {SECOES.map((bloco) => {
           const suja = bloco.id !== 'lixeira' && secaoSuja(bloco.id, config, salvo)
 
           return (
@@ -37,9 +40,6 @@ export function HubCelular({
               onClick={() => onAbrir(bloco.id)}
               className={`mesa-hub-item ${bloco.id === 'lixeira' ? 'mesa-hub-item--perigo' : ''}`}
             >
-              <span className="mesa-hub-indice" aria-hidden="true">
-                {String(indice + 1).padStart(2, '0')}
-              </span>
               <span className="min-w-0 flex-1">
                 <span className="mesa-hub-rotulo">
                   {bloco.rotulo}
@@ -65,7 +65,11 @@ export function HubCelular({
               : 'Abre em tela cheia, direto da tela inicial do celular.'}
           </p>
         </div>
-        <button type="button" onClick={onAbrirInstalacao} className="mesa-btn-secundario">
+        <button
+          type="button"
+          onClick={onInstalar}
+          className="mesa-btn-secundario"
+        >
           {appInstalado ? (
             <Check className="size-4" aria-hidden="true" />
           ) : (

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Plus, RotateCw } from 'lucide-react'
+import { ArrowRight, Plus, RotateCw, Search } from 'lucide-react'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
 import type { MotoParaSalvar } from '../../lib/catalog'
 import { filtrarEstoque, resumirEstoque } from '../../lib/painel'
@@ -40,6 +40,13 @@ export function EstoqueTab({
   const [ordem, setOrdem] = useState<OrdemEstoque>('padrao')
   // Menu ⋯ do cartão (celular): um aberto por vez, pelo id da moto.
   const [acoesAbertas, setAcoesAbertas] = useState<string | null>(null)
+  // A busca do celular mora atrás da lupa: tocou, abriu e focou.
+  const [buscaAberta, setBuscaAberta] = useState(false)
+  useEffect(() => {
+    if (buscaAberta) {
+      document.querySelector<HTMLInputElement>('.estoque-busca-primaria input')?.focus()
+    }
+  }, [buscaAberta])
 
   // Fecha o menu com Esc ou clique fora de qualquer menu ⋯. O
   // mousedown precedente ao click do próprio kebab não o fecha: só
@@ -157,33 +164,47 @@ export function EstoqueTab({
         </section>
       ) : null}
 
-      {/* Barra de filtros: cada controle tem o mesmo desenho de campo
-          (mesma altura, mesma borda, mesmo fundo) e o resumo fica à
-          direita. Só busca e ordem — a situação não é filtro aqui:
-          vendida mora em Vendidas e o pátio é o que ainda vende. */}
+      {/* Barra de filtros: no celular, ordenar à esquerda e a lupa à
+          direita — o ícone é autoexplicativo e o campo de busca abre
+          quando ela é tocada. Na mesa, busca à esquerda e ordenar à
+          direita, como sempre. */}
       <div className="estoque-operacoes">
+        <div className="flex items-center gap-3 lg:order-2">
+          <select
+            value={ordem}
+            onChange={(e) => setOrdem(e.target.value as OrdemEstoque)}
+            aria-label="Ordenar inventário"
+            className="estoque-select flex-1 lg:flex-none"
+          >
+            {ORDENS.map((o) => (
+              <option key={o.valor} value={o.valor}>
+                {o.rotulo}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={() => setBuscaAberta((v) => !v)}
+            aria-expanded={buscaAberta}
+            aria-label="Buscar no estoque"
+            className={`estoque-busca-lupa ${buscaAberta || busca ? 'is-aberta' : ''}`}
+          >
+            <Search className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+
         <CampoBusca
           value={busca}
           onChange={onBusca}
           placeholder="Buscar por marca, modelo ou ano"
           rotulo="Buscar no estoque"
-          className="estoque-busca-primaria"
+          className={`estoque-busca-primaria lg:order-1 ${
+            buscaAberta || busca ? '' : 'hidden lg:block'
+          }`}
         />
 
-        <select
-          value={ordem}
-          onChange={(e) => setOrdem(e.target.value as OrdemEstoque)}
-          aria-label="Ordenar inventário"
-          className="estoque-select"
-        >
-          {ORDENS.map((o) => (
-            <option key={o.valor} value={o.valor}>
-              {o.rotulo}
-            </option>
-          ))}
-        </select>
-
-        <div className="estoque-contagem" aria-live="polite">
+        <div className="estoque-contagem lg:order-3" aria-live="polite">
           {filtrando && contagem ? (
             <span className="estoque-contagem-texto">{contagem}</span>
           ) : null}

@@ -82,7 +82,7 @@ export function Header() {
       <header
         className="cabecalho fixed inset-x-0 top-0 z-50 w-full"
       >
-        <div className="container-site relative flex h-20 items-center gap-6 lg:h-[7.5rem]">
+        <div className="container-site relative flex h-20 items-center gap-6 lg:h-[6.5rem]">
           <Link
             to="/"
             aria-label="DG Motos — Página inicial"
@@ -93,7 +93,7 @@ export function Header() {
               alt=""
               width={40}
               height={40}
-              className="size-12 object-contain sm:size-14 lg:size-20"
+              className="size-12 object-contain sm:size-14 lg:size-[5.5rem]"
             />
           </Link>
 
@@ -187,53 +187,27 @@ export function Header() {
                   className="menu-folha-item"
                 >
                   <span>{item.label}</span>
-                  <item.Icone className="menu-folha-item-icone" aria-hidden="true" />
                 </NavLink>
               ))}
             </nav>
           </div>
 
-          <div className="space-y-4 px-5 pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-            {wa ? (
-              <a
-                href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setAberto(false)}
-                className="btn btn-primary h-12 w-full"
-              >
-                <IconeWhatsapp className="size-4" />
-                <span>Falar no WhatsApp</span>
-              </a>
-            ) : (
-              <Link
-                to="/contato"
-                onClick={() => setAberto(false)}
-                className="btn btn-primary h-12 w-full"
-              >
-                <IconeWhatsapp className="size-4" />
-                <span>Falar com a loja</span>
-              </Link>
-            )}
-
+          {/* O fecho do menu: só o Instagram — WhatsApp o site inteiro
+              já oferece (hero, balão flutuante, cartões), e endereço
+              mora no rodapé. Navegação pura, cara de marca. */}
+          <div className="px-5 pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             {config.instagramUrl ? (
               <a
                 href={config.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setAberto(false)}
-                className="inline-flex items-center gap-2 py-2 text-sm font-medium text-texto-2 transition-colors hover:text-texto"
+                className="inline-flex items-center gap-2 py-2 text-sm font-medium text-texto-3 transition-colors hover:text-texto"
               >
                 <InstagramIcon className="size-4" aria-hidden="true" />
                 <span>{config.instagramHandle}</span>
               </a>
             ) : null}
-
-            <address className="text-sm leading-relaxed text-texto-3 not-italic">
-              {config.enderecoRua}
-              <br />
-              {config.enderecoCidadeUf}
-            </address>
           </div>
         </div>
       </dialog>

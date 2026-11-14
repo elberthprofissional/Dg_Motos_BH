@@ -90,6 +90,15 @@ export function ConfiguracoesTab({
 }: ConfiguracoesTabProps) {
   const mesa = useTelaDeMesa()
   const app = useInstalarApp()
+  // Instalação num gesto: com o prompt nativo do Android disponível
+  // (beforeinstallprompt), o diálogo do navegador abre na hora —
+  // "quer instalar o app?" — sem passar pelo modal. O modal de
+  // instruções fica para o iOS e para o caso de o navegador não
+  // oferecer o prompt.
+  const acionarInstalacao = () => {
+    if (app.podeInstalar) void app.instalar()
+    else app.abrir()
+  }
 
   const [config, setConfig] = useState<ConfigLoja>(() => lerConfig())
   const [salvo, setSalvo] = useState<ConfigLoja>(config)
@@ -485,7 +494,7 @@ export function ConfiguracoesTab({
         salvo={salvo}
         onAbrir={abrirSecao}
         appInstalado={app.instalado}
-        onAbrirInstalacao={app.abrir}
+        onInstalar={acionarInstalacao}
       />
     </div>
   )

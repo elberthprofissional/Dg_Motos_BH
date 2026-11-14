@@ -81,7 +81,7 @@ export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps
             </h2>
             <span aria-hidden="true" className="mt-5 block h-0.5 w-14 bg-marca" />
             <p className="mt-5 max-w-[32ch] text-[length:var(--step-body)] leading-relaxed text-noite-texto-2">
-              Clientes que já saíram da loja com a moto na mão.
+              Quem já passou por aqui — Clientes que escolheram a DG Motos.
             </p>
           </div>
 

@@ -50,7 +50,7 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
               Sonhos realizados
             </h2>
             <p className="hidden max-w-[30ch] text-right text-sm text-texto-2 sm:block">
-              Clientes que já saíram da loja com a moto na mão.
+              Quem já passou por aqui — Clientes que escolheram a DG Motos.
             </p>
           </div>
 

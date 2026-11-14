@@ -96,10 +96,6 @@ export function Footer() {
                   <span>{config.instagramHandle}</span>
                 </a>
               ) : null}
-              <Link to="/admin/login" className={`${link} gap-2`}>
-                <LockKeyhole className="size-3.5 shrink-0" aria-hidden="true" />
-                <span>Área administrativa</span>
-              </Link>
             </div>
           </div>
 
@@ -122,18 +118,48 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-noite-borda pt-4">
-          <div className="flex flex-col items-start gap-2.5 text-sm text-noite-texto-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-2">
-            <p>© {ANO_ATUAL} DG Motos · Belo Horizonte, MG</p>
-            <div className="flex min-w-0 items-center gap-2.5">
-              <img
-                src="/icons/ibama.webp"
-                alt=""
-                width={28}
-                height={28}
-                loading="lazy"
-                className="size-7 shrink-0 object-contain"
-              />
-              <p className="whitespace-nowrap">Desacelere. Seu bem maior é a vida.</p>
+          <div className="flex flex-col items-start gap-4 text-sm text-noite-texto-2 lg:flex-row lg:items-center lg:justify-between">
+            {/* Esquerda: a ficha da casa. */}
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
+              <p>© {ANO_ATUAL} DG Motos · Belo Horizonte, MG</p>
+              <div className="flex items-center gap-2.5">
+                <img
+                  src="/icons/ibama.webp"
+                  alt=""
+                  width={28}
+                  height={28}
+                  loading="lazy"
+                  className="size-7 shrink-0 object-contain"
+                />
+                <p className="whitespace-nowrap">Desacelere. Seu bem maior é a vida.</p>
+              </div>
+            </div>
+
+            {/* Direita: o crédito do responsável e a porta do dono.
+                No celular a ordem inverte — o acesso do dono vem
+                primeiro e com área de toque maior; na mesa mantém o
+                crédito em primeiro e o acesso discreto no fim. */}
+            <div className="flex flex-col items-start gap-3 lg:flex-row lg:items-center lg:gap-6">
+              <a
+                href="https://wa.me/5531980159559?text=Fala%2C%20Elberth!%20Vim%20pelo%20cr%C3%A9dito%20no%20rodap%C3%A9%20do%20site%20da%20DG%20Motos%20%F0%9F%91%8B"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="order-2 inline-flex items-center gap-1.5 text-noite-texto-2 transition-colors hover:text-noite-texto lg:order-1"
+              >
+                <span>
+                  Criado por{' '}
+                  <span className="font-semibold text-noite-texto">Elberth</span>
+                </span>
+                <IconeWhatsapp className="size-3.5" aria-hidden="true" />
+              </a>
+              <Link
+                to="/admin/login"
+                aria-label="Área administrativa"
+                className="order-1 inline-flex min-h-11 items-center gap-2 text-sm text-noite-texto-2/70 transition-colors hover:text-noite-texto lg:order-2 lg:min-h-0 lg:gap-1.5 lg:text-xs lg:text-noite-texto-2/50 lg:transition-colors lg:hover:text-noite-texto"
+              >
+                <LockKeyhole className="size-4 shrink-0 lg:size-3.5" aria-hidden="true" />
+                <span>Área administrativa</span>
+              </Link>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@
   html {
     color-scheme: dark;
     scroll-behavior: smooth;
-    scroll-padding-top: 7.75rem;
+    scroll-padding-top: 7.5rem;
     overflow-x: clip;
     overscroll-behavior-x: none;
     background-color: var(--cor-fundo);

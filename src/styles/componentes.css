@@ -211,7 +211,7 @@
     height: 100%;
     padding: 0 0.15rem;
     font-family: var(--font-sans);
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     line-height: 1;
     color: var(--cor-texto-2);
@@ -265,8 +265,8 @@
     flex: none;
     align-items: center;
     gap: 0.5rem;
-    height: 2.5rem;
-    padding: 0 1rem;
+    height: 2.75rem;
+    padding: 0 1.25rem;
     background-color: var(--cor-marca);
     color: #ffffff;
     font-family: var(--font-sans);
@@ -895,6 +895,45 @@
     min-height: 0;
     color: var(--cor-texto-3);
     font-size: 13px;
+  }
+
+  /* Lupa do celular: o ícone autoexplicativo que abre o campo de
+     busca. Na mesa ela some — o campo vive aberto à esquerda. */
+  .estoque-busca-lupa {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    flex: none;
+    border: 1px solid var(--cor-borda-forte);
+    border-radius: 2px;
+    background-color: var(--cor-painel-2);
+    color: var(--cor-texto-2);
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .estoque-busca-lupa:hover {
+    color: var(--cor-texto);
+  }
+
+  .estoque-busca-lupa.is-aberta {
+    border-color: var(--cor-marca);
+    color: var(--cor-marca-texto);
+  }
+
+  .estoque-busca-lupa:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 768px) {
+    .estoque-busca-lupa {
+      display: none;
+    }
   }
 
   .estoque-contagem-texto {
