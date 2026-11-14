@@ -9,9 +9,9 @@ restrita, que também se instala como app no celular.
   (`/moto/<slug>`), contato com WhatsApp e mapa.
 - **Painel** (`/admin`) — estoque, preços, fotos, promoções, livro de
   saídas (vendas), mural de entregas, lixeira e configurações da loja.
-- **Sem backend próprio** — React + Vite no front, Supabase (Postgres,
-  Auth e Storage) nos dados. Sem Supabase configurado, o site ainda
-  funciona com o catálogo de exemplo em `src/data/`.
+- **Backend = Supabase** — React + Vite no front, Supabase (Postgres,
+  Auth e Storage) nos dados. O catálogo vive 100% no banco: sem
+  Supabase configurado, a vitrine mostra o estado vazio com honestidade.
 
 ## Stack
 
@@ -21,7 +21,7 @@ restrita, que também se instala como app no celular.
 | Build      | Vite 8 (code-split por rota, prerender das fichas no build) |
 | Estilo     | Tailwind 4 + tokens próprios em `src/index.css`             |
 | Dados      | Supabase (`@supabase/supabase-js`) + RLS no banco           |
-| Qualidade  | oxlint, `tsc --strict`, Vitest (185 testes) + E2E de navegação |
+| Qualidade  | oxlint, `tsc --strict`, Vitest (197 testes) + E2E de navegação |
 | Entrega    | Vercel (produção); compatível com Netlify/Cloudflare Pages  |
 
 ## Rodando local
@@ -86,13 +86,13 @@ O site nunca fica sem vitrine:
 
 1. `RootLayout` busca as motos no Supabase uma vez por sessão e as
    distribui por contexto (`useCatalogo`).
-2. Enquanto o banco não responde — e se ele falhar — entra o catálogo
-   de exemplo de `src/data/motorcycles.ts`.
-3. Um catálogo **vazio** no banco é respeitado: se o dono removeu tudo
-   de propósito, a vitrine fica vazia em vez de ressuscitar o exemplo.
+2. Nada é setado no código: sem banco configurado ou com o banco
+   fora do ar, a vitrine mostra o estado vazio com honestidade.
+3. Um catálogo **vazio** no banco é respeitado: se o dono removeu
+   tudo de propósito, a vitrine fica vazia.
 
-O `/admin` sempre lê do banco. O fallback existe para o público, não
-para gerenciar.
+O `/admin` sempre lê do banco. A fixture de `src/test/motos-fixture.ts`
+existe só para os testes automatizados.
 
 As fotos do catálogo moram no Storage do Supabase (tabela
 `motorcycle_images`). Excluir uma moto apaga as imagens em cascata, sem
