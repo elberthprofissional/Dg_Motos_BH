@@ -1,0 +1,30 @@
+name: Atualizar SEO
+
+# Todo dia às 9h da manhã (horário de Brasília = 12h UTC), o robô dá
+# um commit vazio e empurra — o Vercel reconstrói o site com as fichas
+# e o sitemap fresquinhos do Supabase. Ninguém precisa lembrar de nada.
+# Também dá para disparar à mão: aba Actions → Run workflow.
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixa o projeto
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Empurra o toque de atualização
+        run: |
+          git config user.name "Robô DG Motos"
+          git config user.email "robo@users.noreply.github.com"
+          git commit --allow-empty -m "Atualização automática do SEO (robô diário)"
+          git push
