@@ -19,6 +19,7 @@
     "e2e": "node scripts/e2e-navegacao.mjs",
     "prerender": "node scripts/prerender.mjs",
     "prerender:estatico": "node scripts/prerender.mjs --estatico",
+    "og": "node scripts/gerar-og.mjs",
     "postbuild": "node scripts/prerender.mjs"
   },
   "dependencies": {

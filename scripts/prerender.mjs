@@ -59,6 +59,13 @@ const SITE_TS = path.join(ROOT, 'src', 'data', 'site.ts')
 const IMAGEM_PADRAO = '/hero/contato-showroom.webp'
 
 /**
+ * Cartão do link compartilhado (home). Logo sobre o preto da marca em
+ * 1200×630 — a foto de showroom era cortada sem sentido no WhatsApp.
+ * Gerado por `npm run og`.
+ */
+const IMAGEM_HOME = '/og-dgmotos.jpg'
+
+/**
  * CSS mínimo da ficha pré-renderizada.
  *
  * O HTML estático fica no `#root` até o React montar. Sem estilo, o
@@ -434,7 +441,11 @@ async function run() {
     )
     .replace(
       /<meta\s+property="og:image"[\s\S]*?\/>/,
-      `<meta property="og:image" content="${escapar(absoluta(base, IMAGEM_PADRAO))}" />`,
+      `<meta property="og:image" content="${escapar(absoluta(base, IMAGEM_HOME))}" />`,
+    )
+    .replace(
+      /<meta\s+name="twitter:image"[\s\S]*?\/>/,
+      `<meta name="twitter:image" content="${escapar(absoluta(base, IMAGEM_HOME))}" />`,
     )
   await writeFile(INDEX_HTML, casca, 'utf8')
 

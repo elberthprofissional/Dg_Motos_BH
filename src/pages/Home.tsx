@@ -32,8 +32,8 @@ export function Home() {
   const { entregas } = useEntregasPublicadas(LIMITE_MURAL)
 
   usePageMeta(
-    'DG Motos — Motos seminovas em Belo Horizonte',
-    'Motos seminovas com inspeção mecânica e cautelar em Belo Horizonte. Veja o estoque, os preços e fale com a loja.',
+    'DG Motos BH — Motos revisadas e com garantia',
+    'Seminovas revisadas e com garantia em Belo Horizonte. Estoque com fotos e preços, inspeção mecânica e cautelar, e negociação direta com a loja.',
   )
   useJsonLd(autoDealerSchema(config))
 
