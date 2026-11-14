@@ -3,9 +3,10 @@
  *
  * O que ele confirma, de ponta a ponta, num Chrome de verdade:
  *   1. as rotas da vitrine abrem com conteúdo (não ficam em loading);
- *   2. o catálogo de fallback aparece (este teste roda SEM Supabase,
- *      forçado com env vazia — determinístico a cada execução);
- *   3. a ficha de uma moto do fallback abre por slug;
+ *   2. sem Supabase, o catálogo mostra o estado vazio honesto (este
+ *      teste roda com env vazia — determinístico a cada execução);
+ *   3. ficha de slug inexistente explica que o estoque não abriu, sem
+ *      tela em branco nem erro de console;
  *   4. `RotaAdmin` bloqueia o painel sem sessão: build sem Supabase
  *      mostra as instruções, e o login tem os campos de credencial;
  *   5. nenhum erro de console em nenhuma rota.
@@ -30,15 +31,15 @@ const BASE = process.env.BASE ?? `http://localhost:${PORTA_VITE}`
 /* Servidor                                                            */
 /* ------------------------------------------------------------------ */
 
-// Sem Supabase o catálogo cai no fallback de src/data → o teste fica
-// determinístico: nem banco, nem rede, nem dono editando estoque no meio.
+// Sem Supabase o catálogo fica vazio (fonte única é o banco) → o teste
+// fica determinístico: nem banco, nem rede, nem dono editando estoque no meio.
 const env = {
   ...process.env,
   VITE_SUPABASE_URL: '',
   VITE_SUPABASE_ANON_KEY: '',
 }
 
-console.log('Subindo o dev server (modo fallback, Sem Supabase)…')
+console.log('Subindo o dev server (modo sem Supabase)…')
 // Node direto no vite.js: sem shell, sem deprecation de args no Windows.
 const vite = spawn(
   process.execPath,
@@ -183,8 +184,8 @@ try {
     const carregou = esperarEvento('Page.loadEventFired', sessionId)
     await enviar('Page.navigate', { url: `${BASE}${url}` }, sessionId)
     await carregou
-    // O catálogo resolve depois do load (contexto do layout): conheça o
-    // tempo do fallback, que é imediato quando não há Supabase para esperar.
+    // O catálogo resolve depois do load (contexto do layout): sem
+    // Supabase a resposta é imediata, mas o contexto ainda monta.
     await new Promise((r) => setTimeout(r, 1200))
   }
 
@@ -195,14 +196,14 @@ try {
       checar: `!!document.querySelector('main h1') && document.querySelector('main h1').textContent.trim().length > 0`,
     },
     {
-      nome: 'Estoque mostra o catálogo de fallback',
+      nome: 'Estoque sem banco mostra o estado vazio honesto',
       rota: '/estoque',
-      checar: `document.body.innerText.includes('Honda XRE 300')`,
+      checar: `document.body.innerText.includes('Sem motos anunciadas agora')`,
     },
     {
-      nome: 'Ficha abre por slug do fallback',
-      rota: '/moto/honda-xre-300-2021',
-      checar: `document.body.innerText.includes('Honda XRE 300')`,
+      nome: 'Ficha sem banco explica que o estoque não abriu',
+      rota: '/moto/moto-que-nao-existe',
+      checar: `document.body.innerText.includes('Não conseguimos abrir o estoque agora')`,
     },
     {
       nome: 'Contato abre com a seção principal',

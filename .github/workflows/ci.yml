@@ -1,6 +1,6 @@
 # Verificação a cada push e pull request: lint, tipos, testes e build
 # de produção. O prerender degrada sozinho sem as chaves do Supabase
-# (fallback pro catálogo estático), então o job não precisa de secret —
+# (gera o site sem fichas nem estoque), então o job não precisa de secret —
 # com secret (repository variable/secret VITE_*) ele já usa o banco.
 name: CI
 

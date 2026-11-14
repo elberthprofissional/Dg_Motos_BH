@@ -23,9 +23,9 @@ export const WHATSAPP_NUMBER: string | null = null
  * sitemap e Open Graph apontam.
  *
  * Quando `dgmotosbh.com.br` estiver registrado e apontando para a
- * Vercel, trocar por `https://dgmotosbh.com.br` AQUI e nas tags
- * og:url e og:image do `index.html` (grep pelo domínio antigo),
- * e dar deploy.
+ * Vercel, trocar por `https://dgmotosbh.com.br` AQUI e dar deploy —
+ * o prerender reescreve og:url, og:image, sitemap e robots a partir
+ * deste valor, então não há nada para editar à mão no `index.html`.
  */
 export const SITE_URL = 'https://dg-motos-bh.vercel.app'
 
