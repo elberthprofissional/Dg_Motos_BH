@@ -7,20 +7,15 @@
 
 ## Antes de sair de casa (5 min, no PC)
 
-Faça o deploy agora — isso **não depende** do dono e já deixa o site no ar:
+O código já está no GitHub (**elberthprofissional/Dg_Motos_BH**). Faltam
+dois gestos, no PC — e depois disso todo `git push` atualiza o site sozinho:
 
-```
-vercel login
-vercel
-vercel env add VITE_SUPABASE_URL production
-vercel env add VITE_SUPABASE_ANON_KEY production
-vercel --prod
-```
-
-Os dois valores estão no arquivo `.env` da pasta do projeto (abre com o Bloco de Notas).
-Guarde o link `https://....vercel.app` que ele devolver — é o site funcionando.
-
-Se esse passo já estiver feito, pode ir direto para a loja.
+1. **vercel.com/new** → importar o repositório `Dg_Motos_BH` → antes do
+   Deploy, adicionar as duas variáveis de ambiente (os valores estão no
+   `.env` da pasta do projeto):
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+2. **Deploy** → o site sobe em `https://....vercel.app`.
 
 ---
 
@@ -31,12 +26,9 @@ Se esse passo já estiver feito, pode ir direto para a loja.
 - [ ] **Pix ou cartão dele** para os **R$ 40** do primeiro ano.
 - [ ] **E-mail que ele usa de verdade** — é por ali que chegam avisos de renovação.
 
-Aproveite a visita e já resolva o que o site precisa do dono, tudo de uma vez:
-
-- [ ] **WhatsApp oficial da loja** (com DDD) — hoje está vazio no site; ele preenche em `/admin → Configurações`
-- [ ] **Instagram oficial** — hoje está `@dgmotosbh` de exemplo
-- [ ] **Endereço completo e horários** de funcionamento
-- [ ] **Fotos reais das motos** (ou combina como ele vai mandar)
+**CONTEÚDO — RESOLVIDO:** WhatsApp, Instagram, endereço, horários e as
+14 motas com fotos reais foram conferidos e estão lançados no painel.
+O que sobra da visita ao dono é só a parte do domínio, abaixo.
 
 ---
 
