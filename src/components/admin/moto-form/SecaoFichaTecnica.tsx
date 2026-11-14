@@ -3,7 +3,7 @@ import type { MotoParaSalvar } from '../../../lib/catalog'
 import type { MotorcycleSpec } from '../../../types'
 import { campoLinha } from '../campoLinha'
 import { Secao } from './Secao'
-import { positivoOuNulo, textoInicial } from './valores'
+import { inteiroOuNulo, textoInicial } from './valores'
 
 /**
  * ============================================================
@@ -26,9 +26,14 @@ export function SecaoFichaTecnica({
           id="f-cc"
           className={campoLinha}
           defaultValue={textoInicial(form.cilindrada)}
-          onChange={(e) => onSet('cilindrada', positivoOuNulo(e.target.value))}
-          placeholder="Ex.: 291,6"
+          onChange={(e) => onSet('cilindrada', inteiroOuNulo(e.target.value))}
+          placeholder="Ex.: 291"
         />
+        {/* O campo é inteiro no banco: 291,6 viraria 292 cc na ficha sem
+            ninguém perceber. A dica evita a surpresa. */}
+        <p className="mt-1.5 text-xs text-steel-500">
+          Só o número inteiro — 291,6 se cadastra como 291.
+        </p>
       </div>
 
       <div>

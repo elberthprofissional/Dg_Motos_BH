@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { positivoOuNulo, textoInicial } from './valores'
+import { inteiroOuNulo, positivoOuNulo, textoInicial } from './valores'
 
 /**
  *
@@ -23,6 +23,16 @@ describe('positivoOuNulo', () => {
     expect(positivoOuNulo('0')).toBeNull()
     expect(positivoOuNulo('-10')).toBeNull()
     expect(positivoOuNulo('não sei')).toBeNull()
+  })
+})
+
+describe('inteiroOuNulo', () => {
+  it('descarta a casa decimal em vez de deixar o Postgres arredondar', () => {
+    // "291,6" gravado como 291.6 virava 292 cc na ficha.
+    expect(inteiroOuNulo('291,6')).toBe(291)
+    expect(inteiroOuNulo('52.000')).toBe(52000)
+    expect(inteiroOuNulo('')).toBeNull()
+    expect(inteiroOuNulo('0')).toBeNull()
   })
 })
 

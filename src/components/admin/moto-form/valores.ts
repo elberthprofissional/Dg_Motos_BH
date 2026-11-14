@@ -25,6 +25,18 @@ export function positivoOuNulo(texto: string): number | null {
   return n != null && n > 0 ? n : null
 }
 
+/**
+ * Km e cilindrada no banco são colunas inteiras: 291,6 gravado como
+ * 291.6 vira 292 cc na ficha, porque o Postgres arredonda na conversão
+ * e o dono nunca vê o número trocado. Aqui a vírgula é descartada —
+ * "291,6" guarda 291, que é como o mercado anuncia essa cilindrada.
+ * A dica embaixo do campo avisa que o decimal não entra.
+ */
+export function inteiroOuNulo(texto: string): number | null {
+  const n = positivoOuNulo(texto)
+  return n == null ? null : Math.trunc(n)
+}
+
 /** Número pronto para o campo (vazio se não preenchido, BR quando há). */
 export function textoInicial(valor: number | null): string {
   return valor == null || valor === 0 ? '' : formatarNumeroBR(valor)

@@ -4,7 +4,7 @@ import { formatPrice } from '../../../lib/format'
 import { campoLinha, selectLinha } from '../campoLinha'
 import { CampoPreco } from './CampoPreco'
 import { Secao } from './Secao'
-import { positivoOuNulo, textoInicial } from './valores'
+import { inteiroOuNulo, textoInicial } from './valores'
 
 /**
  * ============================================================
@@ -53,7 +53,7 @@ export function SecaoComercial({
           id="f-km"
           className={campoLinha}
           defaultValue={textoInicial(form.quilometragem)}
-          onChange={(e) => onSet('quilometragem', positivoOuNulo(e.target.value))}
+          onChange={(e) => onSet('quilometragem', inteiroOuNulo(e.target.value))}
           placeholder="Deixe vazio = Km a confirmar"
         />
       </div>
