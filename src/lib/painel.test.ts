@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { motorcycles } from '../data/motorcycles'
+import { motosDeTeste as motorcycles } from '../test/motos-fixture'
 import {
   contarPorStatus,
   diasAteApagar,

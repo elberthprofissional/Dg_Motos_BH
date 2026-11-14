@@ -18,12 +18,12 @@ interface BarraConversaoProps {
 
 export function BarraConversao({ valor, precoIncompleto, waHref }: BarraConversaoProps) {
   const botao =
-    'flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-colors active:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
+    'flex h-11 shrink-0 items-center gap-2 bg-marca px-5 text-sm font-semibold text-white transition-colors hover:bg-marca-forte focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-neutral-800 bg-neutral-950/95 px-4 py-3 backdrop-blur-md sm:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 border-t border-borda bg-painel px-4 py-3 sm:hidden">
       <p
-        className={`numeros min-w-0 truncate font-extrabold text-red-500 ${
+        className={`numeros min-w-0 truncate font-display font-extrabold tracking-[-0.02em] text-marca-texto ${
           precoIncompleto ? 'text-base' : 'text-xl'
         }`}
       >
@@ -33,7 +33,7 @@ export function BarraConversao({ valor, precoIncompleto, waHref }: BarraConversa
       {waHref ? (
         <a href={waHref} target="_blank" rel="noopener noreferrer" className={botao}>
           <IconeWhatsapp className="size-[18px] shrink-0" />
-          Falar no WhatsApp
+          WhatsApp
         </a>
       ) : (
         <Link to="/contato" className={botao}>

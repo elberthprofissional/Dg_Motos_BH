@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { ArrowDown, ArrowLeft } from 'lucide-react'
 import { BikeGallery } from '../../components/motorcycles/BikeGallery'
 import { IconeWhatsapp } from '../../components/ui/IconeWhatsapp'
-import { formatKm, formatPrice } from '../../lib/format'
+import { formatPrice } from '../../lib/format'
+import { resumoDaUnidade } from '../../lib/ficha'
 import type { Motorcycle, MotorcycleStatus } from '../../types'
 
 /**
@@ -42,7 +43,7 @@ export function PalcoDesktop({
 }: PalcoDesktopProps) {
   const disponivel = bike.status === 'disponivel'
   const botaoWhatsapp =
-    'btn btn-primary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm lg:h-auto lg:w-full lg:rounded-xl lg:bg-emerald-600 lg:py-4 lg:text-lg lg:font-bold lg:text-white lg:shadow-lg lg:shadow-emerald-950/40 lg:hover:bg-emerald-500 lg:hover:text-white'
+    'btn btn-primary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm lg:h-auto lg:w-full lg:py-4 lg:text-base lg:font-semibold'
 
   return (
     <div className="hidden flex-col sm:flex lg:mx-auto lg:grid lg:w-full lg:max-w-7xl lg:grid-cols-12 lg:items-start lg:gap-10 lg:px-6 lg:py-8">
@@ -86,8 +87,8 @@ export function PalcoDesktop({
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
                 <p
-                  className={`font-display text-[clamp(2rem,3vw,2.5rem)] leading-none font-bold tracking-[-0.03em] lg:text-[3rem] lg:font-black xl:text-[3.25rem] ${
-                    precoIncompleto ? 'text-texto' : 'numeros text-marca-viva'
+                  className={`font-display text-[clamp(2rem,3vw,2.5rem)] leading-none font-extrabold tracking-[-0.03em] lg:text-[3rem] xl:text-[3.25rem] ${
+                    precoIncompleto ? 'text-texto' : 'numeros text-marca-texto'
                   }`}
                 >
                   {valor}
@@ -121,19 +122,12 @@ export function PalcoDesktop({
           </div>
         </header>
 
-        <dl className="order-4 mt-8 mb-6 grid grid-cols-2 gap-x-6 gap-y-5 px-4 sm:mb-8 sm:grid-cols-4 lg:order-none lg:mt-6 lg:mb-0 lg:grid-cols-2 lg:gap-3 lg:rounded-xl lg:border lg:border-borda lg:bg-painel/60 lg:p-4 lg:backdrop-blur-md">
-          {[
-            ['Ano', String(bike.ano)],
-            ['Quilometragem', formatKm(bike.quilometragem)],
-            ['Cilindrada', bike.cilindrada ? `${bike.cilindrada} cc` : 'A confirmar'],
-          ].map(([rotulo, valorItem]) => (
-            <div
-              key={rotulo}
-              className="lg:min-w-0 lg:rounded-lg lg:border lg:border-borda/70 lg:bg-fundo/40 lg:px-3.5 lg:py-3"
-            >
-              <dt className="text-sm leading-none text-texto-3">{rotulo}</dt>
+        <dl className="order-4 mt-8 mb-6 grid grid-cols-2 gap-x-6 gap-y-5 px-4 sm:mb-8 sm:grid-cols-4 lg:order-none lg:mt-6 lg:mb-0 lg:grid-cols-2 lg:gap-3 lg:border-t lg:border-borda lg:pt-5">
+          {resumoDaUnidade(bike).map((item) => (
+            <div key={item.label} className="lg:min-w-0">
+              <dt className="text-sm leading-none text-texto-3">{item.label}</dt>
               <dd className="numeros mt-2 text-[1.0625rem] leading-none font-semibold text-texto">
-                {valorItem}
+                {item.value}
               </dd>
             </div>
           ))}
@@ -160,7 +154,7 @@ export function PalcoDesktop({
           {temFicha ? (
             <a
               href="#ficha"
-              className="btn btn-secondary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm lg:h-12 lg:w-full lg:rounded-xl lg:border-borda lg:text-texto-2"
+              className="btn btn-secondary h-[3.25rem] flex-1 gap-2.5 px-5 text-sm lg:h-12 lg:w-full"
             >
               Ver ficha técnica
               <ArrowDown className="size-4" aria-hidden="true" />

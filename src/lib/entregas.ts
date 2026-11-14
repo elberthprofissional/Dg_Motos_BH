@@ -112,17 +112,18 @@ export async function buscarEntregasPublicadas(limite?: number): Promise<Entrega
   const sb = await carregarSupabase()
   if (!sb) return []
 
+  // Só o que a galeria mostra: fotos e data. Nome do cliente, moto e
+  // legenda permanecem no painel e nunca são enviados ao navegador do
+  // visitante.
   const consulta = sb
     .from('entregas')
-    // Só o que a galeria mostra: fotos e data. Nome, moto e legenda
-    // permanecem no painel e nunca são enviados ao navegador do visitante.
     .select('id,fotos,entregue_em')
     .eq('status', 'publicada')
     .order('ordem', { ascending: true })
     .order('entregue_em', { ascending: false, nullsFirst: false })
 
-  // A Home passa um limite para não baixar o mural inteiro; sem limite,
-  // a consulta traz todas as entregas publicadas.
+  // A Home passa um limite para não baixar o mural inteiro; sem
+  // limite, a consulta traz todas as entregas publicadas.
   const { data, error } = await (limite && limite > 0 ? consulta.limit(limite) : consulta)
 
   if (error || !data) return []

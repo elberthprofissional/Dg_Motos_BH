@@ -1,9 +1,11 @@
 @layer base {
   html {
+    color-scheme: dark;
     scroll-behavior: smooth;
-    scroll-padding-top: 5rem;
+    scroll-padding-top: 7.75rem;
     overflow-x: clip;
     overscroll-behavior-x: none;
+    background-color: var(--cor-fundo);
   }
 
   body {
@@ -11,35 +13,43 @@
     color: var(--cor-texto);
     font-family: var(--font-sans);
     font-size: var(--step-body);
-    line-height: 1.55;
+    line-height: 1.6;
+    font-variation-settings: 'wdth' 100;
     overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
-  ::selection {
-    background-color: var(--cor-marca);
-    color: #ffffff;
+  /* Granulação: cinema, não tela morta. Um véu fixo de ruído a 4%
+     sobre tudo (pointer-events none); diálogos nativos vivem em
+     camada própria e ficam por cima. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    pointer-events: none;
+    opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* Canto reto é regra da casa — inclusive no painel do dono.
-     O painel antigo usava raio em botão, cartão e etiqueta; aqui
-     ele herda a mesma chapa reta do site, sem precisar reescrever
-     cada componente do admin. */
-  [data-tema='painel'] :where(.rounded-lg, .rounded-md, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full) {
-    border-radius: 0 !important;
+  ::selection {
+    background-color: var(--cor-texto);
+    color: var(--cor-painel);
+  }
+
+  /* Canto reto é regra da casa, inclusive no painel do dono. */
+  :where(.rounded, .rounded-sm, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl) {
+    border-radius: 0;
   }
 
   :focus-visible {
     outline: 2px solid var(--cor-foco);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
 
-  /* O range input é um controle nativo: o polegar precisa existir e
-     ser visível, senão o filtro de preço vira um mistério. O polegar
-     tem 24 px para caber no alvo mínimo de toque (WCAG 2.5.8). */
   input[type='range'] {
-    accent-color: #ada59a;
+    accent-color: var(--cor-marca);
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
@@ -59,9 +69,8 @@
     width: 24px;
     height: 24px;
     margin-top: -11px;
-    border: 0;
-    border-radius: 9999px;
-    background: #cfc8bd;
+    border: 2px solid var(--cor-marca);
+    background: var(--cor-texto);
   }
 
   input[type='range']::-moz-range-track {
@@ -72,12 +81,10 @@
   input[type='range']::-moz-range-thumb {
     width: 24px;
     height: 24px;
-    border: 0;
-    border-radius: 9999px;
-    background: #cfc8bd;
+    border: 2px solid var(--cor-marca);
+    background: var(--cor-texto);
   }
 
-  /* Barra de rolagem na cor da bancada. */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -88,7 +95,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #302c26;
+    background: var(--cor-borda-forte);
     border: 2px solid var(--cor-fundo);
   }
 

@@ -21,39 +21,42 @@
   .display {
     font-family: var(--font-display);
     font-size: var(--step-display);
-    font-weight: 700;
-    line-height: 0.95;
-    letter-spacing: -0.035em;
+    font-variation-settings: 'wdth' 116, 'wght' 820;
+    font-weight: 820;
+    line-height: 0.9;
+    letter-spacing: -0.032em;
     text-wrap: balance;
-    max-width: 16ch;
+    max-width: 15ch;
     margin: 0;
   }
 
-  /* Título de seção: mesmo desenho, um degrau abaixo do display. */
+  /* Título de seção: a mesma voz, um degrau abaixo. */
   .titulo {
     font-family: var(--font-display);
     font-size: var(--step-head);
-    font-weight: 600;
-    line-height: 1.04;
-    letter-spacing: -0.02em;
+    font-variation-settings: 'wdth' 108, 'wght' 720;
+    font-weight: 720;
+    line-height: 1.02;
+    letter-spacing: -0.026em;
     text-wrap: balance;
     margin: 0;
   }
 
   /* Linha de apoio: a frase que segura o título. */
   .lead {
+    color: var(--cor-texto-2);
     font-size: var(--step-lead);
-    line-height: 1.35;
-    letter-spacing: -0.01em;
+    line-height: 1.42;
+    letter-spacing: -0.008em;
     text-wrap: pretty;
-    max-width: 40ch;
+    max-width: 38ch;
     margin: 0;
   }
 
-  /* Texto corrido: 17 a 19 px. */
+  /* Texto corrido. */
   .corpo {
     font-size: var(--step-body);
-    line-height: 1.55;
+    line-height: 1.62;
     text-wrap: pretty;
     max-width: 62ch;
     margin: 0;
@@ -70,15 +73,28 @@
      quando existe dado. Vive no painel do dono; o site público usa
      texto normal. */
   .etiqueta {
-    @apply font-sans text-etiqueta leading-[1.2] font-semibold tracking-[0.14em] text-texto-3 uppercase;
+    @apply font-sans text-[0.75rem] leading-[1.3] font-medium text-texto-3;
+  }
+
+  /* Título de bloco da vitrine: override, sem caixa alta, para
+     separar o conteúdo do site do rótulo de ficha do painel. */
+  .secao-titulo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--cor-borda-forte);
   }
 
   /* Preço: o número que o cliente procura primeiro. Vermelho de
-     texto, condensado, com algarismos de odômetro. */
+     corrida: Barlow Condensed itálico, algarismos de odômetro. */
   .preco {
-    @apply font-display font-bold numeros;
+    @apply font-bold numeros;
+    font-family: var(--font-impacto);
+    font-style: italic;
     color: var(--cor-marca-viva);
-    letter-spacing: 0.005em;
+    letter-spacing: 0.01em;
   }
 
   /* ============================================================
@@ -128,8 +144,12 @@
     @apply inline-flex items-center justify-center gap-2 px-5 py-3 font-sans text-sm font-semibold whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
+  /* Ação principal: tinta cheia. No escuro do painel ela inverte
+     sozinha, porque usa os tokens de texto e fundo. O vermelho fica
+     para preço, selo e o traço da página atual; o hover é o único
+     momento em que ele vira botão. */
   .btn-primary {
-    @apply bg-marca text-white hover:bg-marca-forte;
+    @apply bg-texto text-fundo hover:bg-marca hover:text-white;
   }
 
   .btn-secondary {
@@ -171,64 +191,349 @@
   }
 
   /* ============================================================
-     CARTÁZ — a voz editorial do desktop
-     Archivo condensada em peso pesado, caixa alta e entrelinha
-     curta. Só existe a partir de 1024 px: o celular continua com
-     a composição aprovada, em Lato. O catálogo e o estoque não
-     usam esta classe.
+     CABEÇALHO — a régua do pátio
+     ============================================================
+     Concreto claro, nome à esquerda, links no meio e ferramentas
+     à direita. A página atual ganha um traço vermelho de 2 px
+     embaixo do texto. Sem faixa recortada, sem bordo de vidro: o
+     que separa o cabeçalho do conteúdo é uma régua de 1 px.
      ============================================================ */
+  .cabecalho {
+    background-color: var(--cor-fundo);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .cabecalho-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 100%;
+    padding: 0 0.15rem;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--cor-texto-2);
+    transition: color 0.16s ease;
+  }
+
+  .cabecalho-link:hover {
+    color: var(--cor-texto);
+  }
+
+  .cabecalho-link[aria-current='page'] {
+    color: var(--cor-texto);
+  }
+
+  .cabecalho-link::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 2px;
+    background-color: transparent;
+    transition: background-color 0.16s ease;
+  }
+
+  .cabecalho-link:hover::after {
+    background-color: var(--cor-borda-forte);
+  }
+
+  .cabecalho-link[aria-current='page']::after {
+    background-color: var(--cor-marca);
+  }
+
+  .cabecalho-link-icone {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    opacity: 0.55;
+    transition: opacity 0.16s ease;
+  }
+
+  .cabecalho-link:hover .cabecalho-link-icone,
+  .cabecalho-link[aria-current='page'] .cabecalho-link-icone {
+    opacity: 1;
+  }
+
+  /* Ação de conversa: tinta cheia, não vermelha. O vermelho é do
+     preço e do sinal de página atual. */
+  .cabecalho-cta {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding: 0 1rem;
+    background-color: var(--cor-marca);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      background-color 0.16s ease,
+      color 0.16s ease;
+  }
+
+  .cabecalho-cta:hover {
+    background-color: var(--cor-marca-forte);
+    color: #ffffff;
+  }
+
+  /* A barra do desktop é mais alta: as peças acompanham para ela não
+     parecer vazia. No celular a régua continua compacta. */
   @media (min-width: 1024px) {
-    .cartaz {
-      font-family: var(--font-cartaz);
-      font-stretch: 62%;
-      font-variation-settings: 'wdth' 62, 'wght' 800;
-      font-weight: 800;
-      font-kerning: normal;
-      font-synthesis: none;
-      text-transform: uppercase;
-      letter-spacing: -0.012em;
-      line-height: 0.86;
-      text-wrap: balance;
-      margin-left: -0.02em;
+    .cabecalho-link {
+      gap: 0.5rem;
+      font-size: 0.9375rem;
     }
 
-    .titulo-galeria {
-      font-size: clamp(3rem, 5.15vw, 5.75rem);
+    .cabecalho-link-icone {
+      width: 1.125rem;
+      height: 1.125rem;
     }
 
-    .titulo-troca {
-      font-size: clamp(2.9rem, 4.7vw, 4.75rem);
+    .cabecalho-cta {
+      height: 2.75rem;
+      padding: 0 1.25rem;
+      font-size: 0.9375rem;
     }
+  }
 
-    /* Véu neutro só atrás do texto: a foto e a moto continuam
-       limpas à direita. É o único gradiente permitido na casa. */
-    .hero-veu {
+  /* Menu do celular: a mesma faixa, empilhada. A folha repete a
+     gramática da faixa do desktop — caixa alta, ícone discreto e o
+     vermelho marcando a página atual. */
+  .menu-folha-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.05rem 0;
+    border-bottom: 1px solid var(--cor-borda);
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    font-variation-settings: 'wdth' 105, 'wght' 650;
+    font-weight: 650;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--cor-texto);
+    transition: color 0.16s ease;
+  }
+
+  .menu-folha-item:hover {
+    color: var(--cor-marca-texto);
+  }
+
+  .menu-folha-item[aria-current='page'] {
+    color: var(--cor-marca-texto);
+  }
+
+  .menu-folha-item-icone {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    color: var(--cor-texto-3);
+  }
+
+  /* ============================================================
+     CARTAZ — a manchete do pátio
+     ============================================================
+     Archivo larga e pesada, caixa alta e entrelinha curta. Como
+     agora é a mesma família do texto, o cartaz vale em qualquer
+     largura, e não só no desktop.
+     ============================================================ */
+  .cartaz {
+    font-family: var(--font-impacto);
+    font-style: italic;
+    font-weight: 800;
+    font-kerning: normal;
+    font-synthesis: none;
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+    line-height: 0.9;
+    text-wrap: balance;
+    margin-left: -0.02em;
+  }
+
+  .titulo-galeria {
+    font-size: clamp(2.75rem, 4.6vw, 5rem);
+  }
+
+  /* Apoio do hero: voz editorial — corpo pequeno, entrelinha folgada,
+     medida curta para fechar em duas linhas. Fica um degrau abaixo
+     do título em tamanho, cor e peso: contraste suave, sem disputar
+     a cena com o cartaz nem com a moto. */
+  .hero-lead {
+    max-width: 34ch;
+    margin: 0;
+    color: var(--cor-texto-2);
+    font-size: clamp(0.9375rem, 0.88rem + 0.3vw, 1.0625rem);
+    font-weight: 400;
+    line-height: 1.62;
+    letter-spacing: 0.002em;
+    text-wrap: pretty;
+  }
+
+  /* O momento tipográfico do hero (só no mobile e no tablet, onde a
+     moto não entra): o traço vermelho da marca abre o bloco e a
+     palavra do meio vira contorno — tinta vazia, só a assinatura. A
+     partir da mesa o título volta à linha única branca de sempre, e
+     sem text-stroke o contorno fica sólido: nada quebra. */
+  .hero-traco {
+    width: 4.5rem;
+    height: 4px;
+    background-color: var(--cor-marca);
+    transform: skewX(-14deg);
+  }
+
+  /* Luz de marca + grafismos de velocidade (desktop): tudo em uma
+     camada só, sem HTML novo. O ângulo de 115° é o mesmo do mobile —
+     é o rumo da casa. Da frente para o fundo: vincos finos, talhes
+     largos, cunha no canto, a luz da marca sob a moto e os poços de
+     profundidade. O recorte da moto pinta por cima; as linhas
+     aparecem ao redor dela, nunca na frente. */
+  .hero-luz {
+    background:
+      /* vincos finos — linhas de velocidade */
+      linear-gradient(115deg, transparent 50%, rgb(238 240 234 / 0.12) 57.9%, rgb(238 240 234 / 0.12) 58.1%, transparent 66%),
+      linear-gradient(115deg, transparent 62%, rgb(211 36 14 / 0.42) 69.9%, rgb(211 36 14 / 0.42) 70.1%, transparent 78%),
+      linear-gradient(115deg, transparent 78%, rgb(211 36 14 / 0.26) 84.9%, rgb(211 36 14 / 0.26) 85.1%, transparent 92%),
+      /* talhes largos — camadas de movimento */
+      linear-gradient(115deg, transparent 60%, rgb(211 36 14 / 0.07) 70%, transparent 80%),
+      linear-gradient(115deg, transparent 74%, rgb(211 36 14 / 0.15) 82%, transparent 90%),
+      /* laje de grafite — profundidade atrás do texto */
+      linear-gradient(115deg, transparent 18%, rgb(238 240 234 / 0.025) 30%, transparent 42%),
+      /* cunha vermelha no canto superior esquerdo */
+      linear-gradient(115deg, rgb(211 36 14 / 0.15) 0 3%, transparent 3.5%),
+      linear-gradient(115deg, rgb(238 240 234 / 0.055) 0 1.5%, transparent 2%),
+      /* luz da marca sob a moto */
+      radial-gradient(ellipse 55% 50% at 72% 62%, rgb(211 36 14 / 0.2), transparent 70%),
+      /* recorte de luz atrás da parte alta da moto — separa a
+         silhueta do fundo sem contorno artificial */
+      radial-gradient(ellipse 32% 26% at 80% 38%, rgb(238 240 234 / 0.05), transparent 70%),
+      /* sombra de contato: a poça escura encostada na linha do chão,
+         exatamente onde as rodas pousam */
+      radial-gradient(ellipse 28% 9% at 74% 89%, rgb(0 0 0 / 0.55), transparent 70%),
+      /* poços de profundidade: cantos que recuem para dar contraste */
+      radial-gradient(ellipse 50% 65% at 4% 96%, rgb(0 0 0 / 0.5), transparent 62%),
+      radial-gradient(ellipse 40% 40% at 96% 0%, rgb(0 0 0 / 0.38), transparent 58%);
+  }
+
+  /* Deriva: um fio de luz que atravessa devagar — a página respira
+     sem virar videogame. Some com movimento reduzido. */
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .hero-luz::after {
+      content: '';
+      position: absolute;
+      inset: 0;
       background: linear-gradient(
-        90deg,
-        #0f0e0c 0%,
-        rgba(15, 14, 12, 0.94) 28%,
-        rgba(15, 14, 12, 0.82) 42%,
-        rgba(15, 14, 12, 0.3) 56%,
-        rgba(15, 14, 12, 0) 66%
+        115deg,
+        transparent 46%,
+        rgb(238 240 234 / 0.07) 49.9%,
+        rgb(238 240 234 / 0.07) 50.1%,
+        transparent 54%
       );
+      animation: hero-deriva 16s ease-in-out infinite alternate;
     }
 
-    @media (prefers-reduced-motion: no-preference) {
-      .hero-foto {
-        animation: hero-foto 1.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+    @keyframes hero-deriva {
+      from {
+        transform: translate3d(-2.5%, -1.5%, 0);
+        opacity: 0.4;
       }
+      to {
+        transform: translate3d(2.5%, 1.5%, 0);
+        opacity: 1;
+      }
+    }
+  }
 
-      .hero-texto > * {
-        animation: hero-texto 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-      }
+  /* Grafismo do mobile: diagonais de velocidade finas — um slash
+     vermelho largo, um fio branco por cima e a luz no canto superior.
+     Plano, sem neon, e some no desktop. */
+  @media (max-width: 1023px) {
+    .hero-grafismo {
+      background:
+        linear-gradient(
+          115deg,
+          transparent 76%,
+          rgb(211 36 14 / 0.12) 76.5%,
+          rgb(211 36 14 / 0.12) 85%,
+          transparent 85.5%
+        ),
+        linear-gradient(
+          115deg,
+          transparent 86%,
+          rgb(238 240 234 / 0.05) 86.5%,
+          rgb(238 240 234 / 0.05) 90%,
+          transparent 90.5%
+        ),
+        radial-gradient(
+          ellipse 90% 34% at 88% 0%,
+          rgb(211 36 14 / 0.13),
+          transparent 70%
+        );
+    }
+  }
 
-      .hero-texto > *:nth-child(2) {
-        animation-delay: 0.08s;
+  /* No mobile o contraste é branco × vermelho: SEMINOVAS em tinta
+     cheia da marca; no desktop o contorno branco segue valendo. */
+  @media (max-width: 1023px) {
+    @supports ((-webkit-text-stroke: 2px #fff) or (text-stroke: 2px #fff)) {
+      .hero-contorno {
+        color: var(--cor-marca-viva);
+        -webkit-text-stroke: 0;
       }
+    }
+  }
 
-      .hero-texto > *:nth-child(3) {
-        animation-delay: 0.16s;
+  @supports ((-webkit-text-stroke: 2px #fff) or (text-stroke: 2px #fff)) {
+    @media (min-width: 1024px) {
+      .hero-contorno {
+        color: transparent;
+        -webkit-text-stroke: 2px var(--cor-texto);
       }
+    }
+  }
+
+  /* Título do catálogo: a voz do cartaz, um degrau abaixo do hero —
+     mesma família larga e pesada, caixa alta, entrelinha curta. O
+     vermelho fica para a linha de 2px logo abaixo. */
+  .titulo-ofertas {
+    font-family: var(--font-impacto);
+    font-style: italic;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 1.2rem + 2.4vw, 2.75rem);
+    line-height: 0.95;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-foto {
+      animation: hero-foto 1.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .hero-texto > * {
+      animation: hero-texto 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .hero-texto > *:nth-child(2) {
+      animation-delay: 0.08s;
+    }
+
+    .hero-texto > *:nth-child(3) {
+      animation-delay: 0.16s;
+    }
+
+    .hero-texto > *:nth-child(4) {
+      animation-delay: 0.24s;
     }
   }
 
@@ -414,9 +719,12 @@
   /* Faixa do pátio: dois números entre réguas, sem caixa de KPI. O
      rótulo miúdo em cima e o número condensado embaixo — o olho lê a
      loja, não um dashboard. */
+  /* Disponíveis à esquerda e valor em estoque à direita: os dois
+     indicadores dividem a faixa em vez de empilhar, um em cima do
+     outro, com a régua vertical no meio. */
   .estoque-indicadores {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr);
     border-top: 1px solid var(--cor-borda-forte);
     border-bottom: 1px solid var(--cor-borda);
     background-color: transparent;
@@ -427,16 +735,20 @@
     min-width: 0;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 14px 16px 16px;
+    padding: 14px 12px 16px;
   }
 
   .estoque-indicador:first-child {
     padding-left: 0;
   }
 
+  .estoque-indicador:last-child {
+    padding-right: 0;
+  }
+
   .estoque-indicador-financeiro {
-    padding: 14px 0 16px;
-    border-top: 1px solid var(--cor-borda);
+    padding: 14px 0 16px 12px;
+    border-left: 1px solid var(--cor-borda);
   }
 
   .estoque-indicador-rotulo {
@@ -468,7 +780,7 @@
   }
 
   .estoque-indicador-financeiro .estoque-indicador-valor {
-    font-size: 30px;
+    font-size: 26px;
   }
 
   /* ============================================================
@@ -864,11 +1176,13 @@
     outline-offset: 1px;
   }
 
+  /* 45 fica acima da barra inferior (z-40): o menu da última linha do
+     celular abria atrás dela e parecia cortado. */
   .estoque-menu-painel {
     position: absolute;
     top: calc(100% + 4px);
     right: 0;
-    z-index: 30;
+    z-index: 45;
     min-width: 200px;
     border: 1px solid var(--cor-borda-forte);
     background-color: var(--cor-painel-2);
@@ -1057,7 +1371,7 @@
     }
 
     .estoque-indicador-financeiro {
-      padding: 16px 0 18px;
+      padding: 16px 0 18px 20px;
     }
 
     .estoque-indicador-valor {
@@ -1813,3 +2127,12 @@
     @apply text-[11px] tracking-[0.08em] text-texto-3 uppercase;
   }
 }
+
+/* ============================================================
+   PÁTIO — catálogo em grade (tablet e desktop)
+   ============================================================
+   Os anúncios são da variante `vitrine` do BikeCard: nascem sem
+   caixa, sem sombra e sem etiqueta de canto — a organização vem do
+   espaçamento e do alinhamento. A classe fica como gancho semântico
+   da grade.
+   ============================================================ */

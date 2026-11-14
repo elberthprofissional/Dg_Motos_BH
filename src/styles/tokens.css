@@ -1,73 +1,41 @@
-/* ============================================================
-   DG MOTOS BH — SISTEMA VISUAL "BANCADA + FICHA"
-   ============================================================
-   O lugar é a bancada de oficina, onde a ficha de vistoria é
-   montada antes de a moto virar anúncio. A página é esse lugar:
-
-     · PRETO   — a bancada. O fundo de tudo, à noite.
-     · FOLHA   — o papel da ficha. Seções claras que deitam sobre
-                 a bancada, de ponta a ponta.
-     · VERMELHO— o carimbo. O único acento: preço, ação
-                 principal, o que está disponível.
-
-   REGRA DE OURO: o vermelho é o sinal. Se algo está vermelho, é
-   porque o olho precisa parar aí. E o vermelho só aparece onde o
-   carimbo aparece de verdade — nunca em rótulo miúdo, nunca em
-   borda de 1 px, nunca em gradiente.
-
-   A logo da casa é um traço branco sobre preto: por isso o preto
-   é o chão do cabeçalho e do rodapé, e o papel só entra no
-   corpo da página, onde a foto da moto vive.
-   ============================================================ */
-
 @theme {
-  /* Tipografia ------------------------------------------------- */
-  /* Display: Lato em peso pesado — título de oficina: dá a ideia de
-     placa estampada sem precisar gritar em caixa alta (que é o truque
-     genérico de landing page). */
-  --font-display: 'Lato', 'Helvetica Neue', Arial, sans-serif;
-  /* Texto e interface: Lato regular — a família única do site. Algarismos
-     tabulares de verdade ficam por conta do @utility numeros. */
-  --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system,
-    'Segoe UI', sans-serif;
-  /* Voz editorial do desktop: cartaz condensado. Não entra no
-     catálogo, no painel nem no celular. */
-  --font-cartaz: 'Archivo', 'Arial Narrow', Arial, sans-serif;
+  /* Uma família para o site inteiro. A largura variável é o que dá
+     voz: título largo e pesado, texto na largura normal. */
+  --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-cartaz: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
 
-  /* Rótulos de 10 e 11 px: sobraram só para o painel do dono, que é
-     uma tela de trabalho e não uma vitrine. O site público não usa
-     nenhum texto abaixo de 13 px. */
   --text-micro: 0.625rem;
   --text-etiqueta: 0.6875rem;
 
-  /* ---------- PRETO: a bancada ---------- */
-  --color-breu: #100f0d;
-  --color-night-950: #0d0c0a;
-  --color-night-900: #141311;
-  --color-night-800: #1e1c19;
-  --color-night-700: #282521;
-  --color-sidebar: #0c0b09;
+  /* Impacto: a fonte dos títulos de manchete e dos números. Barlow
+     Condensed é a voz de corrida — estreita, pesada, de itálico
+     agressivo. Archivo continua no corpo e nos cabeçalhos de texto. */
+  --font-impacto: 'Barlow Condensed', 'Archivo', 'Helvetica Neue', sans-serif;
 
-  /* ---------- BRANCO: a letra ---------- */
-  --color-paper: #ffffff;
-  /* A escada de cinzas do painel. O degrau mais escuro (steel-600)
-     passa de 4,5:1 sobre o fundo do painel — microtexto de 10 px não
-     pode depender de borda para ser lido. */
-  --color-steel-300: #cfc8bd;
-  --color-steel-400: #ada59a;
-  --color-steel-500: #948c82;
-  --color-steel-600: #7d756b;
+  /* Concreto: a escala neutra do pátio. Fria, de chão lavado. */
+  --color-concreto-50: #f5f6f2;
+  --color-concreto-100: #eaece6;
+  --color-concreto-200: #dfe1da;
+  --color-concreto-300: #cbcdc4;
+  --color-concreto-400: #a5a79d;
+  --color-concreto-500: #7d7f76;
+  --color-concreto-600: #5b5d56;
+  --color-concreto-700: #3f413b;
+  --color-concreto-800: #26272a;
+  --color-concreto-900: #17181b;
+  --color-concreto-950: #0f1012;
 
-  /* ---------- VERMELHO: o carimbo ---------- */
-  --color-brand-400: #f26d62;
-  --color-brand-500: #d91f26;
-  --color-brand-600: #b3131a;
-  --color-brand-700: #8d0f14;
-  --color-carimbo: #d91f26;
-  --color-carimbo-escuro: #b3131a;
+  --color-brand-300: #ff8f7b;
+  --color-brand-400: #ef4a30;
+  --color-brand-500: #d3240e;
+  --color-brand-600: #ab1c0a;
+  --color-brand-700: #801407;
+  --color-carimbo: #d3240e;
+  --color-carimbo-escuro: #ab1c0a;
 
-  --color-ok: #3fbf7f;
-  --color-warn: #e0a33c;
+  --color-ok: #1f7a4d;
+  --color-warn: #8a5a12;
 
   --animate-sheet: sheet 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade: fade 0.18s ease-out both;
@@ -90,139 +58,154 @@
   }
 }
 
-/* ============================================================
-   TOKENS SEMÂNTICOS — o que o componente pede, não o que ele é
-   ============================================================ */
+/* ------------------------------------------------------------
+   VITRINE — a loja no preto da marca
+   Base preta em profundidades: grafite da bancada, painel que
+   sobe meio tom e o poço do rodapé. Tinta branca, cinza de
+   apoio e o vermelho só no sinal: preço, selo e o traço da
+   página atual. Todos os nomes abaixo são a linguagem que os
+   componentes já falam; o que mudou foi o valor.
+   ------------------------------------------------------------ */
 :root {
-  /* --- A bancada (chão padrão do site) --- */
-  --cor-fundo: #0f0e0c;
-  --cor-painel: #161513;
-  --cor-painel-2: #1d1b18;
-  --cor-painel-3: #252320;
+  color-scheme: dark;
 
-  --cor-texto: #ece7de;
-  --cor-texto-2: #a8a198;
-  --cor-texto-3: #8e887e;
+  /* Profundidade do chumbo: o fundo sobe para o cinza industrial
+     (#121316) e os painéis acompanham; o poço continua mais fundo.
+     A granulação fica na base.css — cinema, não tela morta. */
+  --cor-fundo: #121316;
+  --cor-painel: #191b20;
+  --cor-painel-2: #22252b;
+  --cor-painel-3: #2b2f36;
 
-  --cor-borda: rgba(236, 231, 222, 0.09);
-  --cor-borda-forte: rgba(236, 231, 222, 0.18);
+  --cor-texto: #eef0ea;
+  --cor-texto-2: #b4b6ae;
+  --cor-texto-3: #8e908a;
 
-  /* Vermelho de preenchimento: branco sobra ele passa de 4,5:1.
-     O tom puro (#ef302f) fica no realce (.preco), onde o corpo grande
-     ja sustenta o contraste. */
-  --cor-marca: #d91f26;
-  --cor-marca-viva: #ef302f;
-  /* Vermelho de texto sobre preto: o tom puro fica no limite do
-     contraste em corpo pequeno; este sobe o suficiente para ler. */
-  --cor-marca-texto: #f26d62;
-  /* Vermelho pressionado: mais fundo, nunca mais claro. */
-  --cor-marca-forte: #b3131a;
+  --cor-borda: rgba(238, 240, 234, 0.13);
+  --cor-borda-forte: rgba(238, 240, 234, 0.3);
 
-  --cor-ok: #3fbf7f;
-  --cor-alerta: #e0a33c;
-  --cor-foco: #f0554b;
-  --cor-papel-claro: #ffffff;
-  --cor-tinta: #ffffff;
+  /* Sinal: o vermelho de assinatura preenche selo e destaque;
+     em texto sobre o preto, a versão viva mantém a leitura. */
+  --cor-marca: #d3240e;
+  --cor-marca-viva: #ef4a30;
+  --cor-marca-texto: #ef4a30;
+  --cor-marca-forte: #b81e09;
 
-  /* Verde do WhatsApp: a única cor fora da paleta, e só no botão
-     flutuante do canto — quem chega de fora precisa reconhecer o
-     "chama no zap" de longe. Nos CTAs dentro do site manda o
-     vermelho da casa. O texto sobre o verde é quase preto (10,6:1);
-     branco sobre este verde daria 1,98:1 e reprovaria na WCAG. */
-  --cor-whatsapp: #25d366;
+  --cor-ok: #6fd39b;
+  --cor-alerta: #e3a548;
+  --cor-foco: #ef4a30;
+  --cor-papel-claro: #f5f6f2;
+  --cor-tinta: #141518;
 
-  /* --- A folha: o papel da ficha --- */
-  --cor-folha: #f1f2f3;
-  --cor-folha-2: #ffffff;
+  --cor-whatsapp: #1faa54;
 
-  /* --- Escala: cinco degraus, bem afastados --- */
-  --step-display: clamp(2.5rem, 1rem + 6.6vw, 5.75rem);
-  --step-head: clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
-  --step-lead: clamp(1.25rem, 1.12rem + 0.55vw, 1.625rem);
-  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --cor-folha: #15171b;
+  --cor-folha-2: #0f1013;
+
+  /* O poço: rodapé, moldura de foto e faixas de fechamento.
+     Um tom abaixo do fundo, para as fotos e as seções finais
+     afundarem de vez. */
+  --cor-noite: #08090b;
+  --cor-noite-2: #141518;
+  --cor-noite-texto: #eef0ea;
+  --cor-noite-texto-2: #b4b6ae;
+  --cor-noite-borda: rgba(238, 240, 234, 0.14);
+
+  /* Rodapé: preto de verdade, o fim do pátio. Abaixo do fundo da
+     página, ele fecha a vitrine sem repetir o mesmo tom. */
+  --cor-rodape: #000000;
+
+  --step-display: clamp(2.5rem, 0.9rem + 6.2vw, 6rem);
+  --step-head: clamp(1.75rem, 1.1rem + 2.4vw, 3.25rem);
+  --step-lead: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  --step-body: clamp(1rem, 0.96rem + 0.18vw, 1.0938rem);
   --step-small: 0.8125rem;
 
-  /* --- Moldura: margens apertadas, conteúdo até a borda --- */
-  --margem: clamp(1rem, 2.2vw, 2rem);
-  --gutter: clamp(0.75rem, 1.4vw, 1.5rem);
+  --margem: clamp(1.25rem, 3vw, 3.5rem);
+  --gutter: clamp(1rem, 1.6vw, 1.75rem);
+
+  --font-publico-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-publico-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* A ficha: chapa escura levemente mais clara que a bancada para
-   criar hierarquia sem virar papel branco. */
-[data-tema='folha'] {
-  --cor-fundo: #161513;
-  --cor-painel: #1d1b18;
-  --cor-painel-2: #242220;
-  --cor-painel-3: #2c2a26;
-
-  --cor-texto: #ece7de;
-  --cor-texto-2: #a8a198;
-  --cor-texto-3: #8e887e;
-
-  --cor-borda: rgba(236, 231, 222, 0.09);
-  --cor-borda-forte: rgba(236, 231, 222, 0.18);
-
-  --cor-marca: #d91f26;
-  --cor-marca-viva: #ef302f;
-  --cor-marca-texto: #f26d62;
-  --cor-marca-forte: #b3131a;
-  --cor-foco: #f0554b;
-
-  --cor-papel-claro: #ffffff;
-  --cor-tinta: #ffffff;
-}
-
-/* O painel do dono é a mesma bancada, com a luz de serviço acesa:
-   a área restrita é da casa, não do público. */
+/* ------------------------------------------------------------
+   PAINEL DO DONO — a bancada de trabalho
+   Escuro porque é ferramenta, não vitrine. O vermelho continua
+   sendo o único acento; a tipografia é a mesma do site.
+   ------------------------------------------------------------ */
 [data-tema='painel'] {
-  --cor-fundo: #0b0c0e;
-  --cor-painel: #121417;
-  --cor-painel-2: #191b1f;
-  --cor-painel-3: #22252a;
-  --cor-texto: #f2f3f5;
-  --cor-texto-2: #b7bac0;
-  --cor-texto-3: #969ba3;
-  --cor-borda: rgba(242, 243, 245, 0.1);
-  --cor-borda-forte: rgba(242, 243, 245, 0.18);
-  --cor-marca: #d91f26;
-  --cor-marca-viva: #ef302f;
-  --cor-marca-texto: #f26d62;
-  --cor-marca-forte: #b3131a;
-  --cor-ok: #3fbf7f;
-  --cor-alerta: #e0a33c;
-  --cor-foco: #f0554b;
-  --cor-papel-claro: #ffffff;
-  --cor-tinta: #ffffff;
-  --color-night-950: #0b0c0e;
-  --color-night-900: #121417;
-  --color-night-800: #191b1f;
-  --color-night-700: #22252a;
-  --color-sidebar: #090a0c;
-  --color-steel-300: #d1d3d7;
-  --color-steel-400: #b7bac0;
-  --color-steel-500: #969ba3;
-  --color-steel-600: #858a92;
+  color-scheme: dark;
+  --cor-fundo: #0e0f11;
+  --cor-painel: #16171a;
+  --cor-painel-2: #1e2024;
+  --cor-painel-3: #282a2f;
+
+  --cor-texto: #eef0ea;
+  --cor-texto-2: #b4b6ae;
+  --cor-texto-3: #8e908a;
+
+  --cor-borda: rgba(238, 240, 234, 0.12);
+  --cor-borda-forte: rgba(238, 240, 234, 0.26);
+
+  --cor-marca: #d3240e;
+  --cor-marca-viva: #ef4a30;
+  --cor-marca-texto: #ff8f7b;
+  --cor-marca-forte: #ab1c0a;
+
+  --cor-ok: #6fd39b;
+  --cor-alerta: #e3a548;
+  --cor-foco: #ff6a45;
+  --cor-papel-claro: #f5f6f2;
+  --cor-tinta: #141518;
+
+  --cor-noite: #0a0b0d;
+  --cor-noite-2: #16171a;
+  --cor-noite-texto: #eef0ea;
+  --cor-noite-texto-2: #b4b6ae;
+  --cor-noite-borda: rgba(238, 240, 234, 0.12);
+  --cor-rodape: #000000;
+
+  --color-night-950: #0e0f11;
+  --color-night-900: #16171a;
+  --color-night-800: #1e2024;
+  --color-night-700: #282a2f;
+  --color-sidebar: #0a0b0d;
+  /* Papel do título da bancada: tinta branca da marca. Era citado
+     pelos estilos da mesa sem estar definido em lugar nenhum. */
+  --color-paper: #eef0ea;
+  --color-steel-300: #d5d7d0;
+  --color-steel-400: #b4b6ae;
+  --color-steel-500: #8e908a;
+  --color-steel-600: #7a7c76;
 }
 
-/* Prévia do mural dentro do painel: recoloca os tokens do site público
-   no trecho, para o cartão ser exatamente o que o visitante recebe. */
+/* Prévia da ficha dentro do painel: o dono vê a vitrine como ela é.
+   Mesmo preto da marca, mesmo sinal vermelho — só os painéis da
+   bancada do admin não valem aqui. */
 [data-tema='publico'] {
-  --cor-fundo: #0f0e0c;
-  --cor-painel: #161513;
-  --cor-painel-2: #1d1b18;
-  --cor-painel-3: #252320;
-  --cor-texto: #ece7de;
-  --cor-texto-2: #a8a198;
-  --cor-texto-3: #8e887e;
-  --cor-borda: rgba(236, 231, 222, 0.09);
-  --cor-borda-forte: rgba(236, 231, 222, 0.18);
-  --cor-marca: #d91f26;
-  --cor-marca-viva: #ef302f;
-  --cor-marca-texto: #f26d62;
-  --cor-marca-forte: #b3131a;
-  --cor-ok: #3fbf7f;
-  --cor-papel-claro: #ffffff;
-  --cor-tinta: #ffffff;
+  color-scheme: dark;
+  --cor-fundo: #121316;
+  --cor-painel: #191b20;
+  --cor-painel-2: #22252b;
+  --cor-painel-3: #2b2f36;
+  --cor-texto: #eef0ea;
+  --cor-texto-2: #b4b6ae;
+  --cor-texto-3: #8e908a;
+  --cor-borda: rgba(238, 240, 234, 0.13);
+  --cor-borda-forte: rgba(238, 240, 234, 0.3);
+  --cor-marca: #d3240e;
+  --cor-marca-viva: #ef4a30;
+  --cor-marca-texto: #ef4a30;
+  --cor-marca-forte: #b81e09;
+  --cor-ok: #6fd39b;
+  --cor-papel-claro: #f5f6f2;
+  --cor-tinta: #141518;
+  --cor-noite: #08090b;
+  --cor-noite-2: #141518;
+  --cor-noite-texto: #eef0ea;
+  --cor-noite-texto-2: #b4b6ae;
+  --cor-noite-borda: rgba(238, 240, 234, 0.14);
+  --cor-rodape: #000000;
 }
 
 @theme inline {
@@ -241,29 +224,58 @@
   --color-marca-forte: var(--cor-marca-forte);
   --color-ok: var(--cor-ok);
   --color-alerta: var(--cor-alerta);
-  /* Verde do WhatsApp: só no botão flutuante do canto. */
   --color-whatsapp: var(--cor-whatsapp);
-  /* Alias do painel antigo: `border-line`, `divide-line` e `bg-line` do
-     admin continuam existindo e passam a seguir o tema em uso. */
   --color-line: var(--cor-borda);
   --color-line-forte: var(--cor-borda-forte);
-  /* Branco puro: traço fino, foco e fundo sutil. */
   --color-claro: #ffffff;
 
-  /* A escala `neutral` do Tailwind tem subtom azulado — o cinza frio
-     de ferramenta de design. Sobre a bancada quente ela destoa, então
-     aqui ela toma o mesmo subtom quente (borracha/ossio) com as
-     mesmas luzes de cada degrau. Nenhum componente muda; todo
-     `neutral-*` usado nos filtros, cartões e overlays esquenta igual. */
-  --color-neutral-50: #f8f6f2;
-  --color-neutral-100: #f2efe9;
-  --color-neutral-200: #e6e1d8;
-  --color-neutral-300: #d5cfc5;
-  --color-neutral-400: #a59d92;
-  --color-neutral-500: #746e64;
-  --color-neutral-600: #534e46;
-  --color-neutral-700: #413d36;
-  --color-neutral-800: #292720;
-  --color-neutral-900: #1a1815;
-  --color-neutral-950: #0d0c0a;
+  --color-noite: var(--cor-noite);
+  --color-noite-2: var(--cor-noite-2);
+  --color-noite-texto: var(--cor-noite-texto);
+  --color-noite-texto-2: var(--cor-noite-texto-2);
+  --color-noite-borda: var(--cor-noite-borda);
+  --color-rodape: var(--cor-rodape);
+
+  /* A bancada do painel usa a escala `night`, o `sidebar` e as tintas
+     `paper`/`steel`. Elas viviam só dentro de [data-tema='painel'],
+     onde o Tailwind não enxerga — `bg-sidebar` e `bg-night-950` não
+     existiam e as barras do topo e do rodapé saíam transparentes.
+     Aqui elas entram no tema e viram utilitário de verdade. */
+  --color-sidebar: #0a0b0d;
+  --color-night-950: #0e0f11;
+  --color-night-900: #16171a;
+  --color-night-800: #1e2024;
+  --color-night-700: #282a2f;
+  --color-paper: #eef0ea;
+  --color-steel-200: #e9ebe4;
+  --color-steel-300: #d5d7d0;
+  --color-steel-400: #b4b6ae;
+  --color-steel-500: #8e908a;
+  --color-steel-600: #7a7c76;
+
+  --color-concreto-50: #f5f6f2;
+  --color-concreto-100: #eaece6;
+  --color-concreto-200: #dfe1da;
+  --color-concreto-300: #cbcdc4;
+  --color-concreto-400: #a5a79d;
+  --color-concreto-500: #7d7f76;
+  --color-concreto-600: #5b5d56;
+  --color-concreto-700: #3f413b;
+  --color-concreto-800: #26272a;
+  --color-concreto-900: #17181b;
+  --color-concreto-950: #0f1012;
+
+  /* O painel já usava a escala `neutral`; ela agora é o concreto,
+     então o admin acompanha o site em vez de ter paleta própria. */
+  --color-neutral-50: #f5f6f2;
+  --color-neutral-100: #eaece6;
+  --color-neutral-200: #dfe1da;
+  --color-neutral-300: #cbcdc4;
+  --color-neutral-400: #a5a79d;
+  --color-neutral-500: #7d7f76;
+  --color-neutral-600: #5b5d56;
+  --color-neutral-700: #3f413b;
+  --color-neutral-800: #26272a;
+  --color-neutral-900: #17181b;
+  --color-neutral-950: #0f1012;
 }

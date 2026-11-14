@@ -4,15 +4,18 @@ import { Header } from './Header'
 import { Footer } from './Footer'
 import { BotoesFlutuantes } from '../ui/BotoesFlutuantes'
 import { useScrollToTop } from '../../hooks/useScroll'
+import { useCanonical } from '../../hooks/useCanonical'
 import { CatalogoContexto } from '../../hooks/useCatalogo'
 import type { EstadoCatalogo } from '../../hooks/useCatalogo'
 import { SiteConfigProvider } from '../../hooks/SiteConfigProvider'
 import { buscarCatalogo } from '../../lib/catalog'
 import { supabaseConfigured } from '../../lib/supabase'
-import { motorcycles as catalogoEstatico } from '../../data/motorcycles'
 
 export function RootLayout() {
   useScrollToTop()
+  // Canonical de todas as rotas da vitrine, montado a partir de SITE_URL.
+  // Fica aqui (e não em cada página) para nenhuma rota nova esquecer.
+  useCanonical()
 
   return (
     <div className="flex min-h-dvh flex-col bg-fundo">
@@ -44,14 +47,13 @@ export function RootLayout() {
 /**
  * Busca o catálogo uma vez e reparte por contexto.
  *
- * Enquanto o banco não responde, entrega o catálogo estático de
- * src/data/motorcycles.ts. Assim o site nunca mostra vitrine vazia, e
- * uma queda do Supabase não derruba a loja — o owner continua vendo o
- * estoque antigo e o visitante ainda navega.
+ * A única fonte de estoque é o Supabase. Sem banco configurado ou com
+ * o banco fora do ar, a vitrine exibe o estado vazio com honestidade —
+ * não há catálogo setado no código para esconder a queda.
  */
 function CatalogoProvider({ children }: { children: React.ReactNode }) {
   const [estado, setEstado] = useState<EstadoCatalogo>({
-    motos: catalogoEstatico,
+    motos: [],
     carregando: supabaseConfigured,
     doBanco: false,
   })
@@ -63,21 +65,15 @@ function CatalogoProvider({ children }: { children: React.ReactNode }) {
     buscarCatalogo()
       .then((r) => {
         if (!ativo) return
-        // `doBanco` já distingue "consulta funcionou" de "falhou". Um
-        // catálogo vazio no banco é intencional (owner removeu tudo) e
-        // precisa ser respeitado — senão as motos do seed voltariam a
-        // aparecer sozinhas. O fallback só entra em caso de falha.
-        if (r.doBanco) {
-          setEstado({ motos: r.motos, carregando: false, doBanco: true })
-        } else {
-          setEstado({ motos: catalogoEstatico, carregando: false, doBanco: false })
-        }
+        // Um catálogo vazio no banco é intencional (owner removeu tudo)
+        // e precisa ser respeitado. Sem fallback estático: o que vier
+        // do banco é o que existe.
+        setEstado({ motos: r.motos, carregando: false, doBanco: r.doBanco })
       })
       // Rede de segurança: nenhuma falha pode deixar a vitrine
-      // eternamente em "carregando" — declara indisponível e usa o
-      // catálogo estático.
+      // eternamente em "carregando" — declara indisponível e vazia.
       .catch(() => {
-        if (ativo) setEstado({ motos: catalogoEstatico, carregando: false, doBanco: false })
+        if (ativo) setEstado({ motos: [], carregando: false, doBanco: false })
       })
 
     return () => {

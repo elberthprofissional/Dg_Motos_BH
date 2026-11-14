@@ -52,17 +52,17 @@ export function BotoesFlutuantes() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Conversar no WhatsApp"
-          className="grid size-14 place-items-center rounded-full bg-whatsapp text-white shadow-lg shadow-black/25 transition-[filter] hover:brightness-95"
+          className="grid size-16 place-items-center rounded-full bg-whatsapp text-white shadow-lg shadow-black/25 transition-[filter,transform] hover:scale-105 hover:brightness-95"
         >
-          <IconeWhatsapp className="size-7" />
+          <IconeWhatsapp className="size-8" />
         </a>
       ) : (
         <Link
           to="/contato"
           aria-label="Falar com a loja"
-          className="grid size-14 place-items-center rounded-full bg-whatsapp text-white shadow-lg shadow-black/25 transition-[filter] hover:brightness-95"
+          className="grid size-16 place-items-center rounded-full bg-whatsapp text-white shadow-lg shadow-black/25 transition-[filter,transform] hover:scale-105 hover:brightness-95"
         >
-          <IconeWhatsapp className="size-7" />
+          <IconeWhatsapp className="size-8" />
         </Link>
       )}
 

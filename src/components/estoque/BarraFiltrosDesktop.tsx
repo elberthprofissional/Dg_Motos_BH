@@ -9,6 +9,7 @@ import {
 } from '../../lib/filters'
 import type { BikeFilterState } from '../../types'
 import { formatPrice } from '../../lib/format'
+import { useRolando, useScrolled } from '../../hooks/useScroll'
 import { Search } from 'lucide-react'
 
 /**
@@ -39,13 +40,22 @@ export function BarraFiltrosDesktop({
   atualizar: (patch: Partial<BikeFilterState>) => void
   limparFiltros: () => void
 }) {
+  // O cabeçalho fica fixo e só a barra de filtros se recolhe: sai
+  // durante o arrasto e volta quando a rolagem para. No topo da
+  // página ela nunca se esconde.
+  const rolando = useRolando()
+  const longeDoTopo = useScrolled(80)
+  const recolhida = rolando && longeDoTopo
+
   return (
     <form
       onSubmit={(e) => e.preventDefault()}
       aria-label="Filtros do estoque"
-      className="mb-6 hidden flex-wrap items-end gap-3 bg-painel p-4 lg:flex"
+      className={`mb-8 hidden flex-wrap items-end gap-x-2.5 gap-y-3 border border-borda bg-painel px-4 py-4 transition-transform duration-300 ease-out motion-reduce:transition-none lg:sticky lg:top-[7.75rem] lg:z-40 lg:flex ${
+        recolhida ? 'lg:-translate-y-[calc(100%+8rem)]' : 'lg:translate-y-0'
+      }`}
     >
-      <div className="min-w-44 flex-1">
+      <div className="min-w-[12rem] flex-1">
         <label htmlFor="barra-busca" className="field-label">
           Buscar
         </label>
@@ -60,12 +70,12 @@ export function BarraFiltrosDesktop({
             value={filtros.busca}
             onChange={(e) => atualizar({ busca: e.target.value })}
             placeholder="Marca, modelo ou ano"
-            className="h-10 w-full rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1.5 pr-8 pl-8 text-[13px] text-neutral-200 transition-colors placeholder:text-texto-3 focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600/30 focus:outline-none"
+            className="h-11 w-full border border-borda bg-fundo px-3 py-1.5 pr-9 pl-9 text-sm text-texto transition-colors placeholder:text-texto-3 focus:border-texto focus:outline-none"
           />
         </div>
       </div>
 
-      <div className="w-40">
+      <div className="w-[7.75rem] xl:w-[8.5rem]">
         <label htmlFor="barra-marca" className="field-label">
           Marca
         </label>
@@ -73,7 +83,7 @@ export function BarraFiltrosDesktop({
           id="barra-marca"
           value={filtros.marca}
           onChange={(e) => atualizar({ marca: e.target.value, modelo: '' })}
-          className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
+          className="select h-11 w-full border-borda bg-fundo text-sm"
         >
           <option value="">Todas as marcas</option>
           {marcasDisponiveis(motos).map((m) => (
@@ -84,7 +94,7 @@ export function BarraFiltrosDesktop({
         </select>
       </div>
 
-      <div className="w-40">
+      <div className="w-[7.75rem] xl:w-[8.5rem]">
         <label htmlFor="barra-modelo" className="field-label">
           Modelo
         </label>
@@ -93,7 +103,7 @@ export function BarraFiltrosDesktop({
             id="barra-modelo"
             value={filtros.modelo}
             onChange={(e) => atualizar({ modelo: e.target.value })}
-            className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
+            className="select h-11 w-full border-borda bg-fundo text-sm"
           >
             <option value="">Todos os modelos</option>
             {modelosDisponiveis(motos, filtros.marca).map((m) => (
@@ -107,14 +117,14 @@ export function BarraFiltrosDesktop({
             id="barra-modelo"
             disabled
             aria-disabled="true"
-            className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px] opacity-60"
+            className="select h-11 w-full border-borda bg-fundo text-sm opacity-60"
           >
             <option value="">Escolha a marca</option>
           </select>
         )}
       </div>
 
-      <div className="w-36">
+      <div className="w-[7.75rem] xl:w-[8.5rem]">
         <label htmlFor="barra-ano" className="field-label">
           Ano
         </label>
@@ -122,7 +132,7 @@ export function BarraFiltrosDesktop({
           id="barra-ano"
           value={filtros.anoMin}
           onChange={(e) => atualizar({ anoMin: Number(e.target.value) })}
-          className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
+          className="select h-11 w-full border-borda bg-fundo text-sm"
         >
           <option value={ANO_MIN}>Ano: todos</option>
           {Array.from({ length: ANO_MAX - ANO_MIN }, (_, i) => ANO_MAX - i).map(
@@ -135,7 +145,7 @@ export function BarraFiltrosDesktop({
         </select>
       </div>
 
-      <div className="w-36">
+      <div className="w-[8.75rem] xl:w-[9.5rem]">
         <label htmlFor="barra-ordenacao" className="field-label">
           Ordenar
         </label>
@@ -145,7 +155,7 @@ export function BarraFiltrosDesktop({
           onChange={(e) =>
             atualizar({ ordenacao: e.target.value as BikeFilterState['ordenacao'] })
           }
-          className="select h-10 w-full rounded-lg border-neutral-800 bg-neutral-900 text-[13px]"
+          className="select h-11 w-full border-borda bg-fundo text-sm"
         >
           {ORDENACOES.map((o) => (
             <option key={o.value} value={o.value}>
@@ -158,16 +168,19 @@ export function BarraFiltrosDesktop({
       {/* Preço: um puxador só, "até tal" — a versão limpa da
           referência. O mínimo fica no padrão (a folha do celular
           continua com os dois, intocada). */}
-      <div className="w-44">
-        <div className="flex items-center justify-between gap-2">
-          <label htmlFor="barra-preco-max" className="field-label !mb-0">
+      {/* Preço: o rótulo divide a linha com o valor e o puxador vive
+          dentro de uma caixa da mesma altura dos outros campos — antes
+          ele boiava solto e desalinhava a barra inteira. */}
+      <div className="w-[10.5rem] xl:w-[12rem]">
+        <div className="flex items-baseline justify-between gap-2">
+          <label htmlFor="barra-preco-max" className="field-label !mb-1">
             Preço até
           </label>
-          <span className="numeros text-[11px] leading-none font-semibold text-neutral-200">
+          <span className="numeros text-[11px] leading-none font-semibold text-texto">
             {formatPrice(filtrosAtuais.precoMax)}
           </span>
         </div>
-        <div className="flex h-10 items-center">
+        <div className="flex h-11 items-center border border-borda bg-fundo px-3">
           <input
             id="barra-preco-max"
             type="range"
@@ -190,7 +203,7 @@ export function BarraFiltrosDesktop({
         <button
           type="button"
           onClick={limparFiltros}
-          className="self-center shrink-0 text-[13px] text-texto-3 transition-colors hover:text-texto"
+          className="h-11 shrink-0 px-1 text-sm text-texto-3 transition-colors hover:text-texto"
         >
           Limpar filtros
         </button>

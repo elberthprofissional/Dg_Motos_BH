@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { SearchX, SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal } from 'lucide-react'
 import { useCatalogo } from '../hooks/useCatalogo'
 import {
   ANO_MIN,
@@ -11,9 +11,7 @@ import {
 } from '../lib/filters'
 import type { BikeFilterState } from '../types'
 import { usePageMeta } from '../hooks/usePageMeta'
-import { Marcas } from '../components/home/MarcasProcuradas'
 import { BikeCard } from '../components/motorcycles/BikeCard'
-import { EstadoVazio } from '../components/ui/EstadoVazio'
 import { Button } from '../components/ui/Button'
 import { Revelar } from '../components/ui/Revelar'
 import { formatPrice } from '../lib/format'
@@ -35,11 +33,6 @@ import {
  * A folha do celular trabalha com um rascunho: o visitante ajusta os
  * campos e só então aplica. Assim o resultado não muda a cada arrasto
  * de slider, e o botão "Aplicar filtros" tem uma função clara.
- *
- * A coluna cresce dentro do <main>: num pátio curto (poucas motos), a
- * sobra de altura fica entre o resultado e a esteira de marcas, e a
- * esteira continua encostada no rodapé — como na Home, onde o conteúdo
- * é longo demais para sobrar espaço.
  *
  * Peças visuais moram em `components/estoque/`: a barra do desktop, a
  * folha do celular e as etiquetas de filtros ativos. Aqui fica a
@@ -202,15 +195,13 @@ export function Estoque() {
 
   return (
     <div className="flex grow flex-col pt-cabecalho">
-      <section className="grow bg-fundo pt-2 pb-6 sm:pt-3 sm:pb-8">
+      <section className="grow pt-2 pb-12 sm:pt-3 sm:pb-16">
         <div className="container-site flex grow">
           {/* Resultado */}
           <div className="min-w-0 flex-1">
-            {/* A vitrine abre direto no grid, sem título visível — mas
-                a página precisa de um h1 para o leitor de tela e para
-                o buscador. O sr-only entrega o nome sem mexer no
-                desenho compacto da barra de filtros. */}
-            <h1 className="sr-only">Estoque de motos seminovas em Belo Horizonte</h1>
+            {/* O título fica só para leitores de tela e buscadores: o
+                cabeçalho já nomeia a página e o filtro assume o topo. */}
+            <h1 className="sr-only">Estoque</h1>
             <h2 className="sr-only">Resultados do estoque</h2>
 
             {/* Barra de filtros do desktop */}
@@ -231,61 +222,70 @@ export function Estoque() {
                 onClick={(e) => abrirFolha(e.currentTarget)}
                 aria-haspopup="dialog"
                 aria-expanded={filtrosAbertos}
-                className="btn btn-secondary h-11 shrink-0 gap-2 rounded-lg px-4 text-[13px]"
+                className="btn btn-secondary h-11 shrink-0 gap-2 px-4 text-[13px]"
               >
                 <SlidersHorizontal className="size-4" aria-hidden="true" />
                 Filtros
                 {temAtivos ? (
-                  <span className="grid size-5 place-items-center rounded-full bg-marca text-[10px] font-bold text-white">
+                  <span className="grid size-5 place-items-center bg-marca text-[10px] font-bold text-white">
                     {ativos.length}
                   </span>
                 ) : null}
               </button>
-              <p className="numeros truncate text-xs text-texto-3">
-                {resultados.length} {resultados.length === 1 ? 'moto' : 'motos'}
-              </p>
             </div>
 
             {temAtivos ? <EtiquetasFiltros ativos={ativos} onLimparTudo={limparFiltros} /> : null}
 
             {resultados.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {resultados.map((bike, i) => (
-                  <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
-                    <BikeCard bike={bike} priority={i < 3} />
-                  </Revelar>
-                ))}
-              </div>
+              <>
+                {/* Desktop: índice editorial do pátio — fileiras separadas
+                    por linha fina, foto à esquerda, preço vermelho à
+                    direita. Sem caixa, sem grade de marketplace. */}
+                <div className="estoque-indice hidden divide-y divide-borda lg:block">
+                  {resultados.map((bike) => (
+                    <BikeCard key={bike.id} bike={bike} variante="indice" />
+                  ))}
+                </div>
+
+                {/* Mobile e tablet: grade de cartões — dois por linha no
+                    celular, para a lista não virar uma coluna de fotos
+                    gigantes de alturas diferentes. */}
+                <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:hidden">
+                  {resultados.map((bike, i) => (
+                    <Revelar key={bike.id} atraso={Math.min(i, 6) * 45}>
+                      <BikeCard bike={bike} priority={i < 3} />
+                    </Revelar>
+                  ))}
+                </div>
+              </>
             ) : (
-              <div className="bg-painel px-4 py-2 sm:px-8">
-                <EstadoVazio
-                  icone={<SearchX className="size-7" aria-hidden="true" />}
-                  titulo={totalDisponiveis === 0 ? 'Sem motos anunciadas agora' : 'Nenhuma moto encontrada com esses filtros'}
-                  descricao={
-                    totalDisponiveis === 0
-                      ? 'Fale com a loja para saber quando chegam as próximas.'
-                      : 'Ajuste a faixa de preço ou o ano, ou limpe os filtros para ver todo o estoque.'
-                  }
-                  acao={
-                    <div className="flex flex-wrap justify-center gap-3">
-                      {totalDisponiveis > 0 ? (
-                        <Button variant="outline" onClick={limparFiltros}>
-                          Limpar filtros
-                        </Button>
-                      ) : null}
-                      <Button to="/contato">Falar com a loja</Button>
-                    </div>
-                  }
-                />
+              <div className="flex flex-col items-center py-16 text-center sm:py-24">
+                <span aria-hidden="true" className="block h-0.5 w-12 bg-marca" />
+                <h2 className="mt-6 font-display text-[1.375rem] leading-tight font-bold tracking-[-0.02em] text-texto">
+                  {totalDisponiveis === 0
+                    ? 'Sem motos anunciadas agora'
+                    : 'Nenhuma moto encontrada'}
+                </h2>
+                <p className="mt-2.5 max-w-[40ch] text-[15px] leading-relaxed text-texto-2">
+                  {totalDisponiveis === 0
+                    ? 'Fale com a loja para saber quando chegam as próximas.'
+                    : 'Ajuste a faixa de preço ou o ano, ou veja todo o estoque de uma vez.'}
+                </p>
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+                  {totalDisponiveis > 0 ? (
+                    <Button variant="outline" onClick={limparFiltros}>
+                      Limpar filtros
+                    </Button>
+                  ) : null}
+                  <Button to="/contato" variant="ghost">
+                    Falar com a loja
+                  </Button>
+                </div>
               </div>
             )}
           </div>
         </div>
       </section>
-
-      {/* A esteira de marcas fecha a vitrine, como na Home: fica depois
-          do resultado para não competir com os filtros. */}
-      <Marcas />
 
       {/* Folha de filtros do celular */}
       {filtrosAbertos && (

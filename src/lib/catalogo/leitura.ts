@@ -10,10 +10,8 @@ import { carregarSupabase } from '../supabase'
  *   motorcycles        → a moto
  *   motorcycle_images  → fotos em relação 1:N, ordenadas por `posicao`
  *
- * O arquivo src/data/motorcycles.ts continua existindo como **fallback**
- * para quando o Supabase não está configurado ou está fora do ar. Isso
- * mantém o site no ar mesmo com o banco derrubado — o que importa para
- * uma loja que perde venda por site fora do ar.
+ * Não existe catálogo setado no código: o que estiver no banco é o
+ * que aparece na vitrine. Sem banco, o site exibe o estado vazio.
  *
  * Escrita mora em `./escrita`; Storage e exclusão definitiva, em `./fotos`.
  */

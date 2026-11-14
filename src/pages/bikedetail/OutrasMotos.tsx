@@ -25,12 +25,16 @@ export function OutrasMotos({ recomendadas }: OutrasMotosProps) {
     <section aria-labelledby="outras-titulo" className="mt-12 mb-16 bg-fundo">
       <div className="container-site px-4 lg:max-w-7xl lg:px-6">
         <div className="grid gap-10 lg:block">
-          <div className="flex items-end justify-between gap-6">
+          {/* No celular o título e o link ficam um embaixo do outro e a
+              fonte encolhe com a tela: o título é de uma linha só
+              (nowrap), então não pode disputar largura com "Ver
+              estoque" em 320px. */}
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             <h2
               id="outras-titulo"
-              className="max-w-[12ch] font-display text-[2rem] leading-[1.02] font-bold tracking-[-0.035em] text-texto text-balance lg:text-[2.5rem]"
+              className="whitespace-nowrap font-display text-[length:clamp(1.5rem,7vw,2rem)] leading-[1.02] font-bold tracking-[-0.035em] text-texto lg:text-[2.5rem]"
             >
-              Outras motos no pátio
+              Conheça mais opções
             </h2>
             <Link
               to="/estoque"

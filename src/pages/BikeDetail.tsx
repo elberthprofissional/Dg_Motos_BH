@@ -14,7 +14,7 @@ import {
   precoRequerConfirmacao,
   resumoPublico,
 } from '../lib/format'
-import { descricaoDe, gruposDaFicha } from '../lib/ficha'
+import { descricaoDe, resumoDaUnidade } from '../lib/ficha'
 import { fichaDeReferencia } from '../data/fichasModelo'
 import { Button } from '../components/ui/Button'
 import { precoDeLista } from './bikedetail/comum'
@@ -126,21 +126,11 @@ export function BikeDetail() {
   // sai da página: o que sobra é o resumo que o herói já mostra.
   const temFicha = referencia != null || especificacoesLoja.length > 0
 
-  const grupos = gruposDaFicha(bike)
-
-  const gradeGrupos =
-    grupos.length >= 4
-      ? 'xl:grid-cols-4'
-      : grupos.length === 3
-        ? 'xl:grid-cols-3'
-        : ''
-
-  const introFicha = referencia
-    ? `Os dados desta unidade abrem a ficha; o restante é a especificação da linha ${referencia.modelo}.`
-    : 'Os dados cadastrados pela loja para esta unidade.'
+  const resumoFicha = resumoDaUnidade(bike)
+  const gruposReferencia = referencia?.grupos ?? []
 
   const notaFicha = referencia
-    ? `${referencia.nota} Os campos de “Esta unidade” foram cadastrados pela loja.`
+    ? `${referencia.nota} A faixa de resumo e as características foram cadastradas pela loja.`
     : 'Dados cadastrados pela loja para esta unidade. Confirme os detalhes com o atendimento antes de fechar negócio.'
 
   const recomendadas = motos
@@ -180,9 +170,9 @@ export function BikeDetail() {
         <FichaTecnica
           titulo={titulo}
           ano={bike.ano}
-          introFicha={introFicha}
-          gradeGrupos={gradeGrupos}
-          grupos={grupos}
+          resumo={resumoFicha}
+          caracteristicas={especificacoesLoja}
+          gruposReferencia={gruposReferencia}
           notaFicha={notaFicha}
         />
       ) : null}

@@ -6,15 +6,48 @@
 }
 
 @layer utilities {
+  /* Brilho da marca sob o recorte da hero: o vermelho respira por
+     trás da moto, sutil — cinema, não neon. */
+  .hero-glow {
+    filter: drop-shadow(0 24px 80px rgb(211 36 14 / 0.3));
+  }
+
+  /* Corte de velocidade: o canto inferior direito abate em diagonal.
+     Caixinha 100% reta nunca mais. */
+  .corte-velocidade {
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% calc(100% - 26px),
+      calc(100% - 26px) 100%,
+      0 100%
+    );
+  }
+
+  /* Selo colado na foto: etiqueta vermelha inclinada. */
+  .selo-oferta {
+    display: inline-flex;
+    padding: 2px 8px;
+    background-color: var(--cor-marca);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    font-style: italic;
+    line-height: 1.35;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transform: skewX(-8deg);
+  }
+
   /* Compensa o cabeçalho fixo. Uma classe só: quando a altura da barra
      mudar, todas as páginas acompanham. */
   .pt-cabecalho {
     padding-top: 80px;
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 1024px) {
     .pt-cabecalho {
-      padding-top: 68px;
+      padding-top: 120px;
     }
   }
 
@@ -57,16 +90,93 @@
     left: -9999px;
     top: 0;
     z-index: 100;
-    background: var(--cor-marca);
-    color: #ffffff;
+    background: var(--cor-texto);
+    color: var(--cor-fundo);
     padding: 0.75rem 1.25rem;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 600;
   }
 
   .pular-para-conteudo:focus {
     left: 1rem;
     top: 1rem;
+  }
+
+  /* ============================================================
+     ENTRADA DO PAINEL — desktop
+     Um único momento de movimento: o bloco de acesso sobe e aparece
+     em sequência curta (título, formulário). Só a partir de lg e
+     nunca com movimento reduzido — o celular entra seco, como app.
+     ============================================================ */
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .entrada-painel > * {
+      animation: entrada-painel 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .entrada-painel > *:nth-child(2) {
+      animation-delay: 0.07s;
+    }
+
+    .entrada-painel > *:nth-child(3) {
+      animation-delay: 0.14s;
+    }
+
+    @keyframes entrada-painel {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+
+  /* ============================================================
+     GALERIA DE ENTREGAS — desktop
+     Uma foto por vez no DOM: o mural pode ter cinquenta fotos que o
+     slide continua leve. A entrada é um fade curto; a barra de
+     progresso corre enquanto a foto está em cena e pausa com ela.
+     ============================================================ */
+  @media (prefers-reduced-motion: no-preference) {
+    .galeria-entra {
+      animation: galeria-entra 0.45s ease-out both;
+    }
+
+    @keyframes galeria-entra {
+      from {
+        opacity: 0;
+        transform: scale(1.015);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .galeria-progresso > span {
+      animation: galeria-progresso var(--duracao, 3500ms) linear both;
+    }
+
+    @keyframes galeria-progresso {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    .galeria-progresso[data-pausada='true'] > span {
+      animation-play-state: paused;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .galeria-progresso > span {
+      transform: scaleX(1);
+    }
   }
 
   /* ============================================================
@@ -194,7 +304,10 @@
       overscroll-behavior-inline: contain;
     }
 
-    .marcas-clonagem {
+    /* Sem movimento, duas sequências bastam para preencher a régua:
+       a segunda garante largura em monitores grandes sem transformar
+       a faixa estática numa rolagem quilométrica. */
+    .marcas-excedente {
       display: none;
     }
   }
@@ -225,7 +338,7 @@
   }
 
   .menu-mobile::backdrop {
-    background: rgb(0 0 0 / 0.78);
+    background: rgb(18 19 22 / 0.55);
   }
 
   @starting-style {
@@ -250,7 +363,7 @@
     border: 0;
     background: var(--cor-painel);
     color: var(--cor-texto);
-    box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.8); /* taste-skill-ignore: diálogo flutuante é overlay real */
+    box-shadow: 0 24px 60px -20px rgb(18 19 22 / 0.45);
   }
 
   .dialogo[open] {
@@ -258,7 +371,7 @@
   }
 
   .dialogo::backdrop {
-    background: rgb(0 0 0 / 0.78);
+    background: rgb(0 0 0 / 0.82);
   }
 
   @keyframes dialogo-entra {

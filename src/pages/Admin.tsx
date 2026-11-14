@@ -14,8 +14,7 @@ import { VendidasTab } from '../components/admin/VendidasTab'
 import { PublicacoesTab } from '../components/admin/PublicacoesTab'
 import { SidebarPainel } from '../components/admin/SidebarPainel'
 import { MenuConta } from '../components/admin/MenuConta'
-import { ConvitePwa } from '../components/admin/ConvitePwa'
-import { useConvitePwa } from '../components/admin/useConvitePwa'
+import { useBarraEscondida } from '../hooks/useScroll'
 import { NavegacaoPainel } from '../components/admin/NavegacaoPainel'
 import type { Aba } from '../components/admin/NavegacaoPainel'
 import { DialogoRegistrarVenda } from '../components/admin/DialogoRegistrarVenda'
@@ -84,8 +83,6 @@ export function Admin() {
     avisar,
   })
 
-  const convite = useConvitePwa()
-
   /** O formulário salvou (novo cadastro ou edição): recarrega o estoque. */
   async function aoSalvarMoto() {
     const eraNova = !editando?.id
@@ -124,6 +121,10 @@ export function Admin() {
   const editandoMoto = aba === 'estoque' && editando !== null
   const topbarSemContexto = !editandoMoto
 
+  // A topbar do painel desce e sai de cena como a do site; a barra
+  // inferior não se mexe — ela é o mapa do celular.
+  const barraEscondida = useBarraEscondida()
+
   return (
     <div className="flex min-h-dvh bg-fundo" data-tema="painel">
       {/* ---------------------------------------------------------- */}
@@ -146,9 +147,9 @@ export function Admin() {
             sempre, porque ali a marca e o avatar moram nela (a sidebar
             está escondida). */}
         <header
-          className={`sticky top-0 z-30 border-b border-line bg-night-950 ${
+          className={`sticky top-0 z-30 border-b border-line bg-night-950 transition-transform duration-300 ease-out motion-reduce:transition-none ${
             topbarSemContexto ? 'lg:hidden' : ''
-          }`}
+          } ${barraEscondida ? '-translate-y-full' : 'translate-y-0'}`}
         >
           <div className="flex h-14 items-center gap-3 px-4 sm:px-6 lg:h-16 lg:px-8">
             <Link
@@ -336,10 +337,6 @@ export function Admin() {
 
       <Toast feedback={feedback} onFechar={() => setFeedback(null)} acimaDaBarra />
 
-      {/* Convite de instalação: aparece uma vez só, quando há motivo
-          (Chrome oferecendo instalação, ou iPhone com o caminho manual).
-          Some para fechar no primeiro "não". */}
-      <ConvitePwa convite={convite} />
     </div>
   )
 }

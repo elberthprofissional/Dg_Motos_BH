@@ -11,7 +11,7 @@ import {
   precoRequerConfirmacao,
 } from './format'
 import { autoDealerSchema, vehicleSchema } from './schema'
-import { motorcycles } from '../data/motorcycles'
+import { motosDeTeste as motorcycles } from '../test/motos-fixture'
 
 describe('formatPrice', () => {
   it('formata em reais sem centavos', () => {

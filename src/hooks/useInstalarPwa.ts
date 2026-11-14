@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 /**
  * ============================================================
@@ -9,15 +9,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * (o Chrome/Edge disparam), guardar o evento e chamar `prompt()` quando
  * for a hora.
  *
- * Há dois caminhos de exibição, e é o chamador que escolhe:
- *
- *  - BANNER NATIVO: quando não há convite na tela, o evento passa
- *    direto (sem preventDefault) e o próprio Chrome mostra o "Quer
- *    instalar o app?" — é a pergunta automática do Android.
- *  - CONVITE NOSSO (cartão): quando o chamador informa
- *    `conviteAberto: true`, seguramos o evento (preventDefault) para
- *    que o banner nativo não apareça junto com o cartão — aí quem
- *    decide é o botão do cartão.
+ * O evento é sempre segurado (`preventDefault`): nada de o Chrome
+ * abrir a pergunta automática de instalação quando o painel abre. Quem
+ * instala é quem pede — o botão "Instalar app" nas configurações do
+ * celular. Sem o `preventDefault` o navegador mostraria o banner dele
+ * por conta própria e o mesmo evento não poderia ser reusado depois.
  *
  * O iOS/Safari não dispara esse evento — lá a instalação é manual
  * (Compartilhar → Adicionar à Tela de Início). Por isso o hook expõe
@@ -60,28 +56,19 @@ export function ehIos(): boolean {
   return /iPhone|iPad|iPod/.test(ua) || ipad
 }
 
-export function useInstalarPwa(opcoes?: { conviteAberto?: boolean }): EstadoInstalacao {
+export function useInstalarPwa(): EstadoInstalacao {
   const [evento, setEvento] = useState<EventoInstalacao | null>(null)
   const [instalado, setInstalado] = useState(estaInstalado)
   // iOS é derivado na inicialização: lá não há evento de instalação,
   // então já nasce com as instruções manuais (se ainda não instalado).
   const [instrucoesIos, setInstrucoesIos] = useState(() => ehIos() && !estaInstalado())
 
-  // Espelho síncrono de `conviteAberto` para o listener do evento. A
-  // escrita acontece só em efeito (não durante o render) — o lint e o
-  // React avisariam, e o valor ficaria defasado de qualquer forma.
-  const conviteAberto = useRef(false)
-
-  useEffect(() => {
-    conviteAberto.current = opcoes?.conviteAberto ?? false
-  }, [opcoes?.conviteAberto])
-
   useEffect(() => {
     function onPrompt(e: Event) {
-      // Com convite nosso na tela, seguramos o banner nativo (senão os
-      // dois apareceriam). Sem convite, deixamos o navegador perguntar
-      // sozinho — é assim que o Android pergunta sem ninguém pedir.
-      if (conviteAberto.current) e.preventDefault()
+      // Segura o banner automático do navegador e guarda o evento para
+      // o botão das configurações. Depois do preventDefault o evento
+      // continua válido para o `prompt()` chamado no gesto do usuário.
+      e.preventDefault()
       setEvento(e as EventoInstalacao)
     }
 

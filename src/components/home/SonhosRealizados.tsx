@@ -12,6 +12,10 @@ interface SonhosRealizadosProps {
  */
 export const LIMITE_MURAL = 6
 
+/** No celular a esteira mostra só algumas fotos — o mural completo é
+ * do desktop; quem quiser mais, rola a página no tablet. */
+const FOTOS_ESTEIRA_MOBILE = 8
+
 /**
  * ============================================================
  * SONHOS REALIZADOS
@@ -21,10 +25,11 @@ export const LIMITE_MURAL = 6
  * - No celular, a esteira aprovada continua igual: as fotos passam
  *   como uma escada rolante e pausam ao toque.
  * - No desktop, a galeria vira um carrossel editorial: texto à
- *   esquerda, card 16:9 à direita e qualquer foto abre ampliada.
+ *   esquerda, retrato 4:5 à direita e barras de navegação abaixo.
  *   Uma entrega por cliente, sem repetir imagem.
  */
 export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
+
   // A vitrine pública só existe quando há ao menos uma entrega publicada.
   // Rascunhos e registros privados já são filtrados pela consulta de origem.
   if (entregas.length === 0) return null
@@ -36,23 +41,21 @@ export function SonhosRealizados({ entregas }: SonhosRealizadosProps) {
     <section
       id="sonhos"
       aria-label="Sonhos realizados"
-      className="bg-painel lg:bg-[#0b0a09]"
+      className="border-t border-borda bg-fundo text-noite-texto"
     >
       <div className="lg:hidden">
-        <div className="container-site py-14 sm:py-16">
-          <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
-            <div className="min-w-0">
-              <h2 id="sonhos-titulo" className="titulo text-texto">
-                Sonhos <span className="text-marca">realizados</span>
-              </h2>
-              <p className="mt-3 max-w-[46ch] text-sm leading-relaxed text-texto-2 sm:text-base">
-                Clientes que já saíram da loja com a moto na mão.
-              </p>
-            </div>
-          </header>
+        <div className="container-site py-12 sm:py-16">
+          <div className="secao-titulo">
+            <h2 id="sonhos-titulo" className="titulo text-texto">
+              Sonhos realizados
+            </h2>
+            <p className="hidden max-w-[30ch] text-right text-sm text-texto-2 sm:block">
+              Clientes que já saíram da loja com a moto na mão.
+            </p>
+          </div>
 
           <div data-vitrine className="mt-8 sm:mt-10">
-            <EsteiraFotos imagens={fotos} controlePausa={false} />
+            <EsteiraFotos imagens={fotos.slice(0, FOTOS_ESTEIRA_MOBILE)} controlePausa={false} />
           </div>
         </div>
       </div>

@@ -12,7 +12,7 @@
          linha muda entre Windows (CRLF) e Linux (LF), e o hash deixaria
          de bater no deploy. Depois de qualquer mudança, rode
          `npm run csp` para recalcular e conferir o sha256. -->
-    <script>if(location.pathname==='/'){var l=document.createElement('link');l.rel='preload';l.as='image';l.type='image/webp';l.href=matchMedia('(min-width: 1024px)').matches?'/hero/home-desktop.webp':'/hero/home-mobile-texto.webp';l.setAttribute('fetchpriority','high');document.head.appendChild(l)}</script>
+    <script>if(location.pathname==='/'){var l=document.createElement('link');l.rel='preload';l.as='image';l.type='image/webp';l.href='/hero/moto-hero-inteira.webp';l.setAttribute('fetchpriority','high');document.head.appendChild(l)}</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- PWA: app instalável (painel do dono). O manifest aponta
          start_url para /admin/login, então quem abre o app cai no
@@ -30,29 +30,31 @@
     <title>DG Motos — Seminovas inspecionadas em Belo Horizonte</title>
     <meta
       name="description"
-      content="Loja de motocicletas seminovas em Belo Horizonte, MG. Inspeção mecânica e ciclística, laudo cautelar aprovado e negociação direta pelo WhatsApp."
+      content="Motos seminovas em Belo Horizonte, com inspeção mecânica e cautelar e negociação direta pelo WhatsApp."
     />
-    <meta name="theme-color" content="#0d0c0a" />
+    <meta name="theme-color" content="#0f1013" />
+    <meta name="page-type" content="place" />
+    <meta name="site-kind" content="other" />
+    <meta name="page-kind" content="place" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:site_name" content="DG Motos" />
     <meta property="og:title" content="DG Motos — Realizando Sonhos" />
     <meta property="og:url" content="https://dg-motos-bh.vercel.app/" />
-    <meta property="og:image" content="https://dg-motos-bh.vercel.app/hero/showroom-2026-07-hd.webp" />
+    <meta property="og:image" content="https://dg-motos-bh.vercel.app/hero/contato-showroom.webp" />
     <meta
       property="og:description"
-      content="Loja de motocicletas seminovas em Belo Horizonte, MG. Inspeção mecânica e ciclística, laudo cautelar aprovado e negociação direta pelo WhatsApp."
+      content="Motos seminovas em Belo Horizonte, com inspeção mecânica e cautelar e negociação direta pelo WhatsApp."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!--
-      Lato continua sendo a voz do site (texto, catálogo e celular).
-      Archivo entra só no desktop editorial: títulos condensados de
-      cartaz, com eixo de largura variável. As duas famílias têm
-      papéis separados e não se misturam dentro de um mesmo bloco.
+      Archivo é a voz do site inteiro: texto na largura normal e
+      título no eixo largo, pesado. Uma família só, com eixo de
+      largura variável.
     -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Lato:wght@400;700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap"
       rel="stylesheet"
     />
   </head>

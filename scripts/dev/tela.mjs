@@ -33,6 +33,11 @@ const { targetId } = await send('Target.createTarget', { url: 'about:blank' })
 const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true })
 await send('Page.enable', {}, sessionId)
 await send('Runtime.enable', {}, sessionId)
+if (process.env.REDUZIR === '1') {
+  await send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+  }, sessionId)
+}
 await send('Emulation.setDeviceMetricsOverride', { width: L, height: A, deviceScaleFactor: 1, mobile: L < 700 }, sessionId)
 await send('Emulation.setTouchEmulationEnabled', { enabled: L < 700, maxTouchPoints: 5 }, sessionId)
 const carregou = new Promise((res) => {
@@ -50,6 +55,19 @@ await new Promise((r) => setTimeout(r, 3200))
 if (ROLAR) {
   await send('Runtime.evaluate', { expression: `scrollTo(0, ${ROLAR})` }, sessionId)
   await new Promise((r) => setTimeout(r, 600))
+}
+if (CHEIA) {
+  const total = await send('Runtime.evaluate', {
+    returnByValue: true,
+    expression: 'document.documentElement.scrollHeight',
+  }, sessionId)
+  const passo = Math.max(320, Math.round(A * 0.8))
+  for (let y = 0; y <= total.result.value; y += passo) {
+    await send('Runtime.evaluate', { expression: `scrollTo(0, ${y})` }, sessionId)
+    await new Promise((r) => setTimeout(r, 220))
+  }
+  await send('Runtime.evaluate', { expression: 'scrollTo(0, 0)' }, sessionId)
+  await new Promise((r) => setTimeout(r, 800))
 }
 mkdirSync(SAIDA, { recursive: true })
 const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: CHEIA }, sessionId)

@@ -89,13 +89,11 @@ export function BikeGallery({
       aria-controls={idFoto}
       aria-label={`Ver ${altDe(img, i)}`}
       onClick={() => setAtiva(i)}
-      className={`relative shrink-0 cursor-pointer overflow-hidden bg-painel-2 transition-[opacity,border-color] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco ${
-        app
-          ? 'w-14 rounded-lg border-2'
-          : preencherAltura
-            ? /* Prévia do painel: cartão redondo no celular, fileira fina na mesa. */
-              'w-14 rounded-lg border-2 lg:w-16 lg:rounded-sm'
-            : `w-12 border-b-2 sm:w-14 lg:w-20 lg:rounded-lg lg:border-2`
+      className={`relative shrink-0 cursor-pointer overflow-hidden bg-painel-2 transition-[opacity,border-color] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco ${          app
+            ? 'w-14 border-2'
+            : preencherAltura
+              ? 'w-14 border-2 lg:w-16'
+              : `w-12 border-b-2 sm:w-14 lg:w-20 lg:border-2`
       } ${
         i === indice
           ? 'border-marca opacity-100'
@@ -122,36 +120,16 @@ export function BikeGallery({
         id={idFoto}
         className={
           app
-            ? 'relative mx-4 aspect-[4/3] shrink-0 overflow-hidden rounded-2xl border border-neutral-800 bg-painel-2'
-            : `relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-painel-2 ${
+            ? 'relative mx-4 aspect-[4/3] shrink-0 overflow-hidden border border-borda bg-painel-2'
+            : `relative aspect-[4/3] w-full shrink-0 overflow-hidden border border-borda bg-painel-2 ${
                 preencherAltura
                   ? /* Prévia: no celular 4:3 contendo a moto inteira;
                         na mesa o palco acompanha a coluna como sempre. */
                     'lg:aspect-auto lg:min-h-0 lg:flex-1 lg:shrink'
-                  : 'lg:aspect-[4/3] lg:rounded-2xl lg:border lg:border-borda-forte lg:shadow-2xl lg:shadow-black/60'
+                  : 'lg:aspect-[4/3] lg:border lg:border-borda-forte'
               }`
         }
       >
-        {!preencherAltura ? (
-          <>
-            <img
-              src={atual.src}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 hidden size-full scale-110 object-cover object-center opacity-25 blur-2xl lg:block"
-              onError={(event) => {
-                event.currentTarget.style.display = 'none'
-              }}
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 hidden bg-fundo/30 lg:block"
-            />
-          </>
-        ) : null}
-
         {lista.map((img, i) => (
           <img
             key={`${img.src}-${i}`}
@@ -185,8 +163,8 @@ export function BikeGallery({
           onClick={abrirAmpliada}
           className={
             app
-              ? 'absolute top-3 right-3 z-10 grid size-11 place-items-center rounded-full bg-neutral-950/70 text-white backdrop-blur-md transition-colors hover:bg-marca focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
-              : 'absolute top-3 right-3 z-10 inline-flex h-11 items-center gap-2 bg-fundo/90 px-3 text-sm font-semibold text-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
+              ? 'absolute top-3 right-3 z-10 grid size-11 place-items-center bg-noite/85 text-white transition-colors hover:bg-marca focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
+              : 'absolute top-3 right-3 z-10 inline-flex h-11 items-center gap-2 bg-painel/95 px-3 text-sm font-semibold text-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco'
           }
           aria-label={`Ampliar foto de ${titulo}`}
         >
@@ -231,18 +209,18 @@ export function BikeGallery({
         onClick={(event) => {
           if (event.target === event.currentTarget) fecharAmpliada()
         }}
-        className="m-0 h-dvh max-h-none w-dvw max-w-none bg-transparent p-0 text-texto backdrop:bg-[#080706]"
+        className="m-0 h-dvh max-h-none w-dvw max-w-none bg-transparent p-0 text-noite-texto backdrop:bg-noite"
       >
         <div className="pointer-events-none flex h-full flex-col">
           <div className="pointer-events-auto flex items-center justify-between gap-4 p-4">
-            <p className="numeros text-sm text-texto-2">
+            <p className="numeros text-sm text-noite-texto-2">
               Foto {indice + 1} de {total}
             </p>
             <button
               type="button"
               onClick={fecharAmpliada}
               aria-label="Fechar foto ampliada"
-              className="grid size-11 place-items-center bg-painel text-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco"
+              className="grid size-11 place-items-center bg-noite-2 text-noite-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco"
             >
               <X className="size-5" aria-hidden="true" />
             </button>
@@ -254,7 +232,7 @@ export function BikeGallery({
                 type="button"
                 onClick={() => setAtiva((i) => (i - 1 + total) % total)}
                 aria-label="Foto anterior"
-                className="pointer-events-auto absolute left-2 z-10 grid size-12 place-items-center bg-painel text-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco sm:left-6"
+                className="pointer-events-auto absolute left-2 z-10 grid size-12 place-items-center bg-noite-2 text-noite-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco sm:left-6"
               >
                 <ChevronLeft className="size-6" aria-hidden="true" />
               </button>
@@ -274,14 +252,14 @@ export function BikeGallery({
                 type="button"
                 onClick={() => setAtiva((i) => (i + 1) % total)}
                 aria-label="Próxima foto"
-                className="pointer-events-auto absolute right-2 z-10 grid size-12 place-items-center bg-painel text-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco sm:right-6"
+                className="pointer-events-auto absolute right-2 z-10 grid size-12 place-items-center bg-noite-2 text-noite-texto transition-colors hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foco sm:right-6"
               >
                 <ChevronRight className="size-6" aria-hidden="true" />
               </button>
             ) : null}
           </div>
 
-          <p className="pointer-events-auto px-4 pb-5 text-center text-sm leading-relaxed text-texto-3">
+          <p className="pointer-events-auto px-4 pb-5 text-center text-sm leading-relaxed text-noite-texto-2">
             Use as setas do teclado para passar as fotos. Esc fecha.
           </p>
         </div>

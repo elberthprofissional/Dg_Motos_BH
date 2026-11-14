@@ -1,16 +1,30 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, Search, X } from 'lucide-react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Bike, House, MapPin, Menu, X } from 'lucide-react'
 import { buildDefaultMessage } from '../../lib/format'
 import { useWhatsappLink } from '../../hooks/useWhatsappLink'
 import { InstagramIcon } from '../ui/InstagramIcon'
 import { IconeWhatsapp } from '../ui/IconeWhatsapp'
 import { useSiteConfig } from '../../hooks/siteConfigContexto'
 
+/**
+ * ============================================================
+ * CABEÇALHO — a régua do pátio
+ * ============================================================
+ *
+ * Concreto claro, o nome da loja à esquerda e três links sem enfeite.
+ * A página atual é marcada por um traço vermelho de 2 px embaixo do
+ * texto; o resto do cabeçalho é tinta e régua de 1 px.
+ *
+ * No celular, a navegação vira uma folha de tela cheia com a mesma
+ * tipografia e o mesmo traço. A busca é o único campo do cabeçalho e
+ * abre logo abaixo da barra, sem sobrepor o conteúdo.
+ */
+
 const NAV = [
-  { to: '/', label: 'Início' },
-  { to: '/estoque', label: 'Estoque' },
-  { to: '/contato', label: 'Contato' },
+  { to: '/', label: 'Início', Icone: House },
+  { to: '/estoque', label: 'Estoque', Icone: Bike },
+  { to: '/contato', label: 'Contato', Icone: MapPin },
 ]
 
 const WA_TEXTO: Record<string, string> = {
@@ -19,42 +33,18 @@ const WA_TEXTO: Record<string, string> = {
   '/contato': 'Olá! Vim pelo site e quero falar com a equipe da DG Motos.',
 }
 
-/**
- * Cabeçalho — faixa sólida de grafite sobre o fundo preto da loja.
- *
- * Sem borda, sombra ou vidro: a separação vem do tom. A marca fica à
- * esquerda, três links no centro e uma única ação à direita.
- *
- * No celular sobra a marca e o botão "Menu", que abre uma folha de
- * tela cheia — o <dialog> nativo entrega foco preso, Esc e retorno de
- * foco sem nenhum aria improvisado.
- */
 export function Header() {
   const location = useLocation()
-  const navigate = useNavigate()
   const [aberto, setAberto] = useState(false)
-  const [busca, setBusca] = useState('')
-  const [buscaAberta, setBuscaAberta] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const botaoRef = useRef<HTMLButtonElement>(null)
-  const buscaInputRef = useRef<HTMLInputElement>(null)
 
   const { config } = useSiteConfig()
   const wa = useWhatsappLink(WA_TEXTO[location.pathname] ?? buildDefaultMessage())
 
-  /** Navega para o estoque com o termo na URL. O campo do estoque
-      lê o parâmetro na inicialização (veja Estoque.tsx). */
-  function executarBusca(event?: React.FormEvent) {
-    event?.preventDefault()
-    const termo = busca.trim()
-    const query = termo ? `?busca=${encodeURIComponent(termo)}` : ''
-    setBuscaAberta(false)
-    setBusca('')
-    navigate(`/estoque${query}`)
-  }
+  // O cabeçalho fica fixo. Quem sai de cena é a barra de filtros do
+  // estoque — dois elementos animando juntos piscavam a tela.
 
-  // O <dialog> nativo cuida do modal: `showModal()` prende o foco,
-  // Esc fecha e o navegador devolve o foco ao botão de origem.
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -62,8 +52,6 @@ export function Header() {
     if (!aberto && dialog.open) dialog.close()
   }, [aberto])
 
-  // Menu aberto trava a rolagem do fundo: a página não pode andar
-  // por baixo da folha.
   useEffect(() => {
     if (!aberto) return
     const anterior = document.body.style.overflow
@@ -73,8 +61,6 @@ export function Header() {
     }
   }, [aberto])
 
-  // Fechou pelo Esc (ou pelo botão do próprio diálogo): o estado
-  // precisa acompanhar, senão o cabeçalho fica marcado como aberto.
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -86,30 +72,6 @@ export function Header() {
     return () => dialog.removeEventListener('close', onClose)
   }, [])
 
-  // A busca fecha com Esc ou clique fora. O clique fora é capturado
-  // na janela: se o alvo não estiver dentro do wrapper da busca, fecha.
-  useEffect(() => {
-    if (!buscaAberta) return
-    function aoCliqueFora(event: MouseEvent) {
-      const wrapper = buscaInputRef.current?.closest('[data-busca]')
-      if (wrapper && !wrapper.contains(event.target as Node)) {
-        setBuscaAberta(false)
-      }
-    }
-    function aoEsc(event: KeyboardEvent) {
-      if (event.key === 'Escape') setBuscaAberta(false)
-    }
-    window.addEventListener('mousedown', aoCliqueFora)
-    window.addEventListener('keydown', aoEsc)
-    return () => {
-      window.removeEventListener('mousedown', aoCliqueFora)
-      window.removeEventListener('keydown', aoEsc)
-    }
-  }, [buscaAberta])
-
-  // Trocar de rota fecha o menu: a folha não pode ficar aberta sobre
-  // a página nova. Fechar o <dialog> dispara o evento `close`, que
-  // sincroniza o estado — sem setState dentro do efeito.
   useEffect(() => {
     const dialog = dialogRef.current
     if (dialog?.open) dialog.close()
@@ -117,178 +79,98 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 w-full bg-painel lg:bg-[#0b0a09]">
-        {/* Ordem da barra = quem fala primeiro: a marca, depois os
-            caminhos, e as ferramentas na porta da direita. A busca é
-            secundária — apertada, sem roubar o meio da barra. */}
-        <div className="container-site flex h-20 items-center gap-4 sm:h-[4.25rem]">
+      <header
+        className="cabecalho fixed inset-x-0 top-0 z-50 w-full"
+      >
+        <div className="container-site relative flex h-20 items-center gap-6 lg:h-[7.5rem]">
           <Link
             to="/"
             aria-label="DG Motos — Página inicial"
-            className="flex min-h-11 items-center gap-3"
+            className="flex shrink-0 items-center"
           >
             <img
               src="/logo.webp"
               alt=""
               width={40}
               height={40}
-              className="size-9 object-contain sm:size-10"
+              className="size-12 object-contain sm:size-14 lg:size-20"
             />
-            <span className="flex flex-col gap-1">
-              <span className="font-display text-base leading-none font-bold tracking-[0.04em] text-white sm:text-lg">
-                DG Motos
-              </span>
-            </span>
           </Link>
 
-          <nav aria-label="Navegação principal" className="hidden items-center gap-7 lg:flex">
-            {NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                className={({ isActive }) =>
-                  `inline-flex items-center py-3 font-sans text-sm font-medium transition-colors ${
-                    isActive ? 'font-semibold text-marca-texto' : 'text-texto-2 hover:text-texto'
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+          {/* Centrada na barra: o logo à esquerda e o WhatsApp à
+              direita não empurram mais os três links para o canto. */}
+          <nav
+            aria-label="Navegação principal"
+            className="absolute top-0 left-1/2 hidden h-full -translate-x-1/2 lg:flex"
+          >
+            <ul className="flex h-full items-stretch gap-7">
+              {NAV.map((item) => (
+                <li key={item.to} className="flex">
+                  <NavLink to={item.to} end={item.to === '/'} className="cabecalho-link">
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
           </nav>
 
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            {/* Busca desktop — encolheu e foi pra borda: ferramenta,
-                não destaque */}
-            <form
-              data-busca
-              onSubmit={executarBusca}
-              className="relative hidden lg:block"
-              role="search"
-              aria-label="Busca de motos"
-            >
-              <Search
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-3"
-                aria-hidden="true"
-              />
-              <input
-                ref={buscaInputRef}
-                type="search"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar moto…"
-                aria-label="Buscar moto por marca, modelo ou ano"
-                enterKeyHint="search"
-                className="font-sans h-10 w-48 rounded-none border-0 bg-painel py-1.5 pr-3 pl-9 text-sm text-texto transition-[width,background-color] placeholder:text-texto-3 hover:bg-painel-2 focus:w-60 focus:bg-painel-2 focus:ring-2 focus:ring-marca/60 focus:outline-none xl:w-56 xl:focus:w-72"
-              />
-            </form>
-
-            <button
-              type="button"
-              onClick={() => setBuscaAberta((v) => !v)}
-              aria-expanded={buscaAberta}
-              aria-controls="busca-mobile"
-              aria-label="Abrir busca"
-              className="grid size-11 place-items-center text-texto transition-colors hover:text-marca-texto lg:hidden"
-            >
-              <Search className="size-5" aria-hidden="true" />
-            </button>
-
+          <div className="ml-auto hidden min-w-0 items-center gap-3 lg:flex">
             {wa ? (
-              <a
-                href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary hidden h-11 gap-2 px-5 text-sm lg:inline-flex"
-              >
-                <IconeWhatsapp className="size-4" />
-                Fale conosco
+              <a href={wa} target="_blank" rel="noopener noreferrer" className="cabecalho-cta">
+                <IconeWhatsapp className="size-4 shrink-0" />
+                <span>Falar no WhatsApp</span>
               </a>
             ) : (
-              <Link
-                to="/contato"
-                className="btn btn-primary hidden h-11 gap-2 px-5 text-sm lg:inline-flex"
-              >
-                <IconeWhatsapp className="size-4" />
-                Fale conosco
+              <Link to="/contato" className="cabecalho-cta">
+                <IconeWhatsapp className="size-4 shrink-0" />
+                <span>Falar com a loja</span>
               </Link>
             )}
+          </div>
 
+          <div className="ml-auto flex items-center gap-1 lg:hidden">
             <button
               ref={botaoRef}
               type="button"
               onClick={() => setAberto(true)}
               aria-haspopup="dialog"
               aria-label="Abrir menu"
-              className="grid size-11 place-items-center text-texto transition-colors hover:text-marca-texto lg:hidden"
+              className="grid size-11 place-items-center bg-texto text-fundo transition-colors hover:bg-marca"
             >
               <Menu className="size-6" aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        {/* Busca mobile expansível — abaixo do header, não sobreposição */}
-        {buscaAberta && (
-          <div
-            id="busca-mobile"
-            className="container-site pb-4 lg:hidden"
-          >
-            <form
-              data-busca
-              onSubmit={executarBusca}
-              className="flex items-center gap-2"
-              role="search"
-              aria-label="Busca de motos"
-            >
-              <div className="relative flex-1">
-                <Search
-                  className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-3"
-                  aria-hidden="true"
-                />
-                <input
-                  ref={buscaInputRef}
-                  type="search"
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Buscar moto por marca ou modelo…"
-                  aria-label="Buscar moto por marca, modelo ou ano"
-                  enterKeyHint="search"
-                  className="h-11 w-full rounded border border-borda-forte bg-fundo px-3 py-1.5 pl-9 text-base text-texto transition-colors placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca/30"
-                  style={{ fontSize: '16px' }}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setBuscaAberta(false)}
-                aria-label="Fechar busca"
-                className="grid size-11 shrink-0 place-items-center text-texto-3 transition-colors hover:text-texto"
-              >
-                <X className="size-5" aria-hidden="true" />
-              </button>
-            </form>
-          </div>
-        )}
       </header>
 
-      {/* Menu do celular — <dialog> nativo (Esc, foco preso e retorno) */}
       <dialog
         ref={dialogRef}
         aria-label="Menu de navegação"
         className="menu-mobile"
         onClick={(e) => {
-          // Clique fora do painel (na área do ::backdrop) fecha.
           if (e.target === dialogRef.current) setAberto(false)
         }}
       >
         <div className="flex h-full flex-col justify-between overflow-y-auto overscroll-contain">
           <div>
-            <div className="flex h-16 items-center justify-between px-5">
-              <span className="display text-xl leading-none text-texto">DG Motos</span>
+            <div className="flex items-center justify-between px-5 pt-5 pb-4">
+              <span className="flex items-center gap-2.5">
+                <img
+                  src="/logo.webp"
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="size-9 object-contain"
+                />
+                <span className="font-display text-base font-extrabold tracking-[-0.01em] uppercase">
+                  DG Motos
+                </span>
+              </span>
               <button
                 type="button"
                 onClick={() => setAberto(false)}
-                className="grid size-11 place-items-center text-texto-3 transition-colors hover:text-texto"
+                className="grid size-11 place-items-center text-texto-2 transition-colors hover:text-texto"
               >
                 <X className="size-6" aria-hidden="true" />
                 <span className="sr-only">Fechar menu</span>
@@ -302,13 +184,10 @@ export function Header() {
                   to={item.to}
                   end={item.to === '/'}
                   onClick={() => setAberto(false)}
-                  className={({ isActive }) =>
-                    `display py-5 text-4xl transition-colors ${
-                      isActive ? 'text-marca-texto' : 'text-texto'
-                    }`
-                  }
+                  className="menu-folha-item"
                 >
                   <span>{item.label}</span>
+                  <item.Icone className="menu-folha-item-icone" aria-hidden="true" />
                 </NavLink>
               ))}
             </nav>
@@ -324,7 +203,7 @@ export function Header() {
                 className="btn btn-primary h-12 w-full"
               >
                 <IconeWhatsapp className="size-4" />
-                <span>Chamar no WhatsApp</span>
+                <span>Falar no WhatsApp</span>
               </a>
             ) : (
               <Link
@@ -333,7 +212,7 @@ export function Header() {
                 className="btn btn-primary h-12 w-full"
               >
                 <IconeWhatsapp className="size-4" />
-                <span>Falar com a equipe</span>
+                <span>Falar com a loja</span>
               </Link>
             )}
 
@@ -343,16 +222,18 @@ export function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setAberto(false)}
-                className="inline-flex items-center gap-2 py-2 text-sm text-texto-2 transition-colors hover:text-texto"
+                className="inline-flex items-center gap-2 py-2 text-sm font-medium text-texto-2 transition-colors hover:text-texto"
               >
                 <InstagramIcon className="size-4" aria-hidden="true" />
-                <span>Instagram {config.instagramHandle}</span>
+                <span>{config.instagramHandle}</span>
               </a>
             ) : null}
 
-            <p className="corpo text-texto-3">
-              {config.enderecoRua} — {config.enderecoCidadeUf}
-            </p>
+            <address className="text-sm leading-relaxed text-texto-3 not-italic">
+              {config.enderecoRua}
+              <br />
+              {config.enderecoCidadeUf}
+            </address>
           </div>
         </div>
       </dialog>

@@ -33,7 +33,7 @@ import {
   precoRequerConfirmacao,
   resumoPublico,
 } from '../src/lib/format.ts'
-import { descricaoDe, gruposDaFicha } from '../src/lib/ficha.ts'
+import { descricaoDe, resumoDaUnidade } from '../src/lib/ficha.ts'
 import { fichaDeReferencia } from '../src/data/fichasModelo.ts'
 
 // O Vite carrega o .env sozinho, mas este script é executado pelo Node
@@ -51,6 +51,14 @@ const INDEX_HTML = path.join(DIST, 'index.html')
 const SITE_TS = path.join(ROOT, 'src', 'data', 'site.ts')
 
 /**
+ * Foto de showroom usada como imagem de Open Graph / JSON-LD quando a
+ * moto não tem foto, e como `og:image` da home. Precisa existir em
+ * `public/hero/` — um caminho morto aqui quebra o preview de todo link
+ * compartilhado no WhatsApp.
+ */
+const IMAGEM_PADRAO = '/hero/contato-showroom.webp'
+
+/**
  * CSS mínimo da ficha pré-renderizada.
  *
  * O HTML estático fica no `#root` até o React montar. Sem estilo, o
@@ -66,6 +74,15 @@ html,body{margin:0;background:#0f0e0c;color:#ece7de}
 .prerender .ano,.prerender .resumo{color:#a8a198}
 .prerender .preco{margin:.75rem 0;font-size:1.5rem;font-weight:700;color:#f26d62}
 .prerender .descricao{color:#ece7de}
+.prerender .resumo-ficha{display:grid;grid-template-columns:repeat(2,1fr);margin:1.25rem 0;border:1px solid #2a2825}
+.prerender .resumo-ficha div{padding:.75rem;border-right:1px solid #2a2825;border-bottom:1px solid #2a2825}
+.prerender .resumo-ficha div:nth-child(2n){border-right:0}
+.prerender .resumo-ficha div:nth-last-child(-n+2){border-bottom:0}
+.prerender .caracteristicas{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0 0;padding:0;list-style:none}
+.prerender .caracteristicas li{padding:.35rem .75rem;border:1px solid #2a2825;border-radius:999px;color:#ece7de;font-size:.875rem}
+.prerender .caracteristicas span{color:#8e887e}
+.prerender .ficha-completa{margin-top:1.5rem;border-top:1px solid #2a2825;padding-top:1rem}
+.prerender .ficha-completa summary{cursor:pointer;color:#a8a198;font-weight:600}
 .prerender .especificacoes{display:grid;gap:.5rem;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));margin:0}
 .prerender .especificacoes div{padding:.5rem 0;border-bottom:1px solid #2a2825}
 .prerender dt{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:#8e887e}
@@ -223,7 +240,27 @@ function fichaDe(moto, base) {
     .filter(Boolean)
     .join(' · ')
 
-  const gruposHtml = gruposDaFicha(moto)
+  const resumoHtml = `<dl class="resumo-ficha">${resumoDaUnidade(moto)
+    .map(
+      (item) =>
+        `<div><dt>${escapar(item.label)}</dt><dd>${escapar(item.value)}</dd></div>`,
+    )
+    .join('')}</dl>`
+
+  const caracteristicas = (Array.isArray(moto.especificacoes) ? moto.especificacoes : []).filter(
+    (item) => item?.label?.trim() && item?.value?.trim(),
+  )
+  const caracteristicasHtml =
+    caracteristicas.length > 0
+      ? `<h2>Características</h2><ul class="caracteristicas">${caracteristicas
+          .map(
+            (item) =>
+              `<li><span>${escapar(item.label)}</span> ${escapar(item.value)}</li>`,
+          )
+          .join('')}</ul>`
+      : ''
+
+  const gruposHtml = (referencia?.grupos ?? [])
     .map((grupo) => {
       const itens = grupo.itens.filter(
         (item) => item?.label?.trim() && item?.value?.trim(),
@@ -240,6 +277,10 @@ function fichaDe(moto, base) {
     .filter(Boolean)
     .join('\n  ')
 
+  const fichaCompletaHtml = gruposHtml
+    ? `<details class="ficha-completa"><summary>Ver especificações completas da linha</summary>${gruposHtml}</details>`
+    : ''
+
   return {
     url,
     titulo,
@@ -255,8 +296,10 @@ function fichaDe(moto, base) {
   <p class="preco">${escapar(precoTexto)}</p>
   ${precoNota ? `<p>${escapar(precoNota)}</p>` : ''}
   <p class="resumo">${escapar(lead)}</p>
+  ${resumoHtml}
+  ${caracteristicasHtml}
   ${paragrafos.map((paragrafo) => `<p class="descricao">${escapar(paragrafo)}</p>`).join('\n  ')}
-  ${gruposHtml}
+  ${fichaCompletaHtml}
   <p><a href="/contato">Falar com a loja</a></p>
 </article>`,
   }
@@ -311,7 +354,7 @@ async function run() {
     const ficha = fichaDe(moto, base)
     const titulo = `${escapar(ficha.titulo)} | DG Motos`
     const resumo = escapar(ficha.resumo)
-    const imagem = ficha.fotos[0] ?? absoluta(base, '/hero/showroom-2026-07-hd.webp')
+    const imagem = ficha.fotos[0] ?? absoluta(base, IMAGEM_PADRAO)
 
     // Mesmo formato do JSON-LD emitido em runtime por src/lib/schema.ts,
     // para o buscador ver exatamente a mesma coisa antes e depois do JS.
@@ -377,6 +420,23 @@ async function run() {
     await writeFile(path.join(dir, 'index.html'), html, 'utf8')
     fichas.push({ loc: ficha.url, lastmod: dataDePublicacao(moto) })
   }
+
+  // --- Casca (home) ---
+  // `og:url` e `og:image` do index.html também saem de `SITE_URL`. Sem
+  // isto o index seria uma segunda fonte de verdade do domínio, e trocar
+  // só o site.ts publicaria um cartão social apontando para o endereço
+  // antigo — o tipo de erro que só aparece quando alguém compartilha o
+  // link. O `og:title`/`og:description` da home continuam os do arquivo.
+  const casca = template
+    .replace(
+      /<meta\s+property="og:url"[\s\S]*?\/>/,
+      `<meta property="og:url" content="${escapar(`${base}/`)}" />`,
+    )
+    .replace(
+      /<meta\s+property="og:image"[\s\S]*?\/>/,
+      `<meta property="og:image" content="${escapar(absoluta(base, IMAGEM_PADRAO))}" />`,
+    )
+  await writeFile(INDEX_HTML, casca, 'utf8')
 
   // --- Sitemap ---
   const fixas = [

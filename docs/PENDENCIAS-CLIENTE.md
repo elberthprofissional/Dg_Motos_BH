@@ -61,11 +61,12 @@ Todas as decisões técnicas foram tomadas; este documento lista apenas o que
 moto + showroom + logo. Elas foram convertidas para WebP e já estão no site.
 
 - Fontes em `img/`: `hero/` (home desktop e mobile), `login/` (entrada do
-  painel), `troca/` (banner desktop, mobile e arte da troca), `logo/` e
-  `marcas/`.
-- Consumo no site: `public/hero/` (heróis e showroom), `src/assets/troca/`
-  (arte da troca, com hash do Vite), `public/motos/` (catálogo) e
-  `public/marcas/` (logos).
+  painel), `logo/` e `marcas/`.
+- Consumo no site: `public/hero/` (heróis e showroom), `public/motos/`
+  (catálogo) e `public/marcas/` (logos).
+- A seção **Troca de motos** da home foi removida por decisão do cliente. As
+  artes que ela usava (`public/hero/troca.webp` e `src/assets/troca/*.webp`)
+  foram apagadas junto.
 - Para converter/atualizar fotos: colocar os arquivos em `img/` (mesmos
   nomes-base) e rodar `npm run convert-images`. Ao trocar o hero, ajuste
   também `index.html`, `src/lib/schema.ts` e as listas do script.
@@ -96,13 +97,37 @@ moto + showroom + logo. Elas foram convertidas para WebP e já estão no site.
 - Domínio próprio previsto: **`dgmotosbh.com.br`** — ainda não registrado.
 - Quando registrar e apontar para a Vercel:
   1. Painel da Vercel do projeto → **Settings → Domains** → adicionar
-     `dgmotosbh.com.br` e seguir as instruções de DNS.
-  2. Trocar o domínio em `src/data/site.ts` → `SITE_URL` (grep por
-     `dg-motos-bh.vercel.app`).
-  3. Trocar nas tags `og:url` e `og:image` do `index.html`.
-  4. Trocar a linha `Sitemap:` de `public/robots.txt` (o build regenera
-     o `dist/robots.txt` e o `dist/sitemap.xml` a partir do `SITE_URL`).
-  5. `git push` — um deploy já basta.
+     `dgmotosbh.com.br` e seguir as instruções de DNS. Faça isso antes
+     do passo 2: o push na `main` publica sozinho, e trocar o domínio
+     antes de ele resolver deixaria canonical, sitemap e Open Graph do
+     site no ar apontando para um endereço morto.
+  2. Com o domínio novo já abrindo o site, trocar **só**
+     `src/data/site.ts` → `SITE_URL`. É o único lugar: o build
+     (`scripts/prerender.mjs`) reescreve a partir dele o `og:url` e o
+     `og:image` do `index.html`, as metas e o JSON-LD das fichas, o
+     `sitemap.xml` e o `robots.txt`. O canonical de cada rota da
+     vitrine é montado por `src/hooks/useCanonical.ts`, também a partir
+     do `SITE_URL`.
+  3. No Supabase → Authentication → URL Configuration → Redirect URLs,
+     cadastrar `https://dgmotosbh.com.br/admin/redefinir` (e remover a
+     URL antiga da Vercel quando o domínio novo estiver estável).
+  4. `git push` — um deploy já basta.
+  5. Para não deixar duas cópias do site indexadas, redirecionar o
+     endereço antigo da Vercel para o novo. Em `vercel.json`, dentro de
+     `redirects`, acrescentar:
+
+     ```json
+     {
+       "source": "/(.*)",
+       "has": [{ "type": "host", "value": "dg-motos-bh.vercel.app" }],
+       "destination": "https://dgmotosbh.com.br/$1",
+       "permanent": true
+     }
+     ```
+
+     Só depois dos passos 2 e 4 e de o domínio novo estar servindo —
+     antes disso o site no ar passaria a redirecionar para um endereço
+     que ainda não existe.
 
 ---
 

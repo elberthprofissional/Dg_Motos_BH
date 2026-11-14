@@ -133,35 +133,162 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
             >
               {titulo} · {moto.ano}
             </h1>
-            <p className="mt-1 text-sm text-steel-400">
-              É assim que o anúncio aparece para quem visita a loja.
-            </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={onEditar} className="estoque-btn-primario">
-            <Pencil className="size-4" strokeWidth={1.8} aria-hidden="true" />
-            Editar moto
-          </button>
-          <a
-            href={`/moto/${moto.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="foco-painel inline-flex h-10 items-center gap-2 border border-line px-4 text-sm font-semibold text-steel-300 transition-colors hover:border-claro/25 hover:text-paper"
-          >
-            <ExternalLink className="size-4" strokeWidth={1.8} aria-hidden="true" />
-            Ver no site
-            <span className="sr-only"> (abre em nova aba)</span>
-          </a>
-        </div>
+        {/* As ações ficam todas no rodapé, depois do anúncio: a prova
+            abre no que o cliente vê, e não em dois botões. */}
       </header>
 
-      {/* Moldura de prova: tokens do site público dentro do painel,
-          para a prévia não herdar os cinzas azulados da ferramenta. */}
+      {/* ---------------------------------------------------------- */}
+      {/* CELULAR: o anúncio como ele abre no Android — foto, nome,    */}
+      {/* preço, ficha curta, texto e a barra de conversão, na ordem    */}
+      {/* da página real e sem moldura de navegador enfeitando.        */}
+      {/* ---------------------------------------------------------- */}
       <div
         data-tema="publico"
-        className="overflow-hidden border border-borda-forte bg-fundo"
+        className="overflow-hidden border border-borda-forte bg-fundo sm:hidden"
+        aria-labelledby="previa-titulo"
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-borda bg-painel-2 px-3 py-2">
+          <span className="inline-flex min-w-0 items-center gap-1.5 text-[10px] text-texto-3">
+            <Lock className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{endereco}</span>
+          </span>
+        </div>
+
+        <div className="px-3 pt-3">
+          <aside aria-label={`Fotos de ${titulo} ${moto.ano}`}>
+            <BikeGallery
+              key={`${moto.id}-celular`}
+              imagens={moto.imagens}
+              titulo={`${titulo} ${moto.ano}`}
+              preencherAltura
+            />
+          </aside>
+        </div>
+
+        <div className="px-3 pt-4 pb-4">
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-texto-3 uppercase">
+            {moto.ano}
+          </p>
+
+          <h2 className="mt-1 font-display text-[1.65rem] leading-[1.02] font-extrabold tracking-[-0.03em] break-words text-texto">
+            {titulo}
+          </h2>
+
+          <p className="mt-2 text-[13px] leading-relaxed text-texto-2">{lead}</p>
+
+          <div className="mt-4">
+            {desconto != null ? (
+              <p className="numeros text-[11px] text-texto-3">
+                de {formatPrice(moto.precoAntes ?? moto.preco)}
+              </p>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+              <p
+                className={`font-display text-[1.5rem] leading-none font-extrabold tracking-[-0.03em] ${
+                  precoIncompleto ? 'text-texto' : 'numeros text-marca-viva'
+                }`}
+              >
+                {valor}
+              </p>
+
+              {desconto != null ? (
+                <span className="numeros bg-marca px-1.5 py-0.5 text-[11px] font-bold text-white">
+                  −{desconto}%
+                </span>
+              ) : null}
+
+              <span
+                className={`inline-flex h-6 items-center px-2 text-[11px] font-semibold ${
+                  disponivel ? 'bg-marca text-white' : 'bg-painel-3 text-texto-2'
+                }`}
+              >
+                {rotuloStatus(moto.status)}
+              </span>
+            </div>
+
+            {precoIncompleto ? (
+              <p className="mt-2 text-[11px] leading-relaxed text-texto-2">
+                O preço desta moto está em conferência na loja.
+              </p>
+            ) : precoParaConfirmar ? (
+              <p className="mt-2 text-[11px] leading-relaxed text-texto-2">
+                Confirme o preço com a loja antes de negociar.
+              </p>
+            ) : null}
+          </div>
+
+          <dl className="mt-4 grid grid-cols-2 gap-px border border-borda bg-borda">
+            {[
+              ...resumoTecnico,
+              { rotulo: 'Situação', valor: rotuloStatus(moto.status) },
+            ].map((item) => (
+              <div key={item.rotulo} className="bg-painel px-2.5 py-2">
+                <dt className="text-[10px] leading-none text-texto-3">{item.rotulo}</dt>
+                <dd className="numeros mt-1 text-[13px] leading-none font-semibold text-texto">
+                  {item.valor}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          {paragrafos.length > 0 ? (
+            <section aria-labelledby="previa-app-sobre" className="mt-5 border-t border-borda pt-4">
+              <h3
+                id="previa-app-sobre"
+                className="font-display text-base font-bold text-texto"
+              >
+                {usandoReferencia && referencia ? `Sobre a ${referencia.modelo}` : 'Sobre esta moto'}
+              </h3>
+              <div className="mt-2 space-y-2.5">
+                {paragrafos.map((paragrafo, indice) => (
+                  <p
+                    key={`app-${indice}-${paragrafo.slice(0, 24)}`}
+                    className="text-[12.5px] leading-relaxed text-texto-2"
+                  >
+                    {paragrafo}
+                  </p>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {temFicha ? (
+            <section aria-labelledby="previa-app-ficha" className="mt-5 border-t border-borda pt-4">
+              <h3
+                id="previa-app-ficha"
+                className="font-display text-base font-bold text-texto"
+              >
+                Ficha desta unidade
+              </h3>
+              <dl className="mt-2 border-t border-borda">
+                {itensUnidade.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-baseline justify-between gap-3 border-b border-borda py-2"
+                  >
+                    <dt className="text-xs text-texto-3">{item.label}</dt>
+                    <dd className="numeros text-right text-xs font-medium text-texto">
+                      {item.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
+        </div>
+
+      </div>
+
+      {/* Moldura de prova (tablet e desktop): tokens do site público
+          dentro do painel, para a prévia não herdar os cinzas azulados
+          da ferramenta. */}
+      <div
+        data-tema="publico"
+        className="hidden overflow-hidden border border-borda-forte bg-fundo sm:block"
         aria-labelledby="previa-titulo"
       >
         <div className="flex items-center gap-3 border-b border-borda bg-painel-2 px-4 py-2.5">
@@ -173,10 +300,6 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
           <span className="mx-auto inline-flex min-w-0 items-center gap-1.5 text-[11px] text-texto-3">
             <Lock className="size-3 shrink-0" aria-hidden="true" />
             <span className="truncate">{endereco}</span>
-          </span>
-          <span className="inline-flex shrink-0 items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] text-texto-3 uppercase">
-            <span className="size-1.5 rounded-full bg-ok" aria-hidden="true" />
-            No ar
           </span>
         </div>
 
@@ -340,20 +463,33 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
         </div>
       </div>
 
-      <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-line pt-5">
-        <p className="max-w-[58ch] text-xs leading-relaxed text-steel-500">
-          A prévia mostra o anúncio como está no site agora. Mudar o status ou excluir
-          já reflete no site e no painel.
-        </p>
-
-        {/* Cada ação ocupa a linha que precisa e as duas compartilham a
-            largura no celular — botão de 44px de altura, label nunca
-            cortado. A exclusão mantém o carimbo vermelho do painel. */}
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+      <footer className="flex flex-wrap items-center justify-end gap-4 border-t border-line pt-5">
+        {/* As quatro ações da moto, juntas depois do anúncio: no celular
+            uma por linha, com 44px de altura, na mesa em fila. O rótulo
+            nunca quebra e a exclusão mantém o carimbo vermelho. */}
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <button
+            type="button"
+            onClick={onEditar}
+            className="estoque-btn-primario h-11 w-full justify-center whitespace-nowrap sm:h-10 sm:w-auto"
+          >
+            <Pencil className="size-4" strokeWidth={1.8} aria-hidden="true" />
+            Editar moto
+          </button>
+          <a
+            href={`/moto/${moto.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="foco-painel inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap border border-line px-4 text-sm font-semibold text-steel-300 transition-colors hover:border-claro/25 hover:text-paper sm:h-10 sm:w-auto"
+          >
+            <ExternalLink className="size-4" strokeWidth={1.8} aria-hidden="true" />
+            Ver no site
+            <span className="sr-only"> (abre em nova aba)</span>
+          </a>
           <button
             type="button"
             onClick={onVender}
-            className="foco-painel inline-flex h-11 w-full items-center justify-center gap-2 border border-line px-4 text-sm font-medium text-steel-300 transition-colors hover:border-claro/25 hover:text-paper sm:h-10 sm:w-auto"
+            className="foco-painel inline-flex h-11 w-full items-center justify-center gap-2 border border-line px-4 text-sm font-medium whitespace-nowrap text-steel-300 transition-colors hover:border-claro/25 hover:text-paper sm:h-10 sm:w-auto"
           >
             <CircleDollarSign className="size-4" strokeWidth={1.8} aria-hidden="true" />
             Marcar como vendida
@@ -361,7 +497,7 @@ export function PreviaMoto({ moto, onVoltar, onEditar, onVender, onExcluir }: Pr
           <button
             type="button"
             onClick={onExcluir}
-            className="foco-painel inline-flex h-11 w-full items-center justify-center gap-2 border border-marca/35 px-4 text-sm font-medium text-marca-texto transition-colors hover:border-marca/60 hover:bg-marca/10 sm:h-10 sm:w-auto"
+            className="foco-painel inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap border border-marca/35 px-4 text-sm font-medium text-marca-texto transition-colors hover:border-marca/60 hover:bg-marca/10 sm:h-10 sm:w-auto"
           >
             <Trash2 className="size-4" strokeWidth={1.8} aria-hidden="true" />
             Excluir moto

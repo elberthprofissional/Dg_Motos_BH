@@ -117,7 +117,10 @@ zap caem sozinhos para `/contato`.
 `npm run build` roda `scripts/prerender.mjs` no `postbuild` e gera:
 
 - `dist/moto/<slug>/index.html` — título, descrição, preço, ficha
-  técnica e JSON-LD **dentro do HTML**, sem depender de JavaScript;
+  técnica, JSON-LD e canonical **dentro do HTML**, sem depender de
+  JavaScript;
+- `dist/index.html` — `og:url` e `og:image` reescritos a partir de
+  `SITE_URL` (a home não fica com o domínio fixo no arquivo);
 - `dist/sitemap.xml` com as fichas disponíveis;
 - `dist/robots.txt` bloqueando `/admin`.
 
@@ -138,8 +141,10 @@ Antes de publicar:
 5. Preencher `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` no host.
 6. Cadastrar `/admin/redefinir` em Authentication → URL Configuration →
    Redirect URLs.
-7. Conferir o domínio (`SITE_URL`), que aparece em `index.html`
-   (Open Graph), `public/robots.txt` e `src/data/site.ts`.
+7. Conferir o domínio em `src/data/site.ts` → `SITE_URL`. É a fonte
+   única: o build deriva dele o `og:url`/`og:image` do `index.html`, as
+   metas das fichas, o `sitemap.xml`, o `robots.txt` e o canonical das
+   rotas (`src/hooks/useCanonical.ts`).
 
 Cabeçalhos de segurança (CSP, HSTS, X-Frame-Options etc.) já estão em
 `vercel.json` e replicados em `public/_headers` para Netlify e

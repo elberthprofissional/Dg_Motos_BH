@@ -11,48 +11,35 @@ interface GaleriaEntregasDesktopProps {
   entregas: EntregaPublicada[]
 }
 
+/** Tempo de cada foto antes da próxima entrar. */
+const INTERVALO_SLIDE_MS = 4000
+
 /**
- * Todas as fotos publicadas, na ordem das entregas. O teto existe só
- * para o carrossel não virar uma rolagem sem fim quando o mural crescer;
- * nenhuma imagem é repetida para preencher espaço.
+ * Todas as fotos publicadas, na ordem das entregas — sem teto: se o
+ * dono publicar cinquenta entregas, as cinquenta passam. O slide
+ * carrega uma imagem por vez, então o mural pode crescer sem pesar.
  */
-const MAX_FOTOS = 6
-
-/** Tempo de cada foto antes de a próxima entrar. */
-const INTERVALO_SLIDE_MS = 3000
-
 function fotosDaGaleria(entregas: EntregaPublicada[]): FotoEntrega[] {
-  return entregas
-    .flatMap((entrega) => {
-      const mes = mesDaEntrega(entrega.entregueEm)
-      return entrega.imagens.map((src) => ({ src, mes }))
-    })
-    .slice(0, MAX_FOTOS)
-}
-
-function AberturaGaleria({ id }: { id: string }) {
-  return (
-    <div>
-      <h2 id={id} className="cartaz titulo-galeria text-texto">
-        Sonhos{' '}
-        <br />
-        <span className="text-marca">realizados</span>
-      </h2>
-      <p className="mt-6 max-w-[34ch] text-[length:var(--step-body)] leading-relaxed text-texto-2">
-        Clientes que já saíram da loja com a moto na mão.
-      </p>
-    </div>
-  )
+  return entregas.flatMap((entrega) => {
+    const mes = mesDaEntrega(entrega.entregueEm)
+    return entrega.imagens.map((src) => ({ src, mes }))
+  })
 }
 
 /**
- * Vitrine editorial das entregas no desktop: texto à esquerda e um card
- * 16:9 à direita. As fotos se revezam sozinhas, sem controles sobre a
- * imagem. No sistema com menos movimento, a troca é seca.
+ * ============================================================
+ * SONHOS REALIZADOS — desktop
+ * ============================================================
+ * Galeria de conquista: quadro grande com a foto completa (contain,
+ * nada de corte) e a sequência correndo no tempo. Sem datas, nomes,
+ * miniaturas ou indicadores: as fotografias falam por si, e o mural
+ * cresce com o estoque de entregas sem encher a página de quadradinhos.
+ * Uma imagem grande no DOM por vez.
  */
 export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps) {
   const fotos = useMemo(() => fotosDaGaleria(entregas), [entregas])
   const [ativo, setAtivo] = useState(0)
+  const [pausado, setPausado] = useState(false)
   const [reduzMovimento, setReduzMovimento] = useState(
     () =>
       typeof window !== 'undefined' &&
@@ -69,55 +56,66 @@ export function GaleriaEntregasDesktop({ entregas }: GaleriaEntregasDesktopProps
   }, [])
 
   useEffect(() => {
-    if (total <= 1) return
+    if (total <= 1 || pausado || reduzMovimento) return
     const temporizador = window.setTimeout(() => {
       setAtivo((indice) => (indice + 1) % total)
     }, INTERVALO_SLIDE_MS)
     return () => window.clearTimeout(temporizador)
-  }, [ativo, total])
+  }, [ativo, total, pausado, reduzMovimento])
 
   if (total === 0) return null
 
   const indiceAtivo = ativo % total
-
-  const legenda = (foto: FotoEntrega) =>
-    foto.mes
-      ? `Foto de entrega realizada pela DG Motos em ${foto.mes}`
-      : 'Foto de entrega realizada pela DG Motos'
+  const foto = fotos[indiceAtivo]
 
   return (
     <div className="hidden lg:block">
-      <div className="bg-[#0b0a09] py-20 xl:py-24">
-        <div className="container-site grid grid-cols-12 items-center gap-x-14">
-          <div className="col-span-5">
-            <AberturaGaleria id="sonhos-titulo-desktop" />
+      {/* Respiro mais curto: a seção respirava demais e o quadro ficava
+          boiando num vazio grande em cima e embaixo. */}
+      <div className="bg-fundo py-12 text-noite-texto xl:py-16">
+        <div className="container-site grid grid-cols-12 items-center gap-x-10">
+          {/* Texto: compacto e alinhado ao topo da foto. */}
+          <div className="col-span-4">
+            <h2 className="cartaz text-[length:clamp(2.25rem,3.5vw,3.5rem)] text-noite-texto">
+              Sonhos realizados
+            </h2>
+            <span aria-hidden="true" className="mt-5 block h-0.5 w-14 bg-marca" />
+            <p className="mt-5 max-w-[32ch] text-[length:var(--step-body)] leading-relaxed text-noite-texto-2">
+              Clientes que já saíram da loja com a moto na mão.
+            </p>
           </div>
 
-          <div className="col-span-7 flex justify-center">
+          {/* Galeria: quadro grande com luz de marca discreta e a foto
+              completa, passando sozinha. */}
+          <div
+            className="col-span-8"
+            onMouseEnter={() => setPausado(true)}
+            onMouseLeave={() => setPausado(false)}
+            onFocusCapture={() => setPausado(true)}
+            onBlurCapture={() => setPausado(false)}
+          >
             <div
               role="group"
               aria-roledescription="carrossel"
-              aria-label="Fotos de entregas realizadas"
-              className="relative h-[400px] w-full max-w-2xl overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 shadow-2xl"
+              aria-label="Fotos de entregas realizadas. Pausa ao passar o mouse ou focar."
+              className="corte-velocidade relative flex h-[min(64vh,38rem)] w-full items-center justify-center overflow-hidden bg-noite-2 shadow-[0_0_90px_rgb(211_36_14/0.10)]"
             >
-              {fotos.map((foto, indice) => {
-                const visivel = indice === indiceAtivo
-                return (
-                  <img
-                    key={foto.src}
-                    src={foto.src}
-                    alt={visivel ? legenda(foto) : ''}
-                    aria-hidden={!visivel}
-                    width={1080}
-                    height={1350}
-                    loading={indice === 0 ? 'eager' : 'lazy'}
-                    decoding="async"
-                    className={`absolute inset-0 size-full bg-neutral-950 object-contain ${
-                      reduzMovimento ? '' : 'transition-opacity duration-500 ease-out'
-                    } ${visivel ? 'z-10 opacity-100' : 'z-0 opacity-0'}`}
-                  />
-                )
-              })}
+              <img
+                key={foto.src}
+                src={foto.src}
+                alt={
+                  foto.mes
+                    ? `Foto de entrega realizada pela DG Motos em ${foto.mes}`
+                    : 'Foto de entrega realizada pela DG Motos'
+                }
+                width={1600}
+                height={1600}
+                loading="lazy"
+                decoding="async"
+                className={`size-full object-contain ${
+                  reduzMovimento ? '' : 'galeria-entra'
+                }`}
+              />
             </div>
           </div>
         </div>

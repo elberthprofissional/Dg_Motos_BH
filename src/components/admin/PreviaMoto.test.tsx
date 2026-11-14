@@ -37,27 +37,46 @@ function motoDe(parcial: Partial<Motorcycle> = {}): Motorcycle {
 }
 
 describe('PreviaMoto — composição do anúncio', () => {
-  it('coloca as informações do anúncio antes da foto e a ficha compacta na sequência', () => {
+  it('no desktop coloca as informações do anúncio antes da foto e a ficha na sequência', () => {
     const html = marcar(
       <PreviaMoto moto={motoDe()} onVoltar={handlers} onEditar={handlers} onVender={handlers} onExcluir={handlers} />,
     )
 
+    // A prévia tem duas composições (celular e mesa); a ordem da mesa é
+    // conferida dentro da própria moldura.
+    const mesa = html.slice(html.indexOf('border-borda-forte bg-fundo sm:block'))
     const ordem = [
-      html.indexOf(`${bikeTitle(motoDe())} · 2023`),
-      html.indexOf('No pátio'),
-      html.indexOf('Quilometragem'),
-      html.indexOf(`Fotos de ${bikeTitle(motoDe())} 2023`),
+      mesa.indexOf(bikeTitle(motoDe())),
+      mesa.indexOf('No pátio'),
+      mesa.indexOf('Quilometragem'),
+      mesa.indexOf(`Fotos de ${bikeTitle(motoDe())} 2023`),
     ]
     // Informações primeiro: sobe índice em ordem estritamente crescente.
     expect(
-      ordem.every((i, n) => n === 0 || i > ordem[n - 1]),
-      JSON.stringify({
-        titulo: ordem[0],
-        badge: ordem[1],
-        km: ordem[2],
-        fotos: ordem[3],
-        cmds: html.slice(-600),
-      }),
+      ordem.every((i, n) => i > 0 && (n === 0 || i > ordem[n - 1])),
+      JSON.stringify({ ordem }),
+    ).toBe(true)
+  })
+
+  it('no celular segue a ordem da página real: foto, nome, preço e ficha', () => {
+    const html = marcar(
+      <PreviaMoto moto={motoDe()} onVoltar={handlers} onEditar={handlers} onVender={handlers} onExcluir={handlers} />,
+    )
+
+    const celular = html.slice(
+      html.indexOf('bg-fundo sm:hidden'),
+      html.indexOf('border-borda-forte bg-fundo sm:block'),
+    )
+
+    const ordem = [
+      celular.indexOf(`Fotos de ${bikeTitle(motoDe())} 2023`),
+      celular.indexOf(bikeTitle(motoDe())),
+      celular.indexOf('17.900'),
+      celular.indexOf('Situação'),
+    ]
+    expect(
+      ordem.every((i, n) => i > 0 && (n === 0 || i > ordem[n - 1])),
+      JSON.stringify({ ordem }),
     ).toBe(true)
   })
 
@@ -90,8 +109,8 @@ describe('PreviaMoto — composição do anúncio', () => {
     expect(html).toContain('Ver no site')
     expect(html).toContain('Marcar como vendida')
     expect(html).toContain('Excluir moto')
-    // Botões do rodapé: h-11 no celular, voltando ao h-10 na mesa.
-    expect(html.match(/h-11 w-full/g)?.length).toBe(2)
+    // As quatro ações vivem no rodapé: h-11 no celular, h-10 na mesa.
+    expect(html.match(/h-11 w-full/g)?.length).toBe(4)
   })
 })
 
@@ -107,7 +126,8 @@ describe('BikeGallery — palco da prévia', () => {
     )
 
     expect(html).toContain('aspect-[4/3]')
-    expect(html).toContain('w-14 rounded-lg border-2')
+    // Miniatura-cartão do modo prévia: canto reto, como todo o site.
+    expect(html).toContain('w-14 border-2')
     expect(html).toContain('aria-pressed="true"')
   })
 

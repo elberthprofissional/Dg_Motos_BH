@@ -37,6 +37,30 @@ function statusLongo(status: MotorcycleStatus): string {
   return 'Indisponível no momento'
 }
 
+/** Situação curta, para a faixa de resumo do topo e da ficha. */
+export function rotuloStatusCurto(status: MotorcycleStatus): string {
+  if (status === 'disponivel') return 'No pátio'
+  if (status === 'vendida') return 'Vendida'
+  return 'Indisponível'
+}
+
+/**
+ * Faixa de resumo da unidade — as quatro informações que o visitante
+ * procura primeiro. A mesma lista alimenta o topo da ficha e o palco de
+ * compra, para os dois lugares nunca discordarem.
+ */
+export function resumoDaUnidade(bike: Motorcycle): MotorcycleSpec[] {
+  return [
+    { label: 'Ano', value: String(bike.ano) },
+    { label: 'Quilometragem', value: formatKm(bike.quilometragem) },
+    {
+      label: 'Cilindrada',
+      value: bike.cilindrada ? `${bike.cilindrada} cc` : 'A confirmar',
+    },
+    { label: 'Situação', value: rotuloStatusCurto(bike.status) },
+  ]
+}
+
 /**
  * Grupos da ficha: primeiro a unidade, depois a referência da linha.
  *
